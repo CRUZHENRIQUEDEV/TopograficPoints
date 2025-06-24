@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Como Calcular Distâncias Geográficas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+            background: #f8f9fa;
+        }
+        .formula {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 10px 0;
+            border-left: 4px solid #27ae60;
+        }
+        .example {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .calculator {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: 2px solid #007bff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+            font-weight: bold;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #f2f2f2;
+            font-weight: bold;
+        }
+        .highlight {
+            background: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Como Calcular Distâncias Geográficas</h1>
+        
+        <div class="section">
+            <h2>🤔 Por que não podemos usar Pitágoras direto?</h2>
+            <p>Quando temos coordenadas em <strong>graus</strong> (latitude/longitude), cada grau representa uma distância diferente:</p>
+            
+            <table>
+                <tr>
+                    <th>Coordenada</th>
+                    <th>Valor de 1 grau</th>
+                    <th>Observação</th>
+                </tr>
+                <tr>
+                    <td><strong>Latitude</strong></td>
+                    <td>111.320 metros</td>
+                    <td>✅ Sempre constante</td>
+                </tr>
+                <tr>
+                    <td><strong>Longitude</strong></td>
+                    <td>111.320 × cos(latitude)</td>
+                    <td>⚠️ Varia com a posição</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📐 A Fórmula Completa</h2>
+            
+            <div class="formula">
+<strong>Passo 1:</strong> Calcular as diferenças em graus
+ΔLatitude = lat2 - lat1
+ΔLongitude = long2 - long1
+
+<strong>Passo 2:</strong> Converter para metros
+ΔLat_metros = ΔLatitude × 111.320
+ΔLong_metros = ΔLongitude × 111.320 × cos(latitude_média)
+
+<strong>Passo 3:</strong> Aplicar Pitágoras
+Distância = √(ΔLat_metros² + ΔLong_metros²)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧮 Calculadora Interativa</h2>
+            <div class="calculator">
+                <h3>Digite as coordenadas dos dois pontos:</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4>📍 Ponto 1</h4>
+                        <input type="number" id="lat1" placeholder="Latitude 1" step="any" value="-9.86834395">
+                        <input type="number" id="long1" placeholder="Longitude 1" step="any" value="-36.14089522">
+                    </div>
+                    <div>
+                        <h4>📍 Ponto 2</h4>
+                        <input type="number" id="lat2" placeholder="Latitude 2" step="any" value="-9.86830693">
+                        <input type="number" id="long2" placeholder="Longitude 2" step="any" value="-36.14080112">
+                    </div>
+                </div>
+                
+                <button onclick="calculateDetailedDistance()">🔢 Calcular Passo-a-Passo</button>
+                
+                <div id="calculation" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💡 Exemplo Prático com Seus Dados</h2>
+            <div class="example">
+                <strong>Situação:</strong> Calcular distância entre LD_INICIO e LE_INICIO
+                <br><br>
+                <strong>Ponto 1:</strong> -36.14089522°, -9.86834395°<br>
+                <strong>Ponto 2:</strong> -36.14080112°, -9.86830693°
+            </div>
+            
+            <div class="step">
+                <strong>Passo 1 - Diferenças:</strong><br>
+                ΔLongitude = -36.14080112 - (-36.14089522) = <span class="highlight">0.0000941°</span><br>
+                ΔLatitude = -9.86830693 - (-9.86834395) = <span class="highlight">0.0000370°</span>
+            </div>
+            
+            <div class="step">
+                <strong>Passo 2 - Latitude em metros:</strong><br>
+                ΔLat_metros = 0.0000370° × 111.320 = <span class="highlight">4,12 metros</span>
+            </div>
+            
+            <div class="step">
+                <strong>Passo 3 - Longitude em metros:</strong><br>
+                Latitude_média = (-9.86834395 + -9.86830693) ÷ 2 = -9.86832544°<br>
+                cos(-9.86832544° × π/180) = cos(-0.1722) = <span class="highlight">0.9851</span><br>
+                ΔLong_metros = 0.0000941° × 111.320 × 0.9851 = <span class="highlight">10,32 metros</span>
+            </div>
+            
+            <div class="step">
+                <strong>Passo 4 - Pitágoras:</strong><br>
+                Distância = √(10,32² + 4,12²) = √(106,50 + 16,97) = √123,47 = <span class="highlight">11,11 metros</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Coordenadas UTM/Planas</h2>
+            <p>Quando as coordenadas já estão em metros (UTM, por exemplo):</p>
+            <div class="formula">
+<strong>Exemplo:</strong> 8904327.421, 800824.107
+<strong>Cálculo:</strong> Pitágoras direto!
+Distância = √((x2-x1)² + (y2-y1)²)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Como o Sistema Detecta o Tipo</h2>
+            <div class="formula">
+if (|longitude| < 180 && |latitude| < 90) {
+    // Coordenadas geográficas → Converter para metros
+} else {
+    // Coordenadas planas → Cálculo direto
+}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateDetailedDistance() {
+            const lat1 = parseFloat(document.getElementById('lat1').value);
+            const long1 = parseFloat(document.getElementById('long1').value);
+            const lat2 = parseFloat(document.getElementById('lat2').value);
+            const long2 = parseFloat(document.getElementById('long2').value);
+            
+            if (isNaN(lat1) || isNaN(long1) || isNaN(lat2) || isNaN(long2)) {
+                document.getElementById('calculation').innerHTML = 
+                    '<div class="result" style="background: #f8d7da; border-color: #dc3545;">❌ Por favor, preencha todas as coordenadas!</div>';
+                return;
+            }
+            
+            // Cálculos passo a passo
+            const deltaLat = lat2 - lat1;
+            const deltaLong = long2 - long1;
+            
+            const avgLat = (lat1 + lat2) / 2;
+            const avgLatRad = avgLat * Math.PI / 180;
+            const cosAvgLat = Math.cos(avgLatRad);
+            
+            const deltaLatM = deltaLat * 111320;
+            const deltaLongM = deltaLong * 111320 * cosAvgLat;
+            
+            const distance = Math.sqrt(deltaLatM * deltaLatM + deltaLongM * deltaLongM);
+            
+            document.getElementById('calculation').innerHTML = `
+                <div class="result">
+                    <h3>📊 Cálculo Detalhado:</h3>
+                    
+                    <div class="step">
+                        <strong>🔢 Diferenças em graus:</strong><br>
+                        ΔLatitude = ${lat2} - (${lat1}) = <span class="highlight">${deltaLat.toFixed(8)}°</span><br>
+                        ΔLongitude = ${long2} - (${long1}) = <span class="highlight">${deltaLong.toFixed(8)}°</span>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>📐 Conversão da Latitude:</strong><br>
+                        ΔLat_metros = ${deltaLat.toFixed(8)}° × 111.320 = <span class="highlight">${deltaLatM.toFixed(3)} metros</span>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>🌐 Conversão da Longitude:</strong><br>
+                        Latitude_média = (${lat1} + ${lat2}) ÷ 2 = ${avgLat.toFixed(6)}°<br>
+                        cos(${avgLat.toFixed(6)}°) = cos(${avgLatRad.toFixed(4)} rad) = <span class="highlight">${cosAvgLat.toFixed(6)}</span><br>
+                        ΔLong_metros = ${deltaLong.toFixed(8)}° × 111.320 × ${cosAvgLat.toFixed(6)} = <span class="highlight">${deltaLongM.toFixed(3)} metros</span>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>📏 Pitágoras:</strong><br>
+                        Distância = √(${deltaLatM.toFixed(3)}² + ${deltaLongM.toFixed(3)}²)<br>
+                        Distância = √(${(deltaLatM*deltaLatM).toFixed(2)} + ${(deltaLongM*deltaLongM).toFixed(2)})<br>
+                        Distância = √${(deltaLatM*deltaLatM + deltaLongM*deltaLongM).toFixed(2)} = <span class="highlight" style="font-size: 18px;">${distance.toFixed(3)} metros</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Calcular automaticamente ao carregar
+        window.onload = function() {
+            calculateDetailedDistance();
+        };
+    </script>
+</body>
+</html>
