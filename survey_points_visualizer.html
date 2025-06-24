@@ -5,95 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Visualizador de Pontos Topográficos</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f5f5f5;
-      }
-      .container {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-      h1 {
-        color: #333;
-        text-align: center;
-        margin-bottom: 30px;
-      }
-      .input-section {
-        margin-bottom: 30px;
-      }
-      textarea {
-        width: 100%;
-        height: 200px;
-        padding: 10px;
-        border: 2px solid #ddd;
-        border-radius: 5px;
-        font-family: monospace;
-        font-size: 12px;
-        resize: vertical;
-      }
-      button {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 10px;
-      }
-      button:hover {
-        background: #0056b3;
-      }
-      .visualization {
-        border: 2px solid #ddd;
-        border-radius: 10px;
-        background: white;
-        min-height: 400px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      #canvas {
-        border: 1px solid #ccc;
-        background: #fafafa;
-      }
-      .info-panel {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 5px;
-        border-left: 4px solid #007bff;
-      }
-      .distance-info {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-        margin-top: 15px;
-      }
-      .distance-card {
-        background: white;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-        text-align: center;
-      }
-      .distance-value {
-        font-size: 18px;
-        font-weight: bold;
-        color: #007bff;
-      }
-      .error {
-        color: #dc3545;
-        background: #f8d7da;
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
-      }
+              body {
+                  font-family: Arial, sans-serif;
+                  max-width: 1200px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  background-color: #f5f5f5;
+              }
+
+              function loadExample1() {
+                  const exampleData1 = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
+      05,MONTESQ,-9.8679095,-36.140952,101.93603,110.7473614,-36.140952061439414,-9.867909502332084
+      06,MONTDIR,-9.86794794,-36.1410522,102.22134,111.0326069,-36.1410522012943,-9.86794794608721
+      P-02,LD_INICIO_OAE,-9.86834395,-36.1408952,102.30937,111.1214735,-36.14089522705659,-9.868343956247095
+      P-01,LE_INICIO_OAE,-9.86830693,-36.1408011,102.14289,110.9550518,-36.140801122569556,-9.868306930582875
+      P-03,LE_FINAL_OAE,-9.86843311,-36.1407508,102.1309,110.9433278,-36.14075082658415,-9.868433110094328
+      P-04,LD_FINAL_OAE,-9.86847107,-36.1408461,102.27192,111.0842897,-36.14084618801685,-9.868471077900253
+      07,JUSDIR,-9.86866253,-36.1407698,102.23498,111.0477531,-36.1407698487776,-9.868662533612165
+      08,JUSESQ,-9.86862386,-36.1406702,101.95261,110.7654449,-36.14067023183168,-9.868623861270203`;
+
+                  document.getElementById('csvData').value = exampleData1;
+                  processData();
+              }
+
+              function loadExample2() {
+                  const exampleData2 = `1,8904327.421,800824.107,126.519,MONESQ
+      2,8904339.089,800824.561,126.777,MONDIR
+      3,8904340.559,800790.705,126.910,INICDIR
+      4,8904329.344,800790.058,126.787,INICESQ
+      5,8904329.900,800775.153,126.705,FIMESQ
+      6,8904341.211,800775.493,126.947,FIMDIR
+      7,8904341.915,800756.585,126.890,JUSDIR
+      8,8904330.179,800756.087,126.651,JUSESQ`;
+
+                  document.getElementById('csvData').value = exampleData2;
+                  processData();
+              }
+              .container {
+                  background: white;
+                  padding: 20px;
+                  border-radius: 10px;
+                  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              }
+              h1 {
+                  color: #333;
+                  text-align: center;
+                  margin-bottom: 30px;
+              }
+              .input-section {
+                  margin-bottom: 30px;
+              }
+              textarea {
+                  width: 100%;
+                  height: 200px;
+                  padding: 10px;
+                  border: 2px solid #ddd;
+                  border-radius: 5px;
+                  font-family: monospace;
+                  font-size: 12px;
+                  resize: vertical;
+              }
+              button {
+                  background: #007bff;
+                  color: white;
+                  border: none;
+                  padding: 12px 24px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 16px;
+                  margin-top: 10px;
+              }
+              button:hover {
+                  background: #0056b3;
+              }
+              .visualization {
+                  border: 2px solid #ddd;
+                  border-radius: 10px;
+                  background: white;
+                  min-height: 400px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+              }
+              #canvas {
+                  border: 1px solid #ccc;
+                  background: #fafafa;
+              }
+              .info-panel {
+                  margin-top: 20px;
+                  padding: 15px;
+                  background: #f8f9fa;
+                  border-radius: 5px;
+                  border-left: 4px solid #007bff;
+              }
+              .distance-info {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                  gap: 15px;
+                  margin-top: 15px;
+              }
+              .distance-card {
+                  background: white;
+                  padding: 15px;
+                  border-radius: 5px;
+                  border: 1px solid #ddd;
+                  text-align: center;
+              }
+              .distance-value {
+                  font-size: 18px;
+                  font-weight: bold;
+                  color: #007bff;
+              }
+              .error {
+                  color: #dc3545;
+                  background: #f8d7da;
+                  padding: 10px;
+                  border-radius: 5px;
+                  margin-top: 10px;
+              }
     </style>
   </head>
   <body>
@@ -102,11 +131,30 @@
 
       <div class="input-section">
         <label for="csvData"><strong>Cole os dados CSV aqui:</strong></label>
+        <p style="margin: 5px 0; color: #666; font-size: 14px">
+          📋 Suporta múltiplos formatos:<br />
+          • <strong>Formato 1:</strong> Name,Code,Lat,Long,H_GEO,H_ORTO,x,y (com
+          LD_INICIO_OAE, LE_INICIO_OAE...)<br />
+          • <strong>Formato 2:</strong> índice,northing,easting,altura,nome (com
+          INICDIR, INICESQ, FIMDIR, FIMESQ)
+        </p>
         <textarea
           id="csvData"
-          placeholder="Cole aqui os dados CSV com as colunas: Name,Code,Lat,Long,H_GEO,H_ORTO,x,y"
+          placeholder="Cole aqui os dados CSV. Aceita ambos os formatos automaticamente!"
         ></textarea>
         <button onclick="processData()">🔄 Processar e Visualizar</button>
+        <button
+          onclick="loadExample1()"
+          style="background: #28a745; margin-left: 10px"
+        >
+          📝 Exemplo Formato 1
+        </button>
+        <button
+          onclick="loadExample2()"
+          style="background: #17a2b8; margin-left: 10px"
+        >
+          📝 Exemplo Formato 2
+        </button>
       </div>
 
       <div class="visualization">
@@ -124,10 +172,32 @@
     <script>
       function parseCSV(csvText) {
         const lines = csvText.trim().split("\n");
-        const headers = lines[0].split(",").map((h) => h.trim());
-        const data = [];
+        const firstLine = lines[0];
+        let headers;
+        let dataStartIndex = 0;
 
-        for (let i = 1; i < lines.length; i++) {
+        // Detectar se primeira linha são headers ou dados
+        if (
+          firstLine.includes("Name") ||
+          firstLine.includes("Code") ||
+          firstLine.includes("Lat") ||
+          firstLine.includes("Long") ||
+          firstLine.includes("x") ||
+          firstLine.includes("y")
+        ) {
+          // Primeira linha são headers
+          headers = lines[0].split(",").map((h) => h.trim());
+          dataStartIndex = 1;
+        } else {
+          // Assumir formato sem headers: [índice, y, x, altura, nome]
+          headers = ["0", "1", "2", "3", "4"];
+          dataStartIndex = 0;
+        }
+
+        console.log("Headers detectados:", headers);
+
+        const data = [];
+        for (let i = dataStartIndex; i < lines.length; i++) {
           if (lines[i].trim() === "") continue; // pular linhas vazias
 
           const values = lines[i].split(",");
@@ -151,31 +221,51 @@
           `P1(${x1}, ${y1}) e P2(${x2}, ${y2})`
         );
 
-        // Converter coordenadas geográficas para metros
-        // 1 grau de latitude ≈ 111.320 km
-        // 1 grau de longitude ≈ 111.320 km * cos(latitude)
-        const lat1Rad = (y1 * Math.PI) / 180;
-        const lat2Rad = (y2 * Math.PI) / 180;
-        const avgLatRad = (lat1Rad + lat2Rad) / 2;
+        const deltaX = x2 - x1;
+        const deltaY = y2 - y1;
 
-        const deltaLat = y2 - y1;
-        const deltaLon = x2 - x1;
+        // Detectar se coordenadas estão em graus (lat/long) ou metros (UTM)
+        const isGeographic =
+          Math.abs(x1) < 180 &&
+          Math.abs(y1) < 90 &&
+          Math.abs(x2) < 180 &&
+          Math.abs(y2) < 90;
 
-        // Conversão para metros
-        const deltaLatM = deltaLat * 111320; // metros por grau de latitude
-        const deltaLonM = deltaLon * 111320 * Math.cos(avgLatRad); // metros por grau de longitude
+        let distance;
 
-        const distance = Math.sqrt(
-          deltaLatM * deltaLatM + deltaLonM * deltaLonM
-        );
+        if (isGeographic) {
+          console.log(
+            "Coordenadas geográficas detectadas - convertendo para metros"
+          );
+          // Converter coordenadas geográficas para metros
+          const lat1Rad = (y1 * Math.PI) / 180;
+          const lat2Rad = (y2 * Math.PI) / 180;
+          const avgLatRad = (lat1Rad + lat2Rad) / 2;
 
-        console.log(
-          `Diferenças: dx=${deltaLon}° (${deltaLonM.toFixed(
-            3
-          )}m), dy=${deltaLat}° (${deltaLatM.toFixed(
-            3
-          )}m), distância=${distance.toFixed(3)}m`
-        );
+          // Conversão para metros
+          const deltaLatM = deltaY * 111320; // metros por grau de latitude
+          const deltaLonM = deltaX * 111320 * Math.cos(avgLatRad); // metros por grau de longitude
+
+          distance = Math.sqrt(deltaLatM * deltaLatM + deltaLonM * deltaLonM);
+          console.log(
+            `Diferenças: dx=${deltaX}° (${deltaLonM.toFixed(
+              3
+            )}m), dy=${deltaY}° (${deltaLatM.toFixed(
+              3
+            )}m), distância=${distance.toFixed(3)}m`
+          );
+        } else {
+          console.log(
+            "Coordenadas planas/UTM detectadas - cálculo direto em metros"
+          );
+          // Coordenadas já estão em metros (UTM ou sistema local)
+          distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          console.log(
+            `Diferenças: dx=${deltaX.toFixed(3)}m, dy=${deltaY.toFixed(
+              3
+            )}m, distância=${distance.toFixed(3)}m`
+          );
+        }
 
         return distance;
       }
@@ -183,33 +273,83 @@
       function findPoints(data) {
         const points = {};
         data.forEach((row, index) => {
-          const name = row.Name || row.Code || "";
-          const code = row.Code || row.Name || "";
+          const name = row.Name || row.Code || row["4"] || ""; // Suporte a diferentes formatos CSV
+          const code = row.Code || row.Name || row["4"] || "";
 
           console.log(`Linha ${index}: Name="${name}", Code="${code}"`);
 
-          // Procurar pelos códigos específicos nos dados
+          // Mapeamento de nomes alternativos
+          let mappedCode = code;
+          let mappedName = name;
+
+          // Conversões para padrão OAE
+          if (code === "INICDIR" || name === "INICDIR") {
+            mappedCode = "LD_INICIO_OAE";
+            mappedName = "LD_INICIO_OAE";
+          } else if (code === "INICESQ" || name === "INICESQ") {
+            mappedCode = "LE_INICIO_OAE";
+            mappedName = "LE_INICIO_OAE";
+          } else if (code === "FIMDIR" || name === "FIMDIR") {
+            mappedCode = "LD_FINAL_OAE";
+            mappedName = "LD_FINAL_OAE";
+          } else if (code === "FIMESQ" || name === "FIMESQ") {
+            mappedCode = "LE_FINAL_OAE";
+            mappedName = "LE_FINAL_OAE";
+          }
+
+          // Procurar pelos códigos específicos nos dados (formato original e alternativo)
           if (
-            code.includes("LD_INICIO_OAE") ||
-            code.includes("LE_INICIO_OAE") ||
-            code.includes("LD_FINAL_OAE") ||
-            code.includes("LE_FINAL_OAE") ||
+            mappedCode.includes("LD_INICIO_OAE") ||
+            mappedCode.includes("LE_INICIO_OAE") ||
+            mappedCode.includes("LD_FINAL_OAE") ||
+            mappedCode.includes("LE_FINAL_OAE") ||
+            code.includes("LD_INICIO") ||
+            code.includes("LE_INICIO") ||
+            code.includes("LD_FINAL") ||
+            code.includes("LE_FINAL") ||
             name.includes("LD_INICIO") ||
             name.includes("LE_INICIO") ||
             name.includes("LD_FINAL") ||
-            name.includes("LE_FINAL")
+            name.includes("LE_FINAL") ||
+            code === "INICDIR" ||
+            code === "INICESQ" ||
+            code === "FIMDIR" ||
+            code === "FIMESQ" ||
+            name === "INICDIR" ||
+            name === "INICESQ" ||
+            name === "FIMDIR" ||
+            name === "FIMESQ"
           ) {
+            // Detectar formato dos dados (com ou sem headers específicos)
+            let xCoord, yCoord;
+
+            if (row.x && row.y) {
+              // Formato original com headers x,y
+              xCoord = parseFloat(row.x);
+              yCoord = parseFloat(row.y);
+            } else if (row["1"] && row["2"]) {
+              // Formato alternativo onde x está na coluna 1 e y na coluna 2
+              xCoord = parseFloat(row["2"]); // x = longitude/easting
+              yCoord = parseFloat(row["1"]); // y = latitude/northing
+            } else if (row.Long && row.Lat) {
+              // Usar Lat/Long se x,y não estiverem disponíveis
+              xCoord = parseFloat(row.Long);
+              yCoord = parseFloat(row.Lat);
+            }
+
             const pointData = {
-              x: parseFloat(row.x),
-              y: parseFloat(row.y),
-              lat: parseFloat(row.Lat),
-              long: parseFloat(row.Long),
-              name: name,
-              code: code,
+              x: xCoord,
+              y: yCoord,
+              lat: parseFloat(row.Lat) || yCoord,
+              long: parseFloat(row.Long) || xCoord,
+              name: mappedName,
+              code: mappedCode,
+              originalName: name,
+              originalCode: code,
             };
 
-            console.log(`Ponto encontrado: ${code}`, pointData);
-            points[code] = pointData;
+            console.log(`Ponto encontrado: ${code} → ${mappedCode}`, pointData);
+            points[mappedCode] = pointData;
           }
         });
         return points;
@@ -500,18 +640,7 @@
 
       // Pré-carregar dados de exemplo
       window.onload = function () {
-        const exampleData = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
-05,MONTESQ,-9.8679095,-36.140952,101.93603,110.7473614,-36.140952061439414,-9.867909502332084
-06,MONTDIR,-9.86794794,-36.1410522,102.22134,111.0326069,-36.1410522012943,-9.86794794608721
-P-02,LD_INICIO_OAE,-9.86834395,-36.1408952,102.30937,111.1214735,-36.14089522705659,-9.868343956247095
-P-01,LE_INICIO_OAE,-9.86830693,-36.1408011,102.14289,110.9550518,-36.140801122569556,-9.868306930582875
-P-03,LE_FINAL_OAE,-9.86843311,-36.1407508,102.1309,110.9433278,-36.14075082658415,-9.868433110094328
-P-04,LD_FINAL_OAE,-9.86847107,-36.1408461,102.27192,111.0842897,-36.14084618801685,-9.868471077900253
-07,JUSDIR,-9.86866253,-36.1407698,102.23498,111.0477531,-36.1407698487776,-9.868662533612165
-08,JUSESQ,-9.86862386,-36.1406702,101.95261,110.7654449,-36.14067023183168,-9.868623861270203`;
-
-        document.getElementById("csvData").value = exampleData;
-        processData();
+        loadExample1(); // Carrega o primeiro exemplo por padrão
       };
     </script>
   </body>
