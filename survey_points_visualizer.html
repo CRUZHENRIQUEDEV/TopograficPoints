@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visualizador de Pontos Topográficos</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .input-section {
+        margin-bottom: 30px;
+      }
+      textarea {
+        width: 100%;
+        height: 200px;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        resize: vertical;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .visualization {
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        background: white;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #canvas {
+        border: 1px solid #ccc;
+        background: #fafafa;
+      }
+      .info-panel {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #007bff;
+      }
+      .distance-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+      .distance-card {
+        background: white;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+      .distance-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .error {
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📐 Visualizador de Pontos Topográficos</h1>
+
+      <div class="input-section">
+        <label for="csvData"><strong>Cole os dados CSV aqui:</strong></label>
+        <textarea
+          id="csvData"
+          placeholder="Cole aqui os dados CSV com as colunas: Name,Code,Lat,Long,H_GEO,H_ORTO,x,y"
+        ></textarea>
+        <button onclick="processData()">🔄 Processar e Visualizar</button>
+      </div>
+
+      <div class="visualization">
+        <canvas id="canvas" width="800" height="600"></canvas>
+      </div>
+
+      <div id="infoPanel" class="info-panel" style="display: none">
+        <h3>📊 Informações das Distâncias</h3>
+        <div id="distanceInfo" class="distance-info"></div>
+      </div>
+
+      <div id="errorMsg"></div>
+    </div>
+
+    <script>
+      function parseCSV(csvText) {
+        const lines = csvText.trim().split("\n");
+        const headers = lines[0].split(",").map((h) => h.trim());
+        const data = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].trim() === "") continue; // pular linhas vazias
+
+          const values = lines[i].split(",");
+          const row = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index]?.trim() || "";
+          });
+          data.push(row);
+        }
+        return data;
+      }
+
+      function calculateDistance(point1, point2) {
+        const x1 = parseFloat(point1.x);
+        const y1 = parseFloat(point1.y);
+        const x2 = parseFloat(point2.x);
+        const y2 = parseFloat(point2.y);
+
+        console.log(
+          `Calculando distância entre:`,
+          `P1(${x1}, ${y1}) e P2(${x2}, ${y2})`
+        );
+
+        // Converter coordenadas geográficas para metros
+        // 1 grau de latitude ≈ 111.320 km
+        // 1 grau de longitude ≈ 111.320 km * cos(latitude)
+        const lat1Rad = (y1 * Math.PI) / 180;
+        const lat2Rad = (y2 * Math.PI) / 180;
+        const avgLatRad = (lat1Rad + lat2Rad) / 2;
+
+        const deltaLat = y2 - y1;
+        const deltaLon = x2 - x1;
+
+        // Conversão para metros
+        const deltaLatM = deltaLat * 111320; // metros por grau de latitude
+        const deltaLonM = deltaLon * 111320 * Math.cos(avgLatRad); // metros por grau de longitude
+
+        const distance = Math.sqrt(
+          deltaLatM * deltaLatM + deltaLonM * deltaLonM
+        );
+
+        console.log(
+          `Diferenças: dx=${deltaLon}° (${deltaLonM.toFixed(
+            3
+          )}m), dy=${deltaLat}° (${deltaLatM.toFixed(
+            3
+          )}m), distância=${distance.toFixed(3)}m`
+        );
+
+        return distance;
+      }
+
+      function findPoints(data) {
+        const points = {};
+        data.forEach((row, index) => {
+          const name = row.Name || row.Code || "";
+          const code = row.Code || row.Name || "";
+
+          console.log(`Linha ${index}: Name="${name}", Code="${code}"`);
+
+          // Procurar pelos códigos específicos nos dados
+          if (
+            code.includes("LD_INICIO_OAE") ||
+            code.includes("LE_INICIO_OAE") ||
+            code.includes("LD_FINAL_OAE") ||
+            code.includes("LE_FINAL_OAE") ||
+            name.includes("LD_INICIO") ||
+            name.includes("LE_INICIO") ||
+            name.includes("LD_FINAL") ||
+            name.includes("LE_FINAL")
+          ) {
+            const pointData = {
+              x: parseFloat(row.x),
+              y: parseFloat(row.y),
+              lat: parseFloat(row.Lat),
+              long: parseFloat(row.Long),
+              name: name,
+              code: code,
+            };
+
+            console.log(`Ponto encontrado: ${code}`, pointData);
+            points[code] = pointData;
+          }
+        });
+        return points;
+      }
+
+      function drawVisualization(points) {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Limpar canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Encontrar limites para escala
+        const coords = Object.values(points);
+        if (coords.length === 0) return;
+
+        const minX = Math.min(...coords.map((p) => p.x));
+        const maxX = Math.max(...coords.map((p) => p.x));
+        const minY = Math.min(...coords.map((p) => p.y));
+        const maxY = Math.max(...coords.map((p) => p.y));
+
+        // Margens
+        const margin = 50;
+        const scaleX = (canvas.width - 2 * margin) / (maxX - minX);
+        const scaleY = (canvas.height - 2 * margin) / (maxY - minY);
+        const scale = Math.min(scaleX, scaleY);
+
+        // Centralizar
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const dataWidth = (maxX - minX) * scale;
+        const dataHeight = (maxY - minY) * scale;
+
+        function toCanvasCoords(point) {
+          return {
+            x: centerX - dataWidth / 2 + (point.x - minX) * scale,
+            y: centerY + dataHeight / 2 - (point.y - minY) * scale,
+          };
+        }
+
+        // Identificar pontos específicos pelos códigos
+        const ldInicio = Object.values(points).find(
+          (p) =>
+            p.code.includes("LD_INICIO_OAE") || p.name.includes("LD_INICIO")
+        );
+        const leInicio = Object.values(points).find(
+          (p) =>
+            p.code.includes("LE_INICIO_OAE") || p.name.includes("LE_INICIO")
+        );
+        const ldFinal = Object.values(points).find(
+          (p) => p.code.includes("LD_FINAL_OAE") || p.name.includes("LD_FINAL")
+        );
+        const leFinal = Object.values(points).find(
+          (p) => p.code.includes("LE_FINAL_OAE") || p.name.includes("LE_FINAL")
+        );
+
+        console.log("Pontos identificados:");
+        console.log("LD Início:", ldInicio);
+        console.log("LE Início:", leInicio);
+        console.log("LD Final:", ldFinal);
+        console.log("LE Final:", leFinal);
+
+        if (!ldInicio || !leInicio || !ldFinal || !leFinal) {
+          console.log("Pontos encontrados:", Object.keys(points));
+          document.getElementById("errorMsg").innerHTML =
+            '<div class="error">⚠️ Não foram encontrados todos os pontos necessários. Pontos encontrados: ' +
+            Object.keys(points).join(", ") +
+            "</div>";
+          return;
+        }
+
+        // Converter para coordenadas do canvas
+        const ldInicioCanvas = toCanvasCoords(ldInicio);
+        const leInicioCanvas = toCanvasCoords(leInicio);
+        const ldFinalCanvas = toCanvasCoords(ldFinal);
+        const leFinalCanvas = toCanvasCoords(leFinal);
+
+        // Desenhar retângulo
+        ctx.strokeStyle = "#007bff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ldInicioCanvas.x, ldInicioCanvas.y);
+        ctx.lineTo(leInicioCanvas.x, leInicioCanvas.y);
+        ctx.lineTo(leFinalCanvas.x, leFinalCanvas.y);
+        ctx.lineTo(ldFinalCanvas.x, ldFinalCanvas.y);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Preencher retângulo com transparência
+        ctx.fillStyle = "rgba(0, 123, 255, 0.1)";
+        ctx.fill();
+
+        // Desenhar pontos
+        const pointData = [
+          {
+            point: ldInicio,
+            canvas: ldInicioCanvas,
+            color: "#dc3545",
+            label: "LD INÍCIO",
+          },
+          {
+            point: leInicio,
+            canvas: leInicioCanvas,
+            color: "#28a745",
+            label: "LE INÍCIO",
+          },
+          {
+            point: ldFinal,
+            canvas: ldFinalCanvas,
+            color: "#dc3545",
+            label: "LD FINAL",
+          },
+          {
+            point: leFinal,
+            canvas: leFinalCanvas,
+            color: "#28a745",
+            label: "LE FINAL",
+          },
+        ];
+
+        pointData.forEach(({ canvas, color, label }) => {
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(canvas.x, canvas.y, 6, 0, 2 * Math.PI);
+          ctx.fill();
+
+          // Label do ponto
+          ctx.fillStyle = "#333";
+          ctx.font = "12px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(label, canvas.x, canvas.y - 15);
+        });
+
+        // Calcular e mostrar distâncias
+        console.log("Calculando distâncias...");
+        const distInicio = calculateDistance(ldInicio, leInicio);
+        const distFinal = calculateDistance(ldFinal, leFinal);
+        const distLD = calculateDistance(ldInicio, ldFinal);
+        const distLE = calculateDistance(leInicio, leFinal);
+
+        console.log("Distâncias calculadas:");
+        console.log(`Largura início: ${distInicio}`);
+        console.log(`Largura final: ${distFinal}`);
+        console.log(`Comprimento LD: ${distLD}`);
+        console.log(`Comprimento LE: ${distLE}`);
+
+        // Desenhar linhas de distância e labels
+        const distances = [
+          {
+            start: ldInicioCanvas,
+            end: leInicioCanvas,
+            dist: distInicio,
+            label: `${distInicio.toFixed(3)}m`,
+            color: "#ffc107",
+          },
+          {
+            start: ldFinalCanvas,
+            end: leFinalCanvas,
+            dist: distFinal,
+            label: `${distFinal.toFixed(3)}m`,
+            color: "#ffc107",
+          },
+          {
+            start: ldInicioCanvas,
+            end: ldFinalCanvas,
+            dist: distLD,
+            label: `${distLD.toFixed(3)}m`,
+            color: "#17a2b8",
+          },
+          {
+            start: leInicioCanvas,
+            end: leFinalCanvas,
+            dist: distLE,
+            label: `${distLE.toFixed(3)}m`,
+            color: "#17a2b8",
+          },
+        ];
+
+        distances.forEach(({ start, end, label, color }) => {
+          const midX = (start.x + end.x) / 2;
+          const midY = (start.y + end.y) / 2;
+
+          // Linha pontilhada
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(end.x, end.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Label da distância
+          ctx.fillStyle = color;
+          ctx.font = "bold 11px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(label, midX, midY);
+        });
+
+        // Mostrar informações das distâncias
+        showDistanceInfo(distInicio, distFinal, distLD, distLE);
+      }
+
+      function showDistanceInfo(distInicio, distFinal, distLD, distLE) {
+        const infoPanel = document.getElementById("infoPanel");
+        const distanceInfo = document.getElementById("distanceInfo");
+
+        // Calcular médias
+        const mediaLargura = (distInicio + distFinal) / 2;
+        const mediaComprimento = (distLD + distLE) / 2;
+
+        distanceInfo.innerHTML = `
+                <div class="distance-card">
+                    <div>Largura Início</div>
+                    <div class="distance-value">${distInicio.toFixed(3)} m</div>
+                    <small>LD_INÍCIO ↔ LE_INÍCIO</small>
+                </div>
+                <div class="distance-card">
+                    <div>Largura Final</div>
+                    <div class="distance-value">${distFinal.toFixed(3)} m</div>
+                    <small>LD_FINAL ↔ LE_FINAL</small>
+                </div>
+                <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #9c27b0;">
+                    <div><strong>📏 Média da Largura</strong></div>
+                    <div class="distance-value" style="color: #9c27b0;">${mediaLargura.toFixed(
+                      3
+                    )} m</div>
+                    <small>(Início + Final) ÷ 2</small>
+                </div>
+                <div class="distance-card">
+                    <div>Comprimento LD</div>
+                    <div class="distance-value">${distLD.toFixed(3)} m</div>
+                    <small>LD_INÍCIO ↔ LD_FINAL</small>
+                </div>
+                <div class="distance-card">
+                    <div>Comprimento LE</div>
+                    <div class="distance-value">${distLE.toFixed(3)} m</div>
+                    <small>LE_INÍCIO ↔ LE_FINAL</small>
+                </div>
+                <div class="distance-card" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #ff9800;">
+                    <div><strong>📐 Média do Comprimento</strong></div>
+                    <div class="distance-value" style="color: #ff9800;">${mediaComprimento.toFixed(
+                      3
+                    )} m</div>
+                    <small>(LD + LE) ÷ 2</small>
+                </div>
+            `;
+
+        infoPanel.style.display = "block";
+      }
+
+      function processData() {
+        const csvData = document.getElementById("csvData").value;
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.innerHTML = "";
+
+        if (!csvData.trim()) {
+          errorMsg.innerHTML =
+            '<div class="error">⚠️ Por favor, cole os dados CSV!</div>';
+          return;
+        }
+
+        try {
+          const data = parseCSV(csvData);
+          console.log("Dados parseados detalhados:");
+          data.forEach((row, i) => {
+            console.log(`Linha ${i}:`, row);
+          });
+
+          const points = findPoints(data);
+          console.log("Pontos encontrados detalhados:");
+          Object.entries(points).forEach(([key, point]) => {
+            console.log(`${key}:`, point);
+          });
+
+          if (Object.keys(points).length === 0) {
+            errorMsg.innerHTML =
+              '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado nos dados!</div>';
+            return;
+          }
+
+          drawVisualization(points);
+        } catch (error) {
+          console.error("Erro:", error);
+          errorMsg.innerHTML = `<div class="error">❌ Erro ao processar dados: ${error.message}</div>`;
+        }
+      }
+
+      // Pré-carregar dados de exemplo
+      window.onload = function () {
+        const exampleData = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
+05,MONTESQ,-9.8679095,-36.140952,101.93603,110.7473614,-36.140952061439414,-9.867909502332084
+06,MONTDIR,-9.86794794,-36.1410522,102.22134,111.0326069,-36.1410522012943,-9.86794794608721
+P-02,LD_INICIO_OAE,-9.86834395,-36.1408952,102.30937,111.1214735,-36.14089522705659,-9.868343956247095
+P-01,LE_INICIO_OAE,-9.86830693,-36.1408011,102.14289,110.9550518,-36.140801122569556,-9.868306930582875
+P-03,LE_FINAL_OAE,-9.86843311,-36.1407508,102.1309,110.9433278,-36.14075082658415,-9.868433110094328
+P-04,LD_FINAL_OAE,-9.86847107,-36.1408461,102.27192,111.0842897,-36.14084618801685,-9.868471077900253
+07,JUSDIR,-9.86866253,-36.1407698,102.23498,111.0477531,-36.1407698487776,-9.868662533612165
+08,JUSESQ,-9.86862386,-36.1406702,101.95261,110.7654449,-36.14067023183168,-9.868623861270203`;
+
+        document.getElementById("csvData").value = exampleData;
+        processData();
+      };
+    </script>
+  </body>
+</html>
