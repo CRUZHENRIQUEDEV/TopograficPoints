@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visualizador Duplo de Pontos Topográficos</title>
+    <title>Analisador de Elevação e Inclinação de Tabuleiros de Ponte</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -177,6 +177,16 @@
         color: #007bff;
       }
       
+      .elevation-value {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      
+      .inclination-value {
+        font-size: 14px;
+        font-weight: bold;
+      }
+      
       .cross-distance-card {
         background: linear-gradient(135deg, #fff3e0, #e8f5e8);
         border: 2px solid #ff9800;
@@ -184,6 +194,21 @@
       
       .cross-distance-value {
         color: #ff9800;
+      }
+      
+      .elevation-analysis-card {
+        background: linear-gradient(135deg, #e8f5e8, #f3e5f5);
+        border: 2px solid #4caf50;
+      }
+      
+      .warning-card {
+        background: linear-gradient(135deg, #fff3e0, #ffebee);
+        border: 2px solid #ff5722;
+      }
+      
+      .good-card {
+        background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
+        border: 2px solid #4caf50;
       }
       
       .error {
@@ -237,11 +262,41 @@
         grid-column: 1 / -1;
         text-align: center;
       }
+      
+      .elevation-section {
+        background: linear-gradient(135deg, #e8f5e8, #f3e5f5);
+        border: 2px solid #4caf50;
+        margin: 15px 0 5px 0;
+        grid-column: 1 / -1;
+        text-align: center;
+      }
+      
+      .legend {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        font-size: 12px;
+      }
+      
+      .legend-item {
+        display: inline-block;
+        margin: 0 10px;
+      }
+      
+      .legend-color {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>📐 Visualizador Duplo de Pontos Topográficos</h1>
+      <h1>🌉 Analisador de Elevação e Inclinação de Tabuleiros de Ponte</h1>
 
       <div class="input-section">
         <!-- CSV 1 -->
@@ -282,13 +337,33 @@
           <button onclick="zoomOut()" style="background: #6c757d;">
             🔍-
           </button>
-          <span id="zoomLevel">Zoom: 150%</span>
+          <span id="zoomLevel">Zoom: 200%</span>
           <button onclick="zoomIn()" style="background: #6c757d;">
             🔍+
           </button>
           <button onclick="resetZoom()" style="background: #17a2b8; margin-left: 10px;">
             ↻ Reset
           </button>
+        </div>
+      </div>
+
+      <div class="legend">
+        <strong>🎨 Legenda de Cores (Elevação):</strong>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #4caf50;"></span>
+          <span>Elevação Baixa</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #ffeb3b;"></span>
+          <span>Elevação Média</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #ff9800;"></span>
+          <span>Elevação Alta</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #f44336;"></span>
+          <span>Elevação Muito Alta</span>
         </div>
       </div>
 
@@ -309,7 +384,7 @@
 
     <script>
       // Variáveis globais para zoom e dados
-      let currentZoom = 1.0;
+      let currentZoom = 2.0; // Zoom padrão 200%
       let currentPoints1 = {};
       let currentPoints2 = {};
       
@@ -345,19 +420,19 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
       // Funções de zoom
       function zoomIn() {
-        currentZoom = Math.min(currentZoom * 1.2, 3.0); // Máximo 300%
+        currentZoom = Math.min(currentZoom * 1.2, 3.0);
         updateZoomDisplay();
         redrawVisualization();
       }
       
       function zoomOut() {
-        currentZoom = Math.max(currentZoom / 1.2, 0.3); // Mínimo 30%
+        currentZoom = Math.max(currentZoom / 1.2, 0.3);
         updateZoomDisplay();
         redrawVisualization();
       }
       
       function resetZoom() {
-        currentZoom = 1.0;
+        currentZoom = 2.0; // Reset para zoom padrão 200%
         updateZoomDisplay();
         redrawVisualization();
       }
@@ -380,7 +455,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         document.getElementById('errorMsg').innerHTML = '';
         
         // Limpar dados de zoom
-        currentZoom = 1.0;
+        currentZoom = 2.0; // Zoom padrão 200%
         currentPoints1 = {};
         currentPoints2 = {};
         updateZoomDisplay();
@@ -398,7 +473,6 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         let headers;
         let dataStartIndex = 0;
 
-        // Detectar se primeira linha são headers ou dados
         if (
           firstLine.includes("Name") ||
           firstLine.includes("Code") ||
@@ -407,20 +481,16 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           firstLine.includes("x") ||
           firstLine.includes("y")
         ) {
-          // Primeira linha são headers
           headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ''));
           dataStartIndex = 1;
         } else {
-          // Assumir formato sem headers: [índice, y, x, altura, nome]
           headers = ["0", "1", "2", "3", "4"];
           dataStartIndex = 0;
         }
 
-        console.log("Headers detectados:", headers);
-
         const data = [];
         for (let i = dataStartIndex; i < lines.length; i++) {
-          if (lines[i].trim() === "") continue; // pular linhas vazias
+          if (lines[i].trim() === "") continue;
 
           const values = lines[i].split(",");
           const row = {};
@@ -438,58 +508,67 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         const x2 = parseFloat(point2.x);
         const y2 = parseFloat(point2.y);
 
-        console.log(
-          `Calculando distância entre:`,
-          `P1(${x1}, ${y1}) e P2(${x2}, ${y2})`
-        );
-
         const deltaX = x2 - x1;
         const deltaY = y2 - y1;
 
-        // Detectar se coordenadas estão em graus (lat/long) ou metros (UTM)
-        const isGeographic =
-          Math.abs(x1) < 180 &&
-          Math.abs(y1) < 90 &&
-          Math.abs(x2) < 180 &&
-          Math.abs(y2) < 90;
-
         let distance;
 
-        if (isGeographic) {
-          console.log(
-            "Coordenadas geográficas detectadas - convertendo para metros"
-          );
-          // Converter coordenadas geográficas para metros
+        if ((point1.coordType === 'UTM' && point2.coordType === 'UTM') || 
+            (point1.coordType === 'PLANE' && point2.coordType === 'PLANE')) {
+          distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        } 
+        else if ((point1.coordType === 'GEO' && point2.coordType === 'GEO') ||
+                 (Math.abs(x1) < 180 && Math.abs(y1) < 90 && Math.abs(x2) < 180 && Math.abs(y2) < 90)) {
           const lat1Rad = (y1 * Math.PI) / 180;
           const lat2Rad = (y2 * Math.PI) / 180;
           const avgLatRad = (lat1Rad + lat2Rad) / 2;
 
-          // Conversão para metros
-          const deltaLatM = deltaY * 111320; // metros por grau de latitude
-          const deltaLonM = deltaX * 111320 * Math.cos(avgLatRad); // metros por grau de longitude
+          const deltaLatM = deltaY * 111320;
+          const deltaLonM = deltaX * 111320 * Math.cos(avgLatRad);
 
           distance = Math.sqrt(deltaLatM * deltaLatM + deltaLonM * deltaLonM);
-          console.log(
-            `Diferenças: dx=${deltaX}° (${deltaLonM.toFixed(
-              3
-            )}m), dy=${deltaY}° (${deltaLatM.toFixed(
-              3
-            )}m), distância=${distance.toFixed(3)}m`
-          );
-        } else {
-          console.log(
-            "Coordenadas planas/UTM detectadas - cálculo direto em metros"
-          );
-          // Coordenadas já estão em metros (UTM ou sistema local)
+        }
+        else {
           distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-          console.log(
-            `Diferenças: dx=${deltaX.toFixed(3)}m, dy=${deltaY.toFixed(
-              3
-            )}m, distância=${distance.toFixed(3)}m`
-          );
         }
 
         return distance;
+      }
+
+      // Nova função para calcular diferença de elevação
+      function calculateElevationDifference(point1, point2) {
+        const elev1 = parseFloat(point1.elevation);
+        const elev2 = parseFloat(point2.elevation);
+        return elev2 - elev1; // Positivo se point2 é mais alto
+      }
+
+      // Nova função para calcular inclinação
+      function calculateInclination(point1, point2) {
+        const distance = calculateDistance(point1, point2);
+        const elevationDiff = calculateElevationDifference(point1, point2);
+        
+        if (distance === 0) return { percentage: 0, degrees: 0, ratio: "0:1" };
+        
+        const percentage = (Math.abs(elevationDiff) / distance) * 100;
+        const degrees = Math.atan(Math.abs(elevationDiff) / distance) * (180 / Math.PI);
+        const ratio = `1:${(distance / Math.abs(elevationDiff)).toFixed(1)}`;
+        
+        return { 
+          percentage: percentage, 
+          degrees: degrees, 
+          ratio: ratio,
+          direction: elevationDiff > 0 ? "↗️ Subida" : elevationDiff < 0 ? "↘️ Descida" : "➡️ Nivelado"
+        };
+      }
+
+      // Função para obter cor baseada na elevação
+      function getElevationColor(elevation, minElev, maxElev) {
+        const normalized = (elevation - minElev) / (maxElev - minElev);
+        
+        if (normalized < 0.25) return "#4caf50"; // Verde - baixo
+        else if (normalized < 0.5) return "#ffeb3b"; // Amarelo - médio
+        else if (normalized < 0.75) return "#ff9800"; // Laranja - alto
+        else return "#f44336"; // Vermelho - muito alto
       }
 
       function findPoints(data) {
@@ -498,9 +577,6 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const name = row.Name || row.Code || row["4"] || "";
           const code = row.Code || row.Name || row["4"] || "";
 
-          console.log(`Linha ${index}: Name="${name}", Code="${code}"`);
-
-          // Procurar pelos códigos específicos nos dados
           if (
             code.includes("LD_INICIO_OAE") ||
             code.includes("LE_INICIO_OAE") ||
@@ -511,39 +587,43 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             name.includes("LD_FINAL_OAE") ||
             name.includes("LE_FINAL_OAE")
           ) {
-            // Detectar formato dos dados
-            let xCoord, yCoord;
+            let xCoord, yCoord, elevation;
 
-            if (row.x && row.y) {
-              // Formato original com headers x,y
+            if (row.Northing && row.Easting) {
+              xCoord = parseFloat(row.Easting);
+              yCoord = parseFloat(row.Northing);
+            }
+            else if (row.x && row.y) {
               xCoord = parseFloat(row.x);
               yCoord = parseFloat(row.y);
-            } else if (row.Long && row.Lat) {
-              // Usar Lat/Long se x,y não estiverem disponíveis
+            }
+            else if (row.Long && row.Lat) {
               xCoord = parseFloat(row.Long);
               yCoord = parseFloat(row.Lat);
             }
 
+            elevation = parseFloat(row.Elevation) || parseFloat(row.H_GEO) || parseFloat(row.H_ORTO) || parseFloat(row.Altura) || parseFloat(row.Z) || 0;
+
             const pointData = {
               x: xCoord,
               y: yCoord,
+              elevation: elevation,
               lat: parseFloat(row.Lat) || yCoord,
               long: parseFloat(row.Long) || xCoord,
+              easting: parseFloat(row.Easting) || xCoord,
+              northing: parseFloat(row.Northing) || yCoord,
               name: name || code,
               code: code || name,
               originalName: name,
               originalCode: code,
+              coordType: row.Northing && row.Easting ? 'UTM' : (Math.abs(xCoord) < 180 && Math.abs(yCoord) < 90 ? 'GEO' : 'PLANE')
             };
-
-            console.log(`Ponto encontrado: ${code || name}`, pointData);
             
-            // Usar tanto code quanto name como chave para garantir que encontremos
             if (code) points[code] = pointData;
             if (name && name !== code) points[name] = pointData;
           }
         });
         
-        console.log("Todos os pontos encontrados:", Object.keys(points));
         return points;
       }
 
@@ -551,10 +631,8 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
 
-        // Limpar canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Combinar todos os pontos para calcular escala
         const allPoints = {...points1, ...points2};
         const coords = Object.values(allPoints);
         if (coords.length === 0) return;
@@ -563,16 +641,17 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         const maxX = Math.max(...coords.map((p) => p.x));
         const minY = Math.min(...coords.map((p) => p.y));
         const maxY = Math.max(...coords.map((p) => p.y));
+        
+        // Para cores de elevação
+        const minElev = Math.min(...coords.map((p) => p.elevation));
+        const maxElev = Math.max(...coords.map((p) => p.elevation));
 
-        // Margens muito maiores para garantir que nunca corte
         const margin = 120;
         const scaleX = (canvas.width - 2 * margin) / (maxX - minX);
         const scaleY = (canvas.height - 2 * margin) / (maxY - minY);
-        // Reduzir escala drasticamente e aplicar zoom atual
         const scaleFactor = Object.keys(points2).length > 0 ? 0.15 : 0.25;
         const scale = Math.min(scaleX, scaleY) * scaleFactor * currentZoom;
 
-        // Centralizar
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const dataWidth = (maxX - minX) * scale;
@@ -585,11 +664,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           };
         }
 
-        // Função para desenhar uma estrutura
         function drawStructure(points, color, label) {
-          console.log(`Desenhando estrutura ${label}, pontos disponíveis:`, Object.keys(points));
-          
-          // Busca mais robusta para os pontos
           const ldInicio = Object.values(points).find(p => 
             p.code.includes("LD_INICIO_OAE") || 
             p.name.includes("LD_INICIO_OAE") ||
@@ -618,18 +693,10 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             p.originalName.includes("LE_FINAL_OAE")
           );
 
-          console.log(`Estrutura ${label} - Pontos encontrados:`);
-          console.log("LD_INICIO_OAE:", ldInicio);
-          console.log("LE_INICIO_OAE:", leInicio);
-          console.log("LD_FINAL_OAE:", ldFinal);
-          console.log("LE_FINAL_OAE:", leFinal);
-
           if (!ldInicio || !leInicio || !ldFinal || !leFinal) {
-            console.log(`Estrutura ${label} incompleta, pontos faltando`);
             return null;
           }
 
-          // Converter para coordenadas do canvas
           const ldInicioCanvas = toCanvasCoords(ldInicio);
           const leInicioCanvas = toCanvasCoords(leInicio);
           const ldFinalCanvas = toCanvasCoords(ldFinal);
@@ -658,53 +725,57 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           }
           ctx.fill();
 
-          // Desenhar pontos
+          // Desenhar pontos com cores baseadas na elevação
           const pointData = [
-            { canvas: ldInicioCanvas, color: "#dc3545", label: `LD_INICIO_OAE ${label}` },
-            { canvas: leInicioCanvas, color: "#28a745", label: `LE_INICIO_OAE${label}` },
-            { canvas: ldFinalCanvas, color: "#dc3545", label: `LD_FINAL_OAE ${label}` },
-            { canvas: leFinalCanvas, color: "#28a745", label: `LE_FINAL_OAE ${label}` },
+            { point: ldInicio, canvas: ldInicioCanvas, baseColor: "#dc3545", label: `LD INÍCIO ${label}` },
+            { point: leInicio, canvas: leInicioCanvas, baseColor: "#28a745", label: `LE INÍCIO ${label}` },
+            { point: ldFinal, canvas: ldFinalCanvas, baseColor: "#dc3545", label: `LD FINAL ${label}` },
+            { point: leFinal, canvas: leFinalCanvas, baseColor: "#28a745", label: `LE FINAL ${label}` },
           ];
 
-          pointData.forEach(({ canvas, color, label }) => {
-            ctx.fillStyle = color;
+          pointData.forEach(({ point, canvas, baseColor, label }) => {
+            // Cor baseada na elevação
+            const elevationColor = getElevationColor(point.elevation, minElev, maxElev);
+            
+            // Desenhar círculo externo (base)
+            ctx.fillStyle = baseColor;
             ctx.beginPath();
-            // Tamanho do ponto ajustado pelo zoom
-            const pointRadius = Math.max(2, 3 * currentZoom);
+            const pointRadius = Math.max(3, 4 * currentZoom);
             ctx.arc(canvas.x, canvas.y, pointRadius, 0, 2 * Math.PI);
             ctx.fill();
+            
+            // Desenhar círculo interno (elevação)
+            ctx.fillStyle = elevationColor;
+            ctx.beginPath();
+            ctx.arc(canvas.x, canvas.y, pointRadius * 0.7, 0, 2 * Math.PI);
+            ctx.fill();
 
-            // Label do ponto com tamanho ajustado pelo zoom
+            // Label do ponto
             ctx.fillStyle = "#333";
             const fontSize = Math.max(6, 8 * currentZoom);
             ctx.font = `${fontSize}px Arial`;
             ctx.textAlign = "center";
-            const labelOffset = Math.max(8, 10 * currentZoom);
+            const labelOffset = Math.max(8, 12 * currentZoom);
             ctx.fillText(label, canvas.x, canvas.y - labelOffset);
+            
+            // Mostrar elevação
+            ctx.fillStyle = "#666";
+            const elevFontSize = Math.max(5, 7 * currentZoom);
+            ctx.font = `${elevFontSize}px Arial`;
+            ctx.fillText(`${point.elevation.toFixed(3)}m`, canvas.x, canvas.y + labelOffset + 8);
           });
 
           return { ldInicio, leInicio, ldFinal, leFinal };
         }
 
-        // Desenhar primeira estrutura
         const struct1 = drawStructure(points1, "#007bff", "(1)");
-        
-        // Desenhar segunda estrutura se existir
         const struct2 = Object.keys(points2).length > 0 ? drawStructure(points2, "#e91e63", "(2)") : null;
 
-        // Desenhar linha de conexão APÓS ambas as estruturas
+        // Desenhar linha de conexão
         if (struct1 && struct2) {
-          console.log("=== DESENHANDO LINHA DE CONEXÃO ===");
-          console.log("Struct1 LE_INICIO:", struct1.leInicio);
-          console.log("Struct2 LD_INICIO:", struct2.ldInicio);
-          
           const leInicio1Canvas = toCanvasCoords(struct1.leInicio);
           const ldInicio2Canvas = toCanvasCoords(struct2.ldInicio);
-          
-          console.log("Canvas coords - LE(1):", leInicio1Canvas);
-          console.log("Canvas coords - LD(2):", ldInicio2Canvas);
 
-          // Linha pontilhada conectando as estruturas
           ctx.strokeStyle = "#ff9800";
           const lineWidth = Math.max(2, 3 * currentZoom);
           ctx.lineWidth = lineWidth;
@@ -716,38 +787,27 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ctx.stroke();
           ctx.setLineDash([]);
 
-          console.log("Linha desenhada de:", leInicio1Canvas, "para:", ldInicio2Canvas);
-
-          // Label da distância na linha
           const midX = (leInicio1Canvas.x + ldInicio2Canvas.x) / 2;
           const midY = (leInicio1Canvas.y + ldInicio2Canvas.y) / 2;
           const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
           
-          // Fundo branco para o texto ficar mais visível
           const textWidth = 60;
           const textHeight = 20;
           ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
           ctx.fillRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight);
           
-          // Borda do fundo
           ctx.strokeStyle = "#ff9800";
           ctx.lineWidth = 1;
           ctx.strokeRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight);
           
-          // Texto da distância
           ctx.fillStyle = "#ff9800";
           const crossFontSize = Math.max(10, 12 * currentZoom);
           ctx.font = `bold ${crossFontSize}px Arial`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(`${crossDistance.toFixed(3)}m`, midX, midY);
-          
-          console.log(`=== LINHA CONCLUÍDA: ${crossDistance.toFixed(3)}m ===`);
-        } else {
-          console.log("Linha não desenhada - estruturas:", !!struct1, !!struct2);
         }
 
-        // Calcular e mostrar informações
         showDistanceInfo(struct1, struct2);
       }
 
@@ -759,7 +819,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
         let html = '';
 
-        // Informações da primeira estrutura
+        // Cálculos estrutura 1
         const dist1Inicio = calculateDistance(struct1.ldInicio, struct1.leInicio);
         const dist1Final = calculateDistance(struct1.ldFinal, struct1.leFinal);
         const dist1LD = calculateDistance(struct1.ldInicio, struct1.ldFinal);
@@ -767,7 +827,26 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         const media1Largura = (dist1Inicio + dist1Final) / 2;
         const media1Comprimento = (dist1LD + dist1LE) / 2;
 
-        // ANÁLISE COMPARATIVA PRIMEIRO
+        // ANÁLISES DE ELEVAÇÃO ESTRUTURA 1
+        const elev1_LD_LE_Inicio = calculateElevationDifference(struct1.ldInicio, struct1.leInicio);
+        const elev1_LD_LE_Final = calculateElevationDifference(struct1.ldFinal, struct1.leFinal);
+        const elev1_Inicio_Final_LD = calculateElevationDifference(struct1.ldInicio, struct1.ldFinal);
+        const elev1_Inicio_Final_LE = calculateElevationDifference(struct1.leInicio, struct1.leFinal);
+
+        // INCLINAÇÕES ESTRUTURA 1
+        const incl1_LD_LE_Inicio = calculateInclination(struct1.ldInicio, struct1.leInicio);
+        const incl1_LD_LE_Final = calculateInclination(struct1.ldFinal, struct1.leFinal);
+        const incl1_Inicio_Final_LD = calculateInclination(struct1.ldInicio, struct1.ldFinal);
+        const incl1_Inicio_Final_LE = calculateInclination(struct1.leInicio, struct1.leFinal);
+
+        // Função para determinar se inclinações são problemáticas
+        function getInclinationStatus(inclination) {
+          if (inclination.percentage > 5) return { class: "warning-card", icon: "⚠️", text: "Alta" };
+          else if (inclination.percentage > 2) return { class: "distance-card", icon: "🔶", text: "Moderada" };
+          else return { class: "good-card", icon: "✅", text: "Boa" };
+        }
+
+        // ANÁLISE COMPARATIVA PRIMEIRO se tiver 2 estruturas
         if (struct2) {
           const dist2Inicio = calculateDistance(struct2.ldInicio, struct2.leInicio);
           const dist2Final = calculateDistance(struct2.ldFinal, struct2.leFinal);
@@ -776,22 +855,33 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const media2Largura = (dist2Inicio + dist2Final) / 2;
           const media2Comprimento = (dist2LD + dist2LE) / 2;
 
-          // Análises comparativas
+          // ANÁLISES ENTRE ESTRUTURAS
           const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
+          const crossElevation = calculateElevationDifference(struct1.leInicio, struct2.ldInicio);
+          const crossInclination = calculateInclination(struct1.leInicio, struct2.ldInicio);
+          
+          // Análises comparativas
           const diferencaLargura = Math.abs(media1Largura - media2Largura);
           const diferencaComprimento = Math.abs(media1Comprimento - media2Comprimento);
           
           // Médias gerais entre as duas estruturas
           const mediaGeralLargura = (media1Largura + media2Largura) / 2;
           const mediaGeralComprimento = (media1Comprimento + media2Comprimento) / 2;
-          
+
+          // Cálculos estrutura 2 para elevação
+          const elev2_LD_LE_Inicio = calculateElevationDifference(struct2.ldInicio, struct2.leInicio);
+          const elev2_LD_LE_Final = calculateElevationDifference(struct2.ldFinal, struct2.leFinal);
+          const elev2_Inicio_Final_LD = calculateElevationDifference(struct2.ldInicio, struct2.ldFinal);
+          const elev2_Inicio_Final_LE = calculateElevationDifference(struct2.leInicio, struct2.leFinal);
+
+          const incl2_LD_LE_Inicio = calculateInclination(struct2.ldInicio, struct2.leInicio);
+          const incl2_LD_LE_Final = calculateInclination(struct2.ldFinal, struct2.leFinal);
+          const incl2_Inicio_Final_LD = calculateInclination(struct2.ldInicio, struct2.ldFinal);
+          const incl2_Inicio_Final_LE = calculateInclination(struct2.leInicio, struct2.leFinal);
+
           // Calcular distâncias X e Y
           let deltaX = 0;
           let deltaY = 0;
-          
-          console.log("Calculando distâncias X e Y:");
-          console.log("struct1.leInicio:", struct1.leInicio);
-          console.log("struct2.ldInicio:", struct2.ldInicio);
           
           if (struct1.leInicio && struct2.ldInicio) {
             const x1 = parseFloat(struct1.leInicio.x);
@@ -799,49 +889,51 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             const x2 = parseFloat(struct2.ldInicio.x);
             const y2 = parseFloat(struct2.ldInicio.y);
             
-            console.log(`Coordenadas: P1(${x1}, ${y1}) -> P2(${x2}, ${y2})`);
-            
             if (!isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
               deltaX = Math.abs(x2 - x1);
               deltaY = Math.abs(y2 - y1);
               
-              console.log(`Deltas antes da conversão: X=${deltaX}, Y=${deltaY}`);
-              
-              const isGeographic = Math.abs(x1) < 180 && Math.abs(y1) < 90 && Math.abs(x2) < 180 && Math.abs(y2) < 90;
-              
-              if (isGeographic) {
-                console.log("Convertendo coordenadas geográficas para metros");
+              if ((struct1.leInicio.coordType === 'UTM' && struct2.ldInicio.coordType === 'UTM') || 
+                  (struct1.leInicio.coordType === 'PLANE' && struct2.ldInicio.coordType === 'PLANE')) {
+                // deltaX e deltaY já estão em metros
+              }
+              else if ((struct1.leInicio.coordType === 'GEO' && struct2.ldInicio.coordType === 'GEO') ||
+                       (Math.abs(x1) < 180 && Math.abs(y1) < 90 && Math.abs(x2) < 180 && Math.abs(y2) < 90)) {
                 const avgLatRad = ((y1 + y2) / 2 * Math.PI) / 180;
                 deltaX = deltaX * 111320 * Math.cos(avgLatRad);
                 deltaY = deltaY * 111320;
               }
-              
-              console.log(`Distâncias finais: X=${deltaX.toFixed(3)}m, Y=${deltaY.toFixed(3)}m`);
-            } else {
-              console.error("Coordenadas contêm valores NaN");
             }
-          } else {
-            console.error("Pontos struct1.leInicio ou struct2.ldInicio não encontrados");
           }
           
           html += `
             <div class="distance-card cross-section">
-              <div><strong>🔍 ANÁLISE COMPARATIVA</strong></div>
+              <div><strong>🔍 ANÁLISE COMPARATIVA ENTRE ESTRUTURAS</strong></div>
             </div>
             <div class="distance-card cross-distance-card">
-              <div><strong>Distância Entre Estruturas</strong></div>
+              <div><strong>🌉 Distância Entre Estruturas</strong></div>
               <div class="distance-value cross-distance-value">${crossDistance.toFixed(3)} m</div>
-              <small>LE_INICIO_OAE (1) ↔ LD_INICIO_OAE (2)</small>
+              <small>LE_INÍCIO (1) ↔ LD_INÍCIO (2)</small>
+            </div>
+            <div class="distance-card elevation-analysis-card">
+              <div><strong>📏 Diferença de Elevação</strong></div>
+              <div class="elevation-value" style="color: ${crossElevation >= 0 ? '#4caf50' : '#f44336'};">${crossElevation >= 0 ? '+' : ''}${crossElevation.toFixed(3)} m</div>
+              <small>Entre estruturas (LE1→LD2)</small>
+            </div>
+            <div class="distance-card ${getInclinationStatus(crossInclination).class}">
+              <div><strong>${getInclinationStatus(crossInclination).icon} Inclinação Entre Estruturas</strong></div>
+              <div class="inclination-value">${crossInclination.percentage.toFixed(2)}% (${crossInclination.degrees.toFixed(1)}°)</div>
+              <small>${crossInclination.direction} - ${getInclinationStatus(crossInclination).text}</small>
             </div>
             <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
               <div><strong>📐 Distância em X</strong></div>
-              <div class="distance-value" style="color: ${deltaX >= 0 ? '#6c757d' : '#dc3545'};">${deltaX >= 0 ? deltaX.toFixed(3) : 'N/A'} m</div>
-              <small>${deltaX >= 0 ? 'Diferença horizontal' : 'Erro no cálculo'}</small>
+              <div class="distance-value" style="color: #6c757d;">${deltaX.toFixed(3)} m</div>
+              <small>Diferença horizontal</small>
             </div>
             <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
               <div><strong>📐 Distância em Y</strong></div>
-              <div class="distance-value" style="color: ${deltaY >= 0 ? '#6c757d' : '#dc3545'};">${deltaY >= 0 ? deltaY.toFixed(3) : 'N/A'} m</div>
-              <small>${deltaY >= 0 ? 'Diferença vertical' : 'Erro no cálculo'}</small>
+              <div class="distance-value" style="color: #6c757d;">${deltaY.toFixed(3)} m</div>
+              <small>Diferença vertical</small>
             </div>
             <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #9c27b0;">
               <div><strong>📏 Média Geral Largura</strong></div>
@@ -866,21 +958,21 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           `;
         }
 
-        // ESTRUTURA 1
+        // ESTRUTURA 1 - DISTÂNCIAS E ELEVAÇÕES
         html += `
           <div class="section-divider"></div>
           <div class="distance-card structure-section">
-            <div><strong>🏗️ ESTRUTURA 1 (AZUL)</strong></div>
+            <div><strong>🏗️ ESTRUTURA 1 (AZUL) - Dimensões</strong></div>
           </div>
           <div class="distance-card">
-            <div><strong>Largura INICIO_OAE</strong></div>
+            <div><strong>Largura Início</strong></div>
             <div class="distance-value">${dist1Inicio.toFixed(3)} m</div>
-            <small>LD_INICIO_OAE ↔ LE_INICIO_OAE</small>
+            <small>LD_INÍCIO ↔ LE_INÍCIO</small>
           </div>
           <div class="distance-card">
             <div><strong>Largura Final</strong></div>
             <div class="distance-value">${dist1Final.toFixed(3)} m</div>
-            <small>LD_FINAL_OAE ↔ LE_FINAL_OAE</small>
+            <small>LD_FINAL ↔ LE_FINAL</small>
           </div>
           <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #9c27b0;">
             <div><strong>📏 Média Largura</strong></div>
@@ -890,17 +982,65 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           <div class="distance-card">
             <div><strong>Comprimento LD</strong></div>
             <div class="distance-value">${dist1LD.toFixed(3)} m</div>
-            <small>LD_INICIO_OAE ↔ LD_FINAL_OAE</small>
+            <small>LD_INÍCIO ↔ LD_FINAL</small>
           </div>
           <div class="distance-card">
             <div><strong>Comprimento LE</strong></div>
             <div class="distance-value">${dist1LE.toFixed(3)} m</div>
-            <small>LE_INICIO_OAE ↔ LE_FINAL</small>
+            <small>LE_INÍCIO ↔ LE_FINAL</small>
           </div>
           <div class="distance-card" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #ff9800;">
             <div><strong>📐 Média Comprimento</strong></div>
             <div class="distance-value" style="color: #ff9800;">${media1Comprimento.toFixed(3)} m</div>
             <small>Estrutura 1</small>
+          </div>
+          
+          <div class="distance-card elevation-section">
+            <div><strong>📏 ESTRUTURA 1 - Análise de Elevação</strong></div>
+          </div>
+          <div class="distance-card elevation-analysis-card">
+            <div><strong>Diferença LD↔LE (Início)</strong></div>
+            <div class="elevation-value" style="color: ${elev1_LD_LE_Inicio >= 0 ? '#4caf50' : '#f44336'};">${elev1_LD_LE_Inicio >= 0 ? '+' : ''}${elev1_LD_LE_Inicio.toFixed(3)} m</div>
+            <small>Inclinação transversal início</small>
+          </div>
+          <div class="distance-card elevation-analysis-card">
+            <div><strong>Diferença LD↔LE (Final)</strong></div>
+            <div class="elevation-value" style="color: ${elev1_LD_LE_Final >= 0 ? '#4caf50' : '#f44336'};">${elev1_LD_LE_Final >= 0 ? '+' : ''}${elev1_LD_LE_Final.toFixed(3)} m</div>
+            <small>Inclinação transversal final</small>
+          </div>
+          <div class="distance-card elevation-analysis-card">
+            <div><strong>Diferença Início↔Final (LD)</strong></div>
+            <div class="elevation-value" style="color: ${elev1_Inicio_Final_LD >= 0 ? '#4caf50' : '#f44336'};">${elev1_Inicio_Final_LD >= 0 ? '+' : ''}${elev1_Inicio_Final_LD.toFixed(3)} m</div>
+            <small>Inclinação longitudinal LD</small>
+          </div>
+          <div class="distance-card elevation-analysis-card">
+            <div><strong>Diferença Início↔Final (LE)</strong></div>
+            <div class="elevation-value" style="color: ${elev1_Inicio_Final_LE >= 0 ? '#4caf50' : '#f44336'};">${elev1_Inicio_Final_LE >= 0 ? '+' : ''}${elev1_Inicio_Final_LE.toFixed(3)} m</div>
+            <small>Inclinação longitudinal LE</small>
+          </div>
+          
+          <div class="distance-card elevation-section">
+            <div><strong>📐 ESTRUTURA 1 - Inclinações</strong></div>
+          </div>
+          <div class="distance-card ${getInclinationStatus(incl1_LD_LE_Inicio).class}">
+            <div><strong>${getInclinationStatus(incl1_LD_LE_Inicio).icon} Inclinação LD↔LE (Início)</strong></div>
+            <div class="inclination-value">${incl1_LD_LE_Inicio.percentage.toFixed(2)}% (${incl1_LD_LE_Inicio.degrees.toFixed(1)}°)</div>
+            <small>${incl1_LD_LE_Inicio.direction} - ${getInclinationStatus(incl1_LD_LE_Inicio).text}</small>
+          </div>
+          <div class="distance-card ${getInclinationStatus(incl1_LD_LE_Final).class}">
+            <div><strong>${getInclinationStatus(incl1_LD_LE_Final).icon} Inclinação LD↔LE (Final)</strong></div>
+            <div class="inclination-value">${incl1_LD_LE_Final.percentage.toFixed(2)}% (${incl1_LD_LE_Final.degrees.toFixed(1)}°)</div>
+            <small>${incl1_LD_LE_Final.direction} - ${getInclinationStatus(incl1_LD_LE_Final).text}</small>
+          </div>
+          <div class="distance-card ${getInclinationStatus(incl1_Inicio_Final_LD).class}">
+            <div><strong>${getInclinationStatus(incl1_Inicio_Final_LD).icon} Inclinação Início↔Final (LD)</strong></div>
+            <div class="inclination-value">${incl1_Inicio_Final_LD.percentage.toFixed(2)}% (${incl1_Inicio_Final_LD.degrees.toFixed(1)}°)</div>
+            <small>${incl1_Inicio_Final_LD.direction} - ${getInclinationStatus(incl1_Inicio_Final_LD).text}</small>
+          </div>
+          <div class="distance-card ${getInclinationStatus(incl1_Inicio_Final_LE).class}">
+            <div><strong>${getInclinationStatus(incl1_Inicio_Final_LE).icon} Inclinação Início↔Final (LE)</strong></div>
+            <div class="inclination-value">${incl1_Inicio_Final_LE.percentage.toFixed(2)}% (${incl1_Inicio_Final_LE.degrees.toFixed(1)}°)</div>
+            <small>${incl1_Inicio_Final_LE.direction} - ${getInclinationStatus(incl1_Inicio_Final_LE).text}</small>
           </div>
         `;
 
@@ -913,20 +1053,30 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const media2Largura = (dist2Inicio + dist2Final) / 2;
           const media2Comprimento = (dist2LD + dist2LE) / 2;
 
+          const elev2_LD_LE_Inicio = calculateElevationDifference(struct2.ldInicio, struct2.leInicio);
+          const elev2_LD_LE_Final = calculateElevationDifference(struct2.ldFinal, struct2.leFinal);
+          const elev2_Inicio_Final_LD = calculateElevationDifference(struct2.ldInicio, struct2.ldFinal);
+          const elev2_Inicio_Final_LE = calculateElevationDifference(struct2.leInicio, struct2.leFinal);
+
+          const incl2_LD_LE_Inicio = calculateInclination(struct2.ldInicio, struct2.leInicio);
+          const incl2_LD_LE_Final = calculateInclination(struct2.ldFinal, struct2.leFinal);
+          const incl2_Inicio_Final_LD = calculateInclination(struct2.ldInicio, struct2.ldFinal);
+          const incl2_Inicio_Final_LE = calculateInclination(struct2.leInicio, struct2.leFinal);
+
           html += `
             <div class="section-divider"></div>
             <div class="distance-card structure-section">
-              <div><strong>🏗️ ESTRUTURA 2 (ROSA)</strong></div>
+              <div><strong>🏗️ ESTRUTURA 2 (ROSA) - Dimensões</strong></div>
             </div>
             <div class="distance-card">
-              <div><strong>Largura INICIO_OAE</strong></div>
+              <div><strong>Largura Início</strong></div>
               <div class="distance-value">${dist2Inicio.toFixed(3)} m</div>
-              <small>LD_INICIO_OAE ↔ LE_INICIO_OAE</small>
+              <small>LD_INÍCIO ↔ LE_INÍCIO</small>
             </div>
             <div class="distance-card">
               <div><strong>Largura Final</strong></div>
               <div class="distance-value">${dist2Final.toFixed(3)} m</div>
-              <small>LD_FINAL_OAE ↔ LE_FINAL_OAE</small>
+              <small>LD_FINAL ↔ LE_FINAL</small>
             </div>
             <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #9c27b0;">
               <div><strong>📏 Média Largura</strong></div>
@@ -936,17 +1086,65 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             <div class="distance-card">
               <div><strong>Comprimento LD</strong></div>
               <div class="distance-value">${dist2LD.toFixed(3)} m</div>
-              <small>LD_INICIO_OAE ↔ LD_FINAL_OAE</small>
+              <small>LD_INÍCIO ↔ LD_FINAL</small>
             </div>
             <div class="distance-card">
               <div><strong>Comprimento LE</strong></div>
               <div class="distance-value">${dist2LE.toFixed(3)} m</div>
-              <small>LE_INICIO_OAE ↔ LE_FINAL_OAE</small>
+              <small>LE_INÍCIO ↔ LE_FINAL</small>
             </div>
             <div class="distance-card" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #ff9800;">
               <div><strong>📐 Média Comprimento</strong></div>
               <div class="distance-value" style="color: #ff9800;">${media2Comprimento.toFixed(3)} m</div>
               <small>Estrutura 2</small>
+            </div>
+            
+            <div class="distance-card elevation-section">
+              <div><strong>📏 ESTRUTURA 2 - Análise de Elevação</strong></div>
+            </div>
+            <div class="distance-card elevation-analysis-card">
+              <div><strong>Diferença LD↔LE (Início)</strong></div>
+              <div class="elevation-value" style="color: ${elev2_LD_LE_Inicio >= 0 ? '#4caf50' : '#f44336'};">${elev2_LD_LE_Inicio >= 0 ? '+' : ''}${elev2_LD_LE_Inicio.toFixed(3)} m</div>
+              <small>Inclinação transversal início</small>
+            </div>
+            <div class="distance-card elevation-analysis-card">
+              <div><strong>Diferença LD↔LE (Final)</strong></div>
+              <div class="elevation-value" style="color: ${elev2_LD_LE_Final >= 0 ? '#4caf50' : '#f44336'};">${elev2_LD_LE_Final >= 0 ? '+' : ''}${elev2_LD_LE_Final.toFixed(3)} m</div>
+              <small>Inclinação transversal final</small>
+            </div>
+            <div class="distance-card elevation-analysis-card">
+              <div><strong>Diferença Início↔Final (LD)</strong></div>
+              <div class="elevation-value" style="color: ${elev2_Inicio_Final_LD >= 0 ? '#4caf50' : '#f44336'};">${elev2_Inicio_Final_LD >= 0 ? '+' : ''}${elev2_Inicio_Final_LD.toFixed(3)} m</div>
+              <small>Inclinação longitudinal LD</small>
+            </div>
+            <div class="distance-card elevation-analysis-card">
+              <div><strong>Diferença Início↔Final (LE)</strong></div>
+              <div class="elevation-value" style="color: ${elev2_Inicio_Final_LE >= 0 ? '#4caf50' : '#f44336'};">${elev2_Inicio_Final_LE >= 0 ? '+' : ''}${elev2_Inicio_Final_LE.toFixed(3)} m</div>
+              <small>Inclinação longitudinal LE</small>
+            </div>
+            
+            <div class="distance-card elevation-section">
+              <div><strong>📐 ESTRUTURA 2 - Inclinações</strong></div>
+            </div>
+            <div class="distance-card ${getInclinationStatus(incl2_LD_LE_Inicio).class}">
+              <div><strong>${getInclinationStatus(incl2_LD_LE_Inicio).icon} Inclinação LD↔LE (Início)</strong></div>
+              <div class="inclination-value">${incl2_LD_LE_Inicio.percentage.toFixed(2)}% (${incl2_LD_LE_Inicio.degrees.toFixed(1)}°)</div>
+              <small>${incl2_LD_LE_Inicio.direction} - ${getInclinationStatus(incl2_LD_LE_Inicio).text}</small>
+            </div>
+            <div class="distance-card ${getInclinationStatus(incl2_LD_LE_Final).class}">
+              <div><strong>${getInclinationStatus(incl2_LD_LE_Final).icon} Inclinação LD↔LE (Final)</strong></div>
+              <div class="inclination-value">${incl2_LD_LE_Final.percentage.toFixed(2)}% (${incl2_LD_LE_Final.degrees.toFixed(1)}°)</div>
+              <small>${incl2_LD_LE_Final.direction} - ${getInclinationStatus(incl2_LD_LE_Final).text}</small>
+            </div>
+            <div class="distance-card ${getInclinationStatus(incl2_Inicio_Final_LD).class}">
+              <div><strong>${getInclinationStatus(incl2_Inicio_Final_LD).icon} Inclinação Início↔Final (LD)</strong></div>
+              <div class="inclination-value">${incl2_Inicio_Final_LD.percentage.toFixed(2)}% (${incl2_Inicio_Final_LD.degrees.toFixed(1)}°)</div>
+              <small>${incl2_Inicio_Final_LD.direction} - ${getInclinationStatus(incl2_Inicio_Final_LD).text}</small>
+            </div>
+            <div class="distance-card ${getInclinationStatus(incl2_Inicio_Final_LE).class}">
+              <div><strong>${getInclinationStatus(incl2_Inicio_Final_LE).icon} Inclinação Início↔Final (LE)</strong></div>
+              <div class="inclination-value">${incl2_Inicio_Final_LE.percentage.toFixed(2)}% (${incl2_Inicio_Final_LE.degrees.toFixed(1)}°)</div>
+              <small>${incl2_Inicio_Final_LE.direction} - ${getInclinationStatus(incl2_Inicio_Final_LE).text}</small>
             </div>
           `;
         }
@@ -959,45 +1157,84 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const dist2Final = calculateDistance(struct2.ldFinal, struct2.leFinal);
           const dist2LD = calculateDistance(struct2.ldInicio, struct2.ldFinal);
           const dist2LE = calculateDistance(struct2.leInicio, struct2.leFinal);
+          const media2Largura = (dist2Inicio + dist2Final) / 2;
+          const media2Comprimento = (dist2LD + dist2LE) / 2;
+
+          const elev2_LD_LE_Inicio = calculateElevationDifference(struct2.ldInicio, struct2.leInicio);
+          const elev2_LD_LE_Final = calculateElevationDifference(struct2.ldFinal, struct2.leFinal);
+          const elev2_Inicio_Final_LD = calculateElevationDifference(struct2.ldInicio, struct2.ldFinal);
+          const elev2_Inicio_Final_LE = calculateElevationDifference(struct2.leInicio, struct2.leFinal);
+
+          const incl2_LD_LE_Inicio = calculateInclination(struct2.ldInicio, struct2.leInicio);
+          const incl2_LD_LE_Final = calculateInclination(struct2.ldFinal, struct2.leFinal);
+          const incl2_Inicio_Final_LD = calculateInclination(struct2.ldInicio, struct2.ldFinal);
+          const incl2_Inicio_Final_LE = calculateInclination(struct2.leInicio, struct2.leFinal);
+
           const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
+          const crossElevation = calculateElevationDifference(struct1.leInicio, struct2.ldInicio);
+          const crossInclination = calculateInclination(struct1.leInicio, struct2.ldInicio);
           const mediaGeralLargura = (media1Largura + media2Largura) / 2;
           const mediaGeralComprimento = (media1Comprimento + media2Comprimento) / 2;
           
+          // Verificar problemas de inclinação
+          const problemasInclinacao = [];
+          if (incl1_LD_LE_Inicio.percentage > 5) problemasInclinacao.push("Est.1 LD↔LE início");
+          if (incl1_LD_LE_Final.percentage > 5) problemasInclinacao.push("Est.1 LD↔LE final");
+          if (incl1_Inicio_Final_LD.percentage > 5) problemasInclinacao.push("Est.1 LD longitudinal");
+          if (incl1_Inicio_Final_LE.percentage > 5) problemasInclinacao.push("Est.1 LE longitudinal");
+          if (incl2_LD_LE_Inicio.percentage > 5) problemasInclinacao.push("Est.2 LD↔LE início");
+          if (incl2_LD_LE_Final.percentage > 5) problemasInclinacao.push("Est.2 LD↔LE final");
+          if (incl2_Inicio_Final_LD.percentage > 5) problemasInclinacao.push("Est.2 LD longitudinal");
+          if (incl2_Inicio_Final_LE.percentage > 5) problemasInclinacao.push("Est.2 LE longitudinal");
+          if (crossInclination.percentage > 5) problemasInclinacao.push("Entre estruturas");
+          
           const summaryHtml = `
-            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Análise Geral</h4>
+            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Análise Completa</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center;">
-              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: #9c27b0;">📏 Largura Média</div>
-                <div style="font-size: 16px; font-weight: bold; color: #9c27b0; margin: 5px 0;">${mediaGeralLargura.toFixed(3)}m</div>
-                <div style="font-size: 12px; color: #6c757d;">Entre estruturas</div>
-              </div>
-              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: #ff9800;">📐 Comprimento Médio</div>
-                <div style="font-size: 16px; font-weight: bold; color: #ff9800; margin: 5px 0;">${mediaGeralComprimento.toFixed(3)}m</div>
-                <div style="font-size: 12px; color: #6c757d;">Entre estruturas</div>
-              </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #007bff;">🌉 Distância Total</div>
                 <div style="font-size: 16px; font-weight: bold; color: #007bff; margin: 5px 0;">${crossDistance.toFixed(3)}m</div>
                 <div style="font-size: 12px; color: #6c757d;">LE(1) ↔ LD(2)</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: #6c757d;">📐 Distância X</div>
-                <div style="font-size: 16px; font-weight: bold; color: ${deltaX >= 0 ? '#6c757d' : '#dc3545'}; margin: 5px 0;">${deltaX >= 0 ? deltaX.toFixed(3) + 'm' : 'N/A'}</div>
-                <div style="font-size: 12px; color: #6c757d;">Horizontal</div>
+                <div style="font-weight: bold; color: ${crossElevation >= 0 ? '#4caf50' : '#f44336'};">📏 Diferença Elevação</div>
+                <div style="font-size: 16px; font-weight: bold; color: ${crossElevation >= 0 ? '#4caf50' : '#f44336'}; margin: 5px 0;">${crossElevation >= 0 ? '+' : ''}${crossElevation.toFixed(3)}m</div>
+                <div style="font-size: 12px; color: #6c757d;">Entre estruturas</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: #6c757d;">📐 Distância Y</div>
-                <div style="font-size: 16px; font-weight: bold; color: ${deltaY >= 0 ? '#6c757d' : '#dc3545'}; margin: 5px 0;">${deltaY >= 0 ? deltaY.toFixed(3) + 'm' : 'N/A'}</div>
-                <div style="font-size: 12px; color: #6c757d;">Vertical</div>
+                <div style="font-weight: bold; color: ${crossInclination.percentage > 5 ? '#f44336' : crossInclination.percentage > 2 ? '#ff9800' : '#4caf50'};">📐 Inclinação</div>
+                <div style="font-size: 16px; font-weight: bold; color: ${crossInclination.percentage > 5 ? '#f44336' : crossInclination.percentage > 2 ? '#ff9800' : '#4caf50'}; margin: 5px 0;">${crossInclination.percentage.toFixed(2)}%</div>
+                <div style="font-size: 12px; color: #6c757d;">Entre estruturas</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: #9c27b0;">📏 Largura Média</div>
+                <div style="font-size: 16px; font-weight: bold; color: #9c27b0; margin: 5px 0;">${mediaGeralLargura.toFixed(3)}m</div>
+                <div style="font-size: 12px; color: #6c757d;">Geral (Est.1+2)</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: #ff9800;">📐 Comprimento Médio</div>
+                <div style="font-size: 16px; font-weight: bold; color: #ff9800; margin: 5px 0;">${mediaGeralComprimento.toFixed(3)}m</div>
+                <div style="font-size: 12px; color: #6c757d;">Geral (Est.1+2)</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid ${problemasInclinacao.length > 0 ? '#f44336' : '#4caf50'};">
+                <div style="font-weight: bold; color: ${problemasInclinacao.length > 0 ? '#f44336' : '#4caf50'};">${problemasInclinacao.length > 0 ? '⚠️' : '✅'} Status Inclinação</div>
+                <div style="font-size: 16px; font-weight: bold; color: ${problemasInclinacao.length > 0 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${problemasInclinacao.length > 0 ? `${problemasInclinacao.length} Problemas` : 'Dentro do Normal'}</div>
+                <div style="font-size: 12px; color: #6c757d;">${problemasInclinacao.length > 0 ? 'Verificar inclinações' : 'Todas inclinações OK'}</div>
               </div>
             </div>
+            ${problemasInclinacao.length > 0 ? `
+            <div style="margin-top: 15px; padding: 12px; background: #fff3e0; border: 2px solid #ff9800; border-radius: 6px;">
+              <div style="font-weight: bold; color: #f57c00; margin-bottom: 8px;">⚠️ Inclinações Altas Detectadas (>5%):</div>
+              <div style="font-size: 14px; color: #ef6c00;">${problemasInclinacao.join(', ')}</div>
+              <div style="font-size: 12px; color: #f57c00; margin-top: 5px;">Recomenda-se verificação estrutural para inclinações > 5%</div>
+            </div>
+            ` : ''}
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         } else {
           const summaryHtml = `
-            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Estrutura Única</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: center;">
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #9c27b0;">📏 Largura Média</div>
                 <div style="font-size: 18px; font-weight: bold; color: #9c27b0; margin: 5px 0;">${media1Largura.toFixed(3)} m</div>
@@ -1005,6 +1242,16 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #ff9800;">📐 Comprimento Médio</div>
                 <div style="font-size: 18px; font-weight: bold; color: #ff9800; margin: 5px 0;">${media1Comprimento.toFixed(3)} m</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > 5 || incl1_LD_LE_Final.percentage > 5 ? '#f44336' : '#4caf50'};">📐 Status Transversal</div>
+                <div style="font-size: 14px; font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > 5 || incl1_LD_LE_Final.percentage > 5 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_LD_LE_Inicio.percentage > 5 || incl1_LD_LE_Final.percentage > 5 ? 'Atenção' : 'OK'}</div>
+                <div style="font-size: 12px; color: #6c757d;">Inclinação LD↔LE</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? '#f44336' : '#4caf50'};">📐 Status Longitudinal</div>
+                <div style="font-size: 14px; font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? 'Atenção' : 'OK'}</div>
+                <div style="font-size: 12px; color: #6c757d;">Inclinação Início↔Final</div>
               </div>
             </div>
           `;
@@ -1028,19 +1275,12 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         try {
           const data1 = parseCSV(csvData1);
           const data2 = parseCSV(csvData2);
-          
-          console.log("Dados CSV 1 parseados:", data1);
-          console.log("Dados CSV 2 parseados:", data2);
 
           const points1 = findPoints(data1);
           const points2 = findPoints(data2);
           
-          // Armazenar pontos globalmente para zoom
           currentPoints1 = points1;
           currentPoints2 = points2;
-          
-          console.log("Pontos encontrados CSV 1:", points1);
-          console.log("Pontos encontrados CSV 2:", points2);
 
           if (Object.keys(points1).length === 0) {
             errorMsg.innerHTML = '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado no CSV 1!</div>';
@@ -1049,11 +1289,14 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
           drawVisualization(points1, points2);
         } catch (error) {
+          console.error("Erro:", error);
+          errorMsg.innerHTML = `<div class="error">❌ Erro ao processar dados: ${error.message}</div>`;
         }
       }
 
       // Pré-carregar dados de exemplo
       window.onload = function () {
+        updateZoomDisplay(); // Atualizar display do zoom para 200%
         loadExample1();
       };
     </script>
