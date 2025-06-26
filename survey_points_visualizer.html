@@ -337,7 +337,7 @@
           <button onclick="zoomOut()" style="background: #6c757d;">
             🔍-
           </button>
-          <span id="zoomLevel">Zoom: 200%</span>
+          <span id="zoomLevel">Zoom: 200% (100%-10000%)</span>
           <button onclick="zoomIn()" style="background: #6c757d;">
             🔍+
           </button>
@@ -365,6 +365,12 @@
           <span class="legend-color" style="background: #f44336;"></span>
           <span>Elevação Muito Alta</span>
         </div>
+        <br>
+        <strong>📏 Informações dos Pontos:</strong>
+        <span>Glob = Elevação Global | Rel = Elevação Relativa ao ponto mais alto (0,00m)</span>
+        <br>
+        <strong>🔍 Zoom:</strong>
+        <span>100% até 10000% | Textos ficam menores com zoom maior para melhor visualização</span>
       </div>
 
       <div class="visualization">
@@ -439,7 +445,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
       
       function updateZoomDisplay() {
         const zoomPercent = Math.round(currentZoom * 100);
-        document.getElementById('zoomLevel').textContent = `Zoom: ${zoomPercent}%`;
+        document.getElementById('zoomLevel').textContent = `Zoom: ${zoomPercent}% (100%-10000%)`;
       }
       
       function redrawVisualization() {
@@ -633,23 +639,33 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const allPoints = {...points1, ...points2};
-        const coords = Object.values(allPoints);
-        if (coords.length === 0) return;
-
-        const minX = Math.min(...coords.map((p) => p.x));
-        const maxX = Math.max(...coords.map((p) => p.x));
-        const minY = Math.min(...coords.map((p) => p.y));
-        const maxY = Math.max(...coords.map((p) => p.y));
+        // CORRIGINDO: Coletar TODOS os pontos de estrutura de forma explícita
+        let allStructurePoints = [];
         
-        // Para cores de elevação
-        const minElev = Math.min(...coords.map((p) => p.elevation));
-        const maxElev = Math.max(...coords.map((p) => p.elevation));
+        if (Object.keys(points1).length > 0) {
+          allStructurePoints = allStructurePoints.concat(Object.values(points1));
+        }
+        
+        if (Object.keys(points2).length > 0) {
+          allStructurePoints = allStructurePoints.concat(Object.values(points2));
+        }
+        
+        if (allStructurePoints.length === 0) return;
+
+        // Calcular min/max para coordenadas
+        const minX = Math.min(...allStructurePoints.map((p) => p.x));
+        const maxX = Math.max(...allStructurePoints.map((p) => p.x));
+        const minY = Math.min(...allStructurePoints.map((p) => p.y));
+        const maxY = Math.max(...allStructurePoints.map((p) => p.y));
+        
+        // CORRIGINDO: Calcular min/max de elevação de TODOS os pontos de estrutura
+        const minElev = Math.min(...allStructurePoints.map((p) => p.elevation));
+        const maxElev = Math.max(...allStructurePoints.map((p) => p.elevation));
 
         const margin = 120;
         const scaleX = (canvas.width - 2 * margin) / (maxX - minX);
         const scaleY = (canvas.height - 2 * margin) / (maxY - minY);
-        const scaleFactor = Object.keys(points2).length > 0 ? 0.15 : 0.25;
+        const scaleFactor = Object.keys(points2).length > 0 ? 0.3 : 0.5; // Aumentado para suportar zoom alto
         const scale = Math.min(scaleX, scaleY) * scaleFactor * currentZoom;
 
         const centerX = canvas.width / 2;
@@ -704,7 +720,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
           // Desenhar retângulo
           ctx.strokeStyle = color;
-          const rectLineWidth = Math.max(1, 1.5 * currentZoom);
+          const rectLineWidth = Math.max(1, Math.min(4, 2 * Math.sqrt(currentZoom))); // Linha ajustada
           ctx.lineWidth = rectLineWidth;
           ctx.beginPath();
           ctx.moveTo(ldInicioCanvas.x, ldInicioCanvas.y);
@@ -740,7 +756,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             // Desenhar círculo externo (base)
             ctx.fillStyle = baseColor;
             ctx.beginPath();
-            const pointRadius = Math.max(3, 4 * currentZoom);
+            const pointRadius = Math.max(2, Math.min(8, 4 * Math.sqrt(currentZoom))); // Raio ajustado
             ctx.arc(canvas.x, canvas.y, pointRadius, 0, 2 * Math.PI);
             ctx.fill();
             
@@ -750,19 +766,40 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             ctx.arc(canvas.x, canvas.y, pointRadius * 0.7, 0, 2 * Math.PI);
             ctx.fill();
 
-            // Label do ponto
+            // TEXTOS INVERSAMENTE PROPORCIONAIS AO ZOOM
+            const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom))); // Fator inverso
+            
+            // Label do ponto - AUMENTADO
             ctx.fillStyle = "#333";
-            const fontSize = Math.max(6, 8 * currentZoom);
+            const fontSize = Math.max(4, 12 * zoomFactor); // Aumentado de 8 para 12 (50% maior)
             ctx.font = `${fontSize}px Arial`;
             ctx.textAlign = "center";
-            const labelOffset = Math.max(8, 12 * currentZoom);
+            const labelOffset = Math.max(4, 15 * zoomFactor); // Aumentado offset também
             ctx.fillText(label, canvas.x, canvas.y - labelOffset);
             
-            // Mostrar elevação
-            ctx.fillStyle = "#666";
-            const elevFontSize = Math.max(5, 7 * currentZoom);
+            // CORRIGIDO: Cálculo da elevação relativa ao ponto REAL mais alto
+            const relativeElev = point.elevation - maxElev; // Agora será sempre ≤ 0
+            
+            // Mostrar elevação global e relativa - TEXTOS AUMENTADOS
+            const elevFontSize = Math.max(3, 9 * zoomFactor); // Aumentado de 6 para 9 (50% maior)
             ctx.font = `${elevFontSize}px Arial`;
-            ctx.fillText(`${point.elevation.toFixed(3)}m`, canvas.x, canvas.y + labelOffset + 8);
+            
+            // Elevação global
+            ctx.fillStyle = "#555";
+            const elevOffset1 = Math.max(2, 8 * zoomFactor); // Aumentado offset
+            const elevOffset2 = Math.max(4, 16 * zoomFactor); // Aumentado offset
+            ctx.fillText(`Glob: ${point.elevation.toFixed(3)}m`, canvas.x, canvas.y + labelOffset + elevOffset1);
+            
+            // Elevação relativa - destacar o ponto mais alto
+            if (Math.abs(relativeElev) < 0.001) { // É o ponto mais alto (0.00)
+              ctx.fillStyle = "#ff0000"; // Vermelho para destacar
+              ctx.font = `bold ${elevFontSize}px Arial`;
+            } else {
+              ctx.fillStyle = "#666";
+              ctx.font = `${elevFontSize}px Arial`;
+            }
+            
+            ctx.fillText(`Rel: ${relativeElev.toFixed(3)}m`, canvas.x, canvas.y + labelOffset + elevOffset2);
           });
 
           return { ldInicio, leInicio, ldFinal, leFinal };
@@ -777,9 +814,9 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const ldInicio2Canvas = toCanvasCoords(struct2.ldInicio);
 
           ctx.strokeStyle = "#ff9800";
-          const lineWidth = Math.max(2, 3 * currentZoom);
+          const lineWidth = Math.max(1, Math.min(6, 3 * Math.sqrt(currentZoom))); // Linha ajustada
           ctx.lineWidth = lineWidth;
-          const dashLength = Math.max(8, 12 * currentZoom);
+          const dashLength = Math.max(4, Math.min(20, 12 * Math.sqrt(currentZoom))); // Dash ajustado
           ctx.setLineDash([dashLength, dashLength/2]);
           ctx.beginPath();
           ctx.moveTo(leInicio1Canvas.x, leInicio1Canvas.y);
@@ -787,13 +824,16 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ctx.stroke();
           ctx.setLineDash([]);
 
-          const midX = (leInicio1Canvas.x + ldInicio2Canvas.x) / 2;
+          // Posicionar o texto bem mais à direita - TEXTO MENOR COM ZOOM MAIOR
+          const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom))); // Mesmo fator
+          const offsetDistance = Math.max(40, Math.min(150, 80 * Math.sqrt(currentZoom))); // Offset ajustado
+          const midX = (leInicio1Canvas.x + ldInicio2Canvas.x) / 2 + offsetDistance;
           const midY = (leInicio1Canvas.y + ldInicio2Canvas.y) / 2;
           const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
           
-          const textWidth = 60;
-          const textHeight = 20;
-          ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+          const textWidth = Math.max(60, 110 * zoomFactor); // Caixa maior para texto maior
+          const textHeight = Math.max(20, 35 * zoomFactor); // Altura maior também
+          ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
           ctx.fillRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight);
           
           ctx.strokeStyle = "#ff9800";
@@ -801,7 +841,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ctx.strokeRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight);
           
           ctx.fillStyle = "#ff9800";
-          const crossFontSize = Math.max(10, 12 * currentZoom);
+          const crossFontSize = Math.max(6, 18 * zoomFactor); // Aumentado de 14 para 18 (30% maior)
           ctx.font = `bold ${crossFontSize}px Arial`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
@@ -1232,6 +1272,11 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         } else {
+          // Para estrutura única, calcular pontos para análise de elevação
+          const allPointsForAnalysis = [struct1.ldInicio, struct1.leInicio, struct1.ldFinal, struct1.leFinal];
+          const maxElevForAnalysis = Math.max(...allPointsForAnalysis.map(p => p.elevation));
+          const minElevForAnalysis = Math.min(...allPointsForAnalysis.map(p => p.elevation));
+          
           const summaryHtml = `
             <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Estrutura Única</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: center;">
@@ -1253,6 +1298,14 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
                 <div style="font-size: 14px; font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? 'Atenção' : 'OK'}</div>
                 <div style="font-size: 12px; color: #6c757d;">Inclinação Início↔Final</div>
               </div>
+            </div>
+            <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 6px;">
+              <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px;">📏 Análise de Elevações Relativas:</div>
+              <div style="font-size: 14px; color: #1565c0;">
+                🔺 Ponto mais alto: ${maxElevForAnalysis.toFixed(3)}m (referência 0,00m) | 
+                🔻 Ponto mais baixo: ${minElevForAnalysis.toFixed(3)}m (${(minElevForAnalysis - maxElevForAnalysis).toFixed(3)}m relativo)
+              </div>
+              <div style="font-size: 12px; color: #1976d2; margin-top: 5px;">Amplitude total: ${(maxElevForAnalysis - minElevForAnalysis).toFixed(3)}m</div>
             </div>
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
