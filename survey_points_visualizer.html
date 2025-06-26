@@ -88,6 +88,8 @@
         border-radius: 25px;
         border: 1px solid #dee2e6;
         margin-left: 20px;
+        flex-wrap: wrap;
+        gap: 5px;
       }
       
       @media (max-width: 768px) {
@@ -344,6 +346,9 @@
           <button onclick="resetZoom()" style="background: #17a2b8; margin-left: 10px;">
             ↻ Reset
           </button>
+          <button onclick="rotate45()" style="background: #28a745; margin-left: 15px;">
+            🔄 Rotacionar 22.5°
+          </button>
         </div>
       </div>
 
@@ -371,6 +376,9 @@
         <br>
         <strong>🔍 Zoom:</strong>
         <span>100% até 10000% | Textos ficam menores com zoom maior para melhor visualização</span>
+        <br>
+        <strong>🔄 Rotação:</strong>
+        <span>Clique em "Rotacionar 22.5°" para girar todo o desenho em incrementos de 22.5° (16 posições de 0° a 337.5°)</span>
       </div>
 
       <div class="visualization">
@@ -389,10 +397,11 @@
     </div>
 
     <script>
-      // Variáveis globais para zoom e dados
+      // Variáveis globais para zoom, dados e rotação
       let currentZoom = 2.0; // Zoom padrão 200%
       let currentPoints1 = {};
       let currentPoints2 = {};
+      let currentRotation = 0; // Rotação em graus (0, 45, 90, 135, 180, 225, 270, 315)
       
       function loadExample1() {
         const exampleData1 = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
@@ -448,6 +457,18 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         document.getElementById('zoomLevel').textContent = `Zoom: ${zoomPercent}% (100%-10000%)`;
       }
       
+      // Função de rotação
+      function rotate45() {
+        currentRotation = (currentRotation + 22.5) % 360; // Incrementa 22.5° e volta a 0 após 360°
+        updateRotationDisplay();
+        redrawVisualization();
+      }
+      
+      function updateRotationDisplay() {
+        // Atualizar display se necessário (pode adicionar um elemento para mostrar o ângulo)
+        console.log(`Rotação atual: ${currentRotation}°`);
+      }
+      
       function redrawVisualization() {
         if (Object.keys(currentPoints1).length > 0) {
           drawVisualization(currentPoints1, currentPoints2);
@@ -460,8 +481,9 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         document.getElementById('infoPanel').style.display = 'none';
         document.getElementById('errorMsg').innerHTML = '';
         
-        // Limpar dados de zoom
+        // Limpar dados de zoom e rotação
         currentZoom = 2.0; // Zoom padrão 200%
+        currentRotation = 0; // Reset rotação
         currentPoints1 = {};
         currentPoints2 = {};
         updateZoomDisplay();
@@ -663,20 +685,44 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         const maxElev = Math.max(...allStructurePoints.map((p) => p.elevation));
 
         const margin = 120;
-        const scaleX = (canvas.width - 2 * margin) / (maxX - minX);
-        const scaleY = (canvas.height - 2 * margin) / (maxY - minY);
+        
+        // Calcular dimensões considerando possível rotação
+        const dataRangeX = maxX - minX;
+        const dataRangeY = maxY - minY;
+        
+        // Para rotações de 45°, as dimensões efetivas mudam
+        const rotationRad = (currentRotation * Math.PI) / 180;
+        const cosTheta = Math.abs(Math.cos(rotationRad));
+        const sinTheta = Math.abs(Math.sin(rotationRad));
+        
+        const effectiveWidth = dataRangeX * cosTheta + dataRangeY * sinTheta;
+        const effectiveHeight = dataRangeX * sinTheta + dataRangeY * cosTheta;
+        
+        const scaleX = (canvas.width - 2 * margin) / effectiveWidth;
+        const scaleY = (canvas.height - 2 * margin) / effectiveHeight;
         const scaleFactor = Object.keys(points2).length > 0 ? 0.3 : 0.5; // Aumentado para suportar zoom alto
         const scale = Math.min(scaleX, scaleY) * scaleFactor * currentZoom;
 
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const dataWidth = (maxX - minX) * scale;
-        const dataHeight = (maxY - minY) * scale;
 
         function toCanvasCoords(point) {
+          // Coordenadas relativas ao centro dos dados
+          const relX = point.x - (minX + maxX) / 2;
+          const relY = point.y - (minY + maxY) / 2;
+          
+          // Aplicar rotação
+          const rotationRad = (currentRotation * Math.PI) / 180;
+          const cosTheta = Math.cos(rotationRad);
+          const sinTheta = Math.sin(rotationRad);
+          
+          const rotatedX = relX * cosTheta - relY * sinTheta;
+          const rotatedY = relX * sinTheta + relY * cosTheta;
+          
+          // Aplicar escala e centralizar no canvas
           return {
-            x: centerX - dataWidth / 2 + (point.x - minX) * scale,
-            y: centerY + dataHeight / 2 - (point.y - minY) * scale,
+            x: centerX + rotatedX * scale,
+            y: centerY - rotatedY * scale, // Negativo porque Y do canvas cresce para baixo
           };
         }
 
@@ -824,11 +870,17 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Posicionar o texto bem mais à direita - TEXTO MENOR COM ZOOM MAIOR
+          // Posicionar o texto considerando rotação
           const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom))); // Mesmo fator
-          const offsetDistance = Math.max(40, Math.min(150, 80 * Math.sqrt(currentZoom))); // Offset ajustado
-          const midX = (leInicio1Canvas.x + ldInicio2Canvas.x) / 2 + offsetDistance;
-          const midY = (leInicio1Canvas.y + ldInicio2Canvas.y) / 2;
+          const offsetDistance = Math.max(40, Math.min(150, 80 * Math.sqrt(currentZoom))); // Offset base
+          
+          // Calcular offset rotacionado (sempre para a direita da tela, independente da rotação)
+          const rotationRad = (currentRotation * Math.PI) / 180;
+          const offsetX = offsetDistance * Math.cos(-rotationRad); // Negativo para compensar rotação
+          const offsetY = offsetDistance * Math.sin(-rotationRad);
+          
+          const midX = (leInicio1Canvas.x + ldInicio2Canvas.x) / 2 + offsetX;
+          const midY = (leInicio1Canvas.y + ldInicio2Canvas.y) / 2 + offsetY;
           const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
           
           const textWidth = Math.max(60, 110 * zoomFactor); // Caixa maior para texto maior
