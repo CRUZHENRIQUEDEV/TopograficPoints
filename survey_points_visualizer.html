@@ -294,6 +294,18 @@
         margin-right: 5px;
         vertical-align: middle;
       }
+
+      .debug-info {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
     </style>
   </head>
   <body>
@@ -339,7 +351,7 @@
           <button onclick="zoomOut()" style="background: #6c757d;">
             🔍-
           </button>
-          <span id="zoomLevel">Zoom: 200% (100%-10000%)</span>
+          <span id="zoomLevel">Zoom: 200%</span>
           <button onclick="zoomIn()" style="background: #6c757d;">
             🔍+
           </button>
@@ -374,11 +386,8 @@
         <strong>📏 Informações dos Pontos:</strong>
         <span>Glob = Elevação Global | Rel = Elevação Relativa ao ponto mais alto (0,00m)</span>
         <br>
-        <strong>🔍 Zoom:</strong>
-        <span>100% até 10000% | Textos ficam menores com zoom maior para melhor visualização</span>
-        <br>
-        <strong>🔄 Rotação:</strong>
-        <span>Clique em "Rotacionar 22.5°" para girar todo o desenho em incrementos de 22.5° (16 posições de 0° a 337.5°)</span>
+        <strong>📋 Formatos Suportados:</strong>
+        <span>LAT/LONG | H_ORTHO ou H_ORTO | Múltiplos formatos CSV</span>
       </div>
 
       <div class="visualization">
@@ -394,6 +403,7 @@
       </div>
 
       <div id="errorMsg"></div>
+      <div id="debugInfo" class="debug-info" style="display: none;"></div>
     </div>
 
     <script>
@@ -401,7 +411,16 @@
       let currentZoom = 2.0; // Zoom padrão 200%
       let currentPoints1 = {};
       let currentPoints2 = {};
-      let currentRotation = 0; // Rotação em graus (0, 45, 90, 135, 180, 225, 270, 315)
+      let currentRotation = 0; // Rotação em graus
+      
+      function debugLog(message) {
+        console.log(message);
+        const debugDiv = document.getElementById('debugInfo');
+        if (debugDiv) {
+          debugDiv.innerHTML += message + '<br>';
+          debugDiv.style.display = 'block';
+        }
+      }
       
       function loadExample1() {
         const exampleData1 = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
@@ -419,15 +438,15 @@ P-02,LD_INICIO_OAE,-9.8974121600,-36.4164865000,188.99719,197.3135310000,-36.416
       }
 
       function loadExample2() {
-        const exampleData2 = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
-"09",JUSESQ,-9.8970347800,-36.4160136000,188.80925,197.1262098000,-36.4160136710,-9.8970347823
-"10",JUSDIR,-9.8969431900,-36.4160583000,189.01495,197.3316011000,-36.4160583598,-9.8969431976
-P-08,LD_FINAL_OAE,-9.8968730300,-36.4159092000,188.93670,197.2531865000,-36.4159092614,-9.8968730373
-P-07,LE_FINAL_OAE,-9.8969631400,-36.4158642000,188.78735,197.1041407000,-36.4158642134,-9.8969631483
-P-05,LE_INICIO_OAE,-9.8969029500,-36.4157419000,188.77963,197.0962773000,-36.4157419708,-9.8969029554
-P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.4157865650,-9.8968121660
-"11",MONDIR,-9.8966934700,-36.4155403000,188.86808,197.1841401000,-36.4155403921,-9.8966934728
-"12",MONESQ,-9.8967829800,-36.4154912000,188.66533,196.9816940000,-36.4154912260,-9.8967829816`;
+        const exampleData2 = `Name,Code,LAT,LONG,H_GEO,OND_GEOIDAL,H_ORTHO
+P-03,LE_FINAL_OAE,-9.5859031742,-35.9998403261,64.15077,-8.34781878249589,72.4985887825
+P-04,LD_FINAL_OAE,-9.5858035005,-35.9998555991,65.02932,-8.34729391104167,73.3766139110
+P-02,LD_INICIO_OAE,-9.5857831989,-35.9997202172,65.13386,-8.34760639575098,73.4814663958
+P-01,LE_INICIO_OAE,-9.5858827982,-35.9997040603,64.19835,-8.34813373922375,72.5464837392
+P-05,JUSDIR,-9.5859092793,-36.0002888500,64.13941,-8.34648921628544,72.4858992163
+P-06,JUSDIR,-9.5860060249,-36.0002554090,63.39445,-8.34705462681217,71.7415046268
+P-07,MONT DIR,-9.5858598116,-35.9994324627,64.59709,-8.34884602273111,72.9459360227
+P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.8301104841`;
 
         document.getElementById('csvData2').value = exampleData2;
         processData();
@@ -435,13 +454,13 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
       // Funções de zoom
       function zoomIn() {
-        currentZoom = Math.min(currentZoom * 1.2, 3.0);
+        currentZoom = Math.min(currentZoom * 1.2, 100.0); // Zoom máximo 10000%
         updateZoomDisplay();
         redrawVisualization();
       }
       
       function zoomOut() {
-        currentZoom = Math.max(currentZoom / 1.2, 0.3);
+        currentZoom = Math.max(currentZoom / 1.2, 0.1); // Zoom mínimo 10%
         updateZoomDisplay();
         redrawVisualization();
       }
@@ -454,19 +473,13 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
       
       function updateZoomDisplay() {
         const zoomPercent = Math.round(currentZoom * 100);
-        document.getElementById('zoomLevel').textContent = `Zoom: ${zoomPercent}% (100%-10000%)`;
+        document.getElementById('zoomLevel').textContent = `Zoom: ${zoomPercent}%`;
       }
       
       // Função de rotação
       function rotate45() {
-        currentRotation = (currentRotation + 22.5) % 360; // Incrementa 22.5° e volta a 0 após 360°
-        updateRotationDisplay();
+        currentRotation = (currentRotation + 22.5) % 360;
         redrawVisualization();
-      }
-      
-      function updateRotationDisplay() {
-        // Atualizar display se necessário (pode adicionar um elemento para mostrar o ângulo)
-        console.log(`Rotação atual: ${currentRotation}°`);
       }
       
       function redrawVisualization() {
@@ -480,10 +493,11 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         document.getElementById('csvData2').value = '';
         document.getElementById('infoPanel').style.display = 'none';
         document.getElementById('errorMsg').innerHTML = '';
+        document.getElementById('debugInfo').innerHTML = '';
+        document.getElementById('debugInfo').style.display = 'none';
         
-        // Limpar dados de zoom e rotação
-        currentZoom = 2.0; // Zoom padrão 200%
-        currentRotation = 0; // Reset rotação
+        currentZoom = 2.0;
+        currentRotation = 0;
         currentPoints1 = {};
         currentPoints2 = {};
         updateZoomDisplay();
@@ -496,24 +510,28 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
       function parseCSV(csvText) {
         if (!csvText.trim()) return [];
         
+        debugLog("=== INICIANDO PARSE CSV ===");
         const lines = csvText.trim().split("\n");
+        debugLog(`Total de linhas: ${lines.length}`);
+        
         const firstLine = lines[0];
+        debugLog(`Primeira linha: ${firstLine}`);
+        
         let headers;
         let dataStartIndex = 0;
 
-        if (
-          firstLine.includes("Name") ||
-          firstLine.includes("Code") ||
-          firstLine.includes("Lat") ||
-          firstLine.includes("Long") ||
-          firstLine.includes("x") ||
-          firstLine.includes("y")
-        ) {
+        // Detectar se a primeira linha contém cabeçalhos
+        const commonHeaders = ["Name", "Code", "Lat", "LAT", "Long", "LONG", "x", "y", "H_ORTO", "H_ORTHO", "H_GEO"];
+        const hasHeaders = commonHeaders.some(header => firstLine.includes(header));
+        
+        if (hasHeaders) {
           headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ''));
           dataStartIndex = 1;
+          debugLog(`Cabeçalhos detectados: ${headers.join(', ')}`);
         } else {
-          headers = ["0", "1", "2", "3", "4"];
+          headers = ["Name", "Code", "LAT", "LONG", "H_GEO", "OND_GEOIDAL", "H_ORTHO"];
           dataStartIndex = 0;
+          debugLog("Usando cabeçalhos padrão");
         }
 
         const data = [];
@@ -526,7 +544,10 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             row[header] = values[index]?.trim().replace(/"/g, '') || "";
           });
           data.push(row);
+          debugLog(`Linha ${i}: ${JSON.stringify(row)}`);
         }
+        
+        debugLog(`Total de linhas processadas: ${data.length}`);
         return data;
       }
 
@@ -563,14 +584,12 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         return distance;
       }
 
-      // Nova função para calcular diferença de elevação
       function calculateElevationDifference(point1, point2) {
         const elev1 = parseFloat(point1.elevation);
         const elev2 = parseFloat(point2.elevation);
-        return elev2 - elev1; // Positivo se point2 é mais alto
+        return elev2 - elev1;
       }
 
-      // Nova função para calcular inclinação
       function calculateInclination(point1, point2) {
         const distance = calculateDistance(point1, point2);
         const elevationDiff = calculateElevationDifference(point1, point2);
@@ -589,7 +608,6 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         };
       }
 
-      // Função para obter cor baseada na elevação
       function getElevationColor(elevation, minElev, maxElev) {
         const normalized = (elevation - minElev) / (maxElev - minElev);
         
@@ -600,12 +618,19 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
       }
 
       function findPoints(data) {
+        debugLog("=== PROCURANDO PONTOS ===");
         const points = {};
+        
         data.forEach((row, index) => {
-          const name = row.Name || row.Code || row["4"] || "";
-          const code = row.Code || row.Name || row["4"] || "";
+          debugLog(`Processando linha ${index}: ${JSON.stringify(row)}`);
+          
+          const name = row.Name || row.Code || "";
+          const code = row.Code || row.Name || "";
 
-          if (
+          debugLog(`Nome: ${name}, Código: ${code}`);
+
+          // Verificar se é um ponto de estrutura (OAE)
+          const isStructurePoint = 
             code.includes("LD_INICIO_OAE") ||
             code.includes("LE_INICIO_OAE") ||
             code.includes("LD_FINAL_OAE") ||
@@ -613,10 +638,14 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             name.includes("LD_INICIO_OAE") ||
             name.includes("LE_INICIO_OAE") ||
             name.includes("LD_FINAL_OAE") ||
-            name.includes("LE_FINAL_OAE")
-          ) {
+            name.includes("LE_FINAL_OAE");
+
+          if (isStructurePoint) {
+            debugLog(`Ponto de estrutura encontrado: ${name || code}`);
+            
             let xCoord, yCoord, elevation;
 
+            // Coordenadas
             if (row.Northing && row.Easting) {
               xCoord = parseFloat(row.Easting);
               yCoord = parseFloat(row.Northing);
@@ -625,43 +654,59 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
               xCoord = parseFloat(row.x);
               yCoord = parseFloat(row.y);
             }
-            else if (row.Long && row.Lat) {
-              xCoord = parseFloat(row.Long);
-              yCoord = parseFloat(row.Lat);
+            else if (row.Long || row.LONG) {
+              xCoord = parseFloat(row.Long || row.LONG);
+              yCoord = parseFloat(row.Lat || row.LAT);
             }
 
-            elevation = parseFloat(row.Elevation) || parseFloat(row.H_GEO) || parseFloat(row.H_ORTO) || parseFloat(row.Altura) || parseFloat(row.Z) || 0;
+            // Elevação - suporte para H_ORTHO e H_ORTO
+            elevation = parseFloat(row.H_ORTHO) || 
+                       parseFloat(row.H_ORTO) || 
+                       parseFloat(row.Elevation) || 
+                       parseFloat(row.H_GEO) || 
+                       parseFloat(row.Altura) || 
+                       parseFloat(row.Z) || 0;
 
-            const pointData = {
-              x: xCoord,
-              y: yCoord,
-              elevation: elevation,
-              lat: parseFloat(row.Lat) || yCoord,
-              long: parseFloat(row.Long) || xCoord,
-              easting: parseFloat(row.Easting) || xCoord,
-              northing: parseFloat(row.Northing) || yCoord,
-              name: name || code,
-              code: code || name,
-              originalName: name,
-              originalCode: code,
-              coordType: row.Northing && row.Easting ? 'UTM' : (Math.abs(xCoord) < 180 && Math.abs(yCoord) < 90 ? 'GEO' : 'PLANE')
-            };
-            
-            if (code) points[code] = pointData;
-            if (name && name !== code) points[name] = pointData;
+            debugLog(`Coordenadas: x=${xCoord}, y=${yCoord}, elevação=${elevation}`);
+
+            if (!isNaN(xCoord) && !isNaN(yCoord) && !isNaN(elevation)) {
+              const pointData = {
+                x: xCoord,
+                y: yCoord,
+                elevation: elevation,
+                lat: parseFloat(row.Lat || row.LAT) || yCoord,
+                long: parseFloat(row.Long || row.LONG) || xCoord,
+                easting: parseFloat(row.Easting) || xCoord,
+                northing: parseFloat(row.Northing) || yCoord,
+                name: name || code,
+                code: code || name,
+                originalName: name,
+                originalCode: code,
+                coordType: row.Northing && row.Easting ? 'UTM' : (Math.abs(xCoord) < 180 && Math.abs(yCoord) < 90 ? 'GEO' : 'PLANE')
+              };
+              
+              debugLog(`Ponto criado: ${JSON.stringify(pointData)}`);
+              
+              if (code) points[code] = pointData;
+              if (name && name !== code) points[name] = pointData;
+            } else {
+              debugLog(`Erro: coordenadas ou elevação inválidas`);
+            }
           }
         });
         
+        debugLog(`Total de pontos encontrados: ${Object.keys(points).length}`);
+        debugLog(`Pontos: ${Object.keys(points).join(', ')}`);
         return points;
       }
 
       function drawVisualization(points1, points2 = {}) {
+        debugLog("=== INICIANDO DESENHO ===");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // CORRIGINDO: Coletar TODOS os pontos de estrutura de forma explícita
         let allStructurePoints = [];
         
         if (Object.keys(points1).length > 0) {
@@ -672,7 +717,12 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           allStructurePoints = allStructurePoints.concat(Object.values(points2));
         }
         
-        if (allStructurePoints.length === 0) return;
+        debugLog(`Total pontos para desenhar: ${allStructurePoints.length}`);
+        
+        if (allStructurePoints.length === 0) {
+          debugLog("ERRO: Nenhum ponto para desenhar");
+          return;
+        }
 
         // Calcular min/max para coordenadas
         const minX = Math.min(...allStructurePoints.map((p) => p.x));
@@ -680,17 +730,17 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         const minY = Math.min(...allStructurePoints.map((p) => p.y));
         const maxY = Math.max(...allStructurePoints.map((p) => p.y));
         
-        // CORRIGINDO: Calcular min/max de elevação de TODOS os pontos de estrutura
         const minElev = Math.min(...allStructurePoints.map((p) => p.elevation));
         const maxElev = Math.max(...allStructurePoints.map((p) => p.elevation));
+        
+        debugLog(`Coordenadas - X: ${minX} a ${maxX}, Y: ${minY} a ${maxY}`);
+        debugLog(`Elevações - Min: ${minElev}, Max: ${maxElev}`);
 
         const margin = 120;
         
-        // Calcular dimensões considerando possível rotação
         const dataRangeX = maxX - minX;
         const dataRangeY = maxY - minY;
         
-        // Para rotações de 45°, as dimensões efetivas mudam
         const rotationRad = (currentRotation * Math.PI) / 180;
         const cosTheta = Math.abs(Math.cos(rotationRad));
         const sinTheta = Math.abs(Math.sin(rotationRad));
@@ -700,18 +750,16 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         
         const scaleX = (canvas.width - 2 * margin) / effectiveWidth;
         const scaleY = (canvas.height - 2 * margin) / effectiveHeight;
-        const scaleFactor = Object.keys(points2).length > 0 ? 0.3 : 0.5; // Aumentado para suportar zoom alto
+        const scaleFactor = Object.keys(points2).length > 0 ? 0.3 : 0.5;
         const scale = Math.min(scaleX, scaleY) * scaleFactor * currentZoom;
 
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
         function toCanvasCoords(point) {
-          // Coordenadas relativas ao centro dos dados
           const relX = point.x - (minX + maxX) / 2;
           const relY = point.y - (minY + maxY) / 2;
           
-          // Aplicar rotação
           const rotationRad = (currentRotation * Math.PI) / 180;
           const cosTheta = Math.cos(rotationRad);
           const sinTheta = Math.sin(rotationRad);
@@ -719,14 +767,15 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const rotatedX = relX * cosTheta - relY * sinTheta;
           const rotatedY = relX * sinTheta + relY * cosTheta;
           
-          // Aplicar escala e centralizar no canvas
           return {
             x: centerX + rotatedX * scale,
-            y: centerY - rotatedY * scale, // Negativo porque Y do canvas cresce para baixo
+            y: centerY - rotatedY * scale,
           };
         }
 
         function drawStructure(points, color, label) {
+          debugLog(`Desenhando estrutura ${label}`);
+          
           const ldInicio = Object.values(points).find(p => 
             p.code.includes("LD_INICIO_OAE") || 
             p.name.includes("LD_INICIO_OAE") ||
@@ -755,7 +804,10 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
             p.originalName.includes("LE_FINAL_OAE")
           );
 
+          debugLog(`Pontos encontrados - LD Início: ${!!ldInicio}, LE Início: ${!!leInicio}, LD Final: ${!!ldFinal}, LE Final: ${!!leFinal}`);
+
           if (!ldInicio || !leInicio || !ldFinal || !leFinal) {
+            debugLog("ERRO: Nem todos os pontos da estrutura foram encontrados");
             return null;
           }
 
@@ -766,7 +818,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
 
           // Desenhar retângulo
           ctx.strokeStyle = color;
-          const rectLineWidth = Math.max(1, Math.min(4, 2 * Math.sqrt(currentZoom))); // Linha ajustada
+          const rectLineWidth = Math.max(1, Math.min(4, 2 * Math.sqrt(currentZoom)));
           ctx.lineWidth = rectLineWidth;
           ctx.beginPath();
           ctx.moveTo(ldInicioCanvas.x, ldInicioCanvas.y);
@@ -796,49 +848,40 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ];
 
           pointData.forEach(({ point, canvas, baseColor, label }) => {
-            // Cor baseada na elevação
             const elevationColor = getElevationColor(point.elevation, minElev, maxElev);
             
-            // Desenhar círculo externo (base)
             ctx.fillStyle = baseColor;
             ctx.beginPath();
-            const pointRadius = Math.max(2, Math.min(8, 4 * Math.sqrt(currentZoom))); // Raio ajustado
+            const pointRadius = Math.max(2, Math.min(8, 4 * Math.sqrt(currentZoom)));
             ctx.arc(canvas.x, canvas.y, pointRadius, 0, 2 * Math.PI);
             ctx.fill();
             
-            // Desenhar círculo interno (elevação)
             ctx.fillStyle = elevationColor;
             ctx.beginPath();
             ctx.arc(canvas.x, canvas.y, pointRadius * 0.7, 0, 2 * Math.PI);
             ctx.fill();
 
-            // TEXTOS INVERSAMENTE PROPORCIONAIS AO ZOOM
-            const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom))); // Fator inverso
+            const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom)));
             
-            // Label do ponto - AUMENTADO
             ctx.fillStyle = "#333";
-            const fontSize = Math.max(4, 12 * zoomFactor); // Aumentado de 8 para 12 (50% maior)
+            const fontSize = Math.max(4, 12 * zoomFactor);
             ctx.font = `${fontSize}px Arial`;
             ctx.textAlign = "center";
-            const labelOffset = Math.max(4, 15 * zoomFactor); // Aumentado offset também
+            const labelOffset = Math.max(4, 15 * zoomFactor);
             ctx.fillText(label, canvas.x, canvas.y - labelOffset);
             
-            // CORRIGIDO: Cálculo da elevação relativa ao ponto REAL mais alto
-            const relativeElev = point.elevation - maxElev; // Agora será sempre ≤ 0
+            const relativeElev = point.elevation - maxElev;
             
-            // Mostrar elevação global e relativa - TEXTOS AUMENTADOS
-            const elevFontSize = Math.max(3, 9 * zoomFactor); // Aumentado de 6 para 9 (50% maior)
+            const elevFontSize = Math.max(3, 9 * zoomFactor);
             ctx.font = `${elevFontSize}px Arial`;
             
-            // Elevação global
             ctx.fillStyle = "#555";
-            const elevOffset1 = Math.max(2, 8 * zoomFactor); // Aumentado offset
-            const elevOffset2 = Math.max(4, 16 * zoomFactor); // Aumentado offset
+            const elevOffset1 = Math.max(2, 8 * zoomFactor);
+            const elevOffset2 = Math.max(4, 16 * zoomFactor);
             ctx.fillText(`Glob: ${point.elevation.toFixed(3)}m`, canvas.x, canvas.y + labelOffset + elevOffset1);
             
-            // Elevação relativa - destacar o ponto mais alto
-            if (Math.abs(relativeElev) < 0.001) { // É o ponto mais alto (0.00)
-              ctx.fillStyle = "#ff0000"; // Vermelho para destacar
+            if (Math.abs(relativeElev) < 0.001) {
+              ctx.fillStyle = "#ff0000";
               ctx.font = `bold ${elevFontSize}px Arial`;
             } else {
               ctx.fillStyle = "#666";
@@ -860,9 +903,9 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           const ldInicio2Canvas = toCanvasCoords(struct2.ldInicio);
 
           ctx.strokeStyle = "#ff9800";
-          const lineWidth = Math.max(1, Math.min(6, 3 * Math.sqrt(currentZoom))); // Linha ajustada
+          const lineWidth = Math.max(1, Math.min(6, 3 * Math.sqrt(currentZoom)));
           ctx.lineWidth = lineWidth;
-          const dashLength = Math.max(4, Math.min(20, 12 * Math.sqrt(currentZoom))); // Dash ajustado
+          const dashLength = Math.max(4, Math.min(20, 12 * Math.sqrt(currentZoom)));
           ctx.setLineDash([dashLength, dashLength/2]);
           ctx.beginPath();
           ctx.moveTo(leInicio1Canvas.x, leInicio1Canvas.y);
@@ -870,21 +913,19 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Posicionar o texto considerando rotação
-          const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom))); // Mesmo fator
-          const offsetDistance = Math.max(40, Math.min(150, 80 * Math.sqrt(currentZoom))); // Offset base
+          const zoomFactor = Math.max(0.3, Math.min(2.0, 2.0 / Math.sqrt(currentZoom)));
+          const offsetDistance = Math.max(40, Math.min(150, 80 * Math.sqrt(currentZoom)));
           
-          // Calcular offset rotacionado (sempre para a direita da tela, independente da rotação)
           const rotationRad = (currentRotation * Math.PI) / 180;
-          const offsetX = offsetDistance * Math.cos(-rotationRad); // Negativo para compensar rotação
+          const offsetX = offsetDistance * Math.cos(-rotationRad);
           const offsetY = offsetDistance * Math.sin(-rotationRad);
           
           const midX = (leInicio1Canvas.x + ldInicio2Canvas.x) / 2 + offsetX;
           const midY = (leInicio1Canvas.y + ldInicio2Canvas.y) / 2 + offsetY;
           const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
           
-          const textWidth = Math.max(60, 110 * zoomFactor); // Caixa maior para texto maior
-          const textHeight = Math.max(20, 35 * zoomFactor); // Altura maior também
+          const textWidth = Math.max(60, 110 * zoomFactor);
+          const textHeight = Math.max(20, 35 * zoomFactor);
           ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
           ctx.fillRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight);
           
@@ -893,21 +934,26 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           ctx.strokeRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight);
           
           ctx.fillStyle = "#ff9800";
-          const crossFontSize = Math.max(6, 18 * zoomFactor); // Aumentado de 14 para 18 (30% maior)
+          const crossFontSize = Math.max(6, 18 * zoomFactor);
           ctx.font = `bold ${crossFontSize}px Arial`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(`${crossDistance.toFixed(3)}m`, midX, midY);
         }
 
+        debugLog("Desenho concluído, chamando showDistanceInfo");
         showDistanceInfo(struct1, struct2);
       }
 
       function showDistanceInfo(struct1, struct2) {
+        debugLog("=== GERANDO RELATÓRIO ===");
         const infoPanel = document.getElementById("infoPanel");
         const distanceInfo = document.getElementById("distanceInfo");
 
-        if (!struct1) return;
+        if (!struct1) {
+          debugLog("ERRO: struct1 é null, não é possível gerar relatório");
+          return;
+        }
 
         let html = '';
 
@@ -1324,7 +1370,7 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         } else {
-          // Para estrutura única, calcular pontos para análise de elevação
+          // Para estrutura única
           const allPointsForAnalysis = [struct1.ldInicio, struct1.leInicio, struct1.ldFinal, struct1.leFinal];
           const maxElevForAnalysis = Math.max(...allPointsForAnalysis.map(p => p.elevation));
           const minElevForAnalysis = Math.min(...allPointsForAnalysis.map(p => p.elevation));
@@ -1363,13 +1409,20 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         }
         
+        debugLog("Relatório gerado com sucesso");
         infoPanel.style.display = "block";
       }
 
       function processData() {
+        debugLog("=== PROCESSANDO DADOS ===");
         const csvData1 = document.getElementById("csvData1").value;
         const csvData2 = document.getElementById("csvData2").value;
         const errorMsg = document.getElementById("errorMsg");
+        
+        // Limpar debug anterior
+        document.getElementById('debugInfo').innerHTML = '';
+        document.getElementById('debugInfo').style.display = 'none';
+        
         errorMsg.innerHTML = "";
 
         if (!csvData1.trim()) {
@@ -1378,30 +1431,37 @@ P-06,LD_INICIO_OAE,-9.8968121600,-36.4157865000,188.99719,197.3135310000,-36.415
         }
 
         try {
+          debugLog("Processando CSV 1...");
           const data1 = parseCSV(csvData1);
+          debugLog("Processando CSV 2...");
           const data2 = parseCSV(csvData2);
 
+          debugLog("Procurando pontos no CSV 1...");
           const points1 = findPoints(data1);
+          debugLog("Procurando pontos no CSV 2...");
           const points2 = findPoints(data2);
           
           currentPoints1 = points1;
           currentPoints2 = points2;
 
           if (Object.keys(points1).length === 0) {
-            errorMsg.innerHTML = '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado no CSV 1!</div>';
+            errorMsg.innerHTML = '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado no CSV 1! Certifique-se de que existem pontos com *_OAE no nome ou código.</div>';
             return;
           }
 
+          debugLog("Iniciando visualização...");
           drawVisualization(points1, points2);
         } catch (error) {
           console.error("Erro:", error);
+          debugLog(`ERRO: ${error.message}`);
           errorMsg.innerHTML = `<div class="error">❌ Erro ao processar dados: ${error.message}</div>`;
         }
       }
 
       // Pré-carregar dados de exemplo
       window.onload = function () {
-        updateZoomDisplay(); // Atualizar display do zoom para 200%
+        console.log("🚀 Página carregada - JavaScript ativo");
+        updateZoomDisplay();
         loadExample1();
       };
     </script>
