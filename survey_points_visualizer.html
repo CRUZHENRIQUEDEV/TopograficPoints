@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analisador de Elevação e Inclinação de Tabuleiros de Ponte</title>
+    <title>Analisador de Inclinações - Tabuleiros de Ponte</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -23,7 +23,18 @@
       h1 {
         color: #333;
         text-align: center;
+        margin-bottom: 10px;
+      }
+      
+      .subtitle {
+        text-align: center;
+        color: #666;
         margin-bottom: 30px;
+        font-size: 14px;
+        padding: 10px;
+        background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+        border-radius: 8px;
+        border: 1px solid #2196f3;
       }
       
       .input-section {
@@ -208,9 +219,26 @@
         border: 2px solid #ff5722;
       }
       
+      .critical-warning-card {
+        background: linear-gradient(135deg, #ffebee, #fce4ec);
+        border: 3px solid #d32f2f;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+      }
+      
       .good-card {
         background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
         border: 2px solid #4caf50;
+      }
+      
+      .acceptable-card {
+        background: linear-gradient(135deg, #fff8e1, #f3e5f5);
+        border: 2px solid #ff9800;
       }
       
       .error {
@@ -306,11 +334,61 @@
         max-height: 200px;
         overflow-y: auto;
       }
+      
+      .limits-info {
+        background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+        border: 2px solid #1976d2;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      
+      .limits-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 10px;
+      }
+      
+      .limit-item {
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #1976d2;
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>🌉 Analisador de Elevação e Inclinação de Tabuleiros de Ponte</h1>
+      <h1>🌉 Analisador de Inclinações - Tabuleiros de Ponte</h1>
+      <div class="subtitle">
+        <strong>📐 Verificação de Conformidade Técnica</strong><br>
+        Sistema de análise automática de inclinações transversais e longitudinais para tabuleiros de ponte
+      </div>
+
+      <!-- Informações dos Limites -->
+      <div class="limits-info">
+        <h3 style="margin: 0 0 10px 0; color: #1976d2;">📏 Limites Técnicos Recomendados para Inclinações</h3>
+        <div class="limits-grid">
+          <div class="limit-item">
+            <div style="font-weight: bold; color: #d32f2f;">🔄 TRANSVERSAL (LD ↔ LE)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #d32f2f;">≤ 5,00%</div>
+            <div style="font-size: 12px; color: #666;">Lado com lado no mesmo ponto</div>
+            <div style="font-size: 11px; color: #999;">Início↔Início | Final↔Final</div>
+          </div>
+          <div class="limit-item">
+            <div style="font-weight: bold; color: #ff9800;">↕️ LONGITUDINAL (Início ↔ Final)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #ff9800;">≤ 2,50%</div>
+            <div style="font-size: 12px; color: #666;">Mesmo lado entre pontos</div>
+            <div style="font-size: 11px; color: #999;">LD↔LD | LE↔LE</div>
+          </div>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: #1976d2;">
+          <strong>Nota:</strong> Valores baseados em boas práticas da engenharia de pontes<br>
+          <strong>Regra de Verificação:</strong> Transversal = lado com lado no mesmo ponto | Longitudinal = mesmo lado entre pontos
+        </div>
+      </div>
 
       <div class="input-section">
         <!-- CSV 1 -->
@@ -343,7 +421,7 @@
       </div>
 
       <div class="controls">
-        <button onclick="processData()">🔄 Processar e Visualizar</button>
+        <button onclick="processData()">🔄 Processar e Analisar</button>
         <button onclick="clearAll()" style="background: #dc3545;">
           🗑️ Limpar Tudo
         </button>
@@ -395,7 +473,7 @@
       </div>
 
       <div id="infoPanel" class="info-panel" style="display: none">
-        <h3>📊 Medidas e Análises das Estruturas</h3>
+        <h3>📊 Relatório de Análise Técnica - Inclinações</h3>
         <div id="distanceInfo" class="distance-grid"></div>
         
         <!-- Resumo Executivo -->
@@ -412,6 +490,10 @@
       let currentPoints1 = {};
       let currentPoints2 = {};
       let currentRotation = 0; // Rotação em graus
+      
+      // Limites técnicos
+      const LIMIT_TRANSVERSAL = 5.0; // 5%
+      const LIMIT_LONGITUDINAL = 2.5; // 2.5%
       
       function debugLog(message) {
         console.log(message);
@@ -700,6 +782,41 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
         return points;
       }
 
+      // Função para determinar se inclinações são problemáticas (com novos limites)
+      function getInclinationStatus(inclination, isTransversal = false) {
+        const limit = isTransversal ? LIMIT_TRANSVERSAL : LIMIT_LONGITUDINAL;
+        
+        if (inclination.percentage > limit) {
+          return { 
+            class: "critical-warning-card", 
+            icon: "🚨", 
+            text: `ACIMA DO LIMITE (>${limit}%)`,
+            color: "#d32f2f"
+          };
+        } else if (inclination.percentage > limit * 0.8) {
+          return { 
+            class: "warning-card", 
+            icon: "⚠️", 
+            text: `Próximo ao Limite (${(limit * 0.8).toFixed(1)}-${limit}%)`,
+            color: "#ff5722"
+          };
+        } else if (inclination.percentage > limit * 0.5) {
+          return { 
+            class: "acceptable-card", 
+            icon: "🔶", 
+            text: `Moderada (${(limit * 0.5).toFixed(1)}-${(limit * 0.8).toFixed(1)}%)`,
+            color: "#ff9800"
+          };
+        } else {
+          return { 
+            class: "good-card", 
+            icon: "✅", 
+            text: `Dentro do Limite (<${(limit * 0.5).toFixed(1)}%)`,
+            color: "#4caf50"
+          };
+        }
+      }
+
       function drawVisualization(points1, points2 = {}) {
         debugLog("=== INICIANDO DESENHO ===");
         const canvas = document.getElementById("canvas");
@@ -946,7 +1063,7 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
       }
 
       function showDistanceInfo(struct1, struct2) {
-        debugLog("=== GERANDO RELATÓRIO ===");
+        debugLog("=== GERANDO RELATÓRIO DE CONFORMIDADE ===");
         const infoPanel = document.getElementById("infoPanel");
         const distanceInfo = document.getElementById("distanceInfo");
 
@@ -976,13 +1093,6 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
         const incl1_LD_LE_Final = calculateInclination(struct1.ldFinal, struct1.leFinal);
         const incl1_Inicio_Final_LD = calculateInclination(struct1.ldInicio, struct1.ldFinal);
         const incl1_Inicio_Final_LE = calculateInclination(struct1.leInicio, struct1.leFinal);
-
-        // Função para determinar se inclinações são problemáticas
-        function getInclinationStatus(inclination) {
-          if (inclination.percentage > 5) return { class: "warning-card", icon: "⚠️", text: "Alta" };
-          else if (inclination.percentage > 2) return { class: "distance-card", icon: "🔶", text: "Moderada" };
-          else return { class: "good-card", icon: "✅", text: "Boa" };
-        }
 
         // ANÁLISE COMPARATIVA PRIMEIRO se tiver 2 estruturas
         if (struct2) {
@@ -1044,6 +1154,9 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
             }
           }
           
+          // Status da inclinação entre estruturas (considerar como longitudinal)
+          const crossStatus = getInclinationStatus(crossInclination, false);
+          
           html += `
             <div class="distance-card cross-section">
               <div><strong>🔍 ANÁLISE COMPARATIVA ENTRE ESTRUTURAS</strong></div>
@@ -1058,10 +1171,11 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
               <div class="elevation-value" style="color: ${crossElevation >= 0 ? '#4caf50' : '#f44336'};">${crossElevation >= 0 ? '+' : ''}${crossElevation.toFixed(3)} m</div>
               <small>Entre estruturas (LE1→LD2)</small>
             </div>
-            <div class="distance-card ${getInclinationStatus(crossInclination).class}">
-              <div><strong>${getInclinationStatus(crossInclination).icon} Inclinação Entre Estruturas</strong></div>
-              <div class="inclination-value">${crossInclination.percentage.toFixed(2)}% (${crossInclination.degrees.toFixed(1)}°)</div>
-              <small>${crossInclination.direction} - ${getInclinationStatus(crossInclination).text}</small>
+            <div class="distance-card ${crossStatus.class}">
+              <div><strong>${crossStatus.icon} Inclinação Entre Estruturas</strong></div>
+              <div class="inclination-value" style="color: ${crossStatus.color};">${crossInclination.percentage.toFixed(2)}% (${crossInclination.degrees.toFixed(1)}°)</div>
+              <small>${crossInclination.direction} - ${crossStatus.text}</small>
+              <div style="font-size: 11px; margin-top: 5px; color: #666;">Limite longitudinal: ≤${LIMIT_LONGITUDINAL}%</div>
             </div>
             <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
               <div><strong>📐 Distância em X</strong></div>
@@ -1137,48 +1251,77 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
             <div><strong>📏 ESTRUTURA 1 - Análise de Elevação</strong></div>
           </div>
           <div class="distance-card elevation-analysis-card">
-            <div><strong>Diferença LD↔LE (Início)</strong></div>
+            <div><strong>Diferença LD↔LE (Início com Início)</strong></div>
             <div class="elevation-value" style="color: ${elev1_LD_LE_Inicio >= 0 ? '#4caf50' : '#f44336'};">${elev1_LD_LE_Inicio >= 0 ? '+' : ''}${elev1_LD_LE_Inicio.toFixed(3)} m</div>
-            <small>Inclinação transversal início</small>
+            <small>Inclinação transversal - mesmo ponto</small>
           </div>
           <div class="distance-card elevation-analysis-card">
-            <div><strong>Diferença LD↔LE (Final)</strong></div>
+            <div><strong>Diferença LD↔LE (Final com Final)</strong></div>
             <div class="elevation-value" style="color: ${elev1_LD_LE_Final >= 0 ? '#4caf50' : '#f44336'};">${elev1_LD_LE_Final >= 0 ? '+' : ''}${elev1_LD_LE_Final.toFixed(3)} m</div>
-            <small>Inclinação transversal final</small>
+            <small>Inclinação transversal - mesmo ponto</small>
           </div>
           <div class="distance-card elevation-analysis-card">
-            <div><strong>Diferença Início↔Final (LD)</strong></div>
+            <div><strong>Diferença LD: Início↔Final (Direito com Direito)</strong></div>
             <div class="elevation-value" style="color: ${elev1_Inicio_Final_LD >= 0 ? '#4caf50' : '#f44336'};">${elev1_Inicio_Final_LD >= 0 ? '+' : ''}${elev1_Inicio_Final_LD.toFixed(3)} m</div>
-            <small>Inclinação longitudinal LD</small>
+            <small>Inclinação longitudinal - mesmo lado</small>
           </div>
           <div class="distance-card elevation-analysis-card">
-            <div><strong>Diferença Início↔Final (LE)</strong></div>
+            <div><strong>Diferença LE: Início↔Final (Esquerdo com Esquerdo)</strong></div>
             <div class="elevation-value" style="color: ${elev1_Inicio_Final_LE >= 0 ? '#4caf50' : '#f44336'};">${elev1_Inicio_Final_LE >= 0 ? '+' : ''}${elev1_Inicio_Final_LE.toFixed(3)} m</div>
-            <small>Inclinação longitudinal LE</small>
+            <small>Inclinação longitudinal - mesmo lado</small>
           </div>
           
           <div class="distance-card elevation-section">
-            <div><strong>📐 ESTRUTURA 1 - Inclinações</strong></div>
+            <div><strong>📐 ESTRUTURA 1 - Verificação de Conformidade</strong></div>
           </div>
-          <div class="distance-card ${getInclinationStatus(incl1_LD_LE_Inicio).class}">
-            <div><strong>${getInclinationStatus(incl1_LD_LE_Inicio).icon} Inclinação LD↔LE (Início)</strong></div>
-            <div class="inclination-value">${incl1_LD_LE_Inicio.percentage.toFixed(2)}% (${incl1_LD_LE_Inicio.degrees.toFixed(1)}°)</div>
-            <small>${incl1_LD_LE_Inicio.direction} - ${getInclinationStatus(incl1_LD_LE_Inicio).text}</small>
+        `;
+
+        // Verificação de conformidade para estrutura 1
+        const status1_LD_LE_Inicio = getInclinationStatus(incl1_LD_LE_Inicio, true);
+        const status1_LD_LE_Final = getInclinationStatus(incl1_LD_LE_Final, true);
+        const status1_Inicio_Final_LD = getInclinationStatus(incl1_Inicio_Final_LD, false);
+        const status1_Inicio_Final_LE = getInclinationStatus(incl1_Inicio_Final_LE, false);
+
+        html += `
+          <div class="distance-card ${status1_LD_LE_Inicio.class}">
+            <div><strong>${status1_LD_LE_Inicio.icon} Transversal: LD↔LE (Início com Início)</strong></div>
+            <div class="inclination-value" style="color: ${status1_LD_LE_Inicio.color};">${incl1_LD_LE_Inicio.percentage.toFixed(2)}% (${incl1_LD_LE_Inicio.degrees.toFixed(1)}°)</div>
+            <small>${incl1_LD_LE_Inicio.direction} - ${status1_LD_LE_Inicio.text}</small>
+            <div style="font-size: 11px; margin-top: 5px; color: #666;">
+              📏 Distância: ${dist1Inicio.toFixed(3)}m | Desnível: ${Math.abs(elev1_LD_LE_Inicio).toFixed(3)}m<br>
+              📐 Cálculo: ${Math.abs(elev1_LD_LE_Inicio).toFixed(3)}m ÷ ${dist1Inicio.toFixed(3)}m × 100 = ${incl1_LD_LE_Inicio.percentage.toFixed(2)}%<br>
+              Limite transversal: ≤${LIMIT_TRANSVERSAL}%
+            </div>
           </div>
-          <div class="distance-card ${getInclinationStatus(incl1_LD_LE_Final).class}">
-            <div><strong>${getInclinationStatus(incl1_LD_LE_Final).icon} Inclinação LD↔LE (Final)</strong></div>
-            <div class="inclination-value">${incl1_LD_LE_Final.percentage.toFixed(2)}% (${incl1_LD_LE_Final.degrees.toFixed(1)}°)</div>
-            <small>${incl1_LD_LE_Final.direction} - ${getInclinationStatus(incl1_LD_LE_Final).text}</small>
+          <div class="distance-card ${status1_LD_LE_Final.class}">
+            <div><strong>${status1_LD_LE_Final.icon} Transversal: LD↔LE (Final com Final)</strong></div>
+            <div class="inclination-value" style="color: ${status1_LD_LE_Final.color};">${incl1_LD_LE_Final.percentage.toFixed(2)}% (${incl1_LD_LE_Final.degrees.toFixed(1)}°)</div>
+            <small>${incl1_LD_LE_Final.direction} - ${status1_LD_LE_Final.text}</small>
+            <div style="font-size: 11px; margin-top: 5px; color: #666;">
+              📏 Distância: ${dist1Final.toFixed(3)}m | Desnível: ${Math.abs(elev1_LD_LE_Final).toFixed(3)}m<br>
+              📐 Cálculo: ${Math.abs(elev1_LD_LE_Final).toFixed(3)}m ÷ ${dist1Final.toFixed(3)}m × 100 = ${incl1_LD_LE_Final.percentage.toFixed(2)}%<br>
+              Limite transversal: ≤${LIMIT_TRANSVERSAL}%
+            </div>
           </div>
-          <div class="distance-card ${getInclinationStatus(incl1_Inicio_Final_LD).class}">
-            <div><strong>${getInclinationStatus(incl1_Inicio_Final_LD).icon} Inclinação Início↔Final (LD)</strong></div>
-            <div class="inclination-value">${incl1_Inicio_Final_LD.percentage.toFixed(2)}% (${incl1_Inicio_Final_LD.degrees.toFixed(1)}°)</div>
-            <small>${incl1_Inicio_Final_LD.direction} - ${getInclinationStatus(incl1_Inicio_Final_LD).text}</small>
+          <div class="distance-card ${status1_Inicio_Final_LD.class}">
+            <div><strong>${status1_Inicio_Final_LD.icon} Longitudinal: LD (Direito com Direito)</strong></div>
+            <div class="inclination-value" style="color: ${status1_Inicio_Final_LD.color};">${incl1_Inicio_Final_LD.percentage.toFixed(2)}% (${incl1_Inicio_Final_LD.degrees.toFixed(1)}°)</div>
+            <small>${incl1_Inicio_Final_LD.direction} - ${status1_Inicio_Final_LD.text}</small>
+            <div style="font-size: 11px; margin-top: 5px; color: #666;">
+              📏 Distância: ${dist1LD.toFixed(3)}m | Desnível: ${Math.abs(elev1_Inicio_Final_LD).toFixed(3)}m<br>
+              📐 Cálculo: ${Math.abs(elev1_Inicio_Final_LD).toFixed(3)}m ÷ ${dist1LD.toFixed(3)}m × 100 = ${incl1_Inicio_Final_LD.percentage.toFixed(2)}%<br>
+              Limite longitudinal: ≤${LIMIT_LONGITUDINAL}%
+            </div>
           </div>
-          <div class="distance-card ${getInclinationStatus(incl1_Inicio_Final_LE).class}">
-            <div><strong>${getInclinationStatus(incl1_Inicio_Final_LE).icon} Inclinação Início↔Final (LE)</strong></div>
-            <div class="inclination-value">${incl1_Inicio_Final_LE.percentage.toFixed(2)}% (${incl1_Inicio_Final_LE.degrees.toFixed(1)}°)</div>
-            <small>${incl1_Inicio_Final_LE.direction} - ${getInclinationStatus(incl1_Inicio_Final_LE).text}</small>
+          <div class="distance-card ${status1_Inicio_Final_LE.class}">
+            <div><strong>${status1_Inicio_Final_LE.icon} Longitudinal: LE (Esquerdo com Esquerdo)</strong></div>
+            <div class="inclination-value" style="color: ${status1_Inicio_Final_LE.color};">${incl1_Inicio_Final_LE.percentage.toFixed(2)}% (${incl1_Inicio_Final_LE.degrees.toFixed(1)}°)</div>
+            <small>${incl1_Inicio_Final_LE.direction} - ${status1_Inicio_Final_LE.text}</small>
+            <div style="font-size: 11px; margin-top: 5px; color: #666;">
+              📏 Distância: ${dist1LE.toFixed(3)}m | Desnível: ${Math.abs(elev1_Inicio_Final_LE).toFixed(3)}m<br>
+              📐 Cálculo: ${Math.abs(elev1_Inicio_Final_LE).toFixed(3)}m ÷ ${dist1LE.toFixed(3)}m × 100 = ${incl1_Inicio_Final_LE.percentage.toFixed(2)}%<br>
+              Limite longitudinal: ≤${LIMIT_LONGITUDINAL}%
+            </div>
           </div>
         `;
 
@@ -1262,34 +1405,47 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
             </div>
             
             <div class="distance-card elevation-section">
-              <div><strong>📐 ESTRUTURA 2 - Inclinações</strong></div>
+              <div><strong>📐 ESTRUTURA 2 - Verificação de Conformidade</strong></div>
             </div>
-            <div class="distance-card ${getInclinationStatus(incl2_LD_LE_Inicio).class}">
-              <div><strong>${getInclinationStatus(incl2_LD_LE_Inicio).icon} Inclinação LD↔LE (Início)</strong></div>
-              <div class="inclination-value">${incl2_LD_LE_Inicio.percentage.toFixed(2)}% (${incl2_LD_LE_Inicio.degrees.toFixed(1)}°)</div>
-              <small>${incl2_LD_LE_Inicio.direction} - ${getInclinationStatus(incl2_LD_LE_Inicio).text}</small>
+          `;
+
+          // Verificação de conformidade para estrutura 2
+          const status2_LD_LE_Inicio = getInclinationStatus(incl2_LD_LE_Inicio, true);
+          const status2_LD_LE_Final = getInclinationStatus(incl2_LD_LE_Final, true);
+          const status2_Inicio_Final_LD = getInclinationStatus(incl2_Inicio_Final_LD, false);
+          const status2_Inicio_Final_LE = getInclinationStatus(incl2_Inicio_Final_LE, false);
+
+          html += `
+            <div class="distance-card ${status2_LD_LE_Inicio.class}">
+              <div><strong>${status2_LD_LE_Inicio.icon} Transversal: LD↔LE (Início com Início)</strong></div>
+              <div class="inclination-value" style="color: ${status2_LD_LE_Inicio.color};">${incl2_LD_LE_Inicio.percentage.toFixed(2)}% (${incl2_LD_LE_Inicio.degrees.toFixed(1)}°)</div>
+              <small>${incl2_LD_LE_Inicio.direction} - ${status2_LD_LE_Inicio.text}</small>
+              <div style="font-size: 11px; margin-top: 5px; color: #666;">Limite transversal: ≤${LIMIT_TRANSVERSAL}%</div>
             </div>
-            <div class="distance-card ${getInclinationStatus(incl2_LD_LE_Final).class}">
-              <div><strong>${getInclinationStatus(incl2_LD_LE_Final).icon} Inclinação LD↔LE (Final)</strong></div>
-              <div class="inclination-value">${incl2_LD_LE_Final.percentage.toFixed(2)}% (${incl2_LD_LE_Final.degrees.toFixed(1)}°)</div>
-              <small>${incl2_LD_LE_Final.direction} - ${getInclinationStatus(incl2_LD_LE_Final).text}</small>
+            <div class="distance-card ${status2_LD_LE_Final.class}">
+              <div><strong>${status2_LD_LE_Final.icon} Transversal: LD↔LE (Final com Final)</strong></div>
+              <div class="inclination-value" style="color: ${status2_LD_LE_Final.color};">${incl2_LD_LE_Final.percentage.toFixed(2)}% (${incl2_LD_LE_Final.degrees.toFixed(1)}°)</div>
+              <small>${incl2_LD_LE_Final.direction} - ${status2_LD_LE_Final.text}</small>
+              <div style="font-size: 11px; margin-top: 5px; color: #666;">Limite transversal: ≤${LIMIT_TRANSVERSAL}%</div>
             </div>
-            <div class="distance-card ${getInclinationStatus(incl2_Inicio_Final_LD).class}">
-              <div><strong>${getInclinationStatus(incl2_Inicio_Final_LD).icon} Inclinação Início↔Final (LD)</strong></div>
-              <div class="inclination-value">${incl2_Inicio_Final_LD.percentage.toFixed(2)}% (${incl2_Inicio_Final_LD.degrees.toFixed(1)}°)</div>
-              <small>${incl2_Inicio_Final_LD.direction} - ${getInclinationStatus(incl2_Inicio_Final_LD).text}</small>
+            <div class="distance-card ${status2_Inicio_Final_LD.class}">
+              <div><strong>${status2_Inicio_Final_LD.icon} Longitudinal: LD (Direito com Direito)</strong></div>
+              <div class="inclination-value" style="color: ${status2_Inicio_Final_LD.color};">${incl2_Inicio_Final_LD.percentage.toFixed(2)}% (${incl2_Inicio_Final_LD.degrees.toFixed(1)}°)</div>
+              <small>${incl2_Inicio_Final_LD.direction} - ${status2_Inicio_Final_LD.text}</small>
+              <div style="font-size: 11px; margin-top: 5px; color: #666;">Limite longitudinal: ≤${LIMIT_LONGITUDINAL}%</div>
             </div>
-            <div class="distance-card ${getInclinationStatus(incl2_Inicio_Final_LE).class}">
-              <div><strong>${getInclinationStatus(incl2_Inicio_Final_LE).icon} Inclinação Início↔Final (LE)</strong></div>
-              <div class="inclination-value">${incl2_Inicio_Final_LE.percentage.toFixed(2)}% (${incl2_Inicio_Final_LE.degrees.toFixed(1)}°)</div>
-              <small>${incl2_Inicio_Final_LE.direction} - ${getInclinationStatus(incl2_Inicio_Final_LE).text}</small>
+            <div class="distance-card ${status2_Inicio_Final_LE.class}">
+              <div><strong>${status2_Inicio_Final_LE.icon} Longitudinal: LE (Esquerdo com Esquerdo)</strong></div>
+              <div class="inclination-value" style="color: ${status2_Inicio_Final_LE.color};">${incl2_Inicio_Final_LE.percentage.toFixed(2)}% (${incl2_Inicio_Final_LE.degrees.toFixed(1)}°)</div>
+              <small>${incl2_Inicio_Final_LE.direction} - ${status2_Inicio_Final_LE.text}</small>
+              <div style="font-size: 11px; margin-top: 5px; color: #666;">Limite longitudinal: ≤${LIMIT_LONGITUDINAL}%</div>
             </div>
           `;
         }
 
         distanceInfo.innerHTML = html;
         
-        // Adicionar resumo executivo
+        // Adicionar resumo executivo melhorado
         if (struct2) {
           const dist2Inicio = calculateDistance(struct2.ldInicio, struct2.leInicio);
           const dist2Final = calculateDistance(struct2.ldFinal, struct2.leFinal);
@@ -1297,11 +1453,6 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
           const dist2LE = calculateDistance(struct2.leInicio, struct2.leFinal);
           const media2Largura = (dist2Inicio + dist2Final) / 2;
           const media2Comprimento = (dist2LD + dist2LE) / 2;
-
-          const elev2_LD_LE_Inicio = calculateElevationDifference(struct2.ldInicio, struct2.leInicio);
-          const elev2_LD_LE_Final = calculateElevationDifference(struct2.ldFinal, struct2.leFinal);
-          const elev2_Inicio_Final_LD = calculateElevationDifference(struct2.ldInicio, struct2.ldFinal);
-          const elev2_Inicio_Final_LE = calculateElevationDifference(struct2.leInicio, struct2.leFinal);
 
           const incl2_LD_LE_Inicio = calculateInclination(struct2.ldInicio, struct2.leInicio);
           const incl2_LD_LE_Final = calculateInclination(struct2.ldFinal, struct2.leFinal);
@@ -1314,20 +1465,25 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
           const mediaGeralLargura = (media1Largura + media2Largura) / 2;
           const mediaGeralComprimento = (media1Comprimento + media2Comprimento) / 2;
           
-          // Verificar problemas de inclinação
-          const problemasInclinacao = [];
-          if (incl1_LD_LE_Inicio.percentage > 5) problemasInclinacao.push("Est.1 LD↔LE início");
-          if (incl1_LD_LE_Final.percentage > 5) problemasInclinacao.push("Est.1 LD↔LE final");
-          if (incl1_Inicio_Final_LD.percentage > 5) problemasInclinacao.push("Est.1 LD longitudinal");
-          if (incl1_Inicio_Final_LE.percentage > 5) problemasInclinacao.push("Est.1 LE longitudinal");
-          if (incl2_LD_LE_Inicio.percentage > 5) problemasInclinacao.push("Est.2 LD↔LE início");
-          if (incl2_LD_LE_Final.percentage > 5) problemasInclinacao.push("Est.2 LD↔LE final");
-          if (incl2_Inicio_Final_LD.percentage > 5) problemasInclinacao.push("Est.2 LD longitudinal");
-          if (incl2_Inicio_Final_LE.percentage > 5) problemasInclinacao.push("Est.2 LE longitudinal");
-          if (crossInclination.percentage > 5) problemasInclinacao.push("Entre estruturas");
+          // Verificar problemas de inclinação com novos limites
+          const problemasTransversais = [];
+          const problemasLongitudinais = [];
+          
+          if (incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL) problemasTransversais.push("Est.1 Transversal Início (LD↔LE)");
+          if (incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL) problemasTransversais.push("Est.1 Transversal Final (LD↔LE)");
+          if (incl2_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL) problemasTransversais.push("Est.2 Transversal Início (LD↔LE)");
+          if (incl2_LD_LE_Final.percentage > LIMIT_TRANSVERSAL) problemasTransversais.push("Est.2 Transversal Final (LD↔LE)");
+          
+          if (incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.1 Longitudinal LD (Direito)");
+          if (incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.1 Longitudinal LE (Esquerdo)");
+          if (incl2_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.2 Longitudinal LD (Direito)");
+          if (incl2_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.2 Longitudinal LE (Esquerdo)");
+          if (crossInclination.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Entre estruturas (Longitudinal)");
+          
+          const totalProblemas = problemasTransversais.length + problemasLongitudinais.length;
           
           const summaryHtml = `
-            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Análise Completa</h4>
+            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Análise Técnica</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center;">
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #007bff;">🌉 Distância Total</div>
@@ -1340,9 +1496,9 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
                 <div style="font-size: 12px; color: #6c757d;">Entre estruturas</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: ${crossInclination.percentage > 5 ? '#f44336' : crossInclination.percentage > 2 ? '#ff9800' : '#4caf50'};">📐 Inclinação</div>
-                <div style="font-size: 16px; font-weight: bold; color: ${crossInclination.percentage > 5 ? '#f44336' : crossInclination.percentage > 2 ? '#ff9800' : '#4caf50'}; margin: 5px 0;">${crossInclination.percentage.toFixed(2)}%</div>
-                <div style="font-size: 12px; color: #6c757d;">Entre estruturas</div>
+                <div style="font-weight: bold; color: ${crossInclination.percentage > LIMIT_LONGITUDINAL ? '#f44336' : crossInclination.percentage > LIMIT_LONGITUDINAL * 0.8 ? '#ff9800' : '#4caf50'};">📐 Inclinação Entre Estru.</div>
+                <div style="font-size: 16px; font-weight: bold; color: ${crossInclination.percentage > LIMIT_LONGITUDINAL ? '#f44336' : crossInclination.percentage > LIMIT_LONGITUDINAL * 0.8 ? '#ff9800' : '#4caf50'}; margin: 5px 0;">${crossInclination.percentage.toFixed(2)}%</div>
+                <div style="font-size: 12px; color: #6c757d;">Limite: ≤${LIMIT_LONGITUDINAL}%</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #9c27b0;">📏 Largura Média</div>
@@ -1354,19 +1510,26 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
                 <div style="font-size: 16px; font-weight: bold; color: #ff9800; margin: 5px 0;">${mediaGeralComprimento.toFixed(3)}m</div>
                 <div style="font-size: 12px; color: #6c757d;">Geral (Est.1+2)</div>
               </div>
-              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid ${problemasInclinacao.length > 0 ? '#f44336' : '#4caf50'};">
-                <div style="font-weight: bold; color: ${problemasInclinacao.length > 0 ? '#f44336' : '#4caf50'};">${problemasInclinacao.length > 0 ? '⚠️' : '✅'} Status Inclinação</div>
-                <div style="font-size: 16px; font-weight: bold; color: ${problemasInclinacao.length > 0 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${problemasInclinacao.length > 0 ? `${problemasInclinacao.length} Problemas` : 'Dentro do Normal'}</div>
-                <div style="font-size: 12px; color: #6c757d;">${problemasInclinacao.length > 0 ? 'Verificar inclinações' : 'Todas inclinações OK'}</div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid ${totalProblemas > 0 ? '#f44336' : '#4caf50'};">
+                <div style="font-weight: bold; color: ${totalProblemas > 0 ? '#f44336' : '#4caf50'};">${totalProblemas > 0 ? '🚨' : '✅'} Status Conformidade</div>
+                <div style="font-size: 16px; font-weight: bold; color: ${totalProblemas > 0 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${totalProblemas > 0 ? `${totalProblemas} Não Conformidades` : 'CONFORME'}</div>
+                <div style="font-size: 12px; color: #6c757d;">${totalProblemas > 0 ? 'Revisar inclinações' : 'Todas inclinações OK'}</div>
               </div>
             </div>
-            ${problemasInclinacao.length > 0 ? `
-            <div style="margin-top: 15px; padding: 12px; background: #fff3e0; border: 2px solid #ff9800; border-radius: 6px;">
-              <div style="font-weight: bold; color: #f57c00; margin-bottom: 8px;">⚠️ Inclinações Altas Detectadas (>5%):</div>
-              <div style="font-size: 14px; color: #ef6c00;">${problemasInclinacao.join(', ')}</div>
-              <div style="font-size: 12px; color: #f57c00; margin-top: 5px;">Recomenda-se verificação estrutural para inclinações > 5%</div>
+            ${totalProblemas > 0 ? `
+            <div style="margin-top: 15px; padding: 12px; background: #ffebee; border: 2px solid #f44336; border-radius: 6px;">
+              <div style="font-weight: bold; color: #d32f2f; margin-bottom: 8px;">🚨 INCLINAÇÕES ACIMA DOS LIMITES TÉCNICOS:</div>
+              ${problemasTransversais.length > 0 ? `<div style="font-size: 14px; color: #c62828; margin-bottom: 5px;"><strong>Transversais (>${LIMIT_TRANSVERSAL}%):</strong> ${problemasTransversais.join(', ')}</div>` : ''}
+              ${problemasLongitudinais.length > 0 ? `<div style="font-size: 14px; color: #c62828;"><strong>Longitudinais (>${LIMIT_LONGITUDINAL}%):</strong> ${problemasLongitudinais.join(', ')}</div>` : ''}
+              <div style="font-size: 12px; color: #d32f2f; margin-top: 8px; font-weight: bold;">⚠️ RECOMENDA-SE ANÁLISE ESTRUTURAL ESPECÍFICA</div>
             </div>
-            ` : ''}
+            ` : `
+            <div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border: 2px solid #4caf50; border-radius: 6px;">
+              <div style="font-weight: bold; color: #2e7d32; margin-bottom: 8px;">✅ ESTRUTURAS DENTRO DOS LIMITES TÉCNICOS</div>
+              <div style="font-size: 14px; color: #388e3c;">Todas as inclinações estão dentro dos limites recomendados</div>
+              <div style="font-size: 12px; color: #2e7d32; margin-top: 5px;">Transversais: ≤${LIMIT_TRANSVERSAL}% | Longitudinais: ≤${LIMIT_LONGITUDINAL}%</div>
+            </div>
+            `}
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         } else {
@@ -1375,8 +1538,20 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
           const maxElevForAnalysis = Math.max(...allPointsForAnalysis.map(p => p.elevation));
           const minElevForAnalysis = Math.min(...allPointsForAnalysis.map(p => p.elevation));
           
+          // Verificar problemas de inclinação para estrutura única
+          const problemasTransversais = [];
+          const problemasLongitudinais = [];
+          
+          if (incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL) problemasTransversais.push("Transversal Início (LD↔LE)");
+          if (incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL) problemasTransversais.push("Transversal Final (LD↔LE)");
+          
+          if (incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Longitudinal LD (Direito)");
+          if (incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Longitudinal LE (Esquerdo)");
+          
+          const totalProblemasUnica = problemasTransversais.length + problemasLongitudinais.length;
+          
           const summaryHtml = `
-            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Estrutura Única</h4>
+            <h4 style="margin-bottom: 15px; color: #495057;">📋 Resumo Executivo - Análise Técnica (Estrutura Única)</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: center;">
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #9c27b0;">📏 Largura Média</div>
@@ -1387,14 +1562,19 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
                 <div style="font-size: 18px; font-weight: bold; color: #ff9800; margin: 5px 0;">${media1Comprimento.toFixed(3)} m</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > 5 || incl1_LD_LE_Final.percentage > 5 ? '#f44336' : '#4caf50'};">📐 Status Transversal</div>
-                <div style="font-size: 14px; font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > 5 || incl1_LD_LE_Final.percentage > 5 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_LD_LE_Inicio.percentage > 5 || incl1_LD_LE_Final.percentage > 5 ? 'Atenção' : 'OK'}</div>
-                <div style="font-size: 12px; color: #6c757d;">Inclinação LD↔LE</div>
+                <div style="font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? '#f44336' : '#4caf50'};">🔄 Status Transversal</div>
+                <div style="font-size: 14px; font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? 'ACIMA DO LIMITE' : 'DENTRO DO LIMITE'}</div>
+                <div style="font-size: 12px; color: #6c757d;">Limite: ≤${LIMIT_TRANSVERSAL}%</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? '#f44336' : '#4caf50'};">📐 Status Longitudinal</div>
-                <div style="font-size: 14px; font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_Inicio_Final_LD.percentage > 5 || incl1_Inicio_Final_LE.percentage > 5 ? 'Atenção' : 'OK'}</div>
-                <div style="font-size: 12px; color: #6c757d;">Inclinação Início↔Final</div>
+                <div style="font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL || incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL ? '#f44336' : '#4caf50'};">↕️ Status Longitudinal</div>
+                <div style="font-size: 14px; font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL || incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL || incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL ? 'ACIMA DO LIMITE' : 'DENTRO DO LIMITE'}</div>
+                <div style="font-size: 12px; color: #6c757d;">Limite: ≤${LIMIT_LONGITUDINAL}%</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid ${totalProblemasUnica > 0 ? '#f44336' : '#4caf50'};">
+                <div style="font-weight: bold; color: ${totalProblemasUnica > 0 ? '#f44336' : '#4caf50'};">${totalProblemasUnica > 0 ? '🚨' : '✅'} Status Geral</div>
+                <div style="font-size: 16px; font-weight: bold; color: ${totalProblemasUnica > 0 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${totalProblemasUnica > 0 ? `${totalProblemasUnica} Acima dos Limites` : 'DENTRO DOS LIMITES'}</div>
+                <div style="font-size: 12px; color: #6c757d;">${totalProblemasUnica > 0 ? 'Revisar inclinações' : 'Todas inclinações OK'}</div>
               </div>
             </div>
             <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 6px;">
@@ -1405,11 +1585,58 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
               </div>
               <div style="font-size: 12px; color: #1976d2; margin-top: 5px;">Amplitude total: ${(maxElevForAnalysis - minElevForAnalysis).toFixed(3)}m</div>
             </div>
+            ${totalProblemasUnica > 0 ? `
+            <div style="margin-top: 15px; padding: 12px; background: #ffebee; border: 2px solid #f44336; border-radius: 6px;">
+              <div style="font-weight: bold; color: #d32f2f; margin-bottom: 8px;">🚨 INCLINAÇÕES ACIMA DOS LIMITES TÉCNICOS:</div>
+              ${problemasTransversais.length > 0 ? `<div style="font-size: 14px; color: #c62828; margin-bottom: 5px;"><strong>Transversais (>${LIMIT_TRANSVERSAL}%):</strong> ${problemasTransversais.join(', ')}</div>` : ''}
+              ${problemasLongitudinais.length > 0 ? `<div style="font-size: 14px; color: #c62828;"><strong>Longitudinais (>${LIMIT_LONGITUDINAL}%):</strong> ${problemasLongitudinais.join(', ')}</div>` : ''}
+              <div style="font-size: 12px; color: #d32f2f; margin-top: 8px; font-weight: bold;">⚠️ RECOMENDA-SE ANÁLISE ESTRUTURAL ESPECÍFICA</div>
+            </div>
+            ` : `
+            <div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border: 2px solid #4caf50; border-radius: 6px;">
+              <div style="font-weight: bold; color: #2e7d32; margin-bottom: 8px;">✅ ESTRUTURA DENTRO DOS LIMITES TÉCNICOS</div>
+              <div style="font-size: 14px; color: #388e3c;">Todas as inclinações estão dentro dos limites recomendados</div>
+              <div style="font-size: 12px; color: #2e7d32; margin-top: 5px;">Transversais: ≤${LIMIT_TRANSVERSAL}% | Longitudinais: ≤${LIMIT_LONGITUDINAL}%</div>
+            </div>
+            `}
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         }
         
-        debugLog("Relatório gerado com sucesso");
+        debugLog("Relatório de análise técnica gerado com sucesso");
+        
+        // Adicionar seção explicativa da metodologia
+        const metodologiaHtml = `
+          <div style="margin-top: 25px; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border: 2px solid #6c757d;">
+            <h4 style="margin: 0 0 15px 0; color: #495057; text-align: center;">📐 Metodologia de Análise Aplicada</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 2px solid #d32f2f;">
+                <div style="font-weight: bold; color: #d32f2f; margin-bottom: 8px;">🔄 INCLINAÇÕES TRANSVERSAIS (≤5%)</div>
+                <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                  <strong>✓ LD_INÍCIO ↔ LE_INÍCIO</strong><br>
+                  <em>Lado direito com lado esquerdo no mesmo ponto</em><br><br>
+                  <strong>✓ LD_FINAL ↔ LE_FINAL</strong><br>
+                  <em>Lado direito com lado esquerdo no mesmo ponto</em>
+                </div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 2px solid #ff9800;">
+                <div style="font-weight: bold; color: #ff9800; margin-bottom: 8px;">↕️ INCLINAÇÕES LONGITUDINAIS (≤2,5%)</div>
+                <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                  <strong>✓ LD_INÍCIO ↔ LD_FINAL</strong><br>
+                  <em>Mesmo lado direito entre pontos</em><br><br>
+                  <strong>✓ LE_INÍCIO ↔ LE_FINAL</strong><br>
+                  <em>Mesmo lado esquerdo entre pontos</em>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 12px; font-size: 12px; color: #6c757d;">
+              <strong>Boas Práticas da Engenharia de Pontes</strong> - Sistema automatizado de análise técnica de tabuleiros
+            </div>
+          </div>
+        `;
+        
+        document.getElementById('executiveSummary').insertAdjacentHTML('afterend', metodologiaHtml);
+        
         infoPanel.style.display = "block";
       }
 
@@ -1460,7 +1687,7 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
 
       // Pré-carregar dados de exemplo
       window.onload = function () {
-        console.log("🚀 Página carregada - JavaScript ativo");
+        console.log("🚀 Página carregada - Analisador de Inclinações ativo");
         updateZoomDisplay();
         loadExample1();
       };
