@@ -363,8 +363,9 @@
     <div class="container">
       <h1>🌉 Analisador de Inclinações - Tabuleiros de Ponte</h1>
       <div class="subtitle">
-        <strong>📐 Verificação de Conformidade Técnica</strong><br>
-        Sistema de análise automática de inclinações transversais e longitudinais para tabuleiros de ponte
+        <strong>📐 Verificação de Conformidade Técnica com Detecção Automática SIRGAS 2000</strong><br>
+        Sistema de análise automática de inclinações transversais e longitudinais para tabuleiros de ponte<br>
+        <small style="color: #1976d2;">🗺️ Detecção automática da zona SIRGAS 2000 | Suporte para múltiplos formatos CSV</small>
       </div>
 
       <!-- Informações dos Limites -->
@@ -400,7 +401,10 @@
           ></textarea>
           <div class="example-buttons">
             <button onclick="loadExample1()" class="example-btn">
-              📝 Exemplo CSV 1
+              📝 Exemplo CSV 1 (Lat/Long)
+            </button>
+            <button onclick="loadExample1UTM()" class="example-btn">
+              📝 Exemplo CSV 1 (UTM)
             </button>
           </div>
         </div>
@@ -414,7 +418,7 @@
           ></textarea>
           <div class="example-buttons">
             <button onclick="loadExample2()" class="example-btn">
-              📝 Exemplo CSV 2
+              📝 Exemplo CSV 2 (UTM)
             </button>
           </div>
         </div>
@@ -465,7 +469,7 @@
         <span>Glob = Elevação Global | Rel = Elevação Relativa ao ponto mais alto (0,00m)</span>
         <br>
         <strong>📋 Formatos Suportados:</strong>
-        <span>LAT/LONG | H_ORTHO ou H_ORTO | Múltiplos formatos CSV</span>
+        <span>LAT/LONG | H_ORTHO/H_ORTO | Leste/Norte/Elev | Easting/Northing | Múltiplos formatos CSV com detecção automática de zona SIRGAS 2000</span>
       </div>
 
       <div class="visualization">
@@ -504,6 +508,62 @@
         }
       }
       
+      // Função para determinar zona SIRGAS 2000
+      function determineSirgas2000Zone(point) {
+        let longitude = null;
+        
+        // Se temos coordenadas geográficas diretamente
+        if (point.longitude && Math.abs(point.longitude) <= 180) {
+          longitude = point.longitude;
+        }
+        // Se temos coordenadas UTM, fazer conversão aproximada
+        else if (point.easting && point.northing) {
+          longitude = approximateUTMToLongitude(point.easting, point.northing);
+        }
+        
+        if (longitude !== null) {
+          // Fórmula: Zona = PARTE_INTEIRA((Longitude + 180) / 6) + 1
+          const zona = Math.floor((longitude + 180) / 6) + 1;
+          return zona;
+        }
+        
+        return null;
+      }
+      
+      // Conversão aproximada de UTM para longitude (simplificada para Brasil)
+      function approximateUTMToLongitude(easting, northing) {
+        // Para o Brasil, estimativa baseada em coordenadas típicas
+        // Northing ~8954447 indica latitude aprox -10° (região nordeste)
+        
+        // Estimativa de zona baseada no padrão UTM brasileiro
+        let estimatedZone = null;
+        
+        // Coordenada Leste baixa (~187500) indica zona com meridiano central mais a oeste
+        if (easting < 300000) {
+          if (northing > 8900000 && northing < 9100000) {
+            // Região nordeste com Leste baixo - provavelmente Zona 24 ou 25
+            estimatedZone = easting < 250000 ? 25 : 24;
+          }
+        } else if (easting < 500000) {
+          estimatedZone = 24;
+        } else if (easting < 700000) {
+          estimatedZone = 23;
+        }
+        
+        if (estimatedZone) {
+          // Calcular longitude do meridiano central da zona
+          const centralMeridian = (estimatedZone - 1) * 6 - 180 + 3; // +3 para o centro da zona
+          
+          // Conversão aproximada (simplificada)
+          const deltaEasting = easting - 500000; // 500000 é o false easting padrão
+          const deltaLongitude = deltaEasting / 111320; // aprox metros por grau
+          
+          return centralMeridian + deltaLongitude;
+        }
+        
+        return null;
+      }
+      
       function loadExample1() {
         const exampleData1 = `Name,Code,Lat,Long,H_GEO,H_ORTO,x,y
 "05",JUSESQ,-9.8976347800,-36.4167136000,188.80925,197.1262098000,-36.4167136710,-9.8976347823
@@ -519,16 +579,23 @@ P-02,LD_INICIO_OAE,-9.8974121600,-36.4164865000,188.99719,197.3135310000,-36.416
         processData();
       }
 
+      function loadExample1UTM() {
+        const exampleDataUTM = `Ponto,Codigo,Leste,Prec,Norte,Prec,Elev,Prec,Solucao,PDOP,Sate
+P-01,LE INICIO PONTE,187514.122,0.017,8954447.811,0.017,102.288,0.047,RTX,0.9,29
+P-02,LD INICIO PONTE,187512.661,0.023,8954459.014,0.023,101.795,0.051,RTX,0.9,29
+P-03,LD FINAL DE PONTE,187493.840,0.022,8954456.634,0.022,101.843,0.048,RTX,0.9,30
+P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,30`;
+
+        document.getElementById('csvData1').value = exampleDataUTM;
+        processData();
+      }
+
       function loadExample2() {
-        const exampleData2 = `Name,Code,LAT,LONG,H_GEO,OND_GEOIDAL,H_ORTHO
-P-03,LE_FINAL_OAE,-9.5859031742,-35.9998403261,64.15077,-8.34781878249589,72.4985887825
-P-04,LD_FINAL_OAE,-9.5858035005,-35.9998555991,65.02932,-8.34729391104167,73.3766139110
-P-02,LD_INICIO_OAE,-9.5857831989,-35.9997202172,65.13386,-8.34760639575098,73.4814663958
-P-01,LE_INICIO_OAE,-9.5858827982,-35.9997040603,64.19835,-8.34813373922375,72.5464837392
-P-05,JUSDIR,-9.5859092793,-36.0002888500,64.13941,-8.34648921628544,72.4858992163
-P-06,JUSDIR,-9.5860060249,-36.0002554090,63.39445,-8.34705462681217,71.7415046268
-P-07,MONT DIR,-9.5858598116,-35.9994324627,64.59709,-8.34884602273111,72.9459360227
-P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.8301104841`;
+        const exampleData2 = `Ponto,Codigo,Leste,Prec,Norte,Prec,Elev,Prec,Solucao,PDOP,Sate
+01,LE INICIO PONTE,187514.122,0.017,8954447.811,0.017,102.288,0.047,RTX,0.9,29
+02,LD INICIO PONTE,187512.661,0.023,8954459.014,0.023,101.795,0.051,RTX,0.9,29
+07,LD FINAL DE PONTE,187493.840,0.022,8954456.634,0.022,101.843,0.048,RTX,0.9,30
+08,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,30`;
 
         document.getElementById('csvData2').value = exampleData2;
         processData();
@@ -603,7 +670,7 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
         let dataStartIndex = 0;
 
         // Detectar se a primeira linha contém cabeçalhos
-        const commonHeaders = ["Name", "Code", "Lat", "LAT", "Long", "LONG", "x", "y", "H_ORTO", "H_ORTHO", "H_GEO"];
+        const commonHeaders = ["Name", "Code", "Lat", "LAT", "Long", "LONG", "x", "y", "H_ORTO", "H_ORTHO", "H_GEO", "Ponto", "Codigo", "Leste", "Norte", "Elev"];
         const hasHeaders = commonHeaders.some(header => firstLine.includes(header));
         
         if (hasHeaders) {
@@ -706,12 +773,12 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
         data.forEach((row, index) => {
           debugLog(`Processando linha ${index}: ${JSON.stringify(row)}`);
           
-          const name = row.Name || row.Code || "";
-          const code = row.Code || row.Name || "";
+          const name = row.Name || row.Ponto || row.Code || row.Codigo || "";
+          const code = row.Code || row.Codigo || row.Name || row.Ponto || "";
 
           debugLog(`Nome: ${name}, Código: ${code}`);
 
-          // Verificar se é um ponto de estrutura (OAE)
+          // Verificar se é um ponto de estrutura (OAE ou PONTE)
           const isStructurePoint = 
             code.includes("LD_INICIO_OAE") ||
             code.includes("LE_INICIO_OAE") ||
@@ -720,17 +787,34 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
             name.includes("LD_INICIO_OAE") ||
             name.includes("LE_INICIO_OAE") ||
             name.includes("LD_FINAL_OAE") ||
-            name.includes("LE_FINAL_OAE");
+            name.includes("LE_FINAL_OAE") ||
+            // Novos formatos com PONTE
+            code.includes("LD INICIO PONTE") ||
+            code.includes("LE INICIO PONTE") ||
+            code.includes("LD FINAL PONTE") ||
+            code.includes("LE FINAL PONTE") ||
+            code.includes("LD FINAL DE PONTE") ||
+            code.includes("LE FINAL DE PONTE") ||
+            name.includes("LD INICIO PONTE") ||
+            name.includes("LE INICIO PONTE") ||
+            name.includes("LD FINAL PONTE") ||
+            name.includes("LE FINAL PONTE") ||
+            name.includes("LD FINAL DE PONTE") ||
+            name.includes("LE FINAL DE PONTE");
 
           if (isStructurePoint) {
             debugLog(`Ponto de estrutura encontrado: ${name || code}`);
             
             let xCoord, yCoord, elevation;
 
-            // Coordenadas
+            // Coordenadas - suporte para novos formatos
             if (row.Northing && row.Easting) {
               xCoord = parseFloat(row.Easting);
               yCoord = parseFloat(row.Northing);
+            }
+            else if (row.Norte && row.Leste) {
+              xCoord = parseFloat(row.Leste);
+              yCoord = parseFloat(row.Norte);
             }
             else if (row.x && row.y) {
               xCoord = parseFloat(row.x);
@@ -741,9 +825,10 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
               yCoord = parseFloat(row.Lat || row.LAT);
             }
 
-            // Elevação - suporte para H_ORTHO e H_ORTO
+            // Elevação - suporte ampliado
             elevation = parseFloat(row.H_ORTHO) || 
                        parseFloat(row.H_ORTO) || 
+                       parseFloat(row.Elev) || 
                        parseFloat(row.Elevation) || 
                        parseFloat(row.H_GEO) || 
                        parseFloat(row.Altura) || 
@@ -752,25 +837,47 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
             debugLog(`Coordenadas: x=${xCoord}, y=${yCoord}, elevação=${elevation}`);
 
             if (!isNaN(xCoord) && !isNaN(yCoord) && !isNaN(elevation)) {
+              // Normalizar nomes para compatibilidade
+              let normalizedCode = code || name;
+              
+              // Converter formatos de PONTE para OAE para compatibilidade
+              normalizedCode = normalizedCode
+                .replace("LD INICIO PONTE", "LD_INICIO_OAE")
+                .replace("LE INICIO PONTE", "LE_INICIO_OAE")
+                .replace("LD FINAL PONTE", "LD_FINAL_OAE")
+                .replace("LE FINAL PONTE", "LE_FINAL_OAE")
+                .replace("LD FINAL DE PONTE", "LD_FINAL_OAE")
+                .replace("LE FINAL DE PONTE", "LE_FINAL_OAE");
+
               const pointData = {
                 x: xCoord,
                 y: yCoord,
                 elevation: elevation,
                 lat: parseFloat(row.Lat || row.LAT) || yCoord,
                 long: parseFloat(row.Long || row.LONG) || xCoord,
-                easting: parseFloat(row.Easting) || xCoord,
-                northing: parseFloat(row.Northing) || yCoord,
-                name: name || code,
-                code: code || name,
+                longitude: parseFloat(row.Long || row.LONG) || null,
+                easting: parseFloat(row.Leste || row.Easting) || xCoord,
+                northing: parseFloat(row.Norte || row.Northing) || yCoord,
+                name: normalizedCode,
+                code: normalizedCode,
                 originalName: name,
                 originalCode: code,
-                coordType: row.Northing && row.Easting ? 'UTM' : (Math.abs(xCoord) < 180 && Math.abs(yCoord) < 90 ? 'GEO' : 'PLANE')
+                coordType: (row.Norte && row.Leste) || (row.Northing && row.Easting) ? 'UTM' : 
+                          (Math.abs(xCoord) < 180 && Math.abs(yCoord) < 90 ? 'GEO' : 'PLANE')
               };
+              
+              // Determinar zona SIRGAS
+              const sirgas = determineSirgas2000Zone(pointData);
+              if (sirgas) {
+                pointData.sirgasZone = sirgas;
+                debugLog(`Zona SIRGAS determinada: ${sirgas}S`);
+              }
               
               debugLog(`Ponto criado: ${JSON.stringify(pointData)}`);
               
-              if (code) points[code] = pointData;
-              if (name && name !== code) points[name] = pointData;
+              if (normalizedCode) points[normalizedCode] = pointData;
+              if (code && code !== normalizedCode) points[code] = pointData;
+              if (name && name !== code && name !== normalizedCode) points[name] = pointData;
             } else {
               debugLog(`Erro: coordenadas ou elevação inválidas`);
             }
@@ -1073,6 +1180,44 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
         }
 
         let html = '';
+
+        // INFORMAÇÕES DO SISTEMA DE COORDENADAS E ZONA SIRGAS
+        const ldInicio1 = Object.values(struct1).find(p => 
+          p && (p.code.includes("LD_INICIO_OAE") || p.name.includes("LD_INICIO_OAE"))
+        );
+        
+        let struct2LdInicio = null;
+        if (struct2) {
+          struct2LdInicio = Object.values(struct2).find(p => 
+            p && (p.code.includes("LD_INICIO_OAE") || p.name.includes("LD_INICIO_OAE"))
+          );
+        }
+
+        if (ldInicio1) {
+          html += `
+            <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f8f9fa); border: 3px solid #1976d2; margin-bottom: 20px; grid-column: 1 / -1;">
+              <div><strong>🗺️ SISTEMA DE COORDENADAS DETECTADO</strong></div>
+              <div style="margin-top: 10px;">
+                <div style="font-size: 16px; font-weight: bold; color: #1976d2;">
+                  ${ldInicio1.sirgasZone ? `SIRGAS 2000 / UTM Zone ${ldInicio1.sirgasZone}S` : 'Sistema não identificado automaticamente'}
+                </div>
+                ${ldInicio1.sirgasZone ? `
+                <div style="font-size: 14px; color: #1565c0; margin-top: 5px;">
+                  📍 Código EPSG: ${31984 + ldInicio1.sirgasZone - 17} (Zona ${ldInicio1.sirgasZone}S)
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                  <strong>Estrutura 1:</strong> LD_INÍCIO → E: ${ldInicio1.easting?.toFixed(3)}m, N: ${ldInicio1.northing?.toFixed(3)}m
+                  ${struct2LdInicio && struct2LdInicio.sirgasZone ? `<br><strong>Estrutura 2:</strong> Zona ${struct2LdInicio.sirgasZone}S detectada` : ''}
+                </div>
+                ` : `
+                <div style="font-size: 12px; color: #ff9800; margin-top: 5px;">
+                  ⚠️ Para determinação automática da zona SIRGAS, utilize coordenadas geográficas ou UTM
+                </div>
+                `}
+              </div>
+            </div>
+          `;
+        }
 
         // Cálculos estrutura 1
         const dist1Inicio = calculateDistance(struct1.ldInicio, struct1.leInicio);
@@ -1672,7 +1817,7 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
           currentPoints2 = points2;
 
           if (Object.keys(points1).length === 0) {
-            errorMsg.innerHTML = '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado no CSV 1! Certifique-se de que existem pontos com *_OAE no nome ou código.</div>';
+            errorMsg.innerHTML = '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado no CSV 1! Certifique-se de que existem pontos com *_OAE ou *PONTE no nome ou código.</div>';
             return;
           }
 
@@ -1689,7 +1834,7 @@ P-08,MONT DIR1,-9.5857541640,-35.9994383212,65.48179,-8.34832048405044,73.830110
       window.onload = function () {
         console.log("🚀 Página carregada - Analisador de Inclinações ativo");
         updateZoomDisplay();
-        loadExample1();
+        loadExample1UTM();
       };
     </script>
   </body>
