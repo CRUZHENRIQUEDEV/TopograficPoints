@@ -1,376 +1,684 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor de Imagens Georreferenciadas para GeoJSON</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Conversor de Imagens Georreferenciadas para GeoJSON - OAE Support
+    </title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+
+    <!-- Leaflet CSS e JS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #2c3e50 0%,
+          #34495e 50%,
+          #2c3e50 100%
+        );
+        min-height: 100vh;
+        color: #ffffff;
+        overflow-x: hidden;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1,
+      h2 {
+        color: #ffffff;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffffff, #e3f2fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        font-size: 2.2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .container:hover::before {
+        left: 100%;
+      }
+
+      .container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      #dropZone {
+        border: 2px dashed #3498db;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        margin: 20px 0;
+        cursor: pointer;
+        background: rgba(52, 152, 219, 0.1);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+      }
+
+      #dropZone:hover {
+        background: rgba(52, 152, 219, 0.2);
+        border-color: #64b5f6;
+        transform: translateY(-2px);
+      }
+
+      #dropZone h3 {
+        color: #64b5f6;
+        margin-bottom: 1rem;
+      }
+
+      button {
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 10px 5px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(45deg, #2980b9, #27ae60);
+      }
+
+      button:disabled {
+        background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        overflow: hidden;
+        backdrop-filter: blur(5px);
+      }
+
+      th,
+      td {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 12px;
+        text-align: left;
+      }
+
+      th {
+        background: rgba(52, 152, 219, 0.3);
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      td {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      #map {
+        height: 400px;
+        margin: 20px 0;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 1;
+      }
+
+      .progress-bar {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 3px;
+        border-radius: 15px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        margin: 20px 0;
+        backdrop-filter: blur(5px);
+      }
+
+      .progress {
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        height: 20px;
+        border-radius: 12px;
+        transition: width 0.3s ease;
+        text-align: center;
+        line-height: 20px;
+        color: white;
+        font-weight: 600;
+      }
+
+      .note {
+        background: rgba(255, 235, 59, 0.2);
+        padding: 15px;
+        border-left: 4px solid #ffd600;
+        margin: 15px 0;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+      }
+
+      #stats {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 15px;
+        margin: 20px 0;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      #stats p {
+        margin: 5px 0;
+        font-weight: 500;
+      }
+
+      #stats span {
+        color: #64b5f6;
+        font-weight: 700;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 2rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 3rem;
+        background: rgba(44, 62, 80, 0.3);
+        border-radius: 15px 15px 0 0;
+      }
+
+      .footer p {
+        opacity: 0.9;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .zenith-brand {
+        font-weight: 600;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.1rem;
+      }
+
+      /* Customização do popup do Leaflet */
+      .leaflet-popup-content {
+        color: #333;
+        font-size: 14px;
+      }
+
+      .leaflet-popup-content h4 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+      }
+
+      @media (max-width: 768px) {
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+          padding: 1rem;
         }
-        h1, h2 {
-            color: #2c3e50;
+
+        h1 {
+          font-size: 1.8rem;
         }
+
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+          padding: 1.5rem;
         }
+
         #dropZone {
-            border: 2px dashed #3498db;
-            border-radius: 5px;
-            padding: 30px;
-            text-align: center;
-            margin: 20px 0;
-            cursor: pointer;
-            background-color: #f8fafc;
-            transition: background-color 0.3s;
+          padding: 20px;
         }
-        #dropZone:hover {
-            background-color: #e1f0fa;
-        }
-        button {
-            background-color: #2ecc71;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        button:hover {
-            background-color: #27ae60;
-        }
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
+
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+          font-size: 14px;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+
+        th,
+        td {
+          padding: 8px;
         }
-        th {
-            background-color: #f2f2f2;
+      }
+
+      /* Animações */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
         }
-        #map {
-            height: 400px;
-            margin: 20px 0;
-            border-radius: 5px;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        .progress-bar {
-            width: 100%;
-            background-color: #e0e0e0;
-            padding: 3px;
-            border-radius: 3px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, .2);
-        }
-        .progress {
-            background-color: #3498db;
-            height: 20px;
-            border-radius: 3px;
-            transition: width 0.3s ease;
-            text-align: center;
-            line-height: 20px;
-            color: white;
-        }
-        .note {
-            background-color: #fffde7;
-            padding: 10px;
-            border-left: 4px solid #ffd600;
-            margin: 10px 0;
-        }
+      }
+
+      .container:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .container:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .container:nth-child(3) {
+        animation-delay: 0.3s;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Conversor de Imagens Georreferenciadas para GeoJSON</h1>
-        
-        <div class="note">
-            <p><strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e gera um arquivo GeoJSON que pode ser importado no QGIS. Apenas imagens com dados de geolocalização serão processadas.</p>
-        </div>
-        
-        <div id="dropZone">
-            <h3>Arraste e solte imagens aqui</h3>
-            <p>ou</p>
-            <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
-            <button onclick="document.getElementById('fileInput').click()">Selecionar Imagens</button>
-        </div>
-        
-        <div class="progress-bar" style="display: none;">
-            <div class="progress" style="width: 0%">0%</div>
-        </div>
-        
-        <h2>Pontos Extraídos</h2>
-        <div id="stats">
-            <p>Total de imagens: <span id="totalImages">0</span></p>
-            <p>Imagens com geolocalização: <span id="geoImages">0</span></p>
-        </div>
-        
-        <table id="resultsTable">
-            <thead>
-                <tr>
-                    <th>Nome do Arquivo</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Data/Hora</th>
-                </tr>
-            </thead>
-            <tbody id="resultsBody">
-                <!-- Resultados serão adicionados aqui -->
-            </tbody>
-        </table>
-        
-        <button id="downloadBtn" disabled>Baixar GeoJSON</button>
-        <button id="downloadCsvBtn" disabled>Baixar CSV</button>
-    </div>
-    
-    <div class="container">
-        <h2>Mapa de Pontos</h2>
-        <div id="map"></div>
+      <h1>📷 Conversor de Imagens Georreferenciadas para GeoJSON</h1>
+
+      <div class="note">
+        <p>
+          <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
+          gera um arquivo GeoJSON que pode ser importado no QGIS. Apenas imagens
+          com dados de geolocalização serão processadas.
+        </p>
+      </div>
+
+      <div id="dropZone">
+        <h3>📁 Arraste e solte imagens aqui</h3>
+        <p>ou</p>
+        <input
+          type="file"
+          id="fileInput"
+          multiple
+          accept="image/*"
+          style="display: none"
+        />
+        <button onclick="document.getElementById('fileInput').click()">
+          📂 Selecionar Imagens
+        </button>
+      </div>
+
+      <div class="progress-bar" style="display: none">
+        <div class="progress" style="width: 0%">0%</div>
+      </div>
+
+      <h2>📍 Pontos Extraídos</h2>
+      <div id="stats">
+        <p>📊 Total de imagens: <span id="totalImages">0</span></p>
+        <p>🗺️ Imagens com geolocalização: <span id="geoImages">0</span></p>
+      </div>
+
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th>Nome do Arquivo</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Data/Hora</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+          <!-- Resultados serão adicionados aqui -->
+        </tbody>
+      </table>
+
+      <button id="downloadBtn" disabled>💾 Baixar GeoJSON</button>
+      <button id="downloadCsvBtn" disabled>📊 Baixar CSV</button>
     </div>
 
+    <div class="container">
+      <h2>🗺️ Mapa de Pontos</h2>
+      <div id="map"></div>
+    </div>
+
+    <footer class="footer">
+      <p><span class="zenith-brand">ZenithSolutions</span> - OAE Support</p>
+      <p>&copy; 2025 Ferramentas Topográficas Profissionais</p>
+    </footer>
+
     <script>
-        // Variáveis globais
-        let imagePoints = [];
-        let processedImages = 0;
-        let imagesWithGeo = 0;
-        let totalImages = 0;
-        
-        // Elementos DOM
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const resultsBody = document.getElementById('resultsBody');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const downloadCsvBtn = document.getElementById('downloadCsvBtn');
-        const progressBar = document.querySelector('.progress-bar');
-        const progress = document.querySelector('.progress');
-        
-        // Setup de eventos
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.style.backgroundColor = '#e1f0fa';
-        });
-        
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropZone.style.backgroundColor = '#f8fafc';
-        });
-        
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.style.backgroundColor = '#f8fafc';
-            handleFiles(e.dataTransfer.files);
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-        
-        // Função principal para processar os arquivos
-        function handleFiles(files) {
-            if (!files || files.length === 0) return;
-            
-            // Reset
-            imagePoints = [];
-            processedImages = 0;
-            imagesWithGeo = 0;
-            totalImages = files.length;
-            resultsBody.innerHTML = '';
-            
-            document.getElementById('totalImages').textContent = totalImages;
-            document.getElementById('geoImages').textContent = '0';
-            
-            // Mostrar barra de progresso
-            progressBar.style.display = 'block';
-            progress.style.width = '0%';
-            progress.textContent = '0%';
-            
-            // Desabilitar botões
-            downloadBtn.disabled = true;
-            downloadCsvBtn.disabled = true;
-            
-            // Processar cada arquivo
-            Array.from(files).forEach((file, index) => {
-                if (!file.type.startsWith('image/')) {
-                    updateProgress();
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    processImage(file, e.target.result);
-                };
-                reader.readAsDataURL(file);
-            });
+      // Variáveis globais
+      let imagePoints = [];
+      let processedImages = 0;
+      let imagesWithGeo = 0;
+      let totalImages = 0;
+      let map; // Variável para o mapa
+      let markersLayer; // Camada para os marcadores
+
+      // Elementos DOM
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const resultsBody = document.getElementById("resultsBody");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+      const progressBar = document.querySelector(".progress-bar");
+      const progress = document.querySelector(".progress");
+
+      // Inicializar o mapa
+      function initMap() {
+        // Criar o mapa centrado no Brasil
+        map = L.map("map").setView([-15.7942, -47.8825], 4);
+
+        // Adicionar camada do OpenStreetMap
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+
+        // Criar camada para os marcadores
+        markersLayer = L.layerGroup().addTo(map);
+
+        // Se já temos pontos, plotá-los
+        if (imagePoints.length > 0) {
+          plotPointsOnMap();
         }
-        
-        // Processa uma imagem individual
-        function processImage(file, dataUrl) {
-            const img = new Image();
-            img.onload = function() {
-                EXIF.getData(img, function() {
-                    let lat = null;
-                    let lng = null;
-                    let datetime = null;
-                    
-                    // Tentar obter coordenadas GPS
-                    if (EXIF.getTag(this, "GPSLatitude")) {
-                        lat = convertDMSToDD(
-                            EXIF.getTag(this, "GPSLatitude"),
-                            EXIF.getTag(this, "GPSLatitudeRef")
-                        );
-                        
-                        lng = convertDMSToDD(
-                            EXIF.getTag(this, "GPSLongitude"),
-                            EXIF.getTag(this, "GPSLongitudeRef")
-                        );
-                        
-                        // Tentar obter data/hora
-                        if (EXIF.getTag(this, "DateTimeOriginal")) {
-                            datetime = EXIF.getTag(this, "DateTimeOriginal");
-                        }
-                        
-                        // Se tivermos coordenadas válidas, adicionar aos resultados
-                        if (isValidCoordinate(lat, lng)) {
-                            imagesWithGeo++;
-                            document.getElementById('geoImages').textContent = imagesWithGeo;
-                            
-                            // Adicionar ao array de pontos
-                            imagePoints.push({
-                                filename: file.name,
-                                latitude: lat,
-                                longitude: lng,
-                                datetime: datetime
-                            });
-                            
-                            // Adicionar à tabela
-                            const row = resultsBody.insertRow();
-                            row.insertCell(0).textContent = file.name;
-                            row.insertCell(1).textContent = lat; // Mostrar valor completo sem arredondar
-                            row.insertCell(2).textContent = lng; // Mostrar valor completo sem arredondar
-                            row.insertCell(3).textContent = datetime || 'N/A';
-                        }
-                    }
-                    
-                    updateProgress();
+      }
+
+      // Plotar pontos no mapa
+      function plotPointsOnMap() {
+        if (!map || !markersLayer) return;
+
+        // Limpar marcadores existentes
+        markersLayer.clearLayers();
+
+        if (imagePoints.length === 0) return;
+
+        // Adicionar marcadores para cada ponto
+        let bounds = L.latLngBounds();
+
+        imagePoints.forEach((point, index) => {
+          const marker = L.marker([point.latitude, point.longitude]).bindPopup(`
+              <h4>📷 ${point.filename}</h4>
+              <p><strong>Coordenadas:</strong><br>
+              Lat: ${point.latitude.toFixed(6)}<br>
+              Lng: ${point.longitude.toFixed(6)}</p>
+              <p><strong>Data/Hora:</strong><br>
+              ${point.datetime || "N/A"}</p>
+            `);
+
+          markersLayer.addLayer(marker);
+          bounds.extend([point.latitude, point.longitude]);
+        });
+
+        // Ajustar o zoom para mostrar todos os pontos
+        if (imagePoints.length > 0) {
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
+      }
+
+      // Setup de eventos
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = "rgba(52, 152, 219, 0.2)";
+      });
+
+      dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = "rgba(52, 152, 219, 0.1)";
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = "rgba(52, 152, 219, 0.1)";
+        handleFiles(e.dataTransfer.files);
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        handleFiles(e.target.files);
+      });
+
+      // Função principal para processar os arquivos
+      function handleFiles(files) {
+        if (!files || files.length === 0) return;
+
+        // Reset
+        imagePoints = [];
+        processedImages = 0;
+        imagesWithGeo = 0;
+        totalImages = files.length;
+        resultsBody.innerHTML = "";
+
+        document.getElementById("totalImages").textContent = totalImages;
+        document.getElementById("geoImages").textContent = "0";
+
+        // Mostrar barra de progresso
+        progressBar.style.display = "block";
+        progress.style.width = "0%";
+        progress.textContent = "0%";
+
+        // Desabilitar botões
+        downloadBtn.disabled = true;
+        downloadCsvBtn.disabled = true;
+
+        // Limpar o mapa
+        if (markersLayer) {
+          markersLayer.clearLayers();
+        }
+
+        // Processar cada arquivo
+        Array.from(files).forEach((file, index) => {
+          if (!file.type.startsWith("image/")) {
+            updateProgress();
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            processImage(file, e.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Processa uma imagem individual
+      function processImage(file, dataUrl) {
+        const img = new Image();
+        img.onload = function () {
+          EXIF.getData(img, function () {
+            let lat = null;
+            let lng = null;
+            let datetime = null;
+
+            // Tentar obter coordenadas GPS
+            if (EXIF.getTag(this, "GPSLatitude")) {
+              lat = convertDMSToDD(
+                EXIF.getTag(this, "GPSLatitude"),
+                EXIF.getTag(this, "GPSLatitudeRef")
+              );
+
+              lng = convertDMSToDD(
+                EXIF.getTag(this, "GPSLongitude"),
+                EXIF.getTag(this, "GPSLongitudeRef")
+              );
+
+              // Tentar obter data/hora
+              if (EXIF.getTag(this, "DateTimeOriginal")) {
+                datetime = EXIF.getTag(this, "DateTimeOriginal");
+              }
+
+              // Se tivermos coordenadas válidas, adicionar aos resultados
+              if (isValidCoordinate(lat, lng)) {
+                imagesWithGeo++;
+                document.getElementById("geoImages").textContent =
+                  imagesWithGeo;
+
+                // Adicionar ao array de pontos
+                imagePoints.push({
+                  filename: file.name,
+                  latitude: lat,
+                  longitude: lng,
+                  datetime: datetime,
                 });
-            };
-            img.src = dataUrl;
-        }
-        
-        // Atualiza o progresso
-        function updateProgress() {
-            processedImages++;
-            const percentage = Math.round((processedImages / totalImages) * 100);
-            progress.style.width = percentage + '%';
-            progress.textContent = percentage + '%';
-            
-            // Verificar se terminou
-            if (processedImages === totalImages) {
-                if (imagePoints.length > 0) {
-                    downloadBtn.disabled = false;
-                    downloadCsvBtn.disabled = false;
-                    initMap();
-                }
+
+                // Adicionar à tabela
+                const row = resultsBody.insertRow();
+                row.insertCell(0).textContent = file.name;
+                row.insertCell(1).textContent = lat;
+                row.insertCell(2).textContent = lng;
+                row.insertCell(3).textContent = datetime || "N/A";
+              }
             }
+
+            updateProgress();
+          });
+        };
+        img.src = dataUrl;
+      }
+
+      // Atualiza o progresso
+      function updateProgress() {
+        processedImages++;
+        const percentage = Math.round((processedImages / totalImages) * 100);
+        progress.style.width = percentage + "%";
+        progress.textContent = percentage + "%";
+
+        // Verificar se terminou
+        if (processedImages === totalImages) {
+          if (imagePoints.length > 0) {
+            downloadBtn.disabled = false;
+            downloadCsvBtn.disabled = false;
+            // Plotar pontos no mapa
+            plotPointsOnMap();
+          }
         }
-        
-        // Converter coordenadas DMS para Decimal Degrees com máxima precisão
-        function convertDMSToDD(dms, ref) {
-            if (!dms || dms.length !== 3) return null;
-            
-            // Usar cálculos de alta precisão para conversão
-            let dd = Number(dms[0]) + Number(dms[1])/60 + Number(dms[2])/3600;
-            
-            // Se ref for sul ou oeste, a coordenada é negativa
-            if (ref === 'S' || ref === 'W') {
-                dd = -dd;
-            }
-            
-            // Não arredondar - mantém precisão máxima
-            return dd;
+      }
+
+      // Converter coordenadas DMS para Decimal Degrees com máxima precisão
+      function convertDMSToDD(dms, ref) {
+        if (!dms || dms.length !== 3) return null;
+
+        // Usar cálculos de alta precisão para conversão
+        let dd = Number(dms[0]) + Number(dms[1]) / 60 + Number(dms[2]) / 3600;
+
+        // Se ref for sul ou oeste, a coordenada é negativa
+        if (ref === "S" || ref === "W") {
+          dd = -dd;
         }
-        
-        // Verifica se as coordenadas são válidas
-        function isValidCoordinate(lat, lng) {
-            return lat !== null && lng !== null && 
-                   !isNaN(lat) && !isNaN(lng) &&
-                   lat >= -90 && lat <= 90 && 
-                   lng >= -180 && lng <= 180;
-        }
-        
-        // Gera e faz download do GeoJSON
-        downloadBtn.addEventListener('click', () => {
-            if (imagePoints.length === 0) return;
-            
-            const geojson = {
-                type: "FeatureCollection",
-                features: imagePoints.map(point => ({
-                    type: "Feature",
-                    properties: {
-                        filename: point.filename,
-                        datetime: point.datetime
-                    },
-                    geometry: {
-                        type: "Point",
-                        coordinates: [point.longitude, point.latitude]
-                    }
-                }))
-            };
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "pontos_fotos.geojson");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+
+        return dd;
+      }
+
+      // Verifica se as coordenadas são válidas
+      function isValidCoordinate(lat, lng) {
+        return (
+          lat !== null &&
+          lng !== null &&
+          !isNaN(lat) &&
+          !isNaN(lng) &&
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180
+        );
+      }
+
+      // Gera e faz download do GeoJSON
+      downloadBtn.addEventListener("click", () => {
+        if (imagePoints.length === 0) return;
+
+        const geojson = {
+          type: "FeatureCollection",
+          features: imagePoints.map((point) => ({
+            type: "Feature",
+            properties: {
+              filename: point.filename,
+              datetime: point.datetime,
+            },
+            geometry: {
+              type: "Point",
+              coordinates: [point.longitude, point.latitude],
+            },
+          })),
+        };
+
+        const dataStr =
+          "data:text/json;charset=utf-8," +
+          encodeURIComponent(JSON.stringify(geojson));
+        const downloadAnchor = document.createElement("a");
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "pontos_fotos.geojson");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+
+      // Gera e faz download do CSV
+      downloadCsvBtn.addEventListener("click", () => {
+        if (imagePoints.length === 0) return;
+
+        let csvContent = "Nome do Arquivo,Latitude,Longitude,Data/Hora\n";
+
+        imagePoints.forEach((point) => {
+          csvContent += `"${point.filename}",${String(point.latitude)},${String(
+            point.longitude
+          )},"${point.datetime || ""}"\n`;
         });
-        
-        // Gera e faz download do CSV
-        downloadCsvBtn.addEventListener('click', () => {
-            if (imagePoints.length === 0) return;
-            
-            let csvContent = "Nome do Arquivo,Latitude,Longitude,Data/Hora\n";
-            
-            imagePoints.forEach(point => {
-                // Usar String() para evitar arredondamento automático
-                csvContent += `"${point.filename}",${String(point.latitude)},${String(point.longitude)},"${point.datetime || ''}"\n`;
-            });
-            
-            const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "pontos_fotos.csv");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        });
-        
-        // Inicializa o mapa
-        function initMap() {
-            // Este é apenas um placeholder. Para implementar um mapa real,
-            // você poderia usar a API do Google Maps ou Leaflet.
-            // Nesse exemplo, estamos apenas mostrando uma mensagem.
-            const mapDiv = document.getElementById('map');
-            mapDiv.innerHTML = "<p style='text-align: center; padding: 20px;'>" +
-                               "Para visualizar em um mapa, importe o GeoJSON no QGIS ou em outro software GIS. " +
-                               "Alternativamente, adicione aqui uma biblioteca de mapas como Leaflet ou Google Maps.</p>";
-        }
+
+        const dataStr =
+          "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+        const downloadAnchor = document.createElement("a");
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "pontos_fotos.csv");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+
+      // Inicializar o mapa quando a página carregar
+      document.addEventListener("DOMContentLoaded", function () {
+        initMap();
+      });
     </script>
-</body>
+  </body>
 </html>
