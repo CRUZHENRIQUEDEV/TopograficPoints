@@ -3,140 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Renomeação de Arquivos</title>
+    <title>Sistema de Renomeação de Arquivos - OAE Support</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
     <style>
-      :root {
-        --primary-color: #4d6cfa;
-        --primary-hover: #3a54d4;
-        --bg-color: #121212;
-        --card-bg: #1e1e1e;
-        --text-color: #e0e0e0;
-        --border-color: #333333;
-        --secondary-color: #ff4081;
-        --secondary-hover: #e91e63;
-        --success-color: #00bcd4;
-        --table-header: #1a237e;
-        --table-row-even: #2d2d2d;
-        --table-row-odd: #252525;
-        --shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-        --tooltip-bg: #424242;
-        --drag-hover-bg: #2c3659;
-      }
-
+      /* Estilos gerais */
       * {
-        box-sizing: border-box;
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
       }
 
       body {
-        font-family: "Segoe UI", "Roboto", sans-serif;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        line-height: 1.6;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #2c3e50 0%,
+          #34495e 50%,
+          #2c3e50 100%
+        );
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
+        color: #ffffff;
+        overflow-x: hidden;
       }
 
       .container {
-        width: 100%;
         max-width: 1200px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 2rem;
       }
 
-      header {
-        background-color: rgba(0, 0, 0, 0.2);
-        padding: 20px 0;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 30px;
-      }
-
-      header h1 {
+      /* Cabeçalho */
+      .header {
         text-align: center;
-        font-size: 1.8rem;
-        font-weight: 500;
-        color: var(--primary-color);
-        letter-spacing: 0.5px;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
       }
 
+      .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffffff, #e3f2fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      /* Grid de conteúdo */
       .row {
-        display: flex;
-        flex-wrap: wrap;
-        margin: 0 -15px 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
       }
 
-      .col-50 {
-        flex: 0 0 50%;
-        max-width: 50%;
-        padding: 0 15px;
+      .col-full {
+        grid-column: 1 / -1;
       }
 
-      .col-100 {
-        flex: 0 0 100%;
-        max-width: 100%;
-        padding: 0 15px;
-      }
-
-      @media (max-width: 768px) {
-        .col-50 {
-          flex: 0 0 100%;
-          max-width: 100%;
-          margin-bottom: 20px;
-        }
-      }
-
-      .card {
-        background-color: var(--card-bg);
-        border-radius: 6px;
-        box-shadow: var(--shadow);
+      /* Cartões de seção */
+      .section-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
         overflow: hidden;
         height: 100%;
         display: flex;
         flex-direction: column;
       }
 
-      .card-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
+      .section-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
       }
 
-      .card-number {
+      .section-card:hover::before {
+        left: 100%;
+      }
+
+      .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .card-header {
         display: flex;
-        justify-content: center;
         align-items: center;
-        width: 28px;
-        height: 28px;
-        background-color: var(--primary-color);
-        color: white;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 1;
+      }
+
+      .step-number {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
         border-radius: 50%;
-        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
       }
 
       .card-title {
-        font-size: 18px;
-        font-weight: 500;
+        font-size: 1.4rem;
+        font-weight: 600;
         flex-grow: 1;
-      }
-
-      .info-icon {
-        color: var(--primary-color);
-        cursor: help;
-        position: relative;
         display: flex;
         align-items: center;
-        justify-content: center;
-        width: 20px;
-        height: 20px;
-        margin-left: 8px;
+        gap: 0.5rem;
       }
 
-      .info-icon:hover .tooltip {
+      /* Tooltip de informação */
+      .info-tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: help;
+        margin-left: 0.5rem;
+      }
+
+      .info-tooltip:hover .tooltip {
         visibility: visible;
         opacity: 1;
       }
@@ -145,133 +171,147 @@
         position: absolute;
         top: 100%;
         right: 0;
-        width: 250px;
-        background-color: var(--tooltip-bg);
-        color: var(--text-color);
+        width: 300px;
+        background: rgba(44, 62, 80, 0.95);
+        backdrop-filter: blur(10px);
+        color: #ffffff;
         text-align: left;
-        border-radius: 4px;
-        padding: 10px;
+        border-radius: 10px;
+        padding: 1rem;
         z-index: 100;
         visibility: hidden;
         opacity: 0;
         transition: opacity 0.3s;
-        box-shadow: var(--shadow);
-        font-weight: normal;
-        font-size: 13px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.9rem;
+        line-height: 1.4;
       }
 
       .card-body {
-        padding: 20px;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        position: relative;
+        z-index: 1;
       }
 
+      /* Botões */
       .btn {
-        display: inline-block;
-        background-color: var(--primary-color);
+        background: linear-gradient(45deg, #3498db, #2ecc71);
         color: white;
         border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
+        padding: 12px 24px;
+        border-radius: 15px;
         cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        transition: background-color 0.2s;
-        text-align: center;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
       }
 
       .btn:hover {
-        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(45deg, #2980b9, #27ae60);
       }
 
       .btn:disabled {
-        background-color: #555;
+        background: rgba(149, 165, 166, 0.6);
         cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
       }
 
       .btn-success {
-        background-color: var(--success-color);
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
       }
 
       .btn-success:hover {
-        background-color: #00acc1;
+        background: linear-gradient(45deg, #27ae60, #229954);
       }
 
-      .btn-remove {
-        background-color: var(--secondary-color);
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        display: flex;
-        align-items: center;
+      .btn-small {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 36px;
         justify-content: center;
-        border-radius: 4px;
-        font-size: 16px;
       }
 
-      .btn-remove:hover {
-        background-color: var(--secondary-hover);
+      .btn-danger {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
       }
 
-      .btn-move {
-        background-color: var(--primary-color);
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        margin: 0 4px;
+      .btn-danger:hover {
+        background: linear-gradient(45deg, #c0392b, #a93226);
       }
 
-      .btn-move:hover {
-        background-color: var(--primary-hover);
+      /* Input de arquivo escondido */
+      .file-input {
+        display: none;
       }
 
-      .file-input-container {
-        margin-bottom: 15px;
-      }
-
+      /* Lista de arquivos */
       .file-list {
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        min-height: 300px;
+        max-height: 400px;
         overflow-y: auto;
         flex-grow: 1;
-        min-height: 280px;
-        max-height: 380px;
-        background-color: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* Espaçamento entre os itens */
+      }
+
+      /* Efeito de drag-over na lista de arquivos */
+      .file-list.drag-over {
+        border: 2px dashed #3498db;
+        background: rgba(52, 152, 219, 0.1);
       }
 
       .file-item {
         display: flex;
         align-items: center;
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--border-color);
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
         cursor: grab;
-        transition: background-color 0.2s;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
 
-      .file-item:last-child {
-        border-bottom: none;
+      .file-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
       }
 
       .file-item.dragging {
         opacity: 0.5;
-        background-color: var(--primary-color);
+        background: rgba(52, 152, 219, 0.3);
+        transform: rotate(2deg);
       }
 
       .file-item.drag-over {
-        background-color: var(--drag-hover-bg);
-        border-top: 2px solid var(--primary-color);
+        background: rgba(52, 152, 219, 0.2);
+        border-color: #3498db;
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
       }
 
       .file-icon {
         margin-right: 12px;
-        color: #888;
-        font-size: 14px;
-        cursor: grab;
+        color: #3498db;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
       }
 
       .file-name {
@@ -280,188 +320,336 @@
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .file-controls {
         display: flex;
         align-items: center;
+        gap: 4px;
       }
 
-      textarea {
+      /* Estilos para os botões de mover e remover */
+      .btn-move,
+      .btn-remove {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s ease, border-color 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px; /* Tamanho fixo para botões de ícone */
+        height: 32px;
+      }
+
+      .btn-move:hover {
+        background: rgba(52, 152, 219, 0.3);
+        border-color: #3498db;
+      }
+
+      .btn-move:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-remove {
+        background: rgba(231, 76, 60, 0.2);
+        border-color: rgba(231, 76, 60, 0.4);
+      }
+
+      .btn-remove:hover {
+        background: rgba(231, 76, 60, 0.4);
+        border-color: #e74c3c;
+      }
+
+      /* Textarea */
+      .textarea-container {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .textarea {
         width: 100%;
-        height: 100%;
-        min-height: 280px;
-        padding: 12px;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        background-color: rgba(0, 0, 0, 0.2);
-        color: var(--text-color);
+        flex-grow: 1;
+        min-height: 300px; /* Definindo uma altura mínima */
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
         resize: vertical;
         font-family: inherit;
         font-size: 14px;
         line-height: 1.5;
+        backdrop-filter: blur(5px);
       }
 
-      textarea:focus {
+      .textarea::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .textarea:focus {
         outline: none;
-        border-color: var(--primary-color);
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
       }
 
+      /* Mensagem de lista vazia */
+      .empty-message {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center; /* Centraliza verticalmente se for o único item */
+        gap: 1rem;
+        flex-grow: 1; /* Permite que ocupe o espaço disponível */
+      }
+
+      /* Barra de ações (botões grandes) */
       .action-bar {
         display: flex;
         justify-content: center;
-        margin: 20px 0;
+        margin: 2rem 0;
+      }
+
+      /* Tabela de visualização */
+      .table-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 15px;
-        border-radius: 4px;
-        overflow: hidden;
+        color: #ffffff;
+      }
+
+      th,
+      td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       }
 
       th {
-        background-color: var(--table-header);
-        color: white;
-        text-align: left;
-        padding: 12px 15px;
-        font-weight: 500;
+        background: rgba(52, 152, 219, 0.3);
+        font-weight: 600;
+        color: #ffffff;
       }
 
       td {
-        padding: 10px 15px;
-        border-bottom: 1px solid var(--border-color);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
       }
 
       tr:nth-child(even) {
-        background-color: var(--table-row-even);
+        background: rgba(255, 255, 255, 0.05);
       }
 
-      tr:nth-child(odd) {
-        background-color: var(--table-row-odd);
-      }
-
-      .empty-message {
-        text-align: center;
-        padding: 30px 0;
-        color: #888;
-        font-style: italic;
-      }
-
-      #message {
-        padding: 12px 15px;
-        margin: 10px 0;
-        border-radius: 4px;
+      /* Mensagens de status (erro/sucesso) */
+      .message {
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: 15px;
         display: none;
-      }
-
-      .error {
-        background-color: rgba(244, 67, 54, 0.1);
-        color: #f44336;
-        border-left: 3px solid #f44336;
-      }
-
-      .success {
-        background-color: rgba(0, 188, 212, 0.1);
-        color: #00bcd4;
-        border-left: 3px solid #00bcd4;
-      }
-
-      .footer {
-        margin-top: auto;
+        font-weight: 500;
         text-align: center;
-        padding: 20px 0;
-        font-size: 14px;
-        color: #888;
-        border-top: 1px solid var(--border-color);
+      }
+
+      .message.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border-left: 4px solid #e74c3c;
+      }
+
+      .message.success {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border-left: 4px solid #2ecc71;
+      }
+
+      /* Rodapé */
+      .footer {
+        text-align: center;
+        padding: 2rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 3rem;
+        background: rgba(44, 62, 80, 0.3);
+        border-radius: 15px 15px 0 0;
+      }
+
+      .footer p {
+        opacity: 0.9;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .zenith-brand {
+        font-weight: 600;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.1rem;
+      }
+
+      /* Responsividade */
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+        }
+
+        .section-card {
+          padding: 1.5rem;
+        }
+
+        .tooltip {
+          width: 250px;
+          right: -10px; /* Ajuste para não sair da tela em mobile */
+        }
+      }
+
+      /* Animações */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Aplicar animação aos cartões */
+      .section-card {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0; /* Esconder inicialmente para a animação */
+      }
+
+      .section-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .section-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .section-card:nth-child(3) {
+        animation-delay: 0.3s;
       }
     </style>
   </head>
   <body>
-    <header>
+    <header class="header">
       <h1>SISTEMA DE RENOMEAÇÃO DE ARQUIVOS</h1>
+      <p>
+        Gerencie e renomeie seus arquivos de forma rápida e eficiente. Arraste e
+        solte para reordenar, insira novos nomes e gere uma pré-visualização
+        antes de baixar.
+      </p>
     </header>
 
     <div class="container">
       <div class="row">
-        <!-- Coluna 1: Arquivos -->
-        <div class="col-50">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-number">1</div>
-              <h2 class="card-title">Selecione os Arquivos</h2>
-            </div>
-            <div class="card-body">
-              <div class="file-input-container">
-                <button id="chooseFilesBtn" class="btn">
-                  Escolher Arquivos
-                </button>
-                <input
-                  type="file"
-                  id="fileInput"
-                  multiple
-                  style="display: none"
-                />
-              </div>
-              <div id="fileList" class="file-list">
-                <p id="emptyMessage" class="empty-message">
-                  Nenhum arquivo selecionado
-                </p>
-              </div>
-            </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="step-number">1</div>
+            <h2 class="card-title">Selecione os Arquivos</h2>
+          </div>
+          <div class="card-body">
+            <label for="fileInput" class="btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-folder-open"
+              >
+                <path
+                  d="M6 17c-2.76 0-5-2.24-5-5s2.24-5 5-5h8c2.76 0 5 2.24 5 5v5c0 2.76-2.24 5-5 5H6z"
+                ></path>
+                <path d="M12 2v4"></path>
+                <path d="M10 4h4"></path>
+              </svg>
+              Escolher Arquivos
+            </label>
+            <input type="file" id="fileInput" multiple class="file-input" />
+            <div id="fileList" class="file-list"></div>
           </div>
         </div>
 
-        <!-- Coluna 2: Novos Nomes -->
-        <div class="col-50">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-number">2</div>
-              <h2 class="card-title">Novos Nomes</h2>
-              <div class="info-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-                <div class="tooltip">
-                  Cole aqui os nomes do Excel (um por linha). Se colar dados
-                  tabulados, apenas a primeira coluna será utilizada.
-                </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="step-number">2</div>
+            <h2 class="card-title">Novos Nomes</h2>
+            <div class="info-tooltip">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <div class="tooltip">
+                Cole aqui os nomes do Excel (um por linha). Se colar dados
+                tabulados, apenas a primeira coluna será utilizada.
               </div>
             </div>
-            <div class="card-body">
-              <textarea
-                id="newNames"
-                placeholder="Nome1&#9;Descrição1&#10;Nome2&#9;Descrição2&#10;Nome3&#9;Descrição3"
-              ></textarea>
-            </div>
+          </div>
+          <div class="card-body">
+            <textarea
+              id="newNames"
+              class="textarea"
+              placeholder="Nome1&#9;Descrição1&#10;Nome2&#9;Descrição2&#10;Nome3&#9;Descrição3"
+            ></textarea>
           </div>
         </div>
       </div>
 
       <div class="row">
-        <!-- Visualização -->
-        <div class="col-100">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-number">3</div>
-              <h2 class="card-title">Visualização</h2>
+        <div class="section-card col-full">
+          <div class="card-header">
+            <div class="step-number">3</div>
+            <h2 class="card-title">Visualização</h2>
+          </div>
+          <div class="card-body">
+            <div class="action-bar">
+              <button id="previewBtn" class="btn">Gerar Visualização</button>
             </div>
-            <div class="card-body">
-              <div class="action-bar">
-                <button id="previewBtn" class="btn">Gerar Visualização</button>
-              </div>
+            <div class="table-container">
               <table id="previewTable">
                 <thead>
                   <tr>
@@ -476,14 +664,37 @@
         </div>
       </div>
 
-      <div id="message"></div>
+      <div id="message" class="message"></div>
 
       <div class="action-bar">
         <button id="renameBtn" class="btn btn-success" disabled>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-download"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" x2="12" y1="15" y2="3" />
+          </svg>
           Renomear e Baixar
         </button>
       </div>
     </div>
+
+    <footer class="footer">
+      <p>
+        Desenvolvido com ❤️ por <span class="zenith-brand">OAE Support</span>
+      </p>
+      <p>&copy; 2025. Todos os direitos reservados.</p>
+    </footer>
 
     <script>
       // Elementos DOM
@@ -501,7 +712,9 @@
       let files = [];
 
       // Event listeners
-      chooseFilesBtn.addEventListener("click", () => fileInput.click());
+      document
+        .querySelector(".btn")
+        .addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", handleFileSelect);
       previewBtn.addEventListener("click", generatePreview);
       renameBtn.addEventListener("click", renameAndDownload);
