@@ -699,9 +699,7 @@
     <script>
       // Elementos DOM
       const fileInput = document.getElementById("fileInput");
-      const chooseFilesBtn = document.getElementById("chooseFilesBtn");
       const fileList = document.getElementById("fileList");
-      const emptyMessage = document.getElementById("emptyMessage");
       const newNamesTextarea = document.getElementById("newNames");
       const previewBtn = document.getElementById("previewBtn");
       const previewBody = document.getElementById("previewBody");
@@ -712,9 +710,6 @@
       let files = [];
 
       // Event listeners
-      document
-        .querySelector(".btn")
-        .addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", handleFileSelect);
       previewBtn.addEventListener("click", generatePreview);
       renameBtn.addEventListener("click", renameAndDownload);
@@ -743,6 +738,16 @@
 
         // Mostrar mensagem se não houver arquivos
         if (files.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.className = "empty-message";
+          emptyMessage.innerHTML = `
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            <p>Nenhum arquivo selecionado</p>
+            <p>Clique no botão acima para escolher arquivos</p>
+          `;
           fileList.appendChild(emptyMessage);
           return;
         }
@@ -1066,7 +1071,7 @@
       // Função para mostrar mensagens
       function showMessage(text, type) {
         messageDiv.textContent = text;
-        messageDiv.className = type;
+        messageDiv.className = `message ${type}`;
         messageDiv.style.display = "block";
 
         // Ocultar após 5 segundos
@@ -1074,6 +1079,9 @@
           messageDiv.style.display = "none";
         }, 5000);
       }
+
+      // Inicializar a lista vazia
+      updateFileList();
     </script>
   </body>
 </html>
