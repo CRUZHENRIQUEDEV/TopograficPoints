@@ -670,7 +670,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         let dataStartIndex = 0;
 
         // Detectar se a primeira linha contém cabeçalhos
-        const commonHeaders = ["Name", "Code", "Lat", "LAT", "Long", "LONG", "x", "y", "H_ORTO", "H_ORTHO", "H_GEO", "Ponto", "Codigo", "Leste", "Norte", "Elev"];
+        const commonHeaders = ["Name", "Code", "CODE","codigo", "CODIGO", "Código",  "Lat", "LAT", "Long", "LONG", "x", "y", "H_ORTO", "H_ORTHO", "H_GEO", "Ponto", "Codigo", "Leste", "Norte", "Elev"];
         const hasHeaders = commonHeaders.some(header => firstLine.includes(header));
         
         if (hasHeaders) {
@@ -678,7 +678,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           dataStartIndex = 1;
           debugLog(`Cabeçalhos detectados: ${headers.join(', ')}`);
         } else {
-          headers = ["Name", "Code", "LAT", "LONG", "H_GEO", "OND_GEOIDAL", "H_ORTHO"];
+          headers = ["Name", "Code", "CODE","codigo", "CODIGO", "Código", "LAT", "LONG", "H_GEO", "OND_GEOIDAL", "H_ORTHO"];
           dataStartIndex = 0;
           debugLog("Usando cabeçalhos padrão");
         }
