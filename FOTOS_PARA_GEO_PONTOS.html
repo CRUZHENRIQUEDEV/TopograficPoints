@@ -33,9 +33,27 @@
         min-height: 100vh;
         color: #ffffff;
         overflow-x: hidden;
+      }
+
+      .main-container {
         max-width: 800px;
         margin: 0 auto;
         padding: 20px;
+      }
+
+      .map-container {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        padding: 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .map-header {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 2rem 1rem 2rem;
       }
 
       h1,
@@ -180,12 +198,11 @@
       }
 
       #map {
-        height: 400px;
-        margin: 20px 0;
-        border-radius: 15px;
+        height: 70vh;
+        min-height: 500px;
+        width: 100%;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
         z-index: 1;
       }
 
@@ -274,7 +291,7 @@
       }
 
       @media (max-width: 768px) {
-        body {
+        .main-container {
           padding: 1rem;
         }
 
@@ -284,6 +301,10 @@
 
         .container {
           padding: 1.5rem;
+        }
+
+        .map-header {
+          padding: 1rem;
         }
 
         #dropZone {
@@ -297,6 +318,11 @@
         th,
         td {
           padding: 8px;
+        }
+
+        #map {
+          height: 50vh;
+          min-height: 300px;
         }
       }
 
@@ -324,69 +350,75 @@
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1>📷 Conversor de Imagens Georreferenciadas para GeoJSON</h1>
+    <div class="main-container">
+      <div class="container">
+        <h1>📷 Conversor de Imagens Georreferenciadas para GeoJSON</h1>
 
-      <div class="note">
-        <p>
-          <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
-          gera um arquivo GeoJSON que pode ser importado no QGIS. Apenas imagens
-          com dados de geolocalização serão processadas.
-        </p>
+        <div class="note">
+          <p>
+            <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
+            gera um arquivo GeoJSON que pode ser importado no QGIS. Apenas imagens
+            com dados de geolocalização serão processadas.
+          </p>
+        </div>
+
+        <div id="dropZone">
+          <h3>📁 Arraste e solte imagens aqui</h3>
+          <p>ou</p>
+          <input
+            type="file"
+            id="fileInput"
+            multiple
+            accept="image/*"
+            style="display: none"
+          />
+          <button onclick="document.getElementById('fileInput').click()">
+            📂 Selecionar Imagens
+          </button>
+        </div>
+
+        <div class="progress-bar" style="display: none">
+          <div class="progress" style="width: 0%">0%</div>
+        </div>
+
+        <h2>📍 Pontos Extraídos</h2>
+        <div id="stats">
+          <p>📊 Total de imagens: <span id="totalImages">0</span></p>
+          <p>🗺️ Imagens com geolocalização: <span id="geoImages">0</span></p>
+        </div>
+
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Nome do Arquivo</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Data/Hora</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <!-- Resultados serão adicionados aqui -->
+          </tbody>
+        </table>
+
+        <button id="downloadBtn" disabled>💾 Baixar GeoJSON</button>
+        <button id="downloadCsvBtn" disabled>📊 Baixar CSV</button>
       </div>
-
-      <div id="dropZone">
-        <h3>📁 Arraste e solte imagens aqui</h3>
-        <p>ou</p>
-        <input
-          type="file"
-          id="fileInput"
-          multiple
-          accept="image/*"
-          style="display: none"
-        />
-        <button onclick="document.getElementById('fileInput').click()">
-          📂 Selecionar Imagens
-        </button>
-      </div>
-
-      <div class="progress-bar" style="display: none">
-        <div class="progress" style="width: 0%">0%</div>
-      </div>
-
-      <h2>📍 Pontos Extraídos</h2>
-      <div id="stats">
-        <p>📊 Total de imagens: <span id="totalImages">0</span></p>
-        <p>🗺️ Imagens com geolocalização: <span id="geoImages">0</span></p>
-      </div>
-
-      <table id="resultsTable">
-        <thead>
-          <tr>
-            <th>Nome do Arquivo</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Data/Hora</th>
-          </tr>
-        </thead>
-        <tbody id="resultsBody">
-          <!-- Resultados serão adicionados aqui -->
-        </tbody>
-      </table>
-
-      <button id="downloadBtn" disabled>💾 Baixar GeoJSON</button>
-      <button id="downloadCsvBtn" disabled>📊 Baixar CSV</button>
     </div>
 
-    <div class="container">
-      <h2>🗺️ Mapa de Pontos</h2>
+    <div class="map-container">
+      <div class="map-header">
+        <h2>🗺️ Mapa de Pontos</h2>
+      </div>
       <div id="map"></div>
     </div>
 
-    <footer class="footer">
-      <p><span class="zenith-brand">ZenithSolutions</span> - OAE Support</p>
-      <p>&copy; 2025 Ferramentas Topográficas Profissionais</p>
-    </footer>
+    <div class="main-container">
+      <footer class="footer">
+        <p><span class="zenith-brand">ZenithSolutions</span> - OAE Support</p>
+        <p>&copy; 2025 Ferramentas Topográficas Profissionais</p>
+      </footer>
+    </div>
 
     <script>
       // Variáveis globais
