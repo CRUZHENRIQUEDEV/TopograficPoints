@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Construtor de Renomeação de Arquivos - OAE Support</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <style>
+      /* Estilos gerais */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #2c3e50 0%,
+          #34495e 50%,
+          #2c3e50 100%
+        );
+        min-height: 100vh;
+        color: #ffffff;
+        overflow-x: auto;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      /* Cabeçalho */
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem 0;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffffff, #e3f2fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      /* Layout vertical - um card abaixo do outro */
+      .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      /* Cartões de seção */
+      .section-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+      }
+
+      .section-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .section-card:hover::before {
+        left: 100%;
+      }
+
+      .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 1;
+      }
+
+      .step-number {
+        width: 35px;
+        height: 35px;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-right: 0.8rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      }
+
+      .card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .card-body {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Botões */
+      .btn {
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 15px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(45deg, #2980b9, #27ae60);
+      }
+
+      .btn:disabled {
+        background: rgba(149, 165, 166, 0.6);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .btn-success {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+      }
+
+      .btn-success:hover {
+        background: linear-gradient(45deg, #27ae60, #229954);
+      }
+
+      .btn-apply {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        font-size: 18px;
+        padding: 16px 32px;
+      }
+
+      .btn-apply:hover {
+        background: linear-gradient(45deg, #e67e22, #d35400);
+      }
+
+      .btn-reset {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+      }
+
+      .btn-reset:hover {
+        background: linear-gradient(45deg, #c0392b, #a93226);
+      }
+
+      /* Input de arquivo escondido */
+      .file-input {
+        display: none;
+      }
+
+      /* Lista de arquivos */
+      .file-list {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        min-height: 150px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .file-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .file-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+      }
+
+      .file-item.active {
+        background: rgba(52, 152, 219, 0.3);
+        border-color: #3498db;
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
+      }
+
+      .file-icon {
+        margin-right: 12px;
+        color: #3498db;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+
+      .file-name {
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .file-status {
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        margin-left: 8px;
+        font-weight: 600;
+      }
+
+      .file-status.pending {
+        background: rgba(241, 196, 15, 0.3);
+        color: #f1c40f;
+      }
+
+      .file-status.done {
+        background: rgba(46, 204, 113, 0.3);
+        color: #2ecc71;
+      }
+
+      /* Arquivo atual sendo editado */
+      .current-file-info {
+        background: rgba(52, 152, 219, 0.2);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(52, 152, 219, 0.4);
+      }
+
+      .current-file-info h4 {
+        margin-bottom: 0.8rem;
+        color: #3498db;
+        font-size: 1.1rem;
+      }
+
+      .current-file-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      /* Construtor de nomes */
+      .constructor-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      /* Checkboxes de controle */
+      .control-checkboxes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .checkbox-group:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        margin-right: 8px;
+        transform: scale(1.1);
+        accent-color: #3498db;
+      }
+
+      .checkbox-group label {
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      /* Container de palavras */
+      .words-container {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+
+      .words-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 6px;
+      }
+
+      .word-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 12px;
+      }
+
+      .word-checkbox:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .word-checkbox input[type="checkbox"] {
+        margin-right: 6px;
+        transform: scale(0.9);
+        accent-color: #3498db;
+      }
+
+      .word-checkbox label {
+        cursor: pointer;
+        font-size: 11px;
+        user-select: none;
+      }
+
+      /* Preview */
+      .preview-container {
+        background: rgba(46, 204, 113, 0.2);
+        border: 1px solid rgba(46, 204, 113, 0.4);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .preview-container h4 {
+        color: #2ecc71;
+        margin-bottom: 0.6rem;
+        font-size: 1rem;
+      }
+
+      .preview-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffffff;
+        word-break: break-all;
+        min-height: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+
+      /* Mensagem de lista vazia */
+      .empty-message {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      /* Tabela de visualização */
+      .table-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        color: #ffffff;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 13px;
+      }
+
+      th {
+        background: rgba(52, 152, 219, 0.3);
+        font-weight: 600;
+        color: #ffffff;
+        position: sticky;
+        top: 0;
+      }
+
+      td {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .btn-edit {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 11px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-edit:hover {
+        background: rgba(52, 152, 219, 0.3);
+      }
+
+      /* Ações finais */
+      .final-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+
+      /* Mensagens de status */
+      .message {
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: 15px;
+        display: none;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      .message.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border-left: 4px solid #e74c3c;
+      }
+
+      .message.success {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border-left: 4px solid #2ecc71;
+      }
+
+      /* Rodapé */
+      .footer {
+        text-align: center;
+        padding: 1.5rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 2rem;
+        background: rgba(44, 62, 80, 0.3);
+        border-radius: 12px 12px 0 0;
+      }
+
+      .footer p {
+        opacity: 0.9;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .zenith-brand {
+        font-weight: 600;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.1rem;
+      }
+
+      /* Responsividade */
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .constructor-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .control-checkboxes {
+          grid-template-columns: 1fr;
+        }
+
+        .words-grid {
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+      }
+
+      /* Animações */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section-card {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+      }
+
+      .section-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .section-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .section-card:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <h1>CONSTRUTOR DE RENOMEAÇÃO DE ARQUIVOS</h1>
+      <p>
+        Selecione seus arquivos e construa nomes únicos para cada um, utilizando
+        palavras pré-definidas, prefixos e sufixos personalizados.
+      </p>
+    </header>
+
+    <div class="container">
+      <!-- Layout vertical - um card abaixo do outro -->
+      <div class="main-content">
+        <!-- Card 1: Arquivos -->
+        <div class="section-card">
+          <div class="card-header">
+            <div class="step-number">1</div>
+            <h2 class="card-title">Arquivos</h2>
+          </div>
+          <div class="card-body">
+            <label for="fileInput" class="btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                />
+                <polyline points="14,2 14,8 20,8" />
+              </svg>
+              Escolher Arquivos
+            </label>
+            <input type="file" id="fileInput" multiple class="file-input" />
+            <div id="fileList" class="file-list"></div>
+          </div>
+        </div>
+
+        <!-- Card 2: Construtor -->
+        <div class="section-card">
+          <div class="card-header">
+            <div class="step-number">2</div>
+            <h2 class="card-title">Construtor</h2>
+          </div>
+          <div class="card-body">
+            <!-- Arquivo atual -->
+            <div
+              id="currentFileInfo"
+              class="current-file-info"
+              style="display: none"
+            >
+              <h4>Editando arquivo:</h4>
+              <div id="currentFileName" class="current-file-name">-</div>
+            </div>
+
+            <!-- Campos de entrada -->
+            <div class="constructor-grid">
+              <div class="form-group">
+                <label for="prefixInput">Prefixo:</label>
+                <input
+                  type="text"
+                  id="prefixInput"
+                  class="form-input"
+                  placeholder="Ex: P"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="suffixInput">Sufixo:</label>
+                <input
+                  type="text"
+                  id="suffixInput"
+                  class="form-input"
+                  placeholder="Ex: _001"
+                />
+              </div>
+            </div>
+
+            <!-- Checkboxes de controle -->
+            <div class="control-checkboxes">
+              <div class="checkbox-group">
+                <input type="checkbox" id="addNumbering" checked />
+                <label for="addNumbering">Numerar itens (01, 02, 03...)</label>
+              </div>
+
+              <div class="checkbox-group">
+                <input type="checkbox" id="useSeparator" checked />
+                <label for="useSeparator">Separador entre palavras: "_"</label>
+              </div>
+            </div>
+
+            <!-- Lista de palavras -->
+            <div class="form-group">
+              <label>Palavras disponíveis:</label>
+              <div id="wordsContainer" class="words-container">
+                <div id="wordsGrid" class="words-grid"></div>
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="preview-container">
+              <h4>Preview do nome:</h4>
+              <div id="previewName" class="preview-name">
+                Selecione arquivos para começar...
+              </div>
+            </div>
+
+            <!-- Botão aplicar -->
+            <button id="applyBtn" class="btn btn-apply" disabled>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path
+                  d="m21 12c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10c1.095 0 2.149.176 3.137.507"
+                ></path>
+              </svg>
+              Aplicar e Próximo (Enter)
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3: Visualização -->
+        <div class="section-card">
+          <div class="card-header">
+            <div class="step-number">3</div>
+            <h2 class="card-title">Visualização</h2>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome Original</th>
+                    <th>Novo Nome</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="previewTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensagens -->
+      <div id="message" class="message"></div>
+
+      <!-- Ações finais -->
+      <div class="final-actions">
+        <button id="resetBtn" class="btn btn-reset">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+            <path d="M3 21v-5h5" />
+          </svg>
+          Resetar
+        </button>
+        <button id="downloadBtn" class="btn btn-success" disabled>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" x2="12" y1="15" y2="3" />
+          </svg>
+          Baixar ZIP
+        </button>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>Desenvolvido por <span class="zenith-brand">ZenithSolutions</span></p>
+      <p>&copy; 2025. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+      // Lista de palavras disponíveis (ELEMENTOS DE PONTES - DNIT)
+      const palavrasString = `
+LAJE_DE_CONCRETO_ARMADO
+LAJE_DE_CONCRETO_PROTENDIDO
+LAJE_DE_ACO_ORTOTROPICA
+LAJE_DE_ACO_CHAPA_CORRUGADA
+LAJE_EM_LAJE_DE_CONCRETO_ARMADO
+PONTE_EM_LAJE_DE_CONCRETO_PROTENDIDO
+LAJE_EM_PREMOLDOS_DE_MADEIRA
+VIGA_CAIXAO_DE_CONCRETO_ARMADO
+VIGA_CAIXAO_DE_CONCRETO_PROTENDIDO
+VIGA_CAIXAO_DE_ACO
+VIGA_I_OU_T_DE_CONCRETO_ARMADO
+VIGA_I_OU_T_DE_CONCRETO_PROTENDIDO
+VIGA_I_DE_ACO
+DENTE_GERBER_DE_CONCRETO_ARMADO
+DENTE_GERBER_DE_CONCRETO_ARMADO_COM_PROTENSAO
+TRANSVERSINA_PORTANTE_DE_CONCRETO_ARMADO
+TRANSVERSINA_PORTANTE_DE_CONCRETO_PROTENDIDO
+TRANSVERSINA_PORTANTE_DE_ACO
+DENTE_GERBER_DE_ACO
+ARCO_DE_CONCRETO_ARMADO
+ARCO_DE_CONCRETO_PROTENDIDO
+ARCO_METALICO
+TRELICA_DE_CONCRETO_ARMADO
+TRELICA_DE_ACO
+ESTAIS
+ANCORAGEM_DE_ESTAIS
+REFORCO_LAJE_I_SOBRELAJE_DE_CONCRETO_ARMADO
+REFORCO_LAJE_II_INTRADORSADO_LAJE_EM_CONCRETO_ARMADO
+REFORCO_LAJE_III_ENCAMISAMENTO_DA_VIGA
+REFORCO_VIGA_II_ARMADURA_PRINCIPAL_PASSIVA
+REFORCO_VIGA_III_CABO_DE_PROTENSAO_EXTERNA
+REFORCO_VIGA_IV_BLOQUEIO_DE_ARTICULACAO_GERBER
+VIGA_U_DE_CONCRETO_ARMADO
+ARCO_DE_ALVENARIA_DE_CONCRETO_ARMADO
+REVESTIMENTO_EM_CHAPAS_CORRUGADAS_DE_ACO
+ARCO_DE_ALVENARIA_DE_PEDRA
+BANCO_INFERIOR_DE_ACO_DE_TRELICA_VERTICAL
+BANCO_INFERIOR_DE_ACO_DE_TRELICA_VERTICAL
+DIAGONAL_DE_CONCRETO_DE_TRELICA_VERTICAL
+MONTANTE_DE_ACO_DE_TRELICA_VERTICAL
+BANCO_SUPERIOR_DE_CONCRETO_DE_TRELICA_VERTICAL
+BANCO_INFERIOR_DE_CONCRETO_DE_TRELICA_VERTICAL
+MONTANTE_DE_CONCRETO_DE_TRELICA_VERTICAL
+APARELHO_DE_APOIO_DE_NEOPRENE_FRETADO
+APARELHO_DE_APOIO_DE_TEFLON
+APARELHO_DE_APOIO_DE_ROLO_METALICO
+APARELHO_DE_APOIO_DE_PLACA_DE_CHUMBO
+APARELHO_DE_APOIO_HIDRONAUTICO_FIXO
+APARELHO_DE_APOIO_TIPO_POT_BEARING_DIRECIONAL
+APARELHO_DE_APOIO_FREYSSINET
+APARELHO_DE_APOIO_PENDULO
+ARTICULACAO_DE_ACO
+TORRE_DE_CONCRETO_ARMADO_PARA_ESTAIAMENTO
+REFORCO_PILAR_ENCAMISAMENTO_DE_PILAR
+REFORCO_ESCORA_ENCAMISAMENTO_DE_TRUQUE_LIVRE
+APARELHO_DE_APOIO_OSCILANTE
+PILAR_DE_ACO
+BLOCO_OU_SAPATA_EM_ALVENARIA_DE_PEDRA
+TRAVESSA_DE_APOIO_DE_ACO
+VIGA_DE_CONTRAVENTAMENTO_DE_PILAR_DE_CONCRETO_ARMADO
+PAREDE_DE_CONTRAVENTAMENTO_DE_PILAR_DE_CONCRETO_ARMADO
+VIGA_DE_LIGACAO_DE_FUNDACOES
+BERCO_ELEMENTO_DO_APARATO_DE_NIVELAMENTO
+CONSOLO_ARMADO_DE_CONCRETO_ARMADO
+RADIER_DE_ALVENARIA_DE_PEDRA_E_DE_CONCRETO_ARMADO
+ENCONTRO_PAREDE_FRONTAL_DE_CONCRETO_ARMADO
+ENCONTRO_DE_ALVENARIA_DE_PEDRA
+ENCONTRO_PAREDE_LATERAL_E_VIGAS_DE_CONCRETO_ARMADO
+ENCONTRO_LAJE_DE_CONCRETO_ARMADO
+CORTINA_DE_CONCRETO_ARMADO
+ENCONTRO_CORTINA_DE_CONCRETO_ARMADO
+ENCONTRO_PAREDES_E_VIGAS_E_CONTRA_FORTES_DE_CONCRETO
+ALA_DE_CONCRETO_ARMADO
+MURO_DE_ARRIMO_DE_ALVENARIA_DE_PEDRA
+CONTENCAO_EM_CORTINA_ATIRANTADA_DE_CONCRETO_ARMADO
+LAJE_DE_TRANSICAO
+ATERRO_DE_ACESSO
+MURO_DE_ARRIMO_DE_CONCRETO
+REVESTIMENTO_DE_TALUDE_EM_CONCRETO
+MURO_DE_TERRA_ARMADA
+MURO_DE_GABIAO
+DEFENSA_METALICA
+BLOCO_OU_SAPATA_EM_CONCRETO_ARMADO
+TUBULAO_OU_ESTACAO_DE_CONCRETO_ARMADO
+ESTACA_DE_CONCRETO_ARMADO
+ESTACA_DE_MADEIRA
+CAMISA_METALICA_DE_REVESTIMENTO_PARA_ESTACA
+PAVIMENTO_ASFALTICO
+PAVIMENTO_DE_CONCRETO
+BARREIRA_NEW_JERSEY
+GUARDA_RODAS_ANTIGO_DO_DNER
+GUARDA_RODAS_QUALQUER
+GUARDA_CORPO_DE_CONCRETO_ARMADO
+GUARDA_CORPO_DE_ACO
+CALCADA_PARA_PEDESTRES_DE_CONCRETO_ARMADO
+CALCADA_PARA_PEDESTRES_METALICA
+BERCO_PARA_JUNTA_DE_DILATACAO
+JUNTA_ELASTOMERICA_DE_DILATACAO
+JUNTA_DE_DILATACAO
+JUNTA_METALICA_DE_DILATACAO
+GUARDA_CORPO_MISTO_CONCRETO_ARMADO_E_DE_ACO
+BARREIRA_QUALQUER_DE_CONCRETO_ARMADO
+BARREIRA_NEW_JERSEY_COM_GUARDA_CORPO_DE_CONCRETO_ARMADO
+BUZINAO_DE_ACO_OU_PVC
+TRANSVERSINA_DE_LIGACAO_DE_CONCRETO_ARMADO
+TRANSVERSINA_DE_LIGACAO_DE_CONCRETO_PROTENDIDO
+TRANSVERSINA_DE_LIGACAO_DE_ACO
+LONGARINA_DE_CONTRAVENTAMENTO_DE_LAJE
+VIGA_SECUNDARIA
+DIAGONAL_DE_ACO_HORIZONTAL_DE_TRAVAMENTO
+DIAGONAL_DE_CONCRETO_HORIZONTAL_DE_TRAVAMENTO
+TRANSVERSINA_DE_ACO_DE_TRAVAMENTO
+LONGARINA_DE_ACO_DE_TRAVAMENTO
+MAO_FRANCESA_DE_ACO
+CONTRAVENTAMENTO_DE_ACO
+TELA_DE_PROTECAO_CONTRA_QUEDA_DE_OBJETOS
+PILAR_PAREDE_DE_ALVENARIA_DE_PEDRA
+PILAR_PAREDE_DE_CONCRETO_ARMADO
+PILAR_EM_COLUNAS_DE_CONCRETO_ARMADO
+PILAR_VAZADO_DE_CONCRETO_ARMADO
+TRAVERSA_DE_APOIO_DE_CONCRETO_ARMADO
+TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
+`;
+
+      // Converter string em array
+      const palavrasDisponiveis = palavrasString
+        .trim()
+        .split("\n")
+        .map((palavra) => palavra.trim())
+        .filter((palavra) => palavra.length > 0);
+
+      // Elementos DOM
+      const fileInput = document.getElementById("fileInput");
+      const fileList = document.getElementById("fileList");
+      const currentFileInfo = document.getElementById("currentFileInfo");
+      const currentFileName = document.getElementById("currentFileName");
+      const prefixInput = document.getElementById("prefixInput");
+      const suffixInput = document.getElementById("suffixInput");
+      const addNumbering = document.getElementById("addNumbering");
+      const useSeparator = document.getElementById("useSeparator");
+      const wordsGrid = document.getElementById("wordsGrid");
+      const previewName = document.getElementById("previewName");
+      const applyBtn = document.getElementById("applyBtn");
+      const previewTable = document.getElementById("previewTable");
+      const resetBtn = document.getElementById("resetBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const messageDiv = document.getElementById("message");
+
+      // Variáveis globais
+      let files = [];
+      let fileNames = {}; // Armazena os nomes construídos para cada arquivo
+      let currentFileIndex = -1;
+
+      // Event listeners
+      fileInput.addEventListener("change", handleFileSelect);
+      prefixInput.addEventListener("input", updateCurrentPreview);
+      suffixInput.addEventListener("input", updateCurrentPreview);
+      addNumbering.addEventListener("change", updateCurrentPreview);
+      useSeparator.addEventListener("change", updateSeparatorLabel);
+      useSeparator.addEventListener("change", updateCurrentPreview);
+      applyBtn.addEventListener("click", applyCurrentName);
+      resetBtn.addEventListener("click", resetAll);
+      downloadBtn.addEventListener("click", downloadFiles);
+
+      // Tecla Enter para aplicar
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !applyBtn.disabled) {
+          e.preventDefault();
+          applyCurrentName();
+        }
+      });
+
+      // Inicialização
+      initializeWordsGrid();
+      updateFileList();
+      updateSeparatorLabel();
+
+      // Função para criar a grade de palavras
+      function initializeWordsGrid() {
+        wordsGrid.innerHTML = "";
+
+        palavrasDisponiveis.forEach((palavra) => {
+          const div = document.createElement("div");
+          div.className = "word-checkbox";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = `word_${palavra}`;
+          checkbox.value = palavra;
+          checkbox.addEventListener("change", updateCurrentPreview);
+
+          const label = document.createElement("label");
+          label.htmlFor = `word_${palavra}`;
+          label.textContent = palavra;
+
+          div.appendChild(checkbox);
+          div.appendChild(label);
+          wordsGrid.appendChild(div);
+        });
+      }
+
+      // Função para atualizar o texto do separador
+      function updateSeparatorLabel() {
+        const separatorCheckbox = document.querySelector(
+          'label[for="useSeparator"]'
+        );
+        const separatorChar = useSeparator.checked ? "_" : " ";
+        separatorCheckbox.textContent = `Separador entre palavras: "${separatorChar}"`;
+      }
+
+      // Função para lidar com seleção de arquivos
+      function handleFileSelect(e) {
+        files = Array.from(e.target.files);
+        fileNames = {};
+        currentFileIndex = -1;
+
+        if (files.length > 0) {
+          selectFile(0);
+        }
+
+        updateFileList();
+        updatePreviewTable();
+      }
+
+      // Função para atualizar a lista de arquivos
+      function updateFileList() {
+        fileList.innerHTML = "";
+
+        if (files.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.className = "empty-message";
+          emptyMessage.innerHTML = `
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            <p>Nenhum arquivo selecionado</p>
+            <p>Clique no botão acima para escolher arquivos</p>
+          `;
+          fileList.appendChild(emptyMessage);
+          return;
+        }
+
+        files.forEach((file, index) => {
+          const item = document.createElement("div");
+          item.className = `file-item ${
+            index === currentFileIndex ? "active" : ""
+          }`;
+          item.addEventListener("click", () => selectFile(index));
+
+          const fileIcon = document.createElement("div");
+          fileIcon.className = "file-icon";
+          fileIcon.innerHTML = "📄";
+
+          const fileName = document.createElement("div");
+          fileName.className = "file-name";
+          fileName.textContent = file.name;
+
+          const status = document.createElement("div");
+          status.className = `file-status ${
+            fileNames[index] ? "done" : "pending"
+          }`;
+          status.textContent = fileNames[index] ? "✓" : "○";
+
+          item.appendChild(fileIcon);
+          item.appendChild(fileName);
+          item.appendChild(status);
+
+          fileList.appendChild(item);
+        });
+      }
+
+      // Função para selecionar um arquivo
+      function selectFile(index) {
+        if (index < 0 || index >= files.length) return;
+
+        currentFileIndex = index;
+        currentFileName.textContent = files[index].name;
+        currentFileInfo.style.display = "block";
+
+        // Carregar dados salvos para este arquivo
+        loadFileData(index);
+
+        updateFileList();
+        updateCurrentPreview();
+
+        applyBtn.disabled = false;
+      }
+
+      // Função para carregar dados de um arquivo
+      function loadFileData(index) {
+        const savedData = fileNames[index];
+
+        if (savedData) {
+          prefixInput.value = savedData.prefix || "";
+          suffixInput.value = savedData.suffix || "";
+
+          // Limpar checkboxes
+          document
+            .querySelectorAll('#wordsGrid input[type="checkbox"]')
+            .forEach((cb) => {
+              cb.checked = false;
+            });
+
+          // Marcar palavras salvas
+          if (savedData.words) {
+            savedData.words.forEach((word) => {
+              const checkbox = document.getElementById(`word_${word}`);
+              if (checkbox) checkbox.checked = true;
+            });
+          }
+        } else {
+          // Limpar campos se não há dados salvos
+          prefixInput.value = "";
+          suffixInput.value = "";
+          document
+            .querySelectorAll('#wordsGrid input[type="checkbox"]')
+            .forEach((cb) => {
+              cb.checked = false;
+            });
+        }
+      }
+
+      // Função para gerar um nome baseado no índice atual
+      function generateCurrentName() {
+        if (currentFileIndex === -1) return "";
+
+        const prefix = prefixInput.value.trim();
+        const suffix = suffixInput.value.trim();
+        const separator = useSeparator.checked ? "_" : " ";
+        const shouldAddNumber = addNumbering.checked;
+
+        const checkedWords = [];
+        document
+          .querySelectorAll('#wordsGrid input[type="checkbox"]:checked')
+          .forEach((cb) => {
+            checkedWords.push(cb.value);
+          });
+
+        const originalFile = files[currentFileIndex];
+        const extension = originalFile.name.substring(
+          originalFile.name.lastIndexOf(".")
+        );
+
+        let newName = "";
+
+        // Adicionar prefixo
+        if (prefix) {
+          newName += prefix;
+        }
+
+        // Adicionar numeração (sem separador entre prefixo e número)
+        if (shouldAddNumber) {
+          const number = String(currentFileIndex + 1).padStart(2, "0");
+          newName += number;
+        }
+
+        // Adicionar palavras (com separador se houver prefixo/número antes)
+        if (checkedWords.length > 0) {
+          if (newName) newName += separator;
+          newName += checkedWords.join(separator);
+        }
+
+        // Adicionar sufixo
+        if (suffix) {
+          if (newName) newName += separator;
+          newName += suffix;
+        }
+
+        // Se não há nenhum conteúdo, usar nome padrão
+        if (!newName) {
+          newName = "arquivo";
+        }
+
+        return newName + extension;
+      }
+
+      // Função para atualizar o preview atual
+      function updateCurrentPreview() {
+        if (currentFileIndex === -1) {
+          previewName.textContent = "Selecione arquivos para começar...";
+          return;
+        }
+
+        const generatedName = generateCurrentName();
+        previewName.textContent = generatedName;
+      }
+
+      // Função para aplicar o nome atual e avançar
+      function applyCurrentName() {
+        if (currentFileIndex === -1) return;
+
+        const prefix = prefixInput.value.trim();
+        const suffix = suffixInput.value.trim();
+        const checkedWords = [];
+
+        document
+          .querySelectorAll('#wordsGrid input[type="checkbox"]:checked')
+          .forEach((cb) => {
+            checkedWords.push(cb.value);
+          });
+
+        // Salvar dados do arquivo atual
+        fileNames[currentFileIndex] = {
+          prefix: prefix,
+          suffix: suffix,
+          words: checkedWords,
+          finalName: generateCurrentName(),
+        };
+
+        // Ir para próximo arquivo não nomeado
+        const nextIndex = findNextUnnamedFile();
+        if (nextIndex !== -1) {
+          selectFile(nextIndex);
+        } else {
+          // Todos os arquivos foram processados
+          currentFileIndex = -1;
+          currentFileInfo.style.display = "none";
+          applyBtn.disabled = true;
+          previewName.textContent = "Todos os arquivos foram nomeados!";
+
+          showMessage(
+            "Todos os arquivos foram nomeados! Você pode baixar o ZIP.",
+            "success"
+          );
+        }
+
+        updateFileList();
+        updatePreviewTable();
+        checkAllFilesReady();
+      }
+
+      // Função para encontrar o próximo arquivo sem nome
+      function findNextUnnamedFile() {
+        for (let i = 0; i < files.length; i++) {
+          if (!fileNames[i]) {
+            return i;
+          }
+        }
+        return -1; // Todos nomeados
+      }
+
+      // Função para editar um arquivo específico
+      function editFile(index) {
+        selectFile(index);
+      }
+
+      // Função para atualizar a tabela de preview
+      function updatePreviewTable() {
+        previewTable.innerHTML = "";
+
+        files.forEach((file, index) => {
+          const row = document.createElement("tr");
+
+          const originalCell = document.createElement("td");
+          originalCell.textContent = file.name;
+
+          const newCell = document.createElement("td");
+          newCell.textContent = fileNames[index]
+            ? fileNames[index].finalName
+            : "-";
+
+          const actionCell = document.createElement("td");
+          const editBtn = document.createElement("button");
+          editBtn.className = "btn-edit";
+          editBtn.textContent = "Editar";
+          editBtn.onclick = () => editFile(index);
+          actionCell.appendChild(editBtn);
+
+          row.appendChild(originalCell);
+          row.appendChild(newCell);
+          row.appendChild(actionCell);
+          previewTable.appendChild(row);
+        });
+      }
+
+      // Função para verificar se todos os arquivos estão prontos
+      function checkAllFilesReady() {
+        const allReady = files.every((_, index) => fileNames[index]);
+        downloadBtn.disabled = !allReady;
+      }
+
+      // Função para resetar tudo
+      function resetAll() {
+        files = [];
+        fileNames = {};
+        currentFileIndex = -1;
+        fileInput.value = "";
+        prefixInput.value = "";
+        suffixInput.value = "";
+        addNumbering.checked = true;
+        useSeparator.checked = true;
+
+        document
+          .querySelectorAll('#wordsGrid input[type="checkbox"]')
+          .forEach((cb) => {
+            cb.checked = false;
+          });
+
+        currentFileInfo.style.display = "none";
+        applyBtn.disabled = true;
+        downloadBtn.disabled = true;
+        previewName.textContent = "Selecione arquivos para começar...";
+
+        updateSeparatorLabel();
+        updateFileList();
+        updatePreviewTable();
+
+        showMessage("Sistema resetado!", "success");
+      }
+
+      // Função para baixar arquivos
+      function downloadFiles() {
+        if (!files.length || !Object.keys(fileNames).length) {
+          showMessage("Não há arquivos para baixar.", "error");
+          return;
+        }
+
+        // Carregar JSZip dinamicamente
+        loadJSZip(() => {
+          const zip = new JSZip();
+
+          const promises = files.map((file, index) => {
+            return new Promise((resolve, reject) => {
+              if (!fileNames[index]) {
+                resolve(); // Pular arquivos sem nome
+                return;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                zip.file(fileNames[index].finalName, e.target.result);
+                resolve();
+              };
+              reader.onerror = reject;
+              reader.readAsArrayBuffer(file);
+            });
+          });
+
+          Promise.all(promises)
+            .then(() => zip.generateAsync({ type: "blob" }))
+            .then((blob) => {
+              const link = document.createElement("a");
+              link.href = URL.createObjectURL(blob);
+              link.download = "arquivos_renomeados.zip";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+
+              showMessage("Arquivos baixados com sucesso!", "success");
+            })
+            .catch((error) => {
+              showMessage("Erro ao criar ZIP: " + error.message, "error");
+            });
+        });
+      }
+
+      // Função para carregar JSZip dinamicamente
+      function loadJSZip(callback) {
+        if (window.JSZip) {
+          callback();
+          return;
+        }
+
+        const script = document.createElement("script");
+        script.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+        script.onload = callback;
+        script.onerror = () => {
+          showMessage(
+            "Erro ao carregar JSZip. Verifique sua conexão.",
+            "error"
+          );
+        };
+        document.head.appendChild(script);
+      }
+
+      // Função para mostrar mensagens
+      function showMessage(text, type) {
+        messageDiv.textContent = text;
+        messageDiv.className = `message ${type}`;
+        messageDiv.style.display = "block";
+
+        setTimeout(() => {
+          messageDiv.style.display = "none";
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>
