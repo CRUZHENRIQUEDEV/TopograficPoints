@@ -203,6 +203,17 @@
         background: linear-gradient(45deg, #c0392b, #a93226);
       }
 
+      .btn-regenerate {
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        font-size: 12px;
+        padding: 8px 16px;
+        margin-left: 8px;
+      }
+
+      .btn-regenerate:hover {
+        background: linear-gradient(45deg, #8e44ad, #732d91);
+      }
+
       /* Input de arquivo escondido */
       .file-input {
         display: none;
@@ -431,9 +442,12 @@
         color: #2ecc71;
         margin-bottom: 0.6rem;
         font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
 
-      .preview-name {
+      .preview-name-input {
         font-size: 16px;
         font-weight: 600;
         color: #ffffff;
@@ -442,6 +456,21 @@
         background: rgba(255, 255, 255, 0.1);
         padding: 10px 12px;
         border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        width: 100%;
+      }
+
+      .preview-name-input:focus {
+        outline: none;
+        border-color: #2ecc71;
+        box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .preview-name-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
       }
 
       /* Mensagem de lista vazia */
@@ -722,12 +751,41 @@
               </div>
             </div>
 
-            <!-- Preview -->
+            <!-- Preview com input editável -->
             <div class="preview-container">
-              <h4>Preview do nome:</h4>
-              <div id="previewName" class="preview-name">
-                Selecione arquivos para começar...
-              </div>
+              <h4>
+                Nome final do arquivo:
+                <button id="regenerateBtn" class="btn btn-regenerate">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+                    />
+                    <path d="M21 3v5h-5" />
+                    <path
+                      d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                    />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                  Regenerar
+                </button>
+              </h4>
+              <input
+                type="text"
+                id="previewNameInput"
+                class="preview-name-input"
+                placeholder="Selecione arquivos para começar..."
+                disabled
+              />
             </div>
 
             <!-- Botão aplicar -->
@@ -970,7 +1028,8 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
       const addNumbering = document.getElementById("addNumbering");
       const useSeparator = document.getElementById("useSeparator");
       const wordsGrid = document.getElementById("wordsGrid");
-      const previewName = document.getElementById("previewName");
+      const previewNameInput = document.getElementById("previewNameInput");
+      const regenerateBtn = document.getElementById("regenerateBtn");
       const applyBtn = document.getElementById("applyBtn");
       const previewTable = document.getElementById("previewTable");
       const resetBtn = document.getElementById("resetBtn");
@@ -981,14 +1040,27 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
       let files = [];
       let fileNames = {}; // Armazena os nomes construídos para cada arquivo
       let currentFileIndex = -1;
+      let isManualEdit = false; // Flag para detectar edição manual
 
       // Event listeners
       fileInput.addEventListener("change", handleFileSelect);
-      prefixInput.addEventListener("input", updateCurrentPreview);
-      suffixInput.addEventListener("input", updateCurrentPreview);
-      addNumbering.addEventListener("change", updateCurrentPreview);
+      prefixInput.addEventListener("input", () => {
+        if (!isManualEdit) updatePreviewInput();
+      });
+      suffixInput.addEventListener("input", () => {
+        if (!isManualEdit) updatePreviewInput();
+      });
+      addNumbering.addEventListener("change", () => {
+        if (!isManualEdit) updatePreviewInput();
+      });
       useSeparator.addEventListener("change", updateSeparatorLabel);
-      useSeparator.addEventListener("change", updateCurrentPreview);
+      useSeparator.addEventListener("change", () => {
+        if (!isManualEdit) updatePreviewInput();
+      });
+      previewNameInput.addEventListener("input", () => {
+        isManualEdit = true; // Marca como edição manual
+      });
+      regenerateBtn.addEventListener("click", regenerateName);
       applyBtn.addEventListener("click", applyCurrentName);
       resetBtn.addEventListener("click", resetAll);
       downloadBtn.addEventListener("click", downloadFiles);
@@ -1018,7 +1090,9 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
           checkbox.type = "checkbox";
           checkbox.id = `word_${palavra}`;
           checkbox.value = palavra;
-          checkbox.addEventListener("change", updateCurrentPreview);
+          checkbox.addEventListener("change", () => {
+            if (!isManualEdit) updatePreviewInput();
+          });
 
           const label = document.createElement("label");
           label.htmlFor = `word_${palavra}`;
@@ -1113,14 +1187,17 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
         loadFileData(index);
 
         updateFileList();
-        updateCurrentPreview();
+        updatePreviewInput();
 
         applyBtn.disabled = false;
+        previewNameInput.disabled = false;
+        regenerateBtn.disabled = false;
       }
 
       // Função para carregar dados de um arquivo
       function loadFileData(index) {
         const savedData = fileNames[index];
+        isManualEdit = false; // Reset da flag
 
         if (savedData) {
           prefixInput.value = savedData.prefix || "";
@@ -1140,6 +1217,12 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
               if (checkbox) checkbox.checked = true;
             });
           }
+
+          // Carregar nome final editado
+          previewNameInput.value = savedData.finalName || "";
+          if (savedData.wasManuallyEdited) {
+            isManualEdit = true;
+          }
         } else {
           // Limpar campos se não há dados salvos
           prefixInput.value = "";
@@ -1149,6 +1232,7 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
             .forEach((cb) => {
               cb.checked = false;
             });
+          previewNameInput.value = "";
         }
       }
 
@@ -1206,15 +1290,28 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
         return newName + extension;
       }
 
-      // Função para atualizar o preview atual
-      function updateCurrentPreview() {
+      // Função para atualizar o input de preview
+      function updatePreviewInput() {
         if (currentFileIndex === -1) {
-          previewName.textContent = "Selecione arquivos para começar...";
+          previewNameInput.placeholder = "Selecione arquivos para começar...";
+          previewNameInput.value = "";
           return;
         }
 
-        const generatedName = generateCurrentName();
-        previewName.textContent = generatedName;
+        if (!isManualEdit) {
+          const generatedName = generateCurrentName();
+          previewNameInput.value = generatedName;
+          previewNameInput.placeholder = "";
+        }
+      }
+
+      // Função para regenerar o nome automaticamente
+      function regenerateName() {
+        if (currentFileIndex === -1) return;
+
+        isManualEdit = false; // Reset da flag de edição manual
+        updatePreviewInput();
+        showMessage("Nome regenerado automaticamente!", "success");
       }
 
       // Função para aplicar o nome atual e avançar
@@ -1231,12 +1328,20 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
             checkedWords.push(cb.value);
           });
 
+        // Validar se há um nome no input
+        const finalName = previewNameInput.value.trim();
+        if (!finalName) {
+          showMessage("Por favor, insira um nome para o arquivo!", "error");
+          return;
+        }
+
         // Salvar dados do arquivo atual
         fileNames[currentFileIndex] = {
           prefix: prefix,
           suffix: suffix,
           words: checkedWords,
-          finalName: generateCurrentName(),
+          finalName: finalName,
+          wasManuallyEdited: isManualEdit,
         };
 
         // Ir para próximo arquivo não nomeado
@@ -1248,7 +1353,10 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
           currentFileIndex = -1;
           currentFileInfo.style.display = "none";
           applyBtn.disabled = true;
-          previewName.textContent = "Todos os arquivos foram nomeados!";
+          previewNameInput.disabled = true;
+          previewNameInput.value = "";
+          previewNameInput.placeholder = "Todos os arquivos foram nomeados!";
+          regenerateBtn.disabled = true;
 
           showMessage(
             "Todos os arquivos foram nomeados! Você pode baixar o ZIP.",
@@ -1316,6 +1424,7 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
         files = [];
         fileNames = {};
         currentFileIndex = -1;
+        isManualEdit = false;
         fileInput.value = "";
         prefixInput.value = "";
         suffixInput.value = "";
@@ -1331,7 +1440,10 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
         currentFileInfo.style.display = "none";
         applyBtn.disabled = true;
         downloadBtn.disabled = true;
-        previewName.textContent = "Selecione arquivos para começar...";
+        previewNameInput.disabled = true;
+        previewNameInput.value = "";
+        previewNameInput.placeholder = "Selecione arquivos para começar...";
+        regenerateBtn.disabled = true;
 
         updateSeparatorLabel();
         updateFileList();
