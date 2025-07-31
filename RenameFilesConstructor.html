@@ -10,7 +10,7 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
     <style>
-      /* Estilos gerais */
+      /* Reset e estilos gerais */
       * {
         margin: 0;
         padding: 0;
@@ -19,398 +19,280 @@
 
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(
-          135deg,
-          #2c3e50 0%,
-          #34495e 50%,
-          #2c3e50 100%
-        );
-        min-height: 100vh;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+        height: 100vh;
         color: #ffffff;
-        overflow-x: auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1rem;
-      }
-
-      /* Cabeçalho */
+      /* Cabeçalho compacto */
       .header {
         text-align: center;
-        margin-bottom: 2rem;
-        padding: 1.5rem 0;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .header h1 {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        margin-bottom: 1rem;
+        margin-bottom: 0.3rem;
         background: linear-gradient(45deg, #ffffff, #e3f2fd);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       }
 
       .header p {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        max-width: 700px;
-        margin: 0 auto;
-        line-height: 1.6;
+        font-size: 0.9rem;
+        opacity: 0.8;
+        line-height: 1.3;
       }
 
-      /* Layout vertical - um card abaixo do outro */
-      .main-content {
+      /* Container principal */
+      .container {
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        padding: 0.8rem;
+        gap: 0.8rem;
+        overflow: hidden;
       }
 
-      /* Cartões de seção */
-      .section-card {
+      /* Painel de controles horizontal */
+      .controls-panel {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 15px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        width: 100%;
+        border-radius: 10px;
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: 200px 250px 1fr 180px;
+        gap: 1rem;
+        align-items: start;
       }
 
-      .section-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.1),
-          transparent
-        );
-        transition: left 0.5s ease;
-      }
-
-      .section-card:hover::before {
-        left: 100%;
-      }
-
-      .section-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        border-color: rgba(255, 255, 255, 0.4);
-      }
-
-      .card-header {
+      /* Seção de arquivos */
+      .file-section {
         display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.8rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        position: relative;
-        z-index: 1;
-      }
-
-      .step-number {
-        width: 35px;
-        height: 35px;
-        background: linear-gradient(45deg, #3498db, #2ecc71);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 1.1rem;
-        margin-right: 0.8rem;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-      }
-
-      .card-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        flex-grow: 1;
-        display: flex;
-        align-items: center;
+        flex-direction: column;
         gap: 0.5rem;
       }
 
-      .card-body {
-        position: relative;
-        z-index: 1;
+      .section-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #3498db;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
       }
 
-      /* Botões */
       .btn {
         background: linear-gradient(45deg, #3498db, #2ecc71);
         color: white;
         border: none;
-        padding: 12px 24px;
-        border-radius: 15px;
+        padding: 8px 12px;
+        border-radius: 8px;
         cursor: pointer;
         font-weight: 600;
-        font-size: 12px;
+        font-size: 11px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
+        justify-content: center;
+        gap: 0.4rem;
+        min-height: 32px;
       }
 
       .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        background: linear-gradient(45deg, #2980b9, #27ae60);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
       }
 
       .btn:disabled {
         background: rgba(149, 165, 166, 0.6);
         cursor: not-allowed;
         transform: none;
-        box-shadow: none;
       }
 
-      .btn-success {
-        background: linear-gradient(45deg, #2ecc71, #27ae60);
-      }
+      .btn-success { background: linear-gradient(45deg, #2ecc71, #27ae60); }
+      .btn-csv { background: linear-gradient(45deg, #16a085, #1abc9c); }
+      .btn-reset { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+      .btn-nav { background: linear-gradient(45deg, #f39c12, #e67e22); }
 
-      .btn-success:hover {
-        background: linear-gradient(45deg, #27ae60, #229954);
-      }
+      .file-input { display: none; }
 
-      .btn-apply {
-        background: linear-gradient(45deg, #f39c12, #e67e22);
-        font-size: 18px;
-        padding: 16px 32px;
-      }
-
-      .btn-apply:hover {
-        background: linear-gradient(45deg, #e67e22, #d35400);
-      }
-
-      .btn-reset {
-        background: linear-gradient(45deg, #e74c3c, #c0392b);
-      }
-
-      .btn-reset:hover {
-        background: linear-gradient(45deg, #c0392b, #a93226);
-      }
-
-      .btn-regenerate {
-        background: linear-gradient(45deg, #9b59b6, #8e44ad);
-        font-size: 12px;
-        padding: 8px 16px;
-        margin-left: 8px;
-      }
-
-      .btn-regenerate:hover {
-        background: linear-gradient(45deg, #8e44ad, #732d91);
-      }
-
-      /* Input de arquivo escondido */
-      .file-input {
-        display: none;
-      }
-
-      /* Lista de arquivos */
-      .file-list {
+      .file-counter {
+        font-size: 11px;
+        text-align: center;
+        color: rgba(255,255,255,0.7);
+        padding: 0.3rem;
         background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        min-height: 150px;
-        max-height: 200px;
-        overflow-y: auto;
-        padding: 0.8rem;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        border-radius: 6px;
       }
 
-      .file-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 10px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-      }
-
-      .file-item:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateX(5px);
-      }
-
-      .file-item.active {
-        background: rgba(52, 152, 219, 0.3);
-        border-color: #3498db;
-        box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
-      }
-
-      .file-icon {
-        margin-right: 12px;
-        color: #3498db;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-      }
-
-      .file-name {
-        flex-grow: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .file-status {
-        font-size: 12px;
-        padding: 4px 8px;
-        border-radius: 8px;
-        margin-left: 8px;
-        font-weight: 600;
-      }
-
-      .file-status.pending {
-        background: rgba(241, 196, 15, 0.3);
-        color: #f1c40f;
-      }
-
-      .file-status.done {
-        background: rgba(46, 204, 113, 0.3);
-        color: #2ecc71;
-      }
-
-      /* Arquivo atual sendo editado */
-      .current-file-info {
+      /* Arquivo atual */
+      .current-file {
         background: rgba(52, 152, 219, 0.2);
-        padding: 1.5rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
         border: 1px solid rgba(52, 152, 219, 0.4);
-      }
-
-      .current-file-info h4 {
-        margin-bottom: 0.8rem;
-        color: #3498db;
-        font-size: 1.1rem;
+        border-radius: 8px;
+        padding: 0.8rem;
+        text-align: center;
       }
 
       .current-file-name {
-        font-size: 16px;
+        font-size: 0.9rem;
         font-weight: 600;
         color: #ffffff;
+        margin-bottom: 0.5rem;
+        word-break: break-all;
       }
 
-      /* Construtor de nomes */
-      .constructor-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        margin-bottom: 2rem;
+      .navigation-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+
+      .btn-small {
+        padding: 6px 10px;
+        font-size: 10px;
+        min-height: 28px;
+      }
+
+      /* Controles de nomenclatura e descrição */
+      .name-controls, .description-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .description-controls {
+        min-width: 0; /* Para permitir que os filhos encolham */
       }
 
       .form-group {
-        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
       }
 
       .form-group label {
-        display: block;
-        margin-bottom: 0.8rem;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.9);
-        font-size: 1rem;
+        font-size: 0.8rem;
       }
 
       .form-input {
-        width: 100%;
-        padding: 12px 16px;
+        padding: 6px 10px;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
+        border-radius: 6px;
         background: rgba(255, 255, 255, 0.1);
         color: #ffffff;
-        font-size: 14px;
+        font-size: 12px;
         transition: all 0.3s ease;
       }
 
       .form-input:focus {
         outline: none;
         border-color: #3498db;
-        box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
         background: rgba(255, 255, 255, 0.15);
-      }
-
-      /* Checkboxes de controle */
-      .control-checkboxes {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.8rem;
-        margin-bottom: 1.2rem;
       }
 
       .checkbox-group {
         display: flex;
         align-items: center;
-        padding: 8px 12px;
+        gap: 0.5rem;
+        padding: 4px 8px;
         background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .checkbox-group:hover {
-        background: rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        font-size: 11px;
       }
 
       .checkbox-group input[type="checkbox"] {
-        margin-right: 8px;
-        transform: scale(1.1);
         accent-color: #3498db;
       }
 
-      .checkbox-group label {
-        font-weight: 500;
-        cursor: pointer;
-        font-size: 13px;
+      /* Preview inline */
+      .preview-boxes {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
       }
 
-      /* Container de palavras */
-      .words-container {
+      .preview-box {
+        background: rgba(46, 204, 113, 0.2);
+        border: 1px solid rgba(46, 204, 113, 0.4);
+        border-radius: 6px;
+        padding: 0.5rem;
+        margin-top: 0.3rem;
+      }
+
+      .preview-title {
+        font-size: 0.7rem;
+        color: #2ecc71;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+      }
+
+      .preview-text {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        min-height: 16px;
+        word-break: break-word;
+      }
+
+      /* Grupos de palavras compactos */
+      .word-groups {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .word-group {
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 1rem;
-        max-height: 250px;
+        border-radius: 8px;
+        padding: 0.5rem;
+      }
+
+      .word-group-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: #3498db;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .words-container {
+        max-height: 120px;
         overflow-y: auto;
+        min-height: 80px;
       }
 
       .words-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
 
       .word-checkbox {
         display: flex;
         align-items: center;
-        padding: 6px 8px;
+        gap: 0.4rem;
+        padding: 2px 4px;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
+        border-radius: 4px;
         cursor: pointer;
         transition: all 0.3s ease;
-        font-size: 12px;
+        font-size: 9px;
       }
 
       .word-checkbox:hover {
@@ -418,1065 +300,1080 @@
       }
 
       .word-checkbox input[type="checkbox"] {
-        margin-right: 6px;
-        transform: scale(0.9);
+        transform: scale(0.8);
         accent-color: #3498db;
       }
 
       .word-checkbox label {
         cursor: pointer;
-        font-size: 11px;
         user-select: none;
+        line-height: 1.2;
       }
 
-      /* Preview */
-      .preview-container {
-        background: rgba(46, 204, 113, 0.2);
-        border: 1px solid rgba(46, 204, 113, 0.4);
-        border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 1.2rem;
-      }
-
-      .preview-container h4 {
-        color: #2ecc71;
-        margin-bottom: 0.6rem;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .preview-name-input {
-        font-size: 16px;
-        font-weight: 600;
-        color: #ffffff;
-        word-break: break-all;
-        min-height: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
-        width: 100%;
-      }
-
-      .preview-name-input:focus {
-        outline: none;
-        border-color: #2ecc71;
-        box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
-        background: rgba(255, 255, 255, 0.15);
-      }
-
-      .preview-name-input::placeholder {
-        color: rgba(255, 255, 255, 0.5);
-        font-style: italic;
-      }
-
-      /* Mensagem de lista vazia */
-      .empty-message {
-        text-align: center;
-        padding: 3rem;
-        color: rgba(255, 255, 255, 0.6);
-        font-style: italic;
+      /* Ações */
+      .actions-section {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
+        gap: 0.5rem;
       }
 
-      /* Tabela de visualização */
-      .table-container {
+      /* Área da tabela */
+      .table-area {
+        flex: 1;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        overflow: hidden;
+        backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        max-height: 300px;
-        overflow-y: auto;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
-      table {
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .table-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      .table-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      /* Tabela editável */
+      .table-container {
+        flex: 1;
+        overflow: auto;
+      }
+
+      .editable-table {
         width: 100%;
         border-collapse: collapse;
         color: #ffffff;
       }
 
-      th,
-      td {
-        padding: 10px 12px;
-        text-align: left;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 13px;
-      }
-
-      th {
+      .editable-table th {
         background: rgba(52, 152, 219, 0.3);
+        padding: 8px 12px;
+        text-align: center;
         font-weight: 600;
+        font-size: 12px;
         color: #ffffff;
         position: sticky;
         top: 0;
+        z-index: 10;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
       }
 
-      td {
-        color: rgba(255, 255, 255, 0.9);
+      .editable-table td {
+        padding: 4px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        vertical-align: middle;
+        font-size: 11px;
       }
 
-      tr:nth-child(even) {
-        background: rgba(255, 255, 255, 0.05);
+      .editable-table tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.03);
       }
 
-      .btn-edit {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-        padding: 4px 10px;
-        border-radius: 6px;
-        cursor: pointer;
+      .editable-table tr:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .editable-table tr.current-row {
+        background: rgba(52, 152, 219, 0.2) !important;
+        border: 2px solid #3498db;
+      }
+
+      .editable-input {
+        width: 100%;
+        background: transparent;
+        border: 1px solid transparent;
+        color: #ffffff;
+        padding: 4px 6px;
+        border-radius: 4px;
         font-size: 11px;
         transition: all 0.3s ease;
       }
 
-      .btn-edit:hover {
-        background: rgba(52, 152, 219, 0.3);
+      .editable-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
       }
 
-      /* Ações finais */
-      .final-actions {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        margin: 1.5rem 0;
-      }
-
-      /* Mensagens de status */
-      .message {
-        padding: 1rem 1.5rem;
-        margin: 1rem 0;
-        border-radius: 15px;
-        display: none;
+      .original-name {
         font-weight: 500;
-        text-align: center;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* Status do arquivo atual */
+      .file-status {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-left: 8px;
+        font-weight: 600;
+      }
+
+      .file-status.current {
+        background: rgba(52, 152, 219, 0.3);
+        color: #3498db;
+      }
+
+      .file-status.done {
+        background: rgba(46, 204, 113, 0.3);
+        color: #2ecc71;
+      }
+
+      .file-status.pending {
+        background: rgba(241, 196, 15, 0.3);
+        color: #f1c40f;
+      }
+
+      /* Mensagens */
+      .message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 12px;
+        z-index: 1000;
+        display: none;
+        max-width: 300px;
       }
 
       .message.error {
-        background: rgba(231, 76, 60, 0.2);
-        color: #e74c3c;
+        background: rgba(231, 76, 60, 0.9);
+        color: #ffffff;
         border-left: 4px solid #e74c3c;
       }
 
       .message.success {
-        background: rgba(46, 204, 113, 0.2);
-        color: #2ecc71;
+        background: rgba(46, 204, 113, 0.9);
+        color: #ffffff;
         border-left: 4px solid #2ecc71;
       }
 
-      /* Rodapé */
-      .footer {
+      .message.info {
+        background: rgba(52, 152, 219, 0.9);
+        color: #ffffff;
+        border-left: 4px solid #3498db;
+      }
+
+      /* Modal de confirmação */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      }
+
+      .modal-content {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 2rem;
+        max-width: 400px;
+        width: 90%;
         text-align: center;
-        padding: 1.5rem 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        margin-top: 2rem;
-        background: rgba(44, 62, 80, 0.3);
-        border-radius: 12px 12px 0 0;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       }
 
-      .footer p {
-        opacity: 0.9;
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .zenith-brand {
+      .modal-title {
+        font-size: 1.2rem;
         font-weight: 600;
-        background: linear-gradient(45deg, #3498db, #2ecc71);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 1.1rem;
+        color: #f39c12;
+        margin-bottom: 1rem;
+      }
+
+      .modal-message {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 2rem;
+        line-height: 1.5;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
+
+      .modal-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 100px;
+      }
+
+      .modal-btn-confirm {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        color: white;
+      }
+
+      .modal-btn-cancel {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+      }
+
+      .modal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .message.error {
+        background: rgba(231, 76, 60, 0.9);
+        color: #ffffff;
+        border-left: 4px solid #e74c3c;
+      }
+
+      .message.success {
+        background: rgba(46, 204, 113, 0.9);
+        color: #ffffff;
+        border-left: 4px solid #2ecc71;
+      }
+
+      .message.info {
+        background: rgba(52, 152, 219, 0.9);
+        color: #ffffff;
+        border-left: 4px solid #3498db;
       }
 
       /* Responsividade */
+      @media (max-width: 1200px) {
+        .controls-panel {
+          grid-template-columns: 180px 220px 1fr 160px;
+        }
+      }
+
+      @media (max-width: 1000px) {
+        .controls-panel {
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: auto auto;
+          gap: 0.8rem;
+        }
+        
+        .file-section {
+          grid-column: 1;
+          grid-row: 1;
+        }
+        
+        .name-controls {
+          grid-column: 2;
+          grid-row: 1;
+        }
+        
+        .description-controls {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+        
+        .actions-section {
+          grid-column: 1 / -1;
+          grid-row: 3;
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        
+        .word-groups {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+
       @media (max-width: 768px) {
-        .container {
-          padding: 1rem;
+        .controls-panel {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          gap: 0.8rem;
         }
-
-        .header h1 {
-          font-size: 2rem;
+        
+        .file-section,
+        .name-controls,
+        .description-controls,
+        .actions-section {
+          grid-column: 1;
         }
-
-        .constructor-grid {
+        
+        .word-groups {
           grid-template-columns: 1fr;
         }
-
-        .control-checkboxes {
-          grid-template-columns: 1fr;
-        }
-
-        .words-grid {
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        
+        .table-header {
+          flex-direction: column;
+          gap: 0.5rem;
         }
       }
 
       /* Animações */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
-      .section-card {
-        animation: fadeInUp 0.5s ease-out forwards;
-        opacity: 0;
-      }
-
-      .section-card:nth-child(1) {
-        animation-delay: 0.1s;
-      }
-      .section-card:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      .section-card:nth-child(3) {
-        animation-delay: 0.3s;
+      .controls-panel, .table-area {
+        animation: fadeIn 0.4s ease-out;
       }
     </style>
   </head>
   <body>
     <header class="header">
       <h1>CONSTRUTOR DE RENOMEAÇÃO DE ARQUIVOS</h1>
-      <p>
-        Selecione seus arquivos e construa nomes únicos para cada um, utilizando
-        palavras pré-definidas, prefixos e sufixos personalizados.
-      </p>
+      <p>Fluxo arquivo por arquivo com preview inline e navegação tipo Excel</p>
     </header>
 
     <div class="container">
-      <!-- Layout vertical - um card abaixo do outro -->
-      <div class="main-content">
-        <!-- Card 1: Arquivos -->
-        <div class="section-card">
-          <div class="card-header">
-            <div class="step-number">1</div>
-            <h2 class="card-title">Arquivos</h2>
-          </div>
-          <div class="card-body">
-            <label for="fileInput" class="btn">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
-                />
-                <polyline points="14,2 14,8 20,8" />
-              </svg>
-              Escolher Arquivos
-            </label>
-            <input type="file" id="fileInput" multiple class="file-input" />
-            <div id="fileList" class="file-list"></div>
+      <!-- Painel de controles horizontal -->
+      <div class="controls-panel">
+        <!-- Seção de arquivos -->
+        <div class="file-section">
+          <div class="section-title">📁 Arquivos</div>
+          <label for="fileInput" class="btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            Selecionar
+          </label>
+          <input type="file" id="fileInput" multiple class="file-input" />
+          <div id="fileCounter" class="file-counter">0 arquivos</div>
+          
+          <!-- Arquivo atual -->
+          <div id="currentFileSection" class="current-file" style="display: none;">
+            <div class="preview-title">Arquivo Atual:</div>
+            <div id="currentFileName" class="current-file-name">-</div>
+            <div class="navigation-buttons">
+              <button id="prevBtn" class="btn btn-nav btn-small">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Anterior
+              </button>
+              <button id="nextBtn" class="btn btn-nav btn-small">
+                Próximo
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Card 2: Construtor -->
-        <div class="section-card">
-          <div class="card-header">
-            <div class="step-number">2</div>
-            <h2 class="card-title">Construtor</h2>
+        <!-- Controles centrais -->
+        <div class="name-controls">
+          <div class="section-title">🏷️ Nomenclatura</div>
+          <div class="form-group">
+            <label>Prefixo:</label>
+            <input type="text" id="prefixInput" class="form-input" placeholder="Ex: P" />
           </div>
-          <div class="card-body">
-            <!-- Arquivo atual -->
-            <div
-              id="currentFileInfo"
-              class="current-file-info"
-              style="display: none"
-            >
-              <h4>Editando arquivo:</h4>
-              <div id="currentFileName" class="current-file-name">-</div>
-            </div>
-
-            <!-- Campos de entrada -->
-            <div class="constructor-grid">
-              <div class="form-group">
-                <label for="prefixInput">Prefixo:</label>
-                <input
-                  type="text"
-                  id="prefixInput"
-                  class="form-input"
-                  placeholder="Ex: P"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="suffixInput">Sufixo:</label>
-                <input
-                  type="text"
-                  id="suffixInput"
-                  class="form-input"
-                  placeholder="Ex: _001"
-                />
-              </div>
-            </div>
-
-            <!-- Checkboxes de controle -->
-            <div class="control-checkboxes">
-              <div class="checkbox-group">
-                <input type="checkbox" id="addNumbering" checked />
-                <label for="addNumbering">Numerar itens (01, 02, 03...)</label>
-              </div>
-
-              <div class="checkbox-group">
-                <input type="checkbox" id="useSeparator" checked />
-                <label for="useSeparator">Separador entre palavras: "_"</label>
-              </div>
-            </div>
-
-            <!-- Lista de palavras -->
-            <div class="form-group">
-              <label>Palavras disponíveis:</label>
-              <div id="wordsContainer" class="words-container">
-                <div id="wordsGrid" class="words-grid"></div>
-              </div>
-            </div>
-
-            <!-- Preview com input editável -->
-            <div class="preview-container">
-              <h4>
-                Nome final do arquivo:
-                <button id="regenerateBtn" class="btn btn-regenerate">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
-                    />
-                    <path d="M21 3v5h-5" />
-                    <path
-                      d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
-                    />
-                    <path d="M3 21v-5h5" />
-                  </svg>
-                  Regenerar
-                </button>
-              </h4>
-              <input
-                type="text"
-                id="previewNameInput"
-                class="preview-name-input"
-                placeholder="Selecione arquivos para começar..."
-                disabled
-              />
-            </div>
-
-            <!-- Botão aplicar -->
-            <button id="applyBtn" class="btn btn-apply" disabled>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="9 11 12 14 22 4"></polyline>
-                <path
-                  d="m21 12c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10c1.095 0 2.149.176 3.137.507"
-                ></path>
-              </svg>
-              Aplicar e Próximo (Enter)
-            </button>
+          <div class="form-group">
+            <label>Sufixo:</label>
+            <input type="text" id="suffixInput" class="form-input" placeholder="Ex: 2024" />
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="addNumbering" checked />
+            <label>Numerar automaticamente</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="useSeparator" checked />
+            <label id="separatorLabel">Separador: "_"</label>
+          </div>
+          
+          <!-- Preview do nome -->
+          <div class="preview-box">
+            <div class="preview-title">👁️ Preview Nome:</div>
+            <div id="namePreview" class="preview-text">Configurar para ver preview</div>
           </div>
         </div>
 
-        <!-- Card 3: Visualização -->
-        <div class="section-card">
-          <div class="card-header">
-            <div class="step-number">3</div>
-            <h2 class="card-title">Visualização</h2>
-          </div>
-          <div class="card-body">
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nome Original</th>
-                    <th>Novo Nome</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="previewTable"></tbody>
-              </table>
+        <!-- Descrição -->
+        <div class="description-controls">
+          <div class="section-title">📝 Descrição</div>
+          <div class="word-groups">
+            <div class="word-group">
+              <div class="word-group-title">🏗️ Elementos</div>
+              <div class="words-container">
+                <div id="elementosGrid" class="words-grid"></div>
+              </div>
+            </div>
+            <div class="word-group">
+              <div class="word-group-title">⚠️ Danos</div>
+              <div class="words-container">
+                <div id="danosGrid" class="words-grid"></div>
+              </div>
+            </div>
+            <div class="word-group">
+              <div class="word-group-title">📍 Local</div>
+              <div class="words-container">
+                <div id="localizacaoGrid" class="words-grid"></div>
+              </div>
             </div>
           </div>
+          
+          <!-- Preview da descrição -->
+          <div class="preview-box">
+            <div class="preview-title">👁️ Preview Descrição:</div>
+            <div id="descriptionPreview" class="preview-text">Selecionar itens para ver preview</div>
+          </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="actions-section">
+          <div class="section-title">⚡ Ações</div>
+          <button id="applyCurrentBtn" class="btn" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 11 12 14 22 4"></polyline>
+            </svg>
+            Aplicar Atual
+          </button>
+          <button id="applyAllBtn" class="btn" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="m21 12c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10c1.095 0 2.149.176 3.137.507"></path>
+            </svg>
+            Aplicar Todos
+          </button>
+          <button id="exportCsvBtn" class="btn btn-csv" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+            </svg>
+            CSV
+          </button>
+          <button id="downloadBtn" class="btn btn-success" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+            </svg>
+            ZIP
+          </button>
+          <button id="resetBtn" class="btn btn-reset">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+            </svg>
+            Reset
+          </button>
         </div>
       </div>
 
-      <!-- Mensagens -->
-      <div id="message" class="message"></div>
+      <!-- Área da tabela -->
+      <div class="table-area">
+        <div class="table-header">
+          <div class="table-title">📋 Tabela de Arquivos</div>
+          <div class="table-actions">
+            <span id="progressInfo" style="font-size: 11px; color: rgba(255,255,255,0.7);">-</span>
+          </div>
+        </div>
 
-      <!-- Ações finais -->
-      <div class="final-actions">
-        <button id="resetBtn" class="btn btn-reset">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-            <path d="M21 3v5h-5" />
-            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-            <path d="M3 21v-5h5" />
-          </svg>
-          Resetar
-        </button>
-        <button id="downloadBtn" class="btn btn-success" disabled>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" x2="12" y1="15" y2="3" />
-          </svg>
-          Baixar ZIP
-        </button>
+        <div class="table-container">
+          <table class="editable-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Nome Original</th>
+                <th style="width: 25%;">Novo Nome</th>
+                <th style="width: 50%;">Descrição</th>
+              </tr>
+            </thead>
+            <tbody id="editableTableBody">
+              <tr>
+                <td colspan="3" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6); font-style: italic;">
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                      <polyline points="14,2 14,8 20,8"/>
+                    </svg>
+                    <p>Selecione arquivos para começar</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <footer class="footer">
-      <p>Desenvolvido por <span class="zenith-brand">ZenithSolutions</span></p>
-      <p>&copy; 2025. Todos os direitos reservados.</p>
-    </footer>
+    <!-- Mensagens -->
+    <div id="message" class="message"></div>
+
+    <!-- Modal de confirmação -->
+    <div id="modalOverlay" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+          Atenção
+        </div>
+        <div id="modalMessage" class="modal-message"></div>
+        <div class="modal-buttons">
+          <button id="modalCancel" class="modal-btn modal-btn-cancel">Cancelar</button>
+          <button id="modalConfirm" class="modal-btn modal-btn-confirm">Continuar</button>
+        </div>
+      </div>
+    </div>
 
     <script>
-      // Lista de palavras disponíveis (ELEMENTOS DE PONTES - DNIT)
-      const palavrasString = `
-LAJE_DE_CONCRETO_ARMADO
-LAJE_DE_CONCRETO_PROTENDIDO
-LAJE_DE_ACO_ORTOTROPICA
-LAJE_DE_ACO_CHAPA_CORRUGADA
-LAJE_EM_LAJE_DE_CONCRETO_ARMADO
-PONTE_EM_LAJE_DE_CONCRETO_PROTENDIDO
-LAJE_EM_PREMOLDOS_DE_MADEIRA
-VIGA_CAIXAO_DE_CONCRETO_ARMADO
-VIGA_CAIXAO_DE_CONCRETO_PROTENDIDO
-VIGA_CAIXAO_DE_ACO
-VIGA_I_OU_T_DE_CONCRETO_ARMADO
-VIGA_I_OU_T_DE_CONCRETO_PROTENDIDO
-VIGA_I_DE_ACO
-DENTE_GERBER_DE_CONCRETO_ARMADO
-DENTE_GERBER_DE_CONCRETO_ARMADO_COM_PROTENSAO
-TRANSVERSINA_PORTANTE_DE_CONCRETO_ARMADO
-TRANSVERSINA_PORTANTE_DE_CONCRETO_PROTENDIDO
-TRANSVERSINA_PORTANTE_DE_ACO
-DENTE_GERBER_DE_ACO
-ARCO_DE_CONCRETO_ARMADO
-ARCO_DE_CONCRETO_PROTENDIDO
-ARCO_METALICO
-TRELICA_DE_CONCRETO_ARMADO
-TRELICA_DE_ACO
-ESTAIS
-ANCORAGEM_DE_ESTAIS
-REFORCO_LAJE_I_SOBRELAJE_DE_CONCRETO_ARMADO
-REFORCO_LAJE_II_INTRADORSADO_LAJE_EM_CONCRETO_ARMADO
-REFORCO_LAJE_III_ENCAMISAMENTO_DA_VIGA
-REFORCO_VIGA_II_ARMADURA_PRINCIPAL_PASSIVA
-REFORCO_VIGA_III_CABO_DE_PROTENSAO_EXTERNA
-REFORCO_VIGA_IV_BLOQUEIO_DE_ARTICULACAO_GERBER
-VIGA_U_DE_CONCRETO_ARMADO
-ARCO_DE_ALVENARIA_DE_CONCRETO_ARMADO
-REVESTIMENTO_EM_CHAPAS_CORRUGADAS_DE_ACO
-ARCO_DE_ALVENARIA_DE_PEDRA
-BANCO_INFERIOR_DE_ACO_DE_TRELICA_VERTICAL
-BANCO_INFERIOR_DE_ACO_DE_TRELICA_VERTICAL
-DIAGONAL_DE_CONCRETO_DE_TRELICA_VERTICAL
-MONTANTE_DE_ACO_DE_TRELICA_VERTICAL
-BANCO_SUPERIOR_DE_CONCRETO_DE_TRELICA_VERTICAL
-BANCO_INFERIOR_DE_CONCRETO_DE_TRELICA_VERTICAL
-MONTANTE_DE_CONCRETO_DE_TRELICA_VERTICAL
-APARELHO_DE_APOIO_DE_NEOPRENE_FRETADO
-APARELHO_DE_APOIO_DE_TEFLON
-APARELHO_DE_APOIO_DE_ROLO_METALICO
-APARELHO_DE_APOIO_DE_PLACA_DE_CHUMBO
-APARELHO_DE_APOIO_HIDRONAUTICO_FIXO
-APARELHO_DE_APOIO_TIPO_POT_BEARING_DIRECIONAL
-APARELHO_DE_APOIO_FREYSSINET
-APARELHO_DE_APOIO_PENDULO
-ARTICULACAO_DE_ACO
-TORRE_DE_CONCRETO_ARMADO_PARA_ESTAIAMENTO
-REFORCO_PILAR_ENCAMISAMENTO_DE_PILAR
-REFORCO_ESCORA_ENCAMISAMENTO_DE_TRUQUE_LIVRE
-APARELHO_DE_APOIO_OSCILANTE
-PILAR_DE_ACO
-BLOCO_OU_SAPATA_EM_ALVENARIA_DE_PEDRA
-TRAVESSA_DE_APOIO_DE_ACO
-VIGA_DE_CONTRAVENTAMENTO_DE_PILAR_DE_CONCRETO_ARMADO
-PAREDE_DE_CONTRAVENTAMENTO_DE_PILAR_DE_CONCRETO_ARMADO
-VIGA_DE_LIGACAO_DE_FUNDACOES
-BERCO_ELEMENTO_DO_APARATO_DE_NIVELAMENTO
-CONSOLO_ARMADO_DE_CONCRETO_ARMADO
-RADIER_DE_ALVENARIA_DE_PEDRA_E_DE_CONCRETO_ARMADO
-ENCONTRO_PAREDE_FRONTAL_DE_CONCRETO_ARMADO
-ENCONTRO_DE_ALVENARIA_DE_PEDRA
-ENCONTRO_PAREDE_LATERAL_E_VIGAS_DE_CONCRETO_ARMADO
-ENCONTRO_LAJE_DE_CONCRETO_ARMADO
-CORTINA_DE_CONCRETO_ARMADO
-ENCONTRO_CORTINA_DE_CONCRETO_ARMADO
-ENCONTRO_PAREDES_E_VIGAS_E_CONTRA_FORTES_DE_CONCRETO
-ALA_DE_CONCRETO_ARMADO
-MURO_DE_ARRIMO_DE_ALVENARIA_DE_PEDRA
-CONTENCAO_EM_CORTINA_ATIRANTADA_DE_CONCRETO_ARMADO
-LAJE_DE_TRANSICAO
-ATERRO_DE_ACESSO
-MURO_DE_ARRIMO_DE_CONCRETO
-REVESTIMENTO_DE_TALUDE_EM_CONCRETO
-MURO_DE_TERRA_ARMADA
-MURO_DE_GABIAO
-DEFENSA_METALICA
-BLOCO_OU_SAPATA_EM_CONCRETO_ARMADO
-TUBULAO_OU_ESTACAO_DE_CONCRETO_ARMADO
-ESTACA_DE_CONCRETO_ARMADO
-ESTACA_DE_MADEIRA
-CAMISA_METALICA_DE_REVESTIMENTO_PARA_ESTACA
-PAVIMENTO_ASFALTICO
-PAVIMENTO_DE_CONCRETO
-BARREIRA_NEW_JERSEY
-GUARDA_RODAS_ANTIGO_DO_DNER
-GUARDA_RODAS_QUALQUER
-GUARDA_CORPO_DE_CONCRETO_ARMADO
-GUARDA_CORPO_DE_ACO
-CALCADA_PARA_PEDESTRES_DE_CONCRETO_ARMADO
-CALCADA_PARA_PEDESTRES_METALICA
-BERCO_PARA_JUNTA_DE_DILATACAO
-JUNTA_ELASTOMERICA_DE_DILATACAO
-JUNTA_DE_DILATACAO
-JUNTA_METALICA_DE_DILATACAO
-GUARDA_CORPO_MISTO_CONCRETO_ARMADO_E_DE_ACO
-BARREIRA_QUALQUER_DE_CONCRETO_ARMADO
-BARREIRA_NEW_JERSEY_COM_GUARDA_CORPO_DE_CONCRETO_ARMADO
-BUZINAO_DE_ACO_OU_PVC
-TRANSVERSINA_DE_LIGACAO_DE_CONCRETO_ARMADO
-TRANSVERSINA_DE_LIGACAO_DE_CONCRETO_PROTENDIDO
-TRANSVERSINA_DE_LIGACAO_DE_ACO
-LONGARINA_DE_CONTRAVENTAMENTO_DE_LAJE
-VIGA_SECUNDARIA
-DIAGONAL_DE_ACO_HORIZONTAL_DE_TRAVAMENTO
-DIAGONAL_DE_CONCRETO_HORIZONTAL_DE_TRAVAMENTO
-TRANSVERSINA_DE_ACO_DE_TRAVAMENTO
-LONGARINA_DE_ACO_DE_TRAVAMENTO
-MAO_FRANCESA_DE_ACO
-CONTRAVENTAMENTO_DE_ACO
-TELA_DE_PROTECAO_CONTRA_QUEDA_DE_OBJETOS
-PILAR_PAREDE_DE_ALVENARIA_DE_PEDRA
-PILAR_PAREDE_DE_CONCRETO_ARMADO
-PILAR_EM_COLUNAS_DE_CONCRETO_ARMADO
-PILAR_VAZADO_DE_CONCRETO_ARMADO
-TRAVERSA_DE_APOIO_DE_CONCRETO_ARMADO
-TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
-`;
+      // === FLUXO DA APLICAÇÃO ===
+      // 1. Usuário seleciona arquivos
+      // 2. Para cada arquivo: configura nome/descrição e clica "Aplicar Atual"
+      // 3. Dados são SALVOS permanentemente no fileData[]
+      // 4. Previews são RESETADOS para o próximo arquivo
+      // 5. Tabela mantém os dados já aplicados
+      // 6. Navegação entre arquivos preserva dados salvos
+      
+      // === MELHORIAS IMPLEMENTADAS ===
+      // ✅ "Aplicar Todos" preserva descrições existentes
+      // ✅ Descrição é OPCIONAL - pode baixar ZIP sem descrição (com confirmação)
+      // ✅ Modal customizado para confirmações (bonito e profissional)
+      // ✅ Suporte a ESC para fechar modal
 
-      // Converter string em array
-      const palavrasDisponiveis = palavrasString
-        .trim()
-        .split("\n")
-        .map((palavra) => palavra.trim())
-        .filter((palavra) => palavra.length > 0);
+      // Dados dos grupos de palavras (compactados para economia de espaço)
+      const elementos = ["LAJE", "VIGA", "CORTINA", "BERCO", "PILAR", "ENCONTRO", "ALA", "SAPATA", "ESTACA", "BLOCO", "ARCO", "TRELICA", "TRANSVERSINA", "LONGARINA", "APARELHO_DE_APOIO", "JUNTA", "GUARDA_CORPO", "CALCADA", "PAVIMENTO", "DEFENSA", "MURO", "TUBULAO"];
+
+      const danos = ["ANCORAGEM_INADEQUADA", "APARELHO_DISTORCAO", "APARELHO_DANIFICADO", "APARELHO_DESLOCADO", "ARMADURA_SEM_COBRIMENTO", "BERCO_DANIFICADO", "BURACO_PISTA", "BUZINOTE_DANIFICADO", "CALCADA_DESTRUIDA", "CONCRETO_DESAGREGADO_ARM_EXPOSTA", "CONCRETO_DESAGREGADO", "CORROSAO", "CORROSAO_AVANCADA", "CRESCIMENTO_VEGETACAO", "DESAGREGACAO", "DESNIVEL_PISTA", "DESPLACAMENTO_ARM_EXPOSTA", "DESPLACAMENTO", "ELEMENTO_LIGACAO_DANIFICADO", "ELEMENTO_ROMPIDO", "EROSAO_TALUDE", "ESTACA_SECAO_REDUZIDA", "ESTACA_DESCONFINADA", "ESTACA_DESCONFINAMENTO_LATERAL", "FERRAGEM_EXPOSTA", "FERRAGEM_OXIDADA", "FISSURA_ABERTA_02MM", "FISSURA_ABERTA_03MM", "FISSURA_PROFUNDA", "FISSURA_SUPERFICIAL", "FLAMBAGEM", "FRAGMENTACAO_FOGO", "GUARDA_RODAS_DESTRUIDO", "GUARDA_CORPO_DESTRUIDO", "INFILTRACAO", "JUNTA_DANIFICADA", "LIXIVIACAO_CARBONATACAO", "MADEIRA_DETERIORADA", "MANCHA_FOGO", "MANCHA_UMIDADE", "MANCHA_BIOLOGICA", "NICHO_CONCRETAGEM", "PAVIMENTO_ASFALTICO_DANIFICADO", "PAVIMENTO_CONCRETO_DANIFICADO", "PENDULO_DESAPRUMO", "PINGADEIRA_DANIFICADA", "RACHADURA_ABERTA", "RECALQUE_ATERRO", "CONCRETO_ESMAGADO", "VIGA_CORROSAO"];
+
+      const localizacao = ["SUPERIOR", "INFERIOR", "LATERAL_DIR", "LATERAL_ESQ", "CENTRAL", "EXTREMIDADE", "MEIO_VAO", "APOIO", "FUNDACAO", "TABULEIRO", "SUPERESTRUTURA", "MESOESTRUTURA", "INFRAESTRUTURA", "MONTANTE", "JUSANTE", "FACE_NORTE", "FACE_SUL", "FACE_LESTE", "FACE_OESTE", "INTRADORSO", "EXTRADORSO", "BORDO_LIVRE", "PASSEIO", "FAIXA_ROLAMENTO", "ACOSTAMENTO", "CANTEIRO_CENTRAL"];
 
       // Elementos DOM
       const fileInput = document.getElementById("fileInput");
-      const fileList = document.getElementById("fileList");
-      const currentFileInfo = document.getElementById("currentFileInfo");
+      const fileCounter = document.getElementById("fileCounter");
+      const currentFileSection = document.getElementById("currentFileSection");
       const currentFileName = document.getElementById("currentFileName");
       const prefixInput = document.getElementById("prefixInput");
       const suffixInput = document.getElementById("suffixInput");
       const addNumbering = document.getElementById("addNumbering");
       const useSeparator = document.getElementById("useSeparator");
-      const wordsGrid = document.getElementById("wordsGrid");
-      const previewNameInput = document.getElementById("previewNameInput");
-      const regenerateBtn = document.getElementById("regenerateBtn");
-      const applyBtn = document.getElementById("applyBtn");
-      const previewTable = document.getElementById("previewTable");
-      const resetBtn = document.getElementById("resetBtn");
+      const separatorLabel = document.getElementById("separatorLabel");
+      const namePreview = document.getElementById("namePreview");
+      const descriptionPreview = document.getElementById("descriptionPreview");
+      const progressInfo = document.getElementById("progressInfo");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const applyCurrentBtn = document.getElementById("applyCurrentBtn");
+      const applyAllBtn = document.getElementById("applyAllBtn");
+      const exportCsvBtn = document.getElementById("exportCsvBtn");
       const downloadBtn = document.getElementById("downloadBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const editableTableBody = document.getElementById("editableTableBody");
       const messageDiv = document.getElementById("message");
+      const modalOverlay = document.getElementById("modalOverlay");
+      const modalMessage = document.getElementById("modalMessage");
+      const modalConfirm = document.getElementById("modalConfirm");
+      const modalCancel = document.getElementById("modalCancel");
 
       // Variáveis globais
       let files = [];
-      let fileNames = {}; // Armazena os nomes construídos para cada arquivo
+      let fileData = [];
       let currentFileIndex = -1;
-      let isManualEdit = false; // Flag para detectar edição manual
+      let currentCell = { row: 0, col: 1 }; // Para navegação Excel
+      let selectedOrder = []; // Array para rastrear ordem de seleção
 
       // Event listeners
       fileInput.addEventListener("change", handleFileSelect);
-      prefixInput.addEventListener("input", () => {
-        if (!isManualEdit) updatePreviewInput();
-      });
-      suffixInput.addEventListener("input", () => {
-        if (!isManualEdit) updatePreviewInput();
-      });
-      addNumbering.addEventListener("change", () => {
-        if (!isManualEdit) updatePreviewInput();
-      });
+      prefixInput.addEventListener("input", updatePreviews);
+      suffixInput.addEventListener("input", updatePreviews);
+      addNumbering.addEventListener("change", updatePreviews);
       useSeparator.addEventListener("change", updateSeparatorLabel);
-      useSeparator.addEventListener("change", () => {
-        if (!isManualEdit) updatePreviewInput();
-      });
-      previewNameInput.addEventListener("input", () => {
-        isManualEdit = true; // Marca como edição manual
-      });
-      regenerateBtn.addEventListener("click", regenerateName);
-      applyBtn.addEventListener("click", applyCurrentName);
-      resetBtn.addEventListener("click", resetAll);
+      useSeparator.addEventListener("change", updatePreviews);
+      prevBtn.addEventListener("click", () => navigateFile(-1));
+      nextBtn.addEventListener("click", () => navigateFile(1));
+      applyCurrentBtn.addEventListener("click", applyToCurrent);
+      applyAllBtn.addEventListener("click", applyToAll);
+      exportCsvBtn.addEventListener("click", exportToCsv);
       downloadBtn.addEventListener("click", downloadFiles);
+      resetBtn.addEventListener("click", resetAll);
 
-      // Tecla Enter para aplicar
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !applyBtn.disabled) {
-          e.preventDefault();
-          applyCurrentName();
-        }
+      // Event listeners do modal
+      modalCancel.addEventListener("click", closeModal);
+      modalOverlay.addEventListener("click", (e) => {
+        if (e.target === modalOverlay) closeModal();
       });
+
+      // Teclas de navegação
+      document.addEventListener("keydown", handleKeyNavigation);
 
       // Inicialização
-      initializeWordsGrid();
-      updateFileList();
+      initializeWordsGrids();
       updateSeparatorLabel();
+      updatePreviews();
 
-      // Função para criar a grade de palavras
-      function initializeWordsGrid() {
-        wordsGrid.innerHTML = "";
+      // Criar grades de palavras
+      function initializeWordsGrids() {
+        createWordGrid(document.getElementById("elementosGrid"), elementos, "elemento");
+        createWordGrid(document.getElementById("danosGrid"), danos, "dano");
+        createWordGrid(document.getElementById("localizacaoGrid"), localizacao, "localizacao");
+      }
 
-        palavrasDisponiveis.forEach((palavra) => {
+      function createWordGrid(container, words, prefix) {
+        container.innerHTML = "";
+        words.forEach((palavra) => {
           const div = document.createElement("div");
           div.className = "word-checkbox";
-
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.id = `word_${palavra}`;
+          checkbox.id = `${prefix}_${palavra}`;
           checkbox.value = palavra;
-          checkbox.addEventListener("change", () => {
-            if (!isManualEdit) updatePreviewInput();
+          checkbox.addEventListener("change", (e) => {
+            handleCheckboxChange(e.target);
+            updatePreviews();
           });
-
           const label = document.createElement("label");
-          label.htmlFor = `word_${palavra}`;
-          label.textContent = palavra;
-
+          label.htmlFor = `${prefix}_${palavra}`;
+          label.textContent = palavra.replace(/_/g, ' ');
           div.appendChild(checkbox);
           div.appendChild(label);
-          wordsGrid.appendChild(div);
+          container.appendChild(div);
         });
       }
 
-      // Função para atualizar o texto do separador
+      // Atualizar previews
+      function updatePreviews() {
+        updateNamePreview();
+        updateDescriptionPreview();
+      }
+
+      // Atualizar label do separador
       function updateSeparatorLabel() {
-        const separatorCheckbox = document.querySelector(
-          'label[for="useSeparator"]'
-        );
         const separatorChar = useSeparator.checked ? "_" : " ";
-        separatorCheckbox.textContent = `Separador entre palavras: "${separatorChar}"`;
+        separatorLabel.textContent = `Separador: "${separatorChar}"`;
       }
 
-      // Função para lidar com seleção de arquivos
-      function handleFileSelect(e) {
-        files = Array.from(e.target.files);
-        fileNames = {};
-        currentFileIndex = -1;
-
-        if (files.length > 0) {
-          selectFile(0);
-        }
-
-        updateFileList();
-        updatePreviewTable();
-      }
-
-      // Função para atualizar a lista de arquivos
-      function updateFileList() {
-        fileList.innerHTML = "";
-
-        if (files.length === 0) {
-          const emptyMessage = document.createElement("div");
-          emptyMessage.className = "empty-message";
-          emptyMessage.innerHTML = `
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-              <polyline points="14,2 14,8 20,8"/>
-            </svg>
-            <p>Nenhum arquivo selecionado</p>
-            <p>Clique no botão acima para escolher arquivos</p>
-          `;
-          fileList.appendChild(emptyMessage);
-          return;
-        }
-
-        files.forEach((file, index) => {
-          const item = document.createElement("div");
-          item.className = `file-item ${
-            index === currentFileIndex ? "active" : ""
-          }`;
-          item.addEventListener("click", () => selectFile(index));
-
-          const fileIcon = document.createElement("div");
-          fileIcon.className = "file-icon";
-          fileIcon.innerHTML = "📄";
-
-          const fileName = document.createElement("div");
-          fileName.className = "file-name";
-          fileName.textContent = file.name;
-
-          const status = document.createElement("div");
-          status.className = `file-status ${
-            fileNames[index] ? "done" : "pending"
-          }`;
-          status.textContent = fileNames[index] ? "✓" : "○";
-
-          item.appendChild(fileIcon);
-          item.appendChild(fileName);
-          item.appendChild(status);
-
-          fileList.appendChild(item);
-        });
-      }
-
-      // Função para selecionar um arquivo
-      function selectFile(index) {
-        if (index < 0 || index >= files.length) return;
-
-        currentFileIndex = index;
-        currentFileName.textContent = files[index].name;
-        currentFileInfo.style.display = "block";
-
-        // Carregar dados salvos para este arquivo
-        loadFileData(index);
-
-        updateFileList();
-        updatePreviewInput();
-
-        applyBtn.disabled = false;
-        previewNameInput.disabled = false;
-        regenerateBtn.disabled = false;
-      }
-
-      // Função para carregar dados de um arquivo
-      function loadFileData(index) {
-        const savedData = fileNames[index];
-        isManualEdit = false; // Reset da flag
-
-        if (savedData) {
-          prefixInput.value = savedData.prefix || "";
-          suffixInput.value = savedData.suffix || "";
-
-          // Limpar checkboxes
-          document
-            .querySelectorAll('#wordsGrid input[type="checkbox"]')
-            .forEach((cb) => {
-              cb.checked = false;
-            });
-
-          // Marcar palavras salvas
-          if (savedData.words) {
-            savedData.words.forEach((word) => {
-              const checkbox = document.getElementById(`word_${word}`);
-              if (checkbox) checkbox.checked = true;
-            });
-          }
-
-          // Carregar nome final editado
-          previewNameInput.value = savedData.finalName || "";
-          if (savedData.wasManuallyEdited) {
-            isManualEdit = true;
+      // Manipular mudanças nos checkboxes para rastrear ordem
+      function handleCheckboxChange(checkbox) {
+        const value = checkbox.value;
+        
+        if (checkbox.checked) {
+          // Adicionar à ordem se não existir
+          if (!selectedOrder.includes(value)) {
+            selectedOrder.push(value);
           }
         } else {
-          // Limpar campos se não há dados salvos
-          prefixInput.value = "";
-          suffixInput.value = "";
-          document
-            .querySelectorAll('#wordsGrid input[type="checkbox"]')
-            .forEach((cb) => {
-              cb.checked = false;
-            });
-          previewNameInput.value = "";
+          // Remover da ordem
+          selectedOrder = selectedOrder.filter(item => item !== value);
         }
       }
 
-      // Função para gerar um nome baseado no índice atual
-      function generateCurrentName() {
-        if (currentFileIndex === -1) return "";
+      function updateNamePreview() {
+        if (currentFileIndex === -1) {
+          namePreview.textContent = "Selecione um arquivo";
+          return;
+        }
+        
+        const name = generateName(currentFileIndex);
+        namePreview.textContent = name;
+        
+        // IMPORTANTE: Não atualizar a tabela automaticamente aqui
+        // A tabela só deve ser atualizada quando o usuário clicar em "Aplicar"
+      }
 
+      function updateDescriptionPreview() {
+        const description = generateDescription();
+        descriptionPreview.textContent = description || "Selecione elementos/danos/localização";
+        
+        // Atualizar na tabela também  
+        if (currentFileIndex !== -1 && fileData[currentFileIndex]) {
+          fileData[currentFileIndex].description = description;
+          updateTableRow(currentFileIndex);
+        }
+      }
+
+      // Gerar nome (sem extensão editável)
+      function generateName(index) {
         const prefix = prefixInput.value.trim();
         const suffix = suffixInput.value.trim();
-        const separator = useSeparator.checked ? "_" : " ";
         const shouldAddNumber = addNumbering.checked;
 
-        const checkedWords = [];
-        document
-          .querySelectorAll('#wordsGrid input[type="checkbox"]:checked')
-          .forEach((cb) => {
-            checkedWords.push(cb.value);
+        let name = "";
+        if (prefix) name += prefix;
+        if (shouldAddNumber) name += String(index + 1).padStart(2, "0");
+        if (suffix) name += suffix;
+        if (!name) name = "arquivo" + String(index + 1).padStart(2, "0");
+
+        // Adicionar extensão original (não editável)
+        const originalFile = files[index];
+        const extension = originalFile.name.substring(originalFile.name.lastIndexOf("."));
+        return name + extension;
+      }
+
+      // Gerar descrição
+      function generateDescription() {
+        const separator = useSeparator.checked ? "_" : " ";
+        
+        // Usar apenas os itens que ainda estão selecionados, na ordem de clique
+        const validSelected = selectedOrder.filter(item => {
+          const checkbox = document.querySelector(`input[value="${item}"]`);
+          return checkbox && checkbox.checked;
+        });
+        
+        return validSelected.join(separator);
+      }
+
+      // Manipular seleção de arquivos
+      function handleFileSelect(e) {
+        files = Array.from(e.target.files);
+        fileData = files.map((file, index) => ({
+          originalName: file.name,
+          newName: "",
+          description: "",
+          file: file
+        }));
+
+        fileCounter.textContent = `${files.length} arquivo(s)`;
+        
+        if (files.length > 0) {
+          currentFileIndex = 0;
+          currentFileSection.style.display = "block";
+          selectCurrentFile();
+        }
+
+        updateTable();
+        updateButtonStates();
+      }
+
+      // Selecionar arquivo atual
+      function selectCurrentFile() {
+        if (currentFileIndex < 0 || currentFileIndex >= files.length) return;
+        
+        currentFileName.textContent = files[currentFileIndex].name;
+        progressInfo.textContent = `Arquivo ${currentFileIndex + 1} de ${files.length}`;
+        
+        // Atualizar navegação
+        prevBtn.disabled = currentFileIndex === 0;
+        nextBtn.disabled = currentFileIndex === files.length - 1;
+        
+        // Destacar linha na tabela
+        updateTableHighlight();
+        
+        // Atualizar previews (mas não sobrescrever dados salvos)
+        updatePreviews();
+      }
+
+      // Navegar entre arquivos
+      function navigateFile(direction) {
+        const newIndex = currentFileIndex + direction;
+        if (newIndex >= 0 && newIndex < files.length) {
+          currentFileIndex = newIndex;
+          selectCurrentFile();
+        }
+      }
+
+      // Aplicar ao arquivo atual
+      function applyToCurrent() {
+        if (currentFileIndex === -1) return;
+        
+        // Salvar os dados do arquivo atual
+        fileData[currentFileIndex].newName = generateName(currentFileIndex);
+        fileData[currentFileIndex].description = generateDescription();
+        
+        // Atualizar a linha da tabela com os dados salvos
+        updateTableRow(currentFileIndex);
+        updateButtonStates();
+        
+        showMessage("Aplicado ao arquivo atual!", "success");
+        
+        // Resetar seleções da descrição para o próximo arquivo (mas manter nome)
+        document.querySelectorAll('input[type="checkbox"][id^="elemento_"], input[type="checkbox"][id^="dano_"], input[type="checkbox"][id^="localizacao_"]')
+          .forEach(cb => cb.checked = false);
+        
+        // Limpar ordem de seleção para o próximo arquivo
+        selectedOrder = [];
+        
+        // Atualizar apenas o preview (não a tabela)
+        const separator = useSeparator.checked ? "_" : " ";
+        descriptionPreview.textContent = "Selecionar itens para ver preview";
+        
+        // Ir para próximo arquivo automaticamente
+        if (currentFileIndex < files.length - 1) {
+          navigateFile(1);
+        }
+      }
+
+      // Aplicar a todos
+      function applyToAll() {
+        if (files.length === 0) return;
+        
+        const currentDescription = generateDescription();
+        let appliedCount = 0;
+        
+        fileData.forEach((item, index) => {
+          // Sempre aplicar novo nome
+          item.newName = generateName(index);
+          
+          // Só aplicar descrição se não existir ainda OU se houver uma seleção atual
+          if (!item.description || currentDescription) {
+            if (currentDescription) {
+              item.description = currentDescription;
+              appliedCount++;
+            }
+          }
+        });
+        
+        // Atualizar toda a tabela de uma vez
+        updateTable();
+        updateButtonStates();
+        
+        if (appliedCount > 0) {
+          showMessage(`Nomes aplicados para todos! Descrição aplicada para ${appliedCount} arquivo(s).`, "success");
+        } else {
+          showMessage("Nomes aplicados para todos! Descrições existentes preservadas.", "success");
+        }
+      }
+
+      // Atualizar tabela
+      function updateTable() {
+        editableTableBody.innerHTML = "";
+
+        if (files.length === 0) {
+          const emptyRow = document.createElement("tr");
+          emptyRow.innerHTML = `
+            <td colspan="3" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6); font-style: italic;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <p>Selecione arquivos para começar</p>
+              </div>
+            </td>
+          `;
+          editableTableBody.appendChild(emptyRow);
+          return;
+        }
+
+        fileData.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.dataset.index = index;
+          
+          // Status do arquivo
+          let status = "pending";
+          let statusText = "○";
+          
+          if (index === currentFileIndex) {
+            status = "current";
+            statusText = "Atual";
+          } else if (item.newName && item.description) {
+            status = "done";
+            statusText = "✓";
+          }
+          
+          row.innerHTML = `
+            <td>
+              <div class="original-name" title="${item.originalName}">
+                ${item.originalName}
+                <span class="file-status ${status}">
+                  ${statusText}
+                </span>
+              </div>
+            </td>
+            <td>
+              <input 
+                type="text" 
+                class="editable-input" 
+                value="${item.newName}" 
+                data-index="${index}" 
+                data-field="newName"
+                data-row="${index}"
+                data-col="1"
+                placeholder="Nome do arquivo..."
+              />
+            </td>
+            <td>
+              <input 
+                type="text" 
+                class="editable-input" 
+                value="${item.description}" 
+                data-index="${index}" 
+                data-field="description"
+                data-row="${index}"
+                data-col="2"
+                placeholder="Descrição do arquivo..."
+              />
+            </td>
+          `;
+
+          editableTableBody.appendChild(row);
+        });
+
+        // Event listeners para inputs
+        document.querySelectorAll(".editable-input").forEach(input => {
+          input.addEventListener("input", (e) => {
+            const index = parseInt(e.target.dataset.index);
+            const field = e.target.dataset.field;
+            fileData[index][field] = e.target.value;
+            updateButtonStates();
           });
 
-        const originalFile = files[currentFileIndex];
-        const extension = originalFile.name.substring(
-          originalFile.name.lastIndexOf(".")
+          input.addEventListener("focus", (e) => {
+            currentCell.row = parseInt(e.target.dataset.row);
+            currentCell.col = parseInt(e.target.dataset.col);
+          });
+        });
+
+        updateTableHighlight();
+      }
+
+      // Atualizar linha específica da tabela (APENAS quando dados são efetivamente salvos)
+      function updateTableRow(index) {
+        const row = document.querySelector(`tr[data-index="${index}"]`);
+        if (!row) return;
+        
+        const nameInput = row.querySelector('input[data-field="newName"]');
+        const descInput = row.querySelector('input[data-field="description"]');
+        
+        // Atualizar com os dados salvos no fileData
+        if (nameInput) nameInput.value = fileData[index].newName || "";
+        if (descInput) descInput.value = fileData[index].description || "";
+      }
+
+      // Destacar linha atual
+      function updateTableHighlight() {
+        document.querySelectorAll("tr[data-index]").forEach(row => {
+          row.classList.remove("current-row");
+        });
+        
+        if (currentFileIndex !== -1) {
+          const currentRow = document.querySelector(`tr[data-index="${currentFileIndex}"]`);
+          if (currentRow) currentRow.classList.add("current-row");
+        }
+      }
+
+      // Navegação tipo Excel
+      function handleKeyNavigation(e) {
+        const activeElement = document.activeElement;
+        if (!activeElement.classList.contains("editable-input")) return;
+
+        if (e.key === "Tab") {
+          e.preventDefault();
+          navigateCell(e.shiftKey ? -1 : 1, 0);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          navigateCell(0, 1);
+        }
+      }
+
+      function navigateCell(colDelta, rowDelta) {
+        let newRow = currentCell.row + rowDelta;
+        let newCol = currentCell.col + colDelta;
+
+        // Ajustar limites
+        if (newCol < 1) { newCol = 2; newRow--; }
+        if (newCol > 2) { newCol = 1; newRow++; }
+        if (newRow < 0) newRow = fileData.length - 1;
+        if (newRow >= fileData.length) newRow = 0;
+
+        // Focar nova célula
+        const newInput = document.querySelector(`input[data-row="${newRow}"][data-col="${newCol}"]`);
+        if (newInput) {
+          newInput.focus();
+          currentCell = { row: newRow, col: newCol };
+        }
+      }
+
+      // Estados dos botões
+      function updateButtonStates() {
+        const hasFiles = files.length > 0;
+        const hasAllNames = fileData.length > 0 && fileData.every(item => 
+          item.newName.trim() !== ""
         );
 
-        let newName = "";
-
-        // Adicionar prefixo
-        if (prefix) {
-          newName += prefix;
-        }
-
-        // Adicionar numeração (sem separador entre prefixo e número)
-        if (shouldAddNumber) {
-          const number = String(currentFileIndex + 1).padStart(2, "0");
-          newName += number;
-        }
-
-        // Adicionar palavras (com separador se houver prefixo/número antes)
-        if (checkedWords.length > 0) {
-          if (newName) newName += separator;
-          newName += checkedWords.join(separator);
-        }
-
-        // Adicionar sufixo
-        if (suffix) {
-          if (newName) newName += separator;
-          newName += suffix;
-        }
-
-        // Se não há nenhum conteúdo, usar nome padrão
-        if (!newName) {
-          newName = "arquivo";
-        }
-
-        return newName + extension;
+        applyCurrentBtn.disabled = currentFileIndex === -1;
+        applyAllBtn.disabled = !hasFiles;
+        exportCsvBtn.disabled = !hasFiles;
+        downloadBtn.disabled = !hasAllNames; // Só precisa de nomes, descrição é opcional
       }
 
-      // Função para atualizar o input de preview
-      function updatePreviewInput() {
-        if (currentFileIndex === -1) {
-          previewNameInput.placeholder = "Selecione arquivos para começar...";
-          previewNameInput.value = "";
+      // Exportar CSV
+      function exportToCsv() {
+        if (files.length === 0) {
+          showMessage("Não há arquivos para exportar.", "error");
           return;
         }
 
-        if (!isManualEdit) {
-          const generatedName = generateCurrentName();
-          previewNameInput.value = generatedName;
-          previewNameInput.placeholder = "";
-        }
-      }
-
-      // Função para regenerar o nome automaticamente
-      function regenerateName() {
-        if (currentFileIndex === -1) return;
-
-        isManualEdit = false; // Reset da flag de edição manual
-        updatePreviewInput();
-        showMessage("Nome regenerado automaticamente!", "success");
-      }
-
-      // Função para aplicar o nome atual e avançar
-      function applyCurrentName() {
-        if (currentFileIndex === -1) return;
-
-        const prefix = prefixInput.value.trim();
-        const suffix = suffixInput.value.trim();
-        const checkedWords = [];
-
-        document
-          .querySelectorAll('#wordsGrid input[type="checkbox"]:checked')
-          .forEach((cb) => {
-            checkedWords.push(cb.value);
-          });
-
-        // Validar se há um nome no input
-        const finalName = previewNameInput.value.trim();
-        if (!finalName) {
-          showMessage("Por favor, insira um nome para o arquivo!", "error");
-          return;
-        }
-
-        // Salvar dados do arquivo atual
-        fileNames[currentFileIndex] = {
-          prefix: prefix,
-          suffix: suffix,
-          words: checkedWords,
-          finalName: finalName,
-          wasManuallyEdited: isManualEdit,
-        };
-
-        // Ir para próximo arquivo não nomeado
-        const nextIndex = findNextUnnamedFile();
-        if (nextIndex !== -1) {
-          selectFile(nextIndex);
-        } else {
-          // Todos os arquivos foram processados
-          currentFileIndex = -1;
-          currentFileInfo.style.display = "none";
-          applyBtn.disabled = true;
-          previewNameInput.disabled = true;
-          previewNameInput.value = "";
-          previewNameInput.placeholder = "Todos os arquivos foram nomeados!";
-          regenerateBtn.disabled = true;
-
-          showMessage(
-            "Todos os arquivos foram nomeados! Você pode baixar o ZIP.",
-            "success"
-          );
-        }
-
-        updateFileList();
-        updatePreviewTable();
-        checkAllFilesReady();
-      }
-
-      // Função para encontrar o próximo arquivo sem nome
-      function findNextUnnamedFile() {
-        for (let i = 0; i < files.length; i++) {
-          if (!fileNames[i]) {
-            return i;
-          }
-        }
-        return -1; // Todos nomeados
-      }
-
-      // Função para editar um arquivo específico
-      function editFile(index) {
-        selectFile(index);
-      }
-
-      // Função para atualizar a tabela de preview
-      function updatePreviewTable() {
-        previewTable.innerHTML = "";
-
-        files.forEach((file, index) => {
-          const row = document.createElement("tr");
-
-          const originalCell = document.createElement("td");
-          originalCell.textContent = file.name;
-
-          const newCell = document.createElement("td");
-          newCell.textContent = fileNames[index]
-            ? fileNames[index].finalName
-            : "-";
-
-          const actionCell = document.createElement("td");
-          const editBtn = document.createElement("button");
-          editBtn.className = "btn-edit";
-          editBtn.textContent = "Editar";
-          editBtn.onclick = () => editFile(index);
-          actionCell.appendChild(editBtn);
-
-          row.appendChild(originalCell);
-          row.appendChild(newCell);
-          row.appendChild(actionCell);
-          previewTable.appendChild(row);
+        let csvContent = "Nome Original\tNovo Nome\tDescrição\n";
+        fileData.forEach(item => {
+          csvContent += `${item.originalName}\t${item.newName}\t${item.description}\n`;
         });
+
+        const blob = new Blob([csvContent], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "lista_arquivos_renomeados.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showMessage("CSV exportado com sucesso!", "success");
       }
 
-      // Função para verificar se todos os arquivos estão prontos
-      function checkAllFilesReady() {
-        const allReady = files.every((_, index) => fileNames[index]);
-        downloadBtn.disabled = !allReady;
-      }
-
-      // Função para resetar tudo
-      function resetAll() {
-        files = [];
-        fileNames = {};
-        currentFileIndex = -1;
-        isManualEdit = false;
-        fileInput.value = "";
-        prefixInput.value = "";
-        suffixInput.value = "";
-        addNumbering.checked = true;
-        useSeparator.checked = true;
-
-        document
-          .querySelectorAll('#wordsGrid input[type="checkbox"]')
-          .forEach((cb) => {
-            cb.checked = false;
-          });
-
-        currentFileInfo.style.display = "none";
-        applyBtn.disabled = true;
-        downloadBtn.disabled = true;
-        previewNameInput.disabled = true;
-        previewNameInput.value = "";
-        previewNameInput.placeholder = "Selecione arquivos para começar...";
-        regenerateBtn.disabled = true;
-
-        updateSeparatorLabel();
-        updateFileList();
-        updatePreviewTable();
-
-        showMessage("Sistema resetado!", "success");
-      }
-
-      // Função para baixar arquivos
+      // Download ZIP
       function downloadFiles() {
-        if (!files.length || !Object.keys(fileNames).length) {
-          showMessage("Não há arquivos para baixar.", "error");
+        const hasAllNames = fileData.every(item => 
+          item.newName.trim() !== ""
+        );
+
+        if (!hasAllNames) {
+          showMessage("Todos os arquivos precisam ter um nome definido.", "error");
           return;
         }
 
-        // Carregar JSZip dinamicamente
+        // Verificar arquivos sem descrição
+        const filesWithoutDescription = fileData.filter(item => !item.description.trim());
+        
+        if (filesWithoutDescription.length > 0) {
+          const plural = filesWithoutDescription.length > 1 ? 's' : '';
+          const message = `${filesWithoutDescription.length} arquivo${plural} sem descrição.\n\nDeseja continuar mesmo assim?`;
+          
+          showModal(message, () => {
+            proceedWithDownload();
+          });
+          return;
+        }
+
+        // Prosseguir diretamente se todos têm descrição
+        proceedWithDownload();
+      }
+
+      // Função separada para fazer o download
+      function proceedWithDownload() {
         loadJSZip(() => {
           const zip = new JSZip();
-
-          const promises = files.map((file, index) => {
-            return new Promise((resolve, reject) => {
-              if (!fileNames[index]) {
-                resolve(); // Pular arquivos sem nome
-                return;
-              }
-
+          const promises = fileData.map((item) => {
+            return new Promise((resolve) => {
+              if (!item.newName.trim()) { resolve(); return; }
               const reader = new FileReader();
               reader.onload = (e) => {
-                zip.file(fileNames[index].finalName, e.target.result);
+                zip.file(item.newName, e.target.result);
                 resolve();
               };
-              reader.onerror = reject;
-              reader.readAsArrayBuffer(file);
+              reader.readAsArrayBuffer(item.file);
             });
           });
 
@@ -1489,8 +1386,7 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
-
-              showMessage("Arquivos baixados com sucesso!", "success");
+              showMessage("ZIP baixado com sucesso!", "success");
             })
             .catch((error) => {
               showMessage("Erro ao criar ZIP: " + error.message, "error");
@@ -1498,35 +1394,67 @@ TRAVERSA_DE_APOIO_DE_CONCRETO_PROTENDIDO
         });
       }
 
-      // Função para carregar JSZip dinamicamente
-      function loadJSZip(callback) {
-        if (window.JSZip) {
-          callback();
-          return;
-        }
-
-        const script = document.createElement("script");
-        script.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-        script.onload = callback;
-        script.onerror = () => {
-          showMessage(
-            "Erro ao carregar JSZip. Verifique sua conexão.",
-            "error"
-          );
+      // Mostrar modal de confirmação
+      function showModal(message, onConfirm) {
+        modalMessage.textContent = message;
+        modalOverlay.style.display = "flex";
+        
+        // Atualizar referência para o botão de confirmação
+        const confirmBtn = document.getElementById("modalConfirm");
+        
+        // Remover listeners anteriores e adicionar novo
+        confirmBtn.onclick = () => {
+          closeModal();
+          onConfirm();
         };
+      }
+
+      // Fechar modal
+      function closeModal() {
+        modalOverlay.style.display = "none";
+      }
+
+      // Carregar JSZip
+      function loadJSZip(callback) {
+        if (window.JSZip) { callback(); return; }
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+        script.onload = callback;
+        script.onerror = () => showMessage("Erro ao carregar JSZip.", "error");
         document.head.appendChild(script);
       }
 
-      // Função para mostrar mensagens
+      // Reset
+      function resetAll() {
+        files = [];
+        fileData = [];
+        currentFileIndex = -1;
+        fileInput.value = "";
+        prefixInput.value = "";
+        suffixInput.value = "";
+        addNumbering.checked = true;
+        useSeparator.checked = true;
+
+        document.querySelectorAll('input[type="checkbox"][id^="elemento_"], input[type="checkbox"][id^="dano_"], input[type="checkbox"][id^="localizacao_"]')
+          .forEach(cb => cb.checked = false);
+
+        fileCounter.textContent = "0 arquivos";
+        currentFileSection.style.display = "none";
+        progressInfo.textContent = "-";
+        
+        updateTable();
+        updateSeparatorLabel();
+        updatePreviews();
+        updateButtonStates();
+        showMessage("Sistema resetado!", "success");
+      }
+
+      // Mostrar mensagens
       function showMessage(text, type) {
         messageDiv.textContent = text;
         messageDiv.className = `message ${type}`;
         messageDiv.style.display = "block";
-
-        setTimeout(() => {
-          messageDiv.style.display = "none";
-        }, 5000);
+        setTimeout(() => messageDiv.style.display = "none", 3000);
       }
     </script>
   </body>
