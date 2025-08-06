@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Construtor de Renomeação de Arquivos - OAE Support</title>
+    <title>Construtor Descrição e Renomeação de Arquivos - OAE Support</title>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
       rel="stylesheet"
@@ -58,6 +58,7 @@
         padding: 0.8rem;
         gap: 0.8rem;
         overflow: hidden;
+        height: calc(100vh - 120px);
       }
 
       /* Painel de controles horizontal */
@@ -66,10 +67,10 @@
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 10px;
-        padding: 1rem;
+        padding: 0.7rem;
         display: grid;
         grid-template-columns: 200px 250px 1fr 180px;
-        gap: 1rem;
+        gap: 0.7rem;
         align-items: start;
       }
 
@@ -77,17 +78,17 @@
       .file-section {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.3rem;
       }
 
       .section-title {
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: #3498db;
         text-align: center;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
       }
 
       .btn {
@@ -167,7 +168,7 @@
       .name-controls, .description-controls {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.3rem;
       }
 
       .description-controls {
@@ -177,7 +178,7 @@
       .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
+        gap: 0.2rem;
       }
 
       .form-group label {
@@ -206,11 +207,30 @@
       .checkbox-group {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 4px 8px;
+        gap: 0.3rem;
+        padding: 3px 6px;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 6px;
-        font-size: 11px;
+        font-size: 10px;
+      }
+
+      .select-group {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 3px 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        font-size: 10px;
+      }
+
+      .select-group select {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 10px;
       }
 
       .checkbox-group input[type="checkbox"] {
@@ -228,22 +248,22 @@
         background: rgba(46, 204, 113, 0.2);
         border: 1px solid rgba(46, 204, 113, 0.4);
         border-radius: 6px;
-        padding: 0.5rem;
+        padding: 0.3rem;
         margin-top: 0.3rem;
       }
 
       .preview-title {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: #2ecc71;
         font-weight: 600;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.2rem;
         text-transform: uppercase;
       }
 
       .preview-text {
-        font-size: 11px;
+        font-size: 10px;
         color: rgba(255, 255, 255, 0.9);
-        min-height: 16px;
+        min-height: 14px;
         word-break: break-word;
       }
 
@@ -251,30 +271,30 @@
       .word-groups {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
+        gap: 0.3rem;
+        margin-bottom: 0.3rem;
       }
 
       .word-group {
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 8px;
-        padding: 0.5rem;
+        padding: 0.3rem;
       }
 
       .word-group-title {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         font-weight: 600;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.2rem;
         color: #3498db;
         text-align: center;
         text-transform: uppercase;
       }
 
       .words-container {
-        max-height: 120px;
+        max-height: 280px;
         overflow-y: auto;
-        min-height: 80px;
+        min-height: 240px;
       }
 
       .words-grid {
@@ -314,12 +334,12 @@
       .actions-section {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.3rem;
       }
 
       /* Área da tabela */
       .table-area {
-        flex: 1;
+        height: max(0, calc(100vh - 500px));
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -333,7 +353,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.8rem 1rem;
+        padding: 0.5rem 1rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       }
 
@@ -547,24 +567,6 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       }
 
-      .message.error {
-        background: rgba(231, 76, 60, 0.9);
-        color: #ffffff;
-        border-left: 4px solid #e74c3c;
-      }
-
-      .message.success {
-        background: rgba(46, 204, 113, 0.9);
-        color: #ffffff;
-        border-left: 4px solid #2ecc71;
-      }
-
-      .message.info {
-        background: rgba(52, 152, 219, 0.9);
-        color: #ffffff;
-        border-left: 4px solid #3498db;
-      }
-
       /* Responsividade */
       @media (max-width: 1200px) {
         .controls-panel {
@@ -645,7 +647,7 @@
   </head>
   <body>
     <header class="header">
-      <h1>CONSTRUTOR DE RENOMEAÇÃO DE ARQUIVOS</h1>
+      <h1>CONSTRUTOR DESCRIÇÃO E RENOMEAÇÃO DE ARQUIVOS</h1>
       <p>Fluxo arquivo por arquivo com preview inline e navegação tipo Excel</p>
     </header>
 
@@ -701,9 +703,14 @@
             <input type="checkbox" id="addNumbering" checked />
             <label>Numerar automaticamente</label>
           </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="useSeparator" checked />
-            <label id="separatorLabel">Separador: "_"</label>
+          <div class="select-group">
+            <label>Separador:</label>
+            <select id="separatorSelect">
+              <option value=", " selected>Vírgula (,)</option>
+              <option value="_">Underline (_)</option>
+              <option value=" ">Espaço ( )</option>
+              <option value="-">Traço (-)</option>
+            </select>
           </div>
           
           <!-- Preview do nome -->
@@ -797,14 +804,15 @@
           <table class="editable-table">
             <thead>
               <tr>
-                <th style="width: 25%;">Nome Original</th>
-                <th style="width: 25%;">Novo Nome</th>
-                <th style="width: 50%;">Descrição</th>
+                <th style="width: 20%;">Nome Original</th>
+                <th style="width: 20%;">Novo Nome</th>
+                <th style="width: 45%;">Descrição</th>
+                <th style="width: 15%;">Ações</th>
               </tr>
             </thead>
             <tbody id="editableTableBody">
               <tr>
-                <td colspan="3" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6); font-style: italic;">
+                <td colspan="4" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6); font-style: italic;">
                   <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
@@ -854,36 +862,45 @@
       // ✅ Descrição é OPCIONAL - pode baixar ZIP sem descrição (com confirmação)
       // ✅ Modal customizado para confirmações (bonito e profissional)
       // ✅ Suporte a ESC para fechar modal
+      // ✅ Botão de copiar descrição na tabela
 
       // Dados dos grupos de palavras (compactados para economia de espaço)
       const elementos = [
-      "LAJE", 
-      "VIGA",
-      "CORTINA",
-      "BERCO", 
-      "PILAR",
-       "ENCONTRO",
         "ALA",
-         "SAPATA", 
-         "ESTACA",
-          "BLOCO",
-           "ARCO",
-            "TRELIÇA",
-             "TRANSVERSINA", 
-             "LONGARINA",
-              "APARELHO DE APOIO", 
-              "JUNTA", "GUARDA CORPO", "CALÇADA", "PAVIMENTO", "DEFENSA", "MURO", "TUBULÃO"];
+        "APARELHO DE APOIO", 
+        "ARCO",
+        "ATERRO",
+        "BERCO", 
+        "BLOCO",
+        "CALÇADA",
+        "CORTINA",
+        "DEFENSA",
+        "ESTACA",
+        "GUARDA CORPO",
+        "JUNTA",
+        "LAJE", 
+        "LONGARINA",
+        "MURO",
+        "PAVIMENTO",
+        "PILAR",
+        "SAPATA", 
+        "TRANSVERSINA", 
+        "TRAVESSA",
+        "TRELIÇA",
+        "TUBULÃO",
+        "VIGA T OU I"
+      ];
 
       const danos = [
-        "1 ANCORAGEM INADEQUADA DA DEFENSA METÁLICA",
-        "2 APARELHO DE APOIO COM DISTORÇÃO EXAGERADA",
-        "3 APARELHO DE APOIO DANIFICADO",
-        "4 APARELHO DE APOIO DESLOCADO DA POSIÇÃO",
-        "5 ARMADURA SEM COBRIMENTO",
-        "6 BERÇO PARA JUNTA DANIFICADO",
-        "7 BURACO NA PISTA (ACESSO)",
-        "8 BUZINOTE DANIFICADO OU INEFICIENTE",
-        "9 CALÇADA DESTRUÍDA",
+        "01 ANCORAGEM INADEQUADA DA DEFENSA METÁLICA",
+        "02 APARELHO DE APOIO COM DISTORÇÃO EXAGERADA",
+        "03 APARELHO DE APOIO DANIFICADO",
+        "04 APARELHO DE APOIO DESLOCADO DA POSIÇÃO",
+        "05 ARMADURA SEM COBRIMENTO",
+        "06 BERÇO PARA JUNTA DANIFICADO",
+        "07 BURACO NA PISTA (ACESSO)",
+        "08 BUZINOTE DANIFICADO OU INEFICIENTE",
+        "09 CALÇADA DESTRUÍDA",
         "10 CONCRETO DESAGREGADO COM ARMADURA EXPOSTA E OXIDADA",
         "11 CONCRETO DESAGREGADO SEM ARMADURA EXPOSTA",
         "12 CORROSÃOA",
@@ -927,7 +944,16 @@
         "50 VIGA COM LIGEIRA CORROSÃO"
       ];
 
-      const localizacao = ["TABULEIRO","SUPERIOR", "INFERIOR", "LD", "LE", "DIAGONAL", "TRANSIÇÃO 01", "TRANSIÇÃO 02", "DIAGONAL"];
+      const localizacao = [
+        "DIAGONAL",
+        "INFERIOR",
+        "LD",
+        "LE",
+        "SUPERIOR",
+        "TABULEIRO",
+        "TRANSIÇÃO 01",
+        "TRANSIÇÃO 02",   
+         ];
 
       // Elementos DOM
       const fileInput = document.getElementById("fileInput");
@@ -937,8 +963,7 @@
       const prefixInput = document.getElementById("prefixInput");
       const suffixInput = document.getElementById("suffixInput");
       const addNumbering = document.getElementById("addNumbering");
-      const useSeparator = document.getElementById("useSeparator");
-      const separatorLabel = document.getElementById("separatorLabel");
+      const separatorSelect = document.getElementById("separatorSelect");
       const namePreview = document.getElementById("namePreview");
       const descriptionPreview = document.getElementById("descriptionPreview");
       const progressInfo = document.getElementById("progressInfo");
@@ -968,8 +993,7 @@
       prefixInput.addEventListener("input", updatePreviews);
       suffixInput.addEventListener("input", updatePreviews);
       addNumbering.addEventListener("change", updatePreviews);
-      useSeparator.addEventListener("change", updateSeparatorLabel);
-      useSeparator.addEventListener("change", updatePreviews);
+      separatorSelect.addEventListener("change", updatePreviews);
       prevBtn.addEventListener("click", () => navigateFile(-1));
       nextBtn.addEventListener("click", () => navigateFile(1));
       applyCurrentBtn.addEventListener("click", applyToCurrent);
@@ -989,7 +1013,6 @@
 
       // Inicialização
       initializeWordsGrids();
-      updateSeparatorLabel();
       updatePreviews();
 
       // Criar grades de palavras
@@ -1025,12 +1048,6 @@
       function updatePreviews() {
         updateNamePreview();
         updateDescriptionPreview();
-      }
-
-      // Atualizar label do separador
-      function updateSeparatorLabel() {
-        const separatorChar = useSeparator.checked ? "_" : " ";
-        separatorLabel.textContent = `Separador: "${separatorChar}"`;
       }
 
       // Manipular mudanças nos checkboxes para rastrear ordem
@@ -1092,7 +1109,7 @@
 
       // Gerar descrição
       function generateDescription() {
-        const separator = useSeparator.checked ? "_" : " ";
+        const separator = separatorSelect.value;
         
         // Usar apenas os itens que ainda estão selecionados, na ordem de clique
         const validSelected = selectedOrder.filter(item => {
@@ -1174,7 +1191,6 @@
         selectedOrder = [];
         
         // Atualizar apenas o preview (não a tabela)
-        const separator = useSeparator.checked ? "_" : " ";
         descriptionPreview.textContent = "Selecionar itens para ver preview";
         
         // Ir para próximo arquivo automaticamente
@@ -1221,7 +1237,7 @@
         if (files.length === 0) {
           const emptyRow = document.createElement("tr");
           emptyRow.innerHTML = `
-            <td colspan="3" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6); font-style: italic;">
+            <td colspan="4" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6); font-style: italic;">
               <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
@@ -1284,6 +1300,20 @@
                 placeholder="Descrição do arquivo..."
               />
             </td>
+            <td style="text-align: center;">
+              <button 
+                class="btn btn-small" 
+                onclick="copyDescription(${index})"
+                title="Copiar descrição"
+                style="padding: 4px 8px; font-size: 9px;"
+                ${!item.description ? 'disabled' : ''}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </td>
           `;
 
           editableTableBody.appendChild(row);
@@ -1296,6 +1326,15 @@
             const field = e.target.dataset.field;
             fileData[index][field] = e.target.value;
             updateButtonStates();
+            
+            // Atualizar estado do botão de copiar quando descrição muda
+            if (field === "description") {
+              const row = e.target.closest('tr');
+              const copyBtn = row.querySelector('button[onclick*="copyDescription"]');
+              if (copyBtn) {
+                copyBtn.disabled = !e.target.value.trim();
+              }
+            }
           });
 
           input.addEventListener("focus", (e) => {
@@ -1314,10 +1353,16 @@
         
         const nameInput = row.querySelector('input[data-field="newName"]');
         const descInput = row.querySelector('input[data-field="description"]');
+        const copyBtn = row.querySelector('button[onclick*="copyDescription"]');
         
         // Atualizar com os dados salvos no fileData
         if (nameInput) nameInput.value = fileData[index].newName || "";
         if (descInput) descInput.value = fileData[index].description || "";
+        
+        // Atualizar estado do botão de copiar
+        if (copyBtn) {
+          copyBtn.disabled = !fileData[index].description;
+        }
       }
 
       // Destacar linha atual
@@ -1375,6 +1420,32 @@
         applyAllBtn.disabled = !hasFiles;
         exportCsvBtn.disabled = !hasFiles;
         downloadBtn.disabled = !hasAllNames; // Só precisa de nomes, descrição é opcional
+      }
+
+      // Copiar descrição
+      function copyDescription(index) {
+        const description = fileData[index].description;
+        if (!description) {
+          showMessage("Não há descrição para copiar.", "error");
+          return;
+        }
+
+        navigator.clipboard.writeText(description).then(() => {
+          showMessage("Descrição copiada para a área de transferência!", "success");
+        }).catch(() => {
+          // Fallback para navegadores mais antigos
+          const textArea = document.createElement("textarea");
+          textArea.value = description;
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            showMessage("Descrição copiada para a área de transferência!", "success");
+          } catch (err) {
+            showMessage("Erro ao copiar descrição.", "error");
+          }
+          document.body.removeChild(textArea);
+        });
       }
 
       // Exportar CSV
@@ -1500,7 +1571,7 @@
         prefixInput.value = "";
         suffixInput.value = "";
         addNumbering.checked = true;
-        useSeparator.checked = true;
+        separatorSelect.value = ",";
 
         document.querySelectorAll('input[type="checkbox"][id^="elemento_"], input[type="checkbox"][id^="dano_"], input[type="checkbox"][id^="localizacao_"]')
           .forEach(cb => cb.checked = false);
@@ -1510,7 +1581,6 @@
         progressInfo.textContent = "-";
         
         updateTable();
-        updateSeparatorLabel();
         updatePreviews();
         updateButtonStates();
         showMessage("Sistema resetado!", "success");
