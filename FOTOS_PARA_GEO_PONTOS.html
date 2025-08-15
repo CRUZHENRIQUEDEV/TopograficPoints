@@ -54,6 +54,32 @@
         max-width: 800px;
         margin: 0 auto;
         padding: 2rem 2rem 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .map-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .map-controls select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        color: white;
+        padding: 8px 12px;
+        font-size: 14px;
+        backdrop-filter: blur(5px);
+      }
+
+      .map-controls select option {
+        background: #2c3e50;
+        color: white;
       }
 
       h1,
@@ -305,6 +331,12 @@
 
         .map-header {
           padding: 1rem;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .map-controls {
+          justify-content: center;
         }
 
         #dropZone {
@@ -409,6 +441,15 @@
     <div class="map-container">
       <div class="map-header">
         <h2>🗺️ Mapa de Pontos</h2>
+        <div class="map-controls">
+          <select id="layerSelector">
+            <option value="osm">OpenStreetMap</option>
+            <option value="satellite">Satélite (Esri)</option>
+            <option value="topo">Topográfico</option>
+            <option value="dark">Modo Escuro</option>
+          </select>
+          <button id="maxZoomBtn">🔍 Zoom Máximo</button>
+        </div>
       </div>
       <div id="map"></div>
     </div>
@@ -428,6 +469,7 @@
       let totalImages = 0;
       let map; // Variável para o mapa
       let markersLayer; // Camada para os marcadores
+      let currentTileLayer; // Camada de tiles atual
 
       // Elementos DOM
       const dropZone = document.getElementById("dropZone");
@@ -437,24 +479,101 @@
       const downloadCsvBtn = document.getElementById("downloadCsvBtn");
       const progressBar = document.querySelector(".progress-bar");
       const progress = document.querySelector(".progress");
+      const layerSelector = document.getElementById("layerSelector");
+      const maxZoomBtn = document.getElementById("maxZoomBtn");
+
+      // Definir diferentes camadas de tile com zoom máximo aprimorado
+      const tileLayers = {
+        osm: {
+          url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          options: {
+            attribution: "© OpenStreetMap contributors",
+            maxZoom: 19
+          }
+        },
+        satellite: {
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          options: {
+            attribution: "© Esri, Maxar, GeoEye, Earthstar Geographics",
+            maxZoom: 23
+          }
+        },
+        topo: {
+          url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+          options: {
+            attribution: "© OpenTopoMap (CC-BY-SA)",
+            maxZoom: 17
+          }
+        },
+        dark: {
+          url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          options: {
+            attribution: "© CARTO, © OpenStreetMap contributors",
+            maxZoom: 20
+          }
+        }
+      };
 
       // Inicializar o mapa
       function initMap() {
-        // Criar o mapa centrado no Brasil
-        map = L.map("map").setView([-15.7942, -47.8825], 4);
+        // Criar o mapa centrado no Brasil com configurações aprimoradas
+        map = L.map("map", {
+          maxZoom: 25, // Zoom máximo global
+          minZoom: 2,
+          zoomControl: true,
+          worldCopyJump: true
+        }).setView([-15.7942, -47.8825], 4);
 
-        // Adicionar camada do OpenStreetMap
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors",
-        }).addTo(map);
+        // Adicionar camada inicial (OpenStreetMap)
+        switchTileLayer('osm');
 
         // Criar camada para os marcadores
         markersLayer = L.layerGroup().addTo(map);
+
+        // Event listener para mudança de camada
+        layerSelector.addEventListener('change', function() {
+          switchTileLayer(this.value);
+        });
+
+        // Event listener para zoom máximo
+        maxZoomBtn.addEventListener('click', function() {
+          if (imagePoints.length > 0) {
+            // Encontrar o centro dos pontos
+            let latSum = 0, lngSum = 0;
+            imagePoints.forEach(point => {
+              latSum += point.latitude;
+              lngSum += point.longitude;
+            });
+            const centerLat = latSum / imagePoints.length;
+            const centerLng = lngSum / imagePoints.length;
+            
+            // Ir para o zoom máximo no centro dos pontos
+            map.setView([centerLat, centerLng], map.getMaxZoom());
+          } else {
+            // Se não há pontos, fazer zoom máximo na posição atual
+            map.setZoom(map.getMaxZoom());
+          }
+        });
 
         // Se já temos pontos, plotá-los
         if (imagePoints.length > 0) {
           plotPointsOnMap();
         }
+      }
+
+      // Trocar camada de tile
+      function switchTileLayer(layerType) {
+        // Remover camada atual se existir
+        if (currentTileLayer) {
+          map.removeLayer(currentTileLayer);
+        }
+
+        // Adicionar nova camada
+        const layer = tileLayers[layerType];
+        currentTileLayer = L.tileLayer(layer.url, layer.options).addTo(map);
+
+        // Atualizar o zoom máximo do mapa
+        map.options.maxZoom = layer.options.maxZoom;
       }
 
       // Plotar pontos no mapa
@@ -473,10 +592,15 @@
           const marker = L.marker([point.latitude, point.longitude]).bindPopup(`
               <h4>📷 ${point.filename}</h4>
               <p><strong>Coordenadas:</strong><br>
-              Lat: ${point.latitude.toFixed(6)}<br>
-              Lng: ${point.longitude.toFixed(6)}</p>
+              Lat: ${point.latitude.toFixed(8)}<br>
+              Lng: ${point.longitude.toFixed(8)}</p>
               <p><strong>Data/Hora:</strong><br>
               ${point.datetime || "N/A"}</p>
+              <p><strong>Ações:</strong><br>
+              <button onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())" 
+                      style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                🔍 Zoom Máximo
+              </button></p>
             `);
 
           markersLayer.addLayer(marker);
@@ -596,8 +720,8 @@
                 // Adicionar à tabela
                 const row = resultsBody.insertRow();
                 row.insertCell(0).textContent = file.name;
-                row.insertCell(1).textContent = lat;
-                row.insertCell(2).textContent = lng;
+                row.insertCell(1).textContent = lat.toFixed(8);
+                row.insertCell(2).textContent = lng.toFixed(8);
                 row.insertCell(3).textContent = datetime || "N/A";
               }
             }
