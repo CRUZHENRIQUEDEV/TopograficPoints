@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analisador de Inclinações - Tabuleiros de Ponte</title>
+    <title>Analisador de Inclinações e Esconsidade - Tabuleiros de Ponte</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -361,11 +361,11 @@
   </head>
   <body>
     <div class="container">
-      <h1>🌉 Analisador de Inclinações - Tabuleiros de Ponte</h1>
+      <h1>🌉 Analisador de Inclinações e Esconsidade - Tabuleiros de Ponte</h1>
       <div class="subtitle">
-        <strong>📐 Verificação de Conformidade Técnica com Detecção Automática SIRGAS 2000</strong><br>
-        Sistema de análise automática de inclinações transversais e longitudinais para tabuleiros de ponte<br>
-        <small style="color: #1976d2;">🗺️ Detecção automática da zona SIRGAS 2000 | Suporte para múltiplos formatos CSV</small>
+        <strong>📐 Verificação de Conformidade Técnica com Análise de Esconsidade e Detecção Automática SIRGAS 2000</strong><br>
+        Sistema de análise automática de inclinações transversais, longitudinais e ângulo de esconsidade para tabuleiros de ponte<br>
+        <small style="color: #1976d2;">🗺️ Detecção automática da zona SIRGAS 2000 | 📐 Cálculo de largura útil | Suporte para múltiplos formatos CSV</small>
       </div>
 
       <!-- Informações dos Limites -->
@@ -468,6 +468,9 @@
         <strong>📏 Informações dos Pontos:</strong>
         <span>Glob = Elevação Global | Rel = Elevação Relativa ao ponto mais alto (0,00m)</span>
         <br>
+        <strong>📐 Análise de Esconsidade:</strong>
+        <span>Ângulo = Desvio da perpendicularidade | Largura Útil = Largura × cos(ângulo) | ΔX/ΔY = Componentes de distância</span>
+        <br>
         <strong>📋 Formatos Suportados:</strong>
         <span>LAT/LONG | H_ORTHO/H_ORTO | Leste/Norte/Elev | Easting/Northing | Múltiplos formatos CSV com detecção automática de zona SIRGAS 2000</span>
       </div>
@@ -477,7 +480,7 @@
       </div>
 
       <div id="infoPanel" class="info-panel" style="display: none">
-        <h3>📊 Relatório de Análise Técnica - Inclinações</h3>
+        <h3>📊 Relatório de Análise Técnica - Inclinações e Esconsidade</h3>
         <div id="distanceInfo" class="distance-grid"></div>
         
         <!-- Resumo Executivo -->
@@ -754,6 +757,105 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           degrees: degrees, 
           ratio: ratio,
           direction: elevationDiff > 0 ? "↗️ Subida" : elevationDiff < 0 ? "↘️ Descida" : "➡️ Nivelado"
+        };
+      }
+
+      // Função para calcular esconsidade da ponte
+      function calculateSkewAnalysis(struct) {
+        if (!struct || !struct.ldInicio || !struct.leInicio || !struct.ldFinal || !struct.leFinal) {
+          return null;
+        }
+
+        // Distâncias em X e Y entre LD_INÍCIO e LE_INÍCIO
+        const deltaX_Inicio = Math.abs(struct.leInicio.x - struct.ldInicio.x);
+        const deltaY_Inicio = Math.abs(struct.leInicio.y - struct.ldInicio.y);
+        
+        // Distâncias em X e Y entre LD_FINAL e LE_FINAL
+        const deltaX_Final = Math.abs(struct.leFinal.x - struct.ldFinal.x);
+        const deltaY_Final = Math.abs(struct.leFinal.y - struct.ldFinal.y);
+
+        // Vetores dos eixos da ponte
+        const vetorLD = {
+          x: struct.ldFinal.x - struct.ldInicio.x,
+          y: struct.ldFinal.y - struct.ldInicio.y
+        };
+        
+        const vetorLE = {
+          x: struct.leFinal.x - struct.leInicio.x,
+          y: struct.leFinal.y - struct.leInicio.y
+        };
+
+        // Ângulo do eixo central da ponte
+        const eixoCentral = {
+          x: (vetorLD.x + vetorLE.x) / 2,
+          y: (vetorLD.y + vetorLE.y) / 2
+        };
+        
+        const anguloEixo = Math.atan2(eixoCentral.y, eixoCentral.x) * (180 / Math.PI);
+
+        // Vetor transversal (início)
+        const vetorTransversal = {
+          x: struct.leInicio.x - struct.ldInicio.x,
+          y: struct.leInicio.y - struct.ldInicio.y
+        };
+        
+        const anguloTransversal = Math.atan2(vetorTransversal.y, vetorTransversal.x) * (180 / Math.PI);
+
+        // Ângulo de esconsidade (diferença entre perpendicular ao eixo e transversal)
+        let anguloEsconsidade = Math.abs(anguloTransversal - (anguloEixo + 90));
+        if (anguloEsconsidade > 90) anguloEsconsidade = 180 - anguloEsconsidade;
+        if (anguloEsconsidade > 90) anguloEsconsidade = anguloEsconsidade - 90;
+
+        // Larguras medidas
+        const larguraInicio = calculateDistance(struct.ldInicio, struct.leInicio);
+        const larguraFinal = calculateDistance(struct.ldFinal, struct.leFinal);
+        const larguraMedia = (larguraInicio + larguraFinal) / 2;
+
+        // Largura efetiva (útil para passagem de veículos)
+        const larguraEfetiva = larguraMedia * Math.cos(anguloEsconsidade * Math.PI / 180);
+
+        // Comprimentos dos lados
+        const comprimentoLD = calculateDistance(struct.ldInicio, struct.ldFinal);
+        const comprimentoLE = calculateDistance(struct.leInicio, struct.leFinal);
+        
+        // Diferença de comprimentos (indicador de esconsidade)
+        const diferencaComprimentos = Math.abs(comprimentoLD - comprimentoLE);
+        
+        // Análise da geometria
+        let tipoGeometria = "Retângulo";
+        let statusEsconsidade = "Não Esconsa";
+        
+        if (anguloEsconsidade > 5) {
+          statusEsconsidade = "Esconsa";
+          if (diferencaComprimentos > 0.5) {
+            tipoGeometria = "Quadrilátero Irregular";
+          } else {
+            tipoGeometria = "Paralelogramo";
+          }
+        } else if (diferencaComprimentos > 0.5) {
+          statusEsconsidade = "Levemente Esconsa";
+          tipoGeometria = "Trapézio";
+        }
+
+        return {
+          deltaX_Inicio,
+          deltaY_Inicio,
+          deltaX_Final,
+          deltaY_Final,
+          anguloEsconsidade,
+          anguloEixo,
+          anguloTransversal,
+          larguraInicio,
+          larguraFinal,
+          larguraMedia,
+          larguraEfetiva,
+          comprimentoLD,
+          comprimentoLE,
+          diferencaComprimentos,
+          tipoGeometria,
+          statusEsconsidade,
+          perdaLargura: larguraMedia - larguraEfetiva,
+          percentualPerda: ((larguraMedia - larguraEfetiva) / larguraMedia) * 100
         };
       }
 
@@ -1233,6 +1335,9 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         const elev1_Inicio_Final_LD = calculateElevationDifference(struct1.ldInicio, struct1.ldFinal);
         const elev1_Inicio_Final_LE = calculateElevationDifference(struct1.leInicio, struct1.leFinal);
 
+        // ANÁLISE DE ESCONSIDADE ESTRUTURA 1
+        const skew1 = calculateSkewAnalysis(struct1);
+
         // INCLINAÇÕES ESTRUTURA 1
         const incl1_LD_LE_Inicio = calculateInclination(struct1.ldInicio, struct1.leInicio);
         const incl1_LD_LE_Final = calculateInclination(struct1.ldFinal, struct1.leFinal);
@@ -1271,6 +1376,9 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           const incl2_LD_LE_Final = calculateInclination(struct2.ldFinal, struct2.leFinal);
           const incl2_Inicio_Final_LD = calculateInclination(struct2.ldInicio, struct2.ldFinal);
           const incl2_Inicio_Final_LE = calculateInclination(struct2.leInicio, struct2.leFinal);
+
+          // ANÁLISE DE ESCONSIDADE ESTRUTURA 2
+          const skew2 = calculateSkewAnalysis(struct2);
 
           // Calcular distâncias X e Y
           let deltaX = 0;
@@ -1392,6 +1500,40 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
             <small>Estrutura 1</small>
           </div>
           
+          <div class="distance-card structure-section">
+            <div><strong>📐 ESTRUTURA 1 (AZUL) - Análise de Esconsidade</strong></div>
+          </div>
+          <div class="distance-card" style="background: linear-gradient(135deg, #fff3e0, #e8f5e8); border: 2px solid #ff9800;">
+            <div><strong>📏 Ângulo de Esconsidade</strong></div>
+            <div class="distance-value" style="color: #ff9800;">${skew1.anguloEsconsidade.toFixed(2)}°</div>
+            <small>${skew1.statusEsconsidade} - ${skew1.tipoGeometria}</small>
+          </div>
+          <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #2196f3;">
+            <div><strong>📐 Largura Útil (Efetiva)</strong></div>
+            <div class="distance-value" style="color: #2196f3;">${skew1.larguraEfetiva.toFixed(3)} m</div>
+            <small>Largura real para passagem de veículos</small>
+          </div>
+          <div class="distance-card" style="background: linear-gradient(135deg, #ffebee, #fff3e0); border: 2px solid #f44336;">
+            <div><strong>📉 Perda de Largura</strong></div>
+            <div class="distance-value" style="color: #f44336;">${skew1.perdaLargura.toFixed(3)} m (${skew1.percentualPerda.toFixed(1)}%)</div>
+            <small>Redução devido à esconsidade</small>
+          </div>
+          <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
+            <div><strong>📏 Distância em X (LD↔LE Início)</strong></div>
+            <div class="distance-value" style="color: #6c757d;">${skew1.deltaX_Inicio.toFixed(3)} m</div>
+            <small>Componente horizontal</small>
+          </div>
+          <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
+            <div><strong>📐 Distância em Y (LD↔LE Início)</strong></div>
+            <div class="distance-value" style="color: #6c757d;">${skew1.deltaY_Inicio.toFixed(3)} m</div>
+            <small>Componente vertical</small>
+          </div>
+          <div class="distance-card" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #4caf50;">
+            <div><strong>⚖️ Diferença de Comprimentos</strong></div>
+            <div class="distance-value" style="color: #4caf50;">${skew1.diferencaComprimentos.toFixed(3)} m</div>
+            <small>|Comprimento LD - Comprimento LE|</small>
+          </div>
+          
           <div class="distance-card elevation-section">
             <div><strong>📏 ESTRUTURA 1 - Análise de Elevação</strong></div>
           </div>
@@ -1489,6 +1631,9 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           const incl2_Inicio_Final_LD = calculateInclination(struct2.ldInicio, struct2.ldFinal);
           const incl2_Inicio_Final_LE = calculateInclination(struct2.leInicio, struct2.leFinal);
 
+          // ANÁLISE DE ESCONSIDADE ESTRUTURA 2
+          const skew2 = calculateSkewAnalysis(struct2);
+
           html += `
             <div class="section-divider"></div>
             <div class="distance-card structure-section">
@@ -1523,6 +1668,40 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
               <div><strong>📐 Média Comprimento</strong></div>
               <div class="distance-value" style="color: #ff9800;">${media2Comprimento.toFixed(3)} m</div>
               <small>Estrutura 2</small>
+            </div>
+            
+            <div class="distance-card structure-section">
+              <div><strong>📐 ESTRUTURA 2 (ROSA) - Análise de Esconsidade</strong></div>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #fff3e0, #e8f5e8); border: 2px solid #ff9800;">
+              <div><strong>📏 Ângulo de Esconsidade</strong></div>
+              <div class="distance-value" style="color: #ff9800;">${skew2.anguloEsconsidade.toFixed(2)}°</div>
+              <small>${skew2.statusEsconsidade} - ${skew2.tipoGeometria}</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #2196f3;">
+              <div><strong>📐 Largura Útil (Efetiva)</strong></div>
+              <div class="distance-value" style="color: #2196f3;">${skew2.larguraEfetiva.toFixed(3)} m</div>
+              <small>Largura real para passagem de veículos</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #ffebee, #fff3e0); border: 2px solid #f44336;">
+              <div><strong>📉 Perda de Largura</strong></div>
+              <div class="distance-value" style="color: #f44336;">${skew2.perdaLargura.toFixed(3)} m (${skew2.percentualPerda.toFixed(1)}%)</div>
+              <small>Redução devido à esconsidade</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
+              <div><strong>📏 Distância em X (LD↔LE Início)</strong></div>
+              <div class="distance-value" style="color: #6c757d;">${skew2.deltaX_Inicio.toFixed(3)} m</div>
+              <small>Componente horizontal</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
+              <div><strong>📐 Distância em Y (LD↔LE Início)</strong></div>
+              <div class="distance-value" style="color: #6c757d;">${skew2.deltaY_Inicio.toFixed(3)} m</div>
+              <small>Componente vertical</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #4caf50;">
+              <div><strong>⚖️ Diferença de Comprimentos</strong></div>
+              <div class="distance-value" style="color: #4caf50;">${skew2.diferencaComprimentos.toFixed(3)} m</div>
+              <small>|Comprimento LD - Comprimento LE|</small>
             </div>
             
             <div class="distance-card elevation-section">
@@ -1586,30 +1765,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
               <div style="font-size: 11px; margin-top: 5px; color: #666;">Limite longitudinal: ≤${LIMIT_LONGITUDINAL}%</div>
             </div>
           `;
-        }
 
-        distanceInfo.innerHTML = html;
-        
-        // Adicionar resumo executivo melhorado
-        if (struct2) {
-          const dist2Inicio = calculateDistance(struct2.ldInicio, struct2.leInicio);
-          const dist2Final = calculateDistance(struct2.ldFinal, struct2.leFinal);
-          const dist2LD = calculateDistance(struct2.ldInicio, struct2.ldFinal);
-          const dist2LE = calculateDistance(struct2.leInicio, struct2.leFinal);
-          const media2Largura = (dist2Inicio + dist2Final) / 2;
-          const media2Comprimento = (dist2LD + dist2LE) / 2;
-
-          const incl2_LD_LE_Inicio = calculateInclination(struct2.ldInicio, struct2.leInicio);
-          const incl2_LD_LE_Final = calculateInclination(struct2.ldFinal, struct2.leFinal);
-          const incl2_Inicio_Final_LD = calculateInclination(struct2.ldInicio, struct2.ldFinal);
-          const incl2_Inicio_Final_LE = calculateInclination(struct2.leInicio, struct2.leFinal);
-
-          const crossDistance = calculateDistance(struct1.leInicio, struct2.ldInicio);
-          const crossElevation = calculateElevationDifference(struct1.leInicio, struct2.ldInicio);
-          const crossInclination = calculateInclination(struct1.leInicio, struct2.ldInicio);
-          const mediaGeralLargura = (media1Largura + media2Largura) / 2;
-          const mediaGeralComprimento = (media1Comprimento + media2Comprimento) / 2;
-          
           // Verificar problemas de inclinação com novos limites
           const problemasTransversais = [];
           const problemasLongitudinais = [];
@@ -1623,6 +1779,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           if (incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.1 Longitudinal LE (Esquerdo)");
           if (incl2_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.2 Longitudinal LD (Direito)");
           if (incl2_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Est.2 Longitudinal LE (Esquerdo)");
+          const crossInclination = calculateInclination(struct1.leInicio, struct2.ldInicio);
           if (crossInclination.percentage > LIMIT_LONGITUDINAL) problemasLongitudinais.push("Entre estruturas (Longitudinal)");
           
           const totalProblemas = problemasTransversais.length + problemasLongitudinais.length;
@@ -1655,10 +1812,30 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                 <div style="font-size: 16px; font-weight: bold; color: #ff9800; margin: 5px 0;">${mediaGeralComprimento.toFixed(3)}m</div>
                 <div style="font-size: 12px; color: #6c757d;">Geral (Est.1+2)</div>
               </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: #ff9800;">📐 Esconsidade Geral</div>
+                <div style="font-size: 16px; font-weight: bold; color: #ff9800; margin: 5px 0;">${((skew1.anguloEsconsidade + skew2.anguloEsconsidade) / 2).toFixed(1)}°</div>
+                <div style="font-size: 12px; color: #6c757d;">Média das estruturas</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: #2196f3;">📐 Largura Útil Média</div>
+                <div style="font-size: 16px; font-weight: bold; color: #2196f3; margin: 5px 0;">${((skew1.larguraEfetiva + skew2.larguraEfetiva) / 2).toFixed(3)}m</div>
+                <div style="font-size: 12px; color: #6c757d;">Efetiva para veículos</div>
+              </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid ${totalProblemas > 0 ? '#f44336' : '#4caf50'};">
                 <div style="font-weight: bold; color: ${totalProblemas > 0 ? '#f44336' : '#4caf50'};">${totalProblemas > 0 ? '🚨' : '✅'} Status Conformidade</div>
                 <div style="font-size: 16px; font-weight: bold; color: ${totalProblemas > 0 ? '#f44336' : '#4caf50'}; margin: 5px 0;">${totalProblemas > 0 ? `${totalProblemas} Não Conformidades` : 'CONFORME'}</div>
                 <div style="font-size: 12px; color: #6c757d;">${totalProblemas > 0 ? 'Revisar inclinações' : 'Todas inclinações OK'}</div>
+              </div>
+            </div>
+            <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 6px;">
+              <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px;">📐 Análise de Esconsidade:</div>
+              <div style="font-size: 14px; color: #1565c0;">
+                🔺 Estrutura 1: ${skew1.anguloEsconsidade.toFixed(2)}° (${skew1.statusEsconsidade}) | Largura Útil: ${skew1.larguraEfetiva.toFixed(3)}m (Perda: ${skew1.perdaLargura.toFixed(3)}m)
+                <br>🔺 Estrutura 2: ${skew2.anguloEsconsidade.toFixed(2)}° (${skew2.statusEsconsidade}) | Largura Útil: ${skew2.larguraEfetiva.toFixed(3)}m (Perda: ${skew2.perdaLargura.toFixed(3)}m)
+              </div>
+              <div style="font-size: 12px; color: #1976d2; margin-top: 5px;">
+                Esconsidade média: ${((skew1.anguloEsconsidade + skew2.anguloEsconsidade) / 2).toFixed(1)}° | Largura útil média: ${((skew1.larguraEfetiva + skew2.larguraEfetiva) / 2).toFixed(3)}m
               </div>
             </div>
             ${totalProblemas > 0 ? `
@@ -1682,6 +1859,47 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           const allPointsForAnalysis = [struct1.ldInicio, struct1.leInicio, struct1.ldFinal, struct1.leFinal];
           const maxElevForAnalysis = Math.max(...allPointsForAnalysis.map(p => p.elevation));
           const minElevForAnalysis = Math.min(...allPointsForAnalysis.map(p => p.elevation));
+          
+          // Análise de esconsidade para estrutura única
+          const skew1 = calculateSkewAnalysis(struct1);
+          
+          // Adicionar seção de esconsidade para estrutura única
+          html += `
+            <div class="section-divider"></div>
+            <div class="distance-card structure-section">
+              <div><strong>📐 ESTRUTURA ÚNICA - Análise de Esconsidade</strong></div>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #fff3e0, #e8f5e8); border: 2px solid #ff9800;">
+              <div><strong>📏 Ângulo de Esconsidade</strong></div>
+              <div class="distance-value" style="color: #ff9800;">${skew1.anguloEsconsidade.toFixed(2)}°</div>
+              <small>${skew1.statusEsconsidade} - ${skew1.tipoGeometria}</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #2196f3;">
+              <div><strong>📐 Largura Útil (Efetiva)</strong></div>
+              <div class="distance-value" style="color: #2196f3;">${skew1.larguraEfetiva.toFixed(3)} m</div>
+              <small>Largura real para passagem de veículos</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #ffebee, #fff3e0); border: 2px solid #f44336;">
+              <div><strong>📉 Perda de Largura</strong></div>
+              <div class="distance-value" style="color: #f44336;">${skew1.perdaLargura.toFixed(3)} m (${skew1.percentualPerda.toFixed(1)}%)</div>
+              <small>Redução devido à esconsidade</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
+              <div><strong>📏 Distância em X (LD↔LE Início)</strong></div>
+              <div class="distance-value" style="color: #6c757d;">${skew1.deltaX_Inicio.toFixed(3)} m</div>
+              <small>Componente horizontal</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #6c757d;">
+              <div><strong>📐 Distância em Y (LD↔LE Início)</strong></div>
+              <div class="distance-value" style="color: #6c757d;">${skew1.deltaY_Inicio.toFixed(3)} m</div>
+              <small>Componente vertical</small>
+            </div>
+            <div class="distance-card" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #4caf50;">
+              <div><strong>⚖️ Diferença de Comprimentos</strong></div>
+              <div class="distance-value" style="color: #4caf50;">${skew1.diferencaComprimentos.toFixed(3)} m</div>
+              <small>|Comprimento LD - Comprimento LE|</small>
+            </div>
+          `;
           
           // Verificar problemas de inclinação para estrutura única
           const problemasTransversais = [];
@@ -1707,14 +1925,24 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                 <div style="font-size: 18px; font-weight: bold; color: #ff9800; margin: 5px 0;">${media1Comprimento.toFixed(3)} m</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                <div style="font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? '#f44336' : '#4caf50'};">🔄 Status Transversal</div>
-                <div style="font-size: 14px; font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? 'ACIMA DO LIMITE' : 'DENTRO DO LIMITE'}</div>
-                <div style="font-size: 12px; color: #6c757d;">Limite: ≤${LIMIT_TRANSVERSAL}%</div>
+                <div style="font-weight: bold; color: #ff9800;">📐 Ângulo Esconsidade</div>
+                <div style="font-size: 18px; font-weight: bold; color: #ff9800; margin: 5px 0;">${skew1.anguloEsconsidade.toFixed(1)}°</div>
+                <small>${skew1.statusEsconsidade}</small>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: #2196f3;">📐 Largura Útil</div>
+                <div style="font-size: 18px; font-weight: bold; color: #2196f3; margin: 5px 0;">${skew1.larguraEfetiva.toFixed(3)} m</div>
+                <small>Efetiva para veículos</small>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL || incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL ? '#f44336' : '#4caf50'};">↕️ Status Longitudinal</div>
                 <div style="font-size: 14px; font-weight: bold; color: ${incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL || incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_Inicio_Final_LD.percentage > LIMIT_LONGITUDINAL || incl1_Inicio_Final_LE.percentage > LIMIT_LONGITUDINAL ? 'ACIMA DO LIMITE' : 'DENTRO DO LIMITE'}</div>
                 <div style="font-size: 12px; color: #6c757d;">Limite: ≤${LIMIT_LONGITUDINAL}%</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+                <div style="font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? '#f44336' : '#4caf50'};">🔄 Status Transversal</div>
+                <div style="font-size: 14px; font-weight: bold; color: ${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? '#f44336' : '#4caf50'}; margin: 5px 0;">${incl1_LD_LE_Inicio.percentage > LIMIT_TRANSVERSAL || incl1_LD_LE_Final.percentage > LIMIT_TRANSVERSAL ? 'ACIMA DO LIMITE' : 'DENTRO DO LIMITE'}</div>
+                <div style="font-size: 12px; color: #6c757d;">Limite: ≤${LIMIT_TRANSVERSAL}%</div>
               </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid ${totalProblemasUnica > 0 ? '#f44336' : '#4caf50'};">
                 <div style="font-weight: bold; color: ${totalProblemasUnica > 0 ? '#f44336' : '#4caf50'};">${totalProblemasUnica > 0 ? '🚨' : '✅'} Status Geral</div>
@@ -1723,12 +1951,21 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
               </div>
             </div>
             <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 6px;">
-              <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px;">📏 Análise de Elevações Relativas:</div>
+              <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px;">📐 Análise de Esconsidade:</div>
               <div style="font-size: 14px; color: #1565c0;">
+                🔺 Estrutura 1: ${skew1.anguloEsconsidade.toFixed(2)}° (${skew1.statusEsconsidade}) | Largura Útil: ${skew1.larguraEfetiva.toFixed(3)}m (Perda: ${skew1.perdaLargura.toFixed(3)}m)
+              </div>
+              <div style="font-size: 12px; color: #1976d2; margin-top: 5px;">
+                Geometria: ${skew1.tipoGeometria} | Diferença de comprimentos: ${skew1.diferencaComprimentos.toFixed(3)}m
+              </div>
+            </div>
+            <div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border: 2px solid #4caf50; border-radius: 6px;">
+              <div style="font-weight: bold; color: #2e7d32; margin-bottom: 8px;">📏 Análise de Elevações Relativas:</div>
+              <div style="font-size: 14px; color: #388e3c;">
                 🔺 Ponto mais alto: ${maxElevForAnalysis.toFixed(3)}m (referência 0,00m) | 
                 🔻 Ponto mais baixo: ${minElevForAnalysis.toFixed(3)}m (${(minElevForAnalysis - maxElevForAnalysis).toFixed(3)}m relativo)
               </div>
-              <div style="font-size: 12px; color: #1976d2; margin-top: 5px;">Amplitude total: ${(maxElevForAnalysis - minElevForAnalysis).toFixed(3)}m</div>
+              <div style="font-size: 12px; color: #2e7d32; margin-top: 5px;">Amplitude total: ${(maxElevForAnalysis - minElevForAnalysis).toFixed(3)}m</div>
             </div>
             ${totalProblemasUnica > 0 ? `
             <div style="margin-top: 15px; padding: 12px; background: #ffebee; border: 2px solid #f44336; border-radius: 6px;">
@@ -1747,6 +1984,8 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           `;
           document.getElementById('executiveSummary').innerHTML = summaryHtml;
         }
+
+        distanceInfo.innerHTML = html;
         
         debugLog("Relatório de análise técnica gerado com sucesso");
         
@@ -1754,7 +1993,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         const metodologiaHtml = `
           <div style="margin-top: 25px; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border: 2px solid #6c757d;">
             <h4 style="margin: 0 0 15px 0; color: #495057; text-align: center;">📐 Metodologia de Análise Aplicada</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
               <div style="background: white; padding: 12px; border-radius: 6px; border: 2px solid #d32f2f;">
                 <div style="font-weight: bold; color: #d32f2f; margin-bottom: 8px;">🔄 INCLINAÇÕES TRANSVERSAIS (≤5%)</div>
                 <div style="font-size: 13px; color: #666; line-height: 1.4;">
@@ -1773,9 +2012,18 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                   <em>Mesmo lado esquerdo entre pontos</em>
                 </div>
               </div>
+              <div style="background: white; padding: 12px; border-radius: 6px; border: 2px solid #2196f3;">
+                <div style="font-weight: bold; color: #2196f3; margin-bottom: 8px;">📐 ANÁLISE DE ESCONSIDADE</div>
+                <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                  <strong>✓ Ângulo de Esconsidade</strong><br>
+                  <em>Desvio da perpendicularidade</em><br><br>
+                  <strong>✓ Largura Útil = Largura × cos(θ)</strong><br>
+                  <em>Largura efetiva para veículos</em>
+                </div>
+              </div>
             </div>
             <div style="text-align: center; margin-top: 12px; font-size: 12px; color: #6c757d;">
-              <strong>Boas Práticas da Engenharia de Pontes</strong> - Sistema automatizado de análise técnica de tabuleiros
+              <strong>Boas Práticas da Engenharia de Pontes</strong> - Sistema automatizado de análise técnica de tabuleiros com detecção de esconsidade
             </div>
           </div>
         `;
@@ -1832,7 +2080,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
 
       // Pré-carregar dados de exemplo
       window.onload = function () {
-        console.log("🚀 Página carregada - Analisador de Inclinações ativo");
+        console.log("🚀 Página carregada - Analisador de Inclinações e Esconsidade ativo");
         updateZoomDisplay();
         loadExample1UTM();
       };
