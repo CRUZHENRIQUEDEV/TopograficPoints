@@ -36,6 +36,60 @@
         border-radius: 8px;
         border: 1px solid #2196f3;
       }
+
+      /* Seção dos diagramas de esconsidade */
+      .esconsidade-diagrams {
+        margin: 30px 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border: 2px solid #007bff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      .esconsidade-diagrams h2 {
+        text-align: center;
+        color: #007bff;
+        margin-bottom: 15px;
+        font-size: 24px;
+      }
+
+      .diagrams-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .diagrams-container svg {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .diagram-explanation {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #2196f3;
+        margin-top: 15px;
+      }
+
+      .diagram-explanation h3 {
+        color: #1976d2;
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .diagram-explanation ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .diagram-explanation li {
+        margin-bottom: 8px;
+        color: #1565c0;
+      }
       
       .input-section {
         display: grid;
@@ -113,6 +167,15 @@
           margin-left: 0;
           width: 100%;
           justify-content: center;
+        }
+
+        .esconsidade-diagrams {
+          margin: 20px 0;
+          padding: 15px;
+        }
+
+        .esconsidade-diagrams h2 {
+          font-size: 20px;
         }
       }
       
@@ -388,6 +451,242 @@
         <div style="margin-top: 10px; font-size: 12px; color: #1976d2;">
           <strong>Nota:</strong> Valores baseados em boas práticas da engenharia de pontes<br>
           <strong>Regra de Verificação:</strong> Transversal = lado com lado no mesmo ponto | Longitudinal = mesmo lado entre pontos
+        </div>
+      </div>
+
+      <!-- Seção de Diagramas de Esconsidade -->
+      <div class="esconsidade-diagrams">
+        <h2>📐 Conceitos de Esconsidade em Tabuleiros de Ponte</h2>
+        
+        <div class="diagrams-container">
+          <svg viewBox="0 0 1200 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- Definições de gradientes e filtros -->
+            <defs>
+              <!-- Gradiente para o rio -->
+              <linearGradient id="riverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#64B5F6;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#1E88E5;stop-opacity:1" />
+              </linearGradient>
+              
+              <!-- Gradiente para o tabuleiro -->
+              <linearGradient id="deckGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#F5F5F5;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#E0E0E0;stop-opacity:1" />
+              </linearGradient>
+              
+              <!-- Gradiente para a rodovia -->
+              <linearGradient id="roadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#616161;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#424242;stop-opacity:1" />
+              </linearGradient>
+              
+              <!-- Sombra -->
+              <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="3" dy="3" stdDeviation="3" flood-opacity="0.3"/>
+              </filter>
+              
+              <!-- Sombra suave -->
+              <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.2"/>
+              </filter>
+            </defs>
+            
+            <!-- Título principal -->
+            <rect x="25" y="10" width="1150" height="50" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1" rx="8" filter="url(#softShadow)"/>
+            <text x="600" y="35" text-anchor="middle" font-size="18" font-weight="700" fill="#2C3E50" font-family="Arial, sans-serif">
+              Tipos de Esconsidade no Tabuleiro da Ponte
+            </text>
+            <text x="600" y="50" text-anchor="middle" font-size="12" fill="#5D6D7E" font-family="Arial, sans-serif">
+              Influência da orientação do rio na geometria do tabuleiro
+            </text>
+            
+            <!-- Caso 1: SEM Esconsidade -->
+            <g transform="translate(80, 80)">
+              <!-- Card container -->
+              <rect x="0" y="0" width="280" height="320" fill="#FFFFFF" stroke="#E8EAF0" stroke-width="2" rx="12" filter="url(#shadow)"/>
+              
+              <!-- Header do card -->
+              <rect x="0" y="0" width="280" height="45" fill="#4CAF50" rx="12"/>
+              <rect x="0" y="33" width="280" height="12" fill="#4CAF50"/>
+              <text x="140" y="20" text-anchor="middle" font-size="12" font-weight="600" fill="#FFFFFF" font-family="Arial, sans-serif">
+                CASO 1 - SEM ESCONSIDADE
+              </text>
+              <text x="140" y="35" text-anchor="middle" font-size="10" fill="#E8F5E8" font-family="Arial, sans-serif">
+                Rio Norte-Sul (Perpendicular)
+              </text>
+              
+              <!-- Conteúdo -->
+              <g transform="translate(30, 60)">
+                <!-- Rio vertical (mais estreito que a ponte) -->
+                <rect x="85" y="10" width="40" height="150" fill="url(#riverGradient)" stroke="#1565C0" stroke-width="2" rx="6" filter="url(#softShadow)"/>
+                
+                <!-- Setas do rio -->
+                <polygon points="100,20 110,20 105,30" fill="#0D47A1"/>
+                <polygon points="100,150 110,150 105,140" fill="#0D47A1"/>
+                <text x="120" y="17" font-size="10" fill="#0D47A1" font-weight="600">N</text>
+                <text x="120" y="163" font-size="10" fill="#0D47A1" font-weight="600">S</text>
+                
+                <!-- Rodovia -->
+                <rect x="10" y="70" width="180" height="30" fill="url(#roadGradient)" stroke="#212121" stroke-width="1" rx="3" filter="url(#softShadow)"/>
+                
+                <!-- Tabuleiro retangular -->
+                <rect x="75" y="62" width="60" height="46" fill="url(#deckGradient)" stroke="#9E9E9E" stroke-width="2" rx="3" filter="url(#softShadow)"/>
+                
+                <!-- Faixas de rolamento -->
+                <line x1="75" y1="72" x2="135" y2="72" stroke="#FFD54F" stroke-width="2" stroke-dasharray="15,6"/>
+                <line x1="75" y1="85" x2="135" y2="85" stroke="#FFFFFF" stroke-width="1"/>
+                <line x1="75" y1="98" x2="135" y2="98" stroke="#FFD54F" stroke-width="2" stroke-dasharray="15,6"/>
+                
+                <!-- Guardas -->
+                <rect x="75" y="59" width="60" height="3" fill="#757575" rx="1"/>
+                <rect x="75" y="108" width="60" height="3" fill="#757575" rx="1"/>
+                
+                <!-- Ângulo -->
+                <path d="M 90 50 L 105 50 L 105 65" fill="none" stroke="#4CAF50" stroke-width="3"/>
+                <text x="72" y="47" font-size="12" fill="#4CAF50" font-weight="700">90°</text>
+              </g>
+              
+              <!-- Info box -->
+              <rect x="15" y="260" width="250" height="45" fill="#E8F5E8" stroke="#4CAF50" stroke-width="1" rx="6"/>
+              <text x="25" y="275" font-size="10" fill="#2E7D32" font-weight="600">✓ Tabuleiro Retangular</text>
+              <text x="25" y="287" font-size="10" fill="#2E7D32">✓ Cálculo Estrutural Padrão</text>
+              <text x="25" y="299" font-size="10" fill="#2E7D32">✓ Execução Convencional</text>
+            </g>
+            
+            <!-- Caso 2: COM Esconsidade (NO-SE) -->
+            <g transform="translate(390, 80)">
+              <!-- Card container -->
+              <rect x="0" y="0" width="280" height="320" fill="#FFFFFF" stroke="#E8EAF0" stroke-width="2" rx="12" filter="url(#shadow)"/>
+              
+              <!-- Header do card -->
+              <rect x="0" y="0" width="280" height="45" fill="#FF9800" rx="12"/>
+              <rect x="0" y="33" width="280" height="12" fill="#FF9800"/>
+              <text x="140" y="20" text-anchor="middle" font-size="12" font-weight="600" fill="#FFFFFF" font-family="Arial, sans-serif">
+                CASO 2 - COM ESCONSIDADE
+              </text>
+              <text x="140" y="35" text-anchor="middle" font-size="10" fill="#FFF3E0" font-family="Arial, sans-serif">
+                Rio Noroeste-Sudeste
+              </text>
+              
+              <!-- Conteúdo -->
+              <g transform="translate(30, 60)">
+                <!-- Rio diagonal NO-SE (mesmo ângulo da esconsidade, mais estreito) -->
+                <polygon points="85,15 115,15 145,125 115,125" fill="url(#riverGradient)" stroke="#1565C0" stroke-width="2" filter="url(#softShadow)"/>
+                
+                <!-- Setas do rio -->
+                <polygon points="95,25 105,21 100,31" fill="#0D47A1"/>
+                <polygon points="125,115 135,111 130,121" fill="#0D47A1"/>
+                <text x="75" y="10" font-size="10" fill="#0D47A1" font-weight="600">NO</text>
+                <text x="145" y="140" font-size="10" fill="#0D47A1" font-weight="600">SE</text>
+                
+                <!-- Rodovia -->
+                <rect x="10" y="70" width="180" height="30" fill="url(#roadGradient)" stroke="#212121" stroke-width="1" rx="3" filter="url(#softShadow)"/>
+                
+                <!-- Tabuleiro esconso (paralelogramo) -->
+                <polygon points="65,62 125,62 140,108 80,108" fill="url(#deckGradient)" stroke="#9E9E9E" stroke-width="2" filter="url(#softShadow)"/>
+                
+                <!-- Faixas de rolamento esconsas -->
+                <line x1="70" y1="72" x2="130" y2="72" stroke="#FFD54F" stroke-width="2" stroke-dasharray="15,6"/>
+                <line x1="75" y1="85" x2="135" y2="85" stroke="#FFFFFF" stroke-width="1"/>
+                <line x1="80" y1="98" x2="140" y2="98" stroke="#FFD54F" stroke-width="2" stroke-dasharray="15,6"/>
+                
+                <!-- Guardas esconsas -->
+                <polygon points="65,59 125,59 127,62 67,62" fill="#757575"/>
+                <polygon points="80,108 140,108 142,111 82,111" fill="#757575"/>
+                
+                <!-- Ângulo de esconsidade -->
+                <path d="M 85 50 L 100 50 L 105 65" fill="none" stroke="#FF9800" stroke-width="3"/>
+                <text x="70" y="47" font-size="12" fill="#FF9800" font-weight="700">α ≠ 90°</text>
+              </g>
+              
+              <!-- Info box -->
+              <rect x="15" y="260" width="250" height="45" fill="#FFF3E0" stroke="#FF9800" stroke-width="1" rx="6"/>
+              <text x="25" y="275" font-size="10" fill="#E65100" font-weight="600">⚠ Tabuleiro Esconso</text>
+              <text x="25" y="287" font-size="10" fill="#E65100">⚠ Cálculo Mais Complexo</text>
+              <text x="25" y="299" font-size="10" fill="#E65100">⚠ Formas Especiais</text>
+            </g>
+            
+            <!-- Caso 3: COM Esconsidade (NE-SO) -->
+            <g transform="translate(700, 80)">
+              <!-- Card container -->
+              <rect x="0" y="0" width="280" height="320" fill="#FFFFFF" stroke="#E8EAF0" stroke-width="2" rx="12" filter="url(#shadow)"/>
+              
+              <!-- Header do card -->
+              <rect x="0" y="0" width="280" height="45" fill="#F44336" rx="12"/>
+              <rect x="0" y="33" width="280" height="12" fill="#F44336"/>
+              <text x="140" y="20" text-anchor="middle" font-size="12" font-weight="600" fill="#FFFFFF" font-family="Arial, sans-serif">
+                CASO 3 - COM ESCONSIDADE
+              </text>
+              <text x="140" y="35" text-anchor="middle" font-size="10" fill="#FFEBEE" font-family="Arial, sans-serif">
+                Rio Nordeste-Sudoeste
+              </text>
+              
+              <!-- Conteúdo -->
+              <g transform="translate(30, 60)">
+                <!-- Rio diagonal NE-SO (mesmo ângulo da esconsidade, mais estreito) -->
+                <polygon points="115,15 145,15 115,125 85,125" fill="url(#riverGradient)" stroke="#1565C0" stroke-width="2" filter="url(#softShadow)"/>
+                
+                <!-- Setas do rio -->
+                <polygon points="135,25 125,21 130,31" fill="#0D47A1"/>
+                <polygon points="105,115 95,111 100,121" fill="#0D47A1"/>
+                <text x="150" y="10" font-size="10" fill="#0D47A1" font-weight="600">NE</text>
+                <text x="70" y="140" font-size="10" fill="#0D47A1" font-weight="600">SO</text>
+                
+                <!-- Rodovia -->
+                <rect x="10" y="70" width="180" height="30" fill="url(#roadGradient)" stroke="#212121" stroke-width="1" rx="3" filter="url(#softShadow)"/>
+                
+                <!-- Tabuleiro esconso oposto -->
+                <polygon points="80,62 140,62 125,108 65,108" fill="url(#deckGradient)" stroke="#9E9E9E" stroke-width="2" filter="url(#softShadow)"/>
+                
+                <!-- Faixas de rolamento esconsas -->
+                <line x1="85" y1="72" x2="135" y2="72" stroke="#FFD54F" stroke-width="2" stroke-dasharray="15,6"/>
+                <line x1="80" y1="85" x2="130" y2="85" stroke="#FFFFFF" stroke-width="1"/>
+                <line x1="75" y1="98" x2="125" y2="98" stroke="#FFD54F" stroke-width="2" stroke-dasharray="15,6"/>
+                
+                <!-- Guardas esconsas -->
+                <polygon points="80,59 140,59 138,62 78,62" fill="#757575"/>
+                <polygon points="65,108 125,108 123,111 63,111" fill="#757575"/>
+                
+                <!-- Ângulo de esconsidade -->
+                <path d="M 120 50 L 135 50 L 130 65" fill="none" stroke="#F44336" stroke-width="3"/>
+                <text x="140" y="47" font-size="12" fill="#F44336" font-weight="700">β ≠ 90°</text>
+              </g>
+              
+              <!-- Info box -->
+              <rect x="15" y="260" width="250" height="45" fill="#FFEBEE" stroke="#F44336" stroke-width="1" rx="6"/>
+              <text x="25" y="275" font-size="10" fill="#C62828" font-weight="600">⚠ Tabuleiro Esconso</text>
+              <text x="25" y="287" font-size="10" fill="#C62828">⚠ Geometria Complexa</text>
+              <text x="25" y="299" font-size="10" fill="#C62828">⚠ Armaduras Especiais</text>
+            </g>
+            
+            <!-- Legenda moderna -->
+            <g transform="translate(350, 430)">
+              <rect x="0" y="0" width="500" height="40" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="1" rx="6"/>
+              
+              <rect x="20" y="15" width="20" height="10" fill="url(#riverGradient)" rx="2"/>
+              <text x="45" y="24" font-size="11" fill="#495057" font-weight="500">Rio</text>
+              
+              <rect x="100" y="15" width="20" height="10" fill="url(#deckGradient)" rx="2"/>
+              <text x="125" y="24" font-size="11" fill="#495057" font-weight="500">Tabuleiro</text>
+              
+              <rect x="200" y="15" width="20" height="10" fill="url(#roadGradient)" rx="2"/>
+              <text x="225" y="24" font-size="11" fill="#495057" font-weight="500">Rodovia</text>
+              
+              <line x1="300" y1="20" x2="320" y2="20" stroke="#FFD54F" stroke-width="3" stroke-dasharray="8,4"/>
+              <text x="325" y="24" font-size="11" fill="#495057" font-weight="500">Faixa Central</text>
+              
+              <text x="420" y="24" font-size="11" fill="#495057" font-weight="500">📐 α, β = Ângulos de esconsidade</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="diagram-explanation">
+          <h3>📋 Análise dos Tipos de Esconsidade</h3>
+          <ul>
+            <li><strong>Caso 1 - SEM Esconsidade:</strong> Rio perpendicular à rodovia (90°). Tabuleiro retangular com cálculo estrutural padrão.</li>
+            <li><strong>Caso 2 - COM Esconsidade (NO-SE):</strong> Rio diagonal noroeste-sudeste. Tabuleiro em formato de paralelogramo com geometria complexa.</li>
+            <li><strong>Caso 3 - COM Esconsidade (NE-SO):</strong> Rio diagonal nordeste-sudoeste. Tabuleiro esconso oposto, exigindo formas especiais.</li>
+          </ul>
         </div>
       </div>
 
