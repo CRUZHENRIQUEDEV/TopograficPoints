@@ -810,6 +810,41 @@
         }
       }
       
+      // FUNÇÃO CORRIGIDA: Conversão de coordenadas geográficas para UTM
+      function geographicToUTM(lat, lng) {
+        const a = 6378137.0; // Semi-eixo maior WGS84
+        const f = 1/298.257223563; // Achatamento WGS84
+        const k0 = 0.9996; // Fator de escala UTM
+        
+        // Determinar zona UTM
+        const zone = Math.floor((lng + 180) / 6) + 1;
+        const centralMeridian = (zone - 1) * 6 - 180 + 3;
+        
+        // Converter para radianos
+        const latRad = lat * Math.PI / 180;
+        const lngRad = lng * Math.PI / 180;
+        const centralMeridianRad = centralMeridian * Math.PI / 180;
+        
+        // Cálculos UTM simplificados
+        const deltaLng = lngRad - centralMeridianRad;
+        
+        const N = a / Math.sqrt(1 - (f * (2 - f) * Math.sin(latRad) * Math.sin(latRad)));
+        const T = Math.tan(latRad) * Math.tan(latRad);
+        const C = (f * (2 - f)) / (1 - f * (2 - f)) * Math.cos(latRad) * Math.cos(latRad);
+        const A = deltaLng * Math.cos(latRad);
+        
+        // Coordenadas UTM
+        const easting = k0 * N * (A + (1 - T + C) * A * A * A / 6) + 500000;
+        
+        // Para o hemisfério sul (Brasil), adicionar 10.000.000m
+        const M = a * ((1 - f/4 - 3*f*f/64) * latRad - 
+                      (3*f/8 + 3*f*f/32) * Math.sin(2*latRad) + 
+                      (15*f*f/256) * Math.sin(4*latRad));
+        const northing = lat < 0 ? k0 * M + 10000000 : k0 * M;
+        
+        return { easting, northing, zone };
+      }
+      
       // Função para determinar zona SIRGAS 2000
       function determineSirgas2000Zone(point) {
         let longitude = null;
@@ -835,9 +870,6 @@
       // Conversão aproximada de UTM para longitude (simplificada para Brasil)
       function approximateUTMToLongitude(easting, northing) {
         // Para o Brasil, estimativa baseada em coordenadas típicas
-        // Northing ~8954447 indica latitude aprox -10° (região nordeste)
-        
-        // Estimativa de zona baseada no padrão UTM brasileiro
         let estimatedZone = null;
         
         // Coordenada Leste baixa (~187500) indica zona com meridiano central mais a oeste
@@ -1003,10 +1035,39 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
       }
 
       function calculateDistance(point1, point2) {
-        const x1 = parseFloat(point1.x);
-        const y1 = parseFloat(point1.y);
-        const x2 = parseFloat(point2.x);
-        const y2 = parseFloat(point2.y);
+        // CORREÇÃO: Se ambos os pontos são geográficos, usar cálculo adequado
+        if (point1.coordType === 'GEO' && point2.coordType === 'GEO') {
+          const lat1Rad = point1.lat * Math.PI / 180;
+          const lat2Rad = point2.lat * Math.PI / 180;
+          const deltaLat = (point2.lat - point1.lat) * Math.PI / 180;
+          const deltaLng = (point2.long - point1.long) * Math.PI / 180;
+
+          const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+                    Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+                    Math.sin(deltaLng/2) * Math.sin(deltaLng/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+          return 6371000 * c; // Raio da Terra em metros
+        }
+
+        // Para coordenadas UTM ou se temos coordenadas convertidas
+        let x1, y1, x2, y2;
+        
+        if (point1.utmX && point1.utmY) {
+          x1 = point1.utmX;
+          y1 = point1.utmY;
+        } else {
+          x1 = parseFloat(point1.x);
+          y1 = parseFloat(point1.y);
+        }
+        
+        if (point2.utmX && point2.utmY) {
+          x2 = point2.utmX;
+          y2 = point2.utmY;
+        } else {
+          x2 = parseFloat(point2.x);
+          y2 = parseFloat(point2.y);
+        }
 
         const deltaX = x2 - x1;
         const deltaY = y2 - y1;
@@ -1059,63 +1120,100 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         };
       }
 
-      // Função para calcular esconsidade da ponte
+      // FUNÇÃO CORRIGIDA: Calcular esconsidade da ponte
       function calculateSkewAnalysis(struct) {
         if (!struct || !struct.ldInicio || !struct.leInicio || !struct.ldFinal || !struct.leFinal) {
           return null;
         }
 
+        debugLog("=== CÁLCULO DE ESCONSIDADE CORRIGIDO ===");
+
+        // CORREÇÃO: Converter coordenadas para UTM se necessário
+        let points = [struct.ldInicio, struct.leInicio, struct.ldFinal, struct.leFinal];
+        
+        points.forEach(point => {
+          if (point.coordType === 'GEO') {
+            const utm = geographicToUTM(point.lat, point.long);
+            point.utmX = utm.easting;
+            point.utmY = utm.northing;
+            point.utmZone = utm.zone;
+            debugLog(`Convertido ${point.name}: LAT=${point.lat.toFixed(6)}, LONG=${point.long.toFixed(6)} -> UTM X=${utm.easting.toFixed(3)}, Y=${utm.northing.toFixed(3)}`);
+          } else {
+            point.utmX = parseFloat(point.x);
+            point.utmY = parseFloat(point.y);
+          }
+        });
+
+        // Usar coordenadas UTM para cálculos
+        const ldInicio = { x: struct.ldInicio.utmX, y: struct.ldInicio.utmY };
+        const leInicio = { x: struct.leInicio.utmX, y: struct.leInicio.utmY };
+        const ldFinal = { x: struct.ldFinal.utmX, y: struct.ldFinal.utmY };
+        const leFinal = { x: struct.leFinal.utmX, y: struct.leFinal.utmY };
+
         // Distâncias em X e Y entre LD_INÍCIO e LE_INÍCIO
-        const deltaX_Inicio = Math.abs(struct.leInicio.x - struct.ldInicio.x);
-        const deltaY_Inicio = Math.abs(struct.leInicio.y - struct.ldInicio.y);
+        const deltaX_Inicio = Math.abs(leInicio.x - ldInicio.x);
+        const deltaY_Inicio = Math.abs(leInicio.y - ldInicio.y);
         
         // Distâncias em X e Y entre LD_FINAL e LE_FINAL
-        const deltaX_Final = Math.abs(struct.leFinal.x - struct.ldFinal.x);
-        const deltaY_Final = Math.abs(struct.leFinal.y - struct.ldFinal.y);
+        const deltaX_Final = Math.abs(leFinal.x - ldFinal.x);
+        const deltaY_Final = Math.abs(leFinal.y - ldFinal.y);
 
         // Vetores dos eixos da ponte
         const vetorLD = {
-          x: struct.ldFinal.x - struct.ldInicio.x,
-          y: struct.ldFinal.y - struct.ldInicio.y
+          x: ldFinal.x - ldInicio.x,
+          y: ldFinal.y - ldInicio.y
         };
         
         const vetorLE = {
-          x: struct.leFinal.x - struct.leInicio.x,
-          y: struct.leFinal.y - struct.leInicio.y
+          x: leFinal.x - leInicio.x,
+          y: leFinal.y - leInicio.y
         };
 
-        // Ângulo do eixo central da ponte
-        const eixoCentral = {
-          x: (vetorLD.x + vetorLE.x) / 2,
-          y: (vetorLD.y + vetorLE.y) / 2
-        };
-        
-        const anguloEixo = Math.atan2(eixoCentral.y, eixoCentral.x) * (180 / Math.PI);
+        // Ângulo do eixo longitudinal da ponte (média dos dois lados)
+        const anguloLD = Math.atan2(vetorLD.y, vetorLD.x) * (180 / Math.PI);
+        const anguloLE = Math.atan2(vetorLE.y, vetorLE.x) * (180 / Math.PI);
+        const anguloEixo = (anguloLD + anguloLE) / 2;
 
-        // Vetor transversal (início)
+        // Vetor transversal (início da ponte)
         const vetorTransversal = {
-          x: struct.leInicio.x - struct.ldInicio.x,
-          y: struct.leInicio.y - struct.ldInicio.y
+          x: leInicio.x - ldInicio.x,
+          y: leInicio.y - ldInicio.y
         };
         
         const anguloTransversal = Math.atan2(vetorTransversal.y, vetorTransversal.x) * (180 / Math.PI);
 
-        // Ângulo de esconsidade (diferença entre perpendicular ao eixo e transversal)
+        // CORREÇÃO: Cálculo correto do ângulo de esconsidade
+        // O ângulo de esconsidade é a diferença entre o ângulo transversal e 90° em relação ao eixo
         let anguloEsconsidade = Math.abs(anguloTransversal - (anguloEixo + 90));
-        if (anguloEsconsidade > 90) anguloEsconsidade = 180 - anguloEsconsidade;
-        if (anguloEsconsidade > 90) anguloEsconsidade = anguloEsconsidade - 90;
+        
+        // CORREÇÃO: Normalizar corretamente para o menor ângulo (0° a 90°)
+        if (anguloEsconsidade > 90) {
+          anguloEsconsidade = 180 - anguloEsconsidade;
+        }
+        
+        // CORREÇÃO: Garantir que o ângulo esteja entre 0° e 90°
+        anguloEsconsidade = Math.abs(anguloEsconsidade);
+        if (anguloEsconsidade > 90) {
+          anguloEsconsidade = 180 - anguloEsconsidade;
+        }
 
-        // Larguras medidas
-        const larguraInicio = calculateDistance(struct.ldInicio, struct.leInicio);
-        const larguraFinal = calculateDistance(struct.ldFinal, struct.leFinal);
+        debugLog(`Ângulo LD: ${anguloLD.toFixed(2)}°`);
+        debugLog(`Ângulo LE: ${anguloLE.toFixed(2)}°`);
+        debugLog(`Ângulo Eixo: ${anguloEixo.toFixed(2)}°`);
+        debugLog(`Ângulo Transversal: ${anguloTransversal.toFixed(2)}°`);
+        debugLog(`Ângulo Esconsidade: ${anguloEsconsidade.toFixed(2)}°`);
+
+        // Larguras medidas usando coordenadas UTM
+        const larguraInicio = Math.sqrt(Math.pow(leInicio.x - ldInicio.x, 2) + Math.pow(leInicio.y - ldInicio.y, 2));
+        const larguraFinal = Math.sqrt(Math.pow(leFinal.x - ldFinal.x, 2) + Math.pow(leFinal.y - ldFinal.y, 2));
         const larguraMedia = (larguraInicio + larguraFinal) / 2;
 
         // Largura efetiva (útil para passagem de veículos)
         const larguraEfetiva = larguraMedia * Math.cos(anguloEsconsidade * Math.PI / 180);
 
         // Comprimentos dos lados
-        const comprimentoLD = calculateDistance(struct.ldInicio, struct.ldFinal);
-        const comprimentoLE = calculateDistance(struct.leInicio, struct.leFinal);
+        const comprimentoLD = Math.sqrt(Math.pow(vetorLD.x, 2) + Math.pow(vetorLD.y, 2));
+        const comprimentoLE = Math.sqrt(Math.pow(vetorLE.x, 2) + Math.pow(vetorLE.y, 2));
         
         // Diferença de comprimentos (indicador de esconsidade)
         const diferencaComprimentos = Math.abs(comprimentoLD - comprimentoLE);
@@ -1206,24 +1304,33 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           if (isStructurePoint) {
             debugLog(`Ponto de estrutura encontrado: ${name || code}`);
             
-            let xCoord, yCoord, elevation;
+            let xCoord, yCoord, elevation, lat, lng;
 
-            // Coordenadas - suporte para novos formatos
-            if (row.Northing && row.Easting) {
-              xCoord = parseFloat(row.Easting);
-              yCoord = parseFloat(row.Northing);
-            }
-            else if (row.Norte && row.Leste) {
+            // CORREÇÃO: Detectar coordenadas geográficas primeiro
+            if (row.LAT && row.LONG) {
+              lat = parseFloat(row.LAT);
+              lng = parseFloat(row.LONG);
+              xCoord = lng;
+              yCoord = lat;
+            } else if (row.Lat && row.Long) {
+              lat = parseFloat(row.Lat);
+              lng = parseFloat(row.Long);
+              xCoord = lng;
+              yCoord = lat;
+            } else if (row.Norte && row.Leste) {
               xCoord = parseFloat(row.Leste);
               yCoord = parseFloat(row.Norte);
-            }
-            else if (row.x && row.y) {
+            } else if (row.Northing && row.Easting) {
+              xCoord = parseFloat(row.Easting);
+              yCoord = parseFloat(row.Northing);
+            } else if (row.x && row.y) {
               xCoord = parseFloat(row.x);
               yCoord = parseFloat(row.y);
-            }
-            else if (row.Long || row.LONG) {
+            } else if (row.Long || row.LONG) {
               xCoord = parseFloat(row.Long || row.LONG);
               yCoord = parseFloat(row.Lat || row.LAT);
+              lat = parseFloat(row.Lat || row.LAT);
+              lng = parseFloat(row.Long || row.LONG);
             }
 
             // Elevação - suporte ampliado
@@ -1254,17 +1361,18 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                 x: xCoord,
                 y: yCoord,
                 elevation: elevation,
-                lat: parseFloat(row.Lat || row.LAT) || yCoord,
-                long: parseFloat(row.Long || row.LONG) || xCoord,
-                longitude: parseFloat(row.Long || row.LONG) || null,
+                lat: lat || yCoord,
+                long: lng || xCoord,
+                longitude: lng || null,
                 easting: parseFloat(row.Leste || row.Easting) || xCoord,
                 northing: parseFloat(row.Norte || row.Northing) || yCoord,
                 name: normalizedCode,
                 code: normalizedCode,
                 originalName: name,
                 originalCode: code,
-                coordType: (row.Norte && row.Leste) || (row.Northing && row.Easting) ? 'UTM' : 
-                          (Math.abs(xCoord) < 180 && Math.abs(yCoord) < 90 ? 'GEO' : 'PLANE')
+                // CORREÇÃO: Detecção mais precisa do tipo de coordenada
+                coordType: (lat && lng && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) ? 'GEO' :
+                          ((row.Norte && row.Leste) || (row.Northing && row.Easting)) ? 'UTM' : 'PLANE'
               };
               
               // Determinar zona SIRGAS
@@ -1275,6 +1383,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
               }
               
               debugLog(`Ponto criado: ${JSON.stringify(pointData)}`);
+              debugLog(`Tipo de coordenada: ${pointData.coordType}`);
               
               if (normalizedCode) points[normalizedCode] = pointData;
               if (code && code !== normalizedCode) points[code] = pointData;
@@ -1349,11 +1458,23 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           return;
         }
 
-        // Calcular min/max para coordenadas
-        const minX = Math.min(...allStructurePoints.map((p) => p.x));
-        const maxX = Math.max(...allStructurePoints.map((p) => p.x));
-        const minY = Math.min(...allStructurePoints.map((p) => p.y));
-        const maxY = Math.max(...allStructurePoints.map((p) => p.y));
+        // CORREÇÃO: Converter coordenadas geográficas para UTM para visualização
+        allStructurePoints.forEach(point => {
+          if (point.coordType === 'GEO' && !point.utmX) {
+            const utm = geographicToUTM(point.lat, point.long);
+            point.utmX = utm.easting;
+            point.utmY = utm.northing;
+          }
+        });
+
+        // Calcular min/max para coordenadas (usar UTM se disponível)
+        const getX = (p) => p.utmX || p.x;
+        const getY = (p) => p.utmY || p.y;
+        
+        const minX = Math.min(...allStructurePoints.map(getX));
+        const maxX = Math.max(...allStructurePoints.map(getX));
+        const minY = Math.min(...allStructurePoints.map(getY));
+        const maxY = Math.max(...allStructurePoints.map(getY));
         
         const minElev = Math.min(...allStructurePoints.map((p) => p.elevation));
         const maxElev = Math.max(...allStructurePoints.map((p) => p.elevation));
@@ -1382,8 +1503,11 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         const centerY = canvas.height / 2;
 
         function toCanvasCoords(point) {
-          const relX = point.x - (minX + maxX) / 2;
-          const relY = point.y - (minY + maxY) / 2;
+          const x = getX(point);
+          const y = getY(point);
+          
+          const relX = x - (minX + maxX) / 2;
+          const relY = y - (minY + maxY) / 2;
           
           const rotationRad = (currentRotation * Math.PI) / 180;
           const cosTheta = Math.cos(rotationRad);
@@ -1607,7 +1731,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                   📍 Código EPSG: ${31984 + ldInicio1.sirgasZone - 17} (Zona ${ldInicio1.sirgasZone}S)
                 </div>
                 <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                  <strong>Estrutura 1:</strong> LD_INÍCIO → E: ${ldInicio1.easting?.toFixed(3)}m, N: ${ldInicio1.northing?.toFixed(3)}m
+                  <strong>Estrutura 1:</strong> Tipo: ${ldInicio1.coordType} | ${ldInicio1.coordType === 'GEO' ? `LAT: ${ldInicio1.lat.toFixed(6)}, LONG: ${ldInicio1.long.toFixed(6)}` : `E: ${ldInicio1.easting?.toFixed(3)}m, N: ${ldInicio1.northing?.toFixed(3)}m`}
                   ${struct2LdInicio && struct2LdInicio.sirgasZone ? `<br><strong>Estrutura 2:</strong> Zona ${struct2LdInicio.sirgasZone}S detectada` : ''}
                 </div>
                 ` : `
