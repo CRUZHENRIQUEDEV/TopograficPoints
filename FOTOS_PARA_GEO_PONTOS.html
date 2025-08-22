@@ -309,11 +309,86 @@
       .leaflet-popup-content {
         color: #333;
         font-size: 14px;
+        width: 280px !important;
       }
 
       .leaflet-popup-content h4 {
         margin: 0 0 10px 0;
         color: #2c3e50;
+      }
+
+      /* Estilos para os campos de renomeação no popup */
+      .rename-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #ddd;
+      }
+
+      .rename-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-bottom: 10px;
+        font-family: inherit;
+      }
+
+      .rename-input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+      }
+
+      .popup-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      .popup-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+        flex: 1;
+        min-width: 80px;
+      }
+
+      .popup-btn:hover {
+        background: #2980b9;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .popup-btn.success {
+        background: #2ecc71;
+      }
+
+      .popup-btn.success:hover {
+        background: #27ae60;
+      }
+
+      .popup-btn.danger {
+        background: #e74c3c;
+      }
+
+      .popup-btn.danger:hover {
+        background: #c0392b;
+      }
+
+      /* Botão especial para baixar ZIP */
+      .btn-zip {
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+      }
+
+      .btn-zip:hover {
+        background: linear-gradient(45deg, #8e44ad, #7d3c98);
       }
 
       @media (max-width: 768px) {
@@ -356,6 +431,10 @@
           height: 50vh;
           min-height: 300px;
         }
+
+        .leaflet-popup-content {
+          width: 250px !important;
+        }
       }
 
       /* Animações */
@@ -379,6 +458,18 @@
       .container:nth-child(3) {
         animation-delay: 0.3s;
       }
+
+      /* Indicador de arquivo renomeado */
+      .renamed-indicator {
+        color: #2ecc71;
+        font-weight: bold;
+      }
+
+      .original-name {
+        color: #7f8c8d;
+        font-style: italic;
+        text-decoration: line-through;
+      }
     </style>
   </head>
   <body>
@@ -389,8 +480,7 @@
         <div class="note">
           <p>
             <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
-            gera um arquivo GeoJSON que pode ser importado no QGIS. Apenas imagens
-            com dados de geolocalização serão processadas.
+            gera um arquivo GeoJSON que pode ser importado no QGIS. Além disso, você pode renomear as fotos diretamente no mapa e baixar um ZIP com os arquivos renomeados.
           </p>
         </div>
 
@@ -417,6 +507,7 @@
         <div id="stats">
           <p>📊 Total de imagens: <span id="totalImages">0</span></p>
           <p>🗺️ Imagens com geolocalização: <span id="geoImages">0</span></p>
+          <p>✏️ Imagens renomeadas: <span id="renamedImages">0</span></p>
         </div>
 
         <table id="resultsTable">
@@ -433,8 +524,11 @@
           </tbody>
         </table>
 
-        <button id="downloadBtn" disabled>💾 Baixar GeoJSON</button>
-        <button id="downloadCsvBtn" disabled>📊 Baixar CSV</button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+          <button id="downloadBtn" disabled>💾 Baixar GeoJSON</button>
+          <button id="downloadCsvBtn" disabled>📊 Baixar CSV</button>
+          <button id="downloadZipBtn" class="btn-zip" disabled>📦 Baixar ZIP com Fotos</button>
+        </div>
       </div>
     </div>
 
@@ -464,6 +558,8 @@
     <script>
       // Variáveis globais
       let imagePoints = [];
+      let originalFiles = new Map(); // Para armazenar os arquivos originais
+      let renamedFiles = new Map(); // Para armazenar os novos nomes
       let processedImages = 0;
       let imagesWithGeo = 0;
       let totalImages = 0;
@@ -477,6 +573,7 @@
       const resultsBody = document.getElementById("resultsBody");
       const downloadBtn = document.getElementById("downloadBtn");
       const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+      const downloadZipBtn = document.getElementById("downloadZipBtn");
       const progressBar = document.querySelector(".progress-bar");
       const progress = document.querySelector(".progress");
       const layerSelector = document.getElementById("layerSelector");
@@ -589,19 +686,12 @@
         let bounds = L.latLngBounds();
 
         imagePoints.forEach((point, index) => {
-          const marker = L.marker([point.latitude, point.longitude]).bindPopup(`
-              <h4>📷 ${point.filename}</h4>
-              <p><strong>Coordenadas:</strong><br>
-              Lat: ${point.latitude.toFixed(8)}<br>
-              Lng: ${point.longitude.toFixed(8)}</p>
-              <p><strong>Data/Hora:</strong><br>
-              ${point.datetime || "N/A"}</p>
-              <p><strong>Ações:</strong><br>
-              <button onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())" 
-                      style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
-                🔍 Zoom Máximo
-              </button></p>
-            `);
+          const currentName = renamedFiles.get(point.filename) || point.filename;
+          const isRenamed = renamedFiles.has(point.filename);
+          
+          const marker = L.marker([point.latitude, point.longitude]).bindPopup(
+            createPopupContent(point, index, currentName, isRenamed)
+          );
 
           markersLayer.addLayer(marker);
           bounds.extend([point.latitude, point.longitude]);
@@ -611,6 +701,129 @@
         if (imagePoints.length > 0) {
           map.fitBounds(bounds, { padding: [20, 20] });
         }
+      }
+
+      // Criar conteúdo do popup com opção de renomear
+      function createPopupContent(point, index, currentName, isRenamed) {
+        const fileNameWithoutExt = currentName.substring(0, currentName.lastIndexOf('.')) || currentName;
+        const fileExt = currentName.substring(currentName.lastIndexOf('.')) || '';
+        
+        return `
+          <h4>📷 ${isRenamed ? '<span class="renamed-indicator">✏️ ' + currentName + '</span>' : currentName}</h4>
+          ${isRenamed ? `<p class="original-name">Original: ${point.filename}</p>` : ''}
+          <p><strong>Coordenadas:</strong><br>
+          Lat: ${point.latitude.toFixed(8)}<br>
+          Lng: ${point.longitude.toFixed(8)}</p>
+          <p><strong>Data/Hora:</strong><br>
+          ${point.datetime || "N/A"}</p>
+          
+          <div class="rename-section">
+            <p><strong>Renomear arquivo:</strong></p>
+            <input type="text" id="newName_${index}" class="rename-input" 
+                   value="${fileNameWithoutExt}" placeholder="Novo nome do arquivo">
+            <div class="popup-buttons">
+              <button class="popup-btn success" onclick="renameFile(${index}, '${point.filename}', '${fileExt}')">
+                ✓ Renomear
+              </button>
+              <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
+                🔍 Zoom Max
+              </button>
+              ${isRenamed ? `<button class="popup-btn danger" onclick="resetFileName('${point.filename}', ${index})">↶ Desfazer</button>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Função para renomear arquivo
+      function renameFile(index, originalFilename, fileExt) {
+        const newNameInput = document.getElementById(`newName_${index}`);
+        const newName = newNameInput.value.trim();
+        
+        if (!newName) {
+          alert('Por favor, insira um nome válido.');
+          return;
+        }
+        
+        const fullNewName = newName + fileExt;
+        
+        // Verificar se o nome já está sendo usado
+        const existingNames = Array.from(renamedFiles.values());
+        const originalNames = imagePoints.map(p => p.filename);
+        
+        if (existingNames.includes(fullNewName) || originalNames.includes(fullNewName)) {
+          if (renamedFiles.get(originalFilename) !== fullNewName) {
+            alert('Este nome já está sendo usado por outro arquivo.');
+            return;
+          }
+        }
+        
+        // Salvar o novo nome
+        renamedFiles.set(originalFilename, fullNewName);
+        
+        // Atualizar a tabela
+        updateResultsTable();
+        
+        // Atualizar estatísticas
+        updateStats();
+        
+        // Replotar os pontos no mapa para atualizar os popups
+        plotPointsOnMap();
+        
+        // Habilitar botão de download ZIP
+        downloadZipBtn.disabled = false;
+        
+        // Fechar o popup
+        map.closePopup();
+      }
+
+      // Função para resetar nome do arquivo
+      function resetFileName(originalFilename, index) {
+        renamedFiles.delete(originalFilename);
+        
+        // Atualizar a tabela
+        updateResultsTable();
+        
+        // Atualizar estatísticas
+        updateStats();
+        
+        // Replotar os pontos no mapa
+        plotPointsOnMap();
+        
+        // Desabilitar botão ZIP se não há arquivos renomeados
+        if (renamedFiles.size === 0) {
+          downloadZipBtn.disabled = true;
+        }
+        
+        // Fechar o popup
+        map.closePopup();
+      }
+
+      // Atualizar tabela de resultados
+      function updateResultsTable() {
+        resultsBody.innerHTML = "";
+        
+        imagePoints.forEach((point) => {
+          const currentName = renamedFiles.get(point.filename) || point.filename;
+          const isRenamed = renamedFiles.has(point.filename);
+          
+          const row = resultsBody.insertRow();
+          
+          const nameCell = row.insertCell(0);
+          if (isRenamed) {
+            nameCell.innerHTML = `<span class="renamed-indicator">${currentName}</span><br><small class="original-name">${point.filename}</small>`;
+          } else {
+            nameCell.textContent = currentName;
+          }
+          
+          row.insertCell(1).textContent = point.latitude.toFixed(8);
+          row.insertCell(2).textContent = point.longitude.toFixed(8);
+          row.insertCell(3).textContent = point.datetime || "N/A";
+        });
+      }
+
+      // Atualizar estatísticas
+      function updateStats() {
+        document.getElementById("renamedImages").textContent = renamedFiles.size;
       }
 
       // Setup de eventos
@@ -640,6 +853,8 @@
 
         // Reset
         imagePoints = [];
+        originalFiles.clear();
+        renamedFiles.clear();
         processedImages = 0;
         imagesWithGeo = 0;
         totalImages = files.length;
@@ -647,6 +862,7 @@
 
         document.getElementById("totalImages").textContent = totalImages;
         document.getElementById("geoImages").textContent = "0";
+        document.getElementById("renamedImages").textContent = "0";
 
         // Mostrar barra de progresso
         progressBar.style.display = "block";
@@ -656,6 +872,7 @@
         // Desabilitar botões
         downloadBtn.disabled = true;
         downloadCsvBtn.disabled = true;
+        downloadZipBtn.disabled = true;
 
         // Limpar o mapa
         if (markersLayer) {
@@ -668,6 +885,9 @@
             updateProgress();
             return;
           }
+
+          // Armazenar o arquivo original
+          originalFiles.set(file.name, file);
 
           const reader = new FileReader();
           reader.onload = function (e) {
@@ -706,8 +926,7 @@
               // Se tivermos coordenadas válidas, adicionar aos resultados
               if (isValidCoordinate(lat, lng)) {
                 imagesWithGeo++;
-                document.getElementById("geoImages").textContent =
-                  imagesWithGeo;
+                document.getElementById("geoImages").textContent = imagesWithGeo;
 
                 // Adicionar ao array de pontos
                 imagePoints.push({
@@ -788,8 +1007,10 @@
           features: imagePoints.map((point) => ({
             type: "Feature",
             properties: {
-              filename: point.filename,
+              filename: renamedFiles.get(point.filename) || point.filename,
+              original_filename: point.filename,
               datetime: point.datetime,
+              renamed: renamedFiles.has(point.filename)
             },
             geometry: {
               type: "Point",
@@ -813,12 +1034,15 @@
       downloadCsvBtn.addEventListener("click", () => {
         if (imagePoints.length === 0) return;
 
-        let csvContent = "Nome do Arquivo,Latitude,Longitude,Data/Hora\n";
+        let csvContent = "Nome do Arquivo,Nome Original,Latitude,Longitude,Data/Hora,Renomeado\n";
 
         imagePoints.forEach((point) => {
-          csvContent += `"${point.filename}",${String(point.latitude)},${String(
+          const currentName = renamedFiles.get(point.filename) || point.filename;
+          const isRenamed = renamedFiles.has(point.filename);
+          
+          csvContent += `"${currentName}","${point.filename}",${String(point.latitude)},${String(
             point.longitude
-          )},"${point.datetime || ""}"\n`;
+          )},"${point.datetime || ""}","${isRenamed ? 'Sim' : 'Não'}"\n`;
         });
 
         const dataStr =
@@ -829,6 +1053,71 @@
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
+      });
+
+      // Função para carregar JSZip dinamicamente
+      function loadJSZip(callback) {
+        // Verificar se JSZip já está carregado
+        if (window.JSZip) {
+          callback();
+          return;
+        }
+
+        // Criar script para carregar JSZip
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+        script.onload = callback;
+        script.onerror = () => {
+          alert("Erro ao carregar JSZip. Verifique sua conexão com a internet.");
+        };
+
+        // Adicionar o script à página
+        document.head.appendChild(script);
+      }
+
+      // Gera e faz download do ZIP com fotos renomeadas
+      downloadZipBtn.addEventListener("click", () => {
+        if (imagePoints.length === 0) return;
+
+        loadJSZip(() => {
+          const zip = new JSZip();
+          let promises = [];
+
+          imagePoints.forEach((point) => {
+            const originalFile = originalFiles.get(point.filename);
+            if (originalFile) {
+              const currentName = renamedFiles.get(point.filename) || point.filename;
+              
+              const promise = new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  zip.file(currentName, e.target.result);
+                  resolve();
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(originalFile);
+              });
+              
+              promises.push(promise);
+            }
+          });
+
+          Promise.all(promises)
+            .then(() => {
+              return zip.generateAsync({ type: "blob" });
+            })
+            .then((blob) => {
+              const link = document.createElement("a");
+              link.href = URL.createObjectURL(blob);
+              link.download = "fotos_georreferenciadas.zip";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            })
+            .catch((error) => {
+              alert("Erro ao criar o ZIP: " + error.message);
+            });
+        });
       });
 
       // Inicializar o mapa quando a página carregar
