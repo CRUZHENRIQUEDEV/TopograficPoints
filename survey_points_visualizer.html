@@ -705,6 +705,9 @@
             <button onclick="loadExample1UTM()" class="example-btn">
               📝 Exemplo CSV 1 (UTM)
             </button>
+            <button onclick="loadExample1NewFormat()" class="example-btn">
+              📝 Novo Formato (CODE/LAT/LONG/H_GEO)
+            </button>
           </div>
         </div>
 
@@ -771,7 +774,7 @@
         <span>Ângulo = Desvio da perpendicularidade | Largura Útil = Largura × cos(ângulo) | ΔX/ΔY = Componentes de distância</span>
         <br>
         <strong>📋 Formatos Suportados:</strong>
-        <span>LAT/LONG | H_ORTHO/H_ORTO | Leste/Norte/Elev | Easting/Northing | Múltiplos formatos CSV com detecção automática de zona SIRGAS 2000</span>
+        <span>LAT/LONG | H_ORTHO/H_ORTO | H_GEO | Leste/Norte/Elev | Easting/Northing | CODE/Ponto | Múltiplos formatos CSV com detecção automática de zona SIRGAS 2000</span>
       </div>
 
       <div class="visualization">
@@ -912,6 +915,23 @@ P-02,LD_INICIO_OAE,-9.8974121600,-36.4164865000,188.99719,197.3135310000,-36.416
         document.getElementById('csvData1').value = exampleData1;
         processData();
       }
+      
+      function loadExample1NewFormat() {
+        const exampleDataNewFormat = `Ponto,CODE,Prec,Prec_1,Prec_2,Solucao,PDOP,Sate,LAT,LONG,H_GEO,OND_GEO,PREC_HOR
+1,MONTANTE DIREITA,0.019,0.019,0.047,RTX,0.8,38,-10.9959903361,-37.3016382834,8.908,-10.4325819199854,0.027
+2,MONTANTE ESQUERDA,0.032,0.032,0.055,RTX,0.9,34,-10.9960561613,-37.3015627305,8.961,-10.4329074211096,0.045
+3,LD_INICIO_OAE,0.03,0.03,0.067,RTX,0.9,37,-10.9962461189,-37.3018609293,8.854,-10.4326416447749,0.042
+4,LE_INICIO_OAE,0.023,0.023,0.055,RTX,0.9,36,-10.9963072759,-37.3017912499,8.846,-10.4329428645818,0.033
+5,APOIO,0.029,0.029,0.06,RTX,0.9,29,-10.9964489698,-37.3019151530,8.842,-10.4329745616281,0.041
+6,APOIO,0.03,0.03,0.06,RTX,0.9,37,-10.9963880456,-37.3019876858,8.794,-10.4326672037356,0.042
+23,LD_FINAL_OAE,0.017,0.017,0.043,RTX,0.9,38,-10.9978877404,-37.3033001911,9.004,-10.4329969535235,0.024
+24,LE_FINAL_OAE,0.025,0.025,0.048,RTX,0.9,38,-10.9979497785,-37.3032279719,8.987,-10.4333061411939,0.035
+25,JUSANTE ESQUERDA,0.021,0.021,0.062,RTX,0.9,38,-10.9981799561,-37.3034194465,8.873,-10.4333795659563,0.030
+26,JUSANTE DIREITA,0.028,0.028,0.072,RTX,0.9,39,-10.9981165396,-37.3034990302,9.175,-10.4330500394367,0.040`;
+
+        document.getElementById('csvData1').value = exampleDataNewFormat;
+        processData();
+      }
 
       function loadExample1UTM() {
         const exampleDataUTM = `Ponto,Codigo,Leste,Prec,Norte,Prec,Elev,Prec,Solucao,PDOP,Sate
@@ -1003,8 +1023,14 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         let headers;
         let dataStartIndex = 0;
 
-        // Detectar se a primeira linha contém cabeçalhos
-        const commonHeaders = ["Name", "Code", "CODE","codigo", "CODIGO", "Código",  "Lat", "LAT", "Long", "LONG", "x", "y", "H_ORTO", "H_ORTHO", "H_GEO", "Ponto", "Codigo", "Leste", "Norte", "Elev"];
+        // Detectar se a primeira linha contém cabeçalhos - VERSÃO EXPANDIDA
+        const commonHeaders = [
+          "Name", "Code", "CODE", "codigo", "CODIGO", "Código", "Ponto",
+          "Lat", "LAT", "Long", "LONG", "Longitude", "LONGITUDE", 
+          "x", "y", "X", "Y", "Leste", "Norte", "Easting", "Northing",
+          "H_ORTO", "H_ORTHO", "H_GEO", "Elev", "Elevation", "Altura", "Z",
+          "Prec", "Solucao", "PDOP", "Sate", "OND_GEO", "PREC_HOR"
+        ];
         const hasHeaders = commonHeaders.some(header => firstLine.includes(header));
         
         if (hasHeaders) {
@@ -1012,7 +1038,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           dataStartIndex = 1;
           debugLog(`Cabeçalhos detectados: ${headers.join(', ')}`);
         } else {
-          headers = ["Name", "Code", "CODE","codigo", "CODIGO", "Código", "LAT", "LONG", "H_GEO", "OND_GEOIDAL", "H_ORTHO"];
+          headers = ["Ponto", "CODE", "Prec", "Prec_1", "Prec_2", "Solucao", "PDOP", "Sate", "LAT", "LONG", "H_GEO", "OND_GEO", "PREC_HOR"];
           dataStartIndex = 0;
           debugLog("Usando cabeçalhos padrão");
         }
@@ -1272,8 +1298,8 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         data.forEach((row, index) => {
           debugLog(`Processando linha ${index}: ${JSON.stringify(row)}`);
           
-          const name = row.Name || row.Ponto || row.Code || row.Codigo || "";
-          const code = row.Code || row.Codigo || row.Name || row.Ponto || "";
+          const name = row.Name || row.Ponto || row.Code || row.CODE || row.Codigo || "";
+          const code = row.Code || row.CODE || row.Codigo || row.Name || row.Ponto || "";
 
           debugLog(`Nome: ${name}, Código: ${code}`);
 
@@ -1306,7 +1332,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
             
             let xCoord, yCoord, elevation, lat, lng;
 
-            // CORREÇÃO: Detectar coordenadas geográficas primeiro
+            // CORREÇÃO: Detectar coordenadas geográficas primeiro - VERSÃO EXPANDIDA
             if (row.LAT && row.LONG) {
               lat = parseFloat(row.LAT);
               lng = parseFloat(row.LONG);
@@ -1315,6 +1341,11 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
             } else if (row.Lat && row.Long) {
               lat = parseFloat(row.Lat);
               lng = parseFloat(row.Long);
+              xCoord = lng;
+              yCoord = lat;
+            } else if (row.LATITUDE && row.LONGITUDE) {
+              lat = parseFloat(row.LATITUDE);
+              lng = parseFloat(row.LONGITUDE);
               xCoord = lng;
               yCoord = lat;
             } else if (row.Norte && row.Leste) {
@@ -1326,6 +1357,9 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
             } else if (row.x && row.y) {
               xCoord = parseFloat(row.x);
               yCoord = parseFloat(row.y);
+            } else if (row.X && row.Y) {
+              xCoord = parseFloat(row.X);
+              yCoord = parseFloat(row.Y);
             } else if (row.Long || row.LONG) {
               xCoord = parseFloat(row.Long || row.LONG);
               yCoord = parseFloat(row.Lat || row.LAT);
@@ -1333,14 +1367,15 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
               lng = parseFloat(row.Long || row.LONG);
             }
 
-            // Elevação - suporte ampliado
+            // Elevação - suporte ampliado para novos formatos
             elevation = parseFloat(row.H_ORTHO) || 
                        parseFloat(row.H_ORTO) || 
+                       parseFloat(row.H_GEO) ||  // ADICIONADO SUPORTE PARA H_GEO
                        parseFloat(row.Elev) || 
                        parseFloat(row.Elevation) || 
-                       parseFloat(row.H_GEO) || 
                        parseFloat(row.Altura) || 
-                       parseFloat(row.Z) || 0;
+                       parseFloat(row.Z) || 
+                       parseFloat(row.z) || 0;
 
             debugLog(`Coordenadas: x=${xCoord}, y=${yCoord}, elevação=${elevation}`);
 
@@ -2488,7 +2523,25 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
           currentPoints2 = points2;
 
           if (Object.keys(points1).length === 0) {
-            errorMsg.innerHTML = '<div class="error">⚠️ Nenhum ponto LD ou LE encontrado no CSV 1! Certifique-se de que existem pontos com *_OAE ou *PONTE no nome ou código.</div>';
+            errorMsg.innerHTML = `
+              <div class="error" style="background: linear-gradient(135deg, #ffebee, #fff3e0); border: 3px solid #f44336; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; animation: pulse 2s infinite;">
+                <h3 style="color: #d32f2f; margin: 0 0 15px 0;">🚨 NENHUM PONTO LD OU LE ENCONTRADO NO CSV 1!</h3>
+                <div style="color: #c62828; font-size: 16px; margin-bottom: 15px;">
+                  Certifique-se de que existem pontos com identificadores válidos:
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ff9800;">
+                  <strong style="color: #e65100;">📍 Formatos Aceitos:</strong><br>
+                  <div style="color: #666; font-size: 14px; margin-top: 8px;">
+                    ✅ *_OAE (Ex: LD_INICIO_OAE, LE_FINAL_OAE)<br>
+                    ✅ *PONTE (Ex: LD INICIO PONTE, LE FINAL PONTE)<br>
+                    ✅ Deve estar no campo <strong>Name</strong>, <strong>Code</strong>, <strong>CODE</strong> ou <strong>Codigo</strong>
+                  </div>
+                </div>
+                <div style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-top: 15px; border: 2px solid #2196f3;">
+                  <strong style="color: #1976d2;">💡 Teste os exemplos disponíveis acima para verificar o funcionamento!</strong>
+                </div>
+              </div>
+            `;
             return;
           }
 
@@ -2505,7 +2558,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
       window.onload = function () {
         console.log("🚀 Página carregada - Analisador de Inclinações e Esconsidade ativo");
         updateZoomDisplay();
-        loadExample1UTM();
+        loadExample1NewFormat();
       };
     </script>
   </body>
