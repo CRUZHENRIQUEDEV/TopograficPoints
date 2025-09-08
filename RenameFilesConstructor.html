@@ -204,6 +204,12 @@
         background: rgba(255, 255, 255, 0.15);
       }
 
+      .form-input:disabled {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.5);
+        cursor: not-allowed;
+      }
+
       .checkbox-group {
         display: flex;
         align-items: center;
@@ -212,6 +218,11 @@
         background: rgba(255, 255, 255, 0.1);
         border-radius: 6px;
         font-size: 10px;
+      }
+
+      .checkbox-group.keep-original {
+        background: rgba(230, 126, 34, 0.2);
+        border: 1px solid rgba(230, 126, 34, 0.4);
       }
 
       .select-group {
@@ -237,6 +248,10 @@
         accent-color: #3498db;
       }
 
+      .checkbox-group.keep-original input[type="checkbox"] {
+        accent-color: #e67e22;
+      }
+
       /* Preview inline */
       .preview-boxes {
         display: flex;
@@ -252,12 +267,21 @@
         margin-top: 0.3rem;
       }
 
+      .preview-box.original-name {
+        background: rgba(230, 126, 34, 0.2);
+        border: 1px solid rgba(230, 126, 34, 0.4);
+      }
+
       .preview-title {
         font-size: 0.65rem;
         color: #2ecc71;
         font-weight: 600;
         margin-bottom: 0.2rem;
         text-transform: uppercase;
+      }
+
+      .preview-box.original-name .preview-title {
+        color: #e67e22;
       }
 
       .preview-text {
@@ -431,6 +455,12 @@
         box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
       }
 
+      .editable-input:disabled {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.5);
+        cursor: not-allowed;
+      }
+
       .original-name {
         font-weight: 500;
         color: rgba(255, 255, 255, 0.9);
@@ -462,6 +492,11 @@
       .file-status.pending {
         background: rgba(241, 196, 15, 0.3);
         color: #f1c40f;
+      }
+
+      .file-status.original {
+        background: rgba(230, 126, 34, 0.3);
+        color: #e67e22;
       }
 
       /* Mensagens */
@@ -691,6 +726,18 @@
         <!-- Controles centrais -->
         <div class="name-controls">
           <div class="section-title">🏷️ Nomenclatura</div>
+          
+          <!-- Checkbox para manter nome original -->
+          <div class="checkbox-group keep-original">
+            <input type="checkbox" id="keepOriginalName" />
+            <label>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 2px;">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              Manter nome original
+            </label>
+          </div>
+          
           <div class="form-group">
             <label>Prefixo:</label>
             <input type="text" id="prefixInput" class="form-input" placeholder="Ex: P" />
@@ -714,7 +761,7 @@
           </div>
           
           <!-- Preview do nome -->
-          <div class="preview-box">
+          <div id="namePreviewBox" class="preview-box">
             <div class="preview-title">👁️ Preview Nome:</div>
             <div id="namePreview" class="preview-text">Configurar para ver preview</div>
           </div>
@@ -865,6 +912,7 @@
       // ✅ Botão de copiar descrição na tabela
       // ✅ Aplicar texto digitado manualmente ao clicar "Aplicar Atual"
       // ✅ Numeração sequencial personalizada (ex: F-20 → F-21, F-22...)
+      // ✅ Checkbox para manter nome original dos arquivos
 
       // Dados dos grupos de palavras (compactados para economia de espaço)
       const elementos = [
@@ -894,8 +942,6 @@
         "13",
         "14",
         "15",
-        
-       
       ];
 
       const danos = [
@@ -962,11 +1008,13 @@
       const fileCounter = document.getElementById("fileCounter");
       const currentFileSection = document.getElementById("currentFileSection");
       const currentFileName = document.getElementById("currentFileName");
+      const keepOriginalName = document.getElementById("keepOriginalName");
       const prefixInput = document.getElementById("prefixInput");
       const suffixInput = document.getElementById("suffixInput");
       const addNumbering = document.getElementById("addNumbering");
       const separatorSelect = document.getElementById("separatorSelect");
       const namePreview = document.getElementById("namePreview");
+      const namePreviewBox = document.getElementById("namePreviewBox");
       const descriptionPreview = document.getElementById("descriptionPreview");
       const progressInfo = document.getElementById("progressInfo");
       const prevBtn = document.getElementById("prevBtn");
@@ -995,6 +1043,7 @@
 
       // Event listeners
       fileInput.addEventListener("change", handleFileSelect);
+      keepOriginalName.addEventListener("change", toggleNameControls);
       prefixInput.addEventListener("input", updatePreviews);
       suffixInput.addEventListener("input", updatePreviews);
       addNumbering.addEventListener("change", updatePreviews);
@@ -1016,8 +1065,31 @@
       // Teclas de navegação
       document.addEventListener("keydown", handleKeyNavigation);
 
+      // Toggle dos controles de nomenclatura
+      function toggleNameControls() {
+        const isKeepOriginal = keepOriginalName.checked;
+        
+        // Habilitar/desabilitar controles de nomenclatura
+        prefixInput.disabled = isKeepOriginal;
+        suffixInput.disabled = isKeepOriginal;
+        addNumbering.disabled = isKeepOriginal;
+        separatorSelect.disabled = isKeepOriginal;
+        
+        // Mudar visual do preview
+        if (isKeepOriginal) {
+          namePreviewBox.classList.add('original-name');
+        } else {
+          namePreviewBox.classList.remove('original-name');
+        }
+        
+        updatePreviews();
+      }
+
       // Detectar padrão de numeração personalizada
       function detectAndSetNumberingPattern(manualName) {
+        // Se está mantendo nome original, não detectar padrão
+        if (keepOriginalName.checked) return;
+        
         // Remover extensão para análise
         const nameWithoutExt = manualName.substring(0, manualName.lastIndexOf('.')) || manualName;
         
@@ -1114,9 +1186,6 @@
         
         const name = generateName(currentFileIndex);
         namePreview.textContent = name;
-        
-        // IMPORTANTE: Não atualizar a tabela automaticamente aqui
-        // A tabela só deve ser atualizada quando o usuário clicar em "Aplicar"
       }
 
       function updateDescriptionPreview() {
@@ -1130,8 +1199,13 @@
         }
       }
 
-      // Gerar nome (com suporte a numeração personalizada)
+      // Gerar nome (com suporte a numeração personalizada e nome original)
       function generateName(index) {
+        // Se deve manter nome original
+        if (keepOriginalName.checked) {
+          return files[index].name;
+        }
+        
         // Se há padrão personalizado detectado, usar ele
         if (customNumberingPattern) {
           const currentNumber = customNumberingPattern.startNumber + index;
@@ -1182,7 +1256,8 @@
           originalName: file.name,
           newName: "",
           description: "",
-          file: file
+          file: file,
+          keepOriginal: false
         }));
 
         fileCounter.textContent = `${files.length} arquivo(s)`;
@@ -1243,9 +1318,10 @@
         // Usar texto manual se existir, senão gerar automaticamente
         fileData[currentFileIndex].newName = manualName || generateName(currentFileIndex);
         fileData[currentFileIndex].description = manualDescription || generateDescription();
+        fileData[currentFileIndex].keepOriginal = keepOriginalName.checked;
         
         // Detectar padrão de numeração se foi digitado manualmente
-        if (manualName && currentFileIndex === 0) {
+        if (manualName && currentFileIndex === 0 && !keepOriginalName.checked) {
           detectAndSetNumberingPattern(manualName);
         }
         
@@ -1276,6 +1352,7 @@
         if (files.length === 0) return;
         
         const currentDescription = generateDescription();
+        const keepOriginal = keepOriginalName.checked;
         let appliedCount = 0;
         
         fileData.forEach((item, index) => {
@@ -1291,8 +1368,14 @@
             manualDescription = descInput ? descInput.value.trim() : "";
           }
           
-          // Para nome: usar manual se existir, senão gerar
-          item.newName = manualName || generateName(index);
+          // Para nome: usar manual se existir, senão gerar baseado na configuração
+          if (manualName) {
+            item.newName = manualName;
+          } else {
+            item.newName = keepOriginal ? item.originalName : generateName(index);
+          }
+          
+          item.keepOriginal = keepOriginal;
           
           // Para descrição: só aplicar se não existir ainda OU se houver uma seleção atual
           if (!item.description || currentDescription || manualDescription) {
@@ -1310,10 +1393,14 @@
         updateTable();
         updateButtonStates();
         
-        if (appliedCount > 0) {
-          showMessage(`Nomes aplicados para todos! Descrição aplicada para ${appliedCount} arquivo(s).`, "success");
+        if (keepOriginal) {
+          showMessage(`Nomes originais mantidos! Descrição aplicada para ${appliedCount} arquivo(s).`, "success");
         } else {
-          showMessage("Nomes aplicados para todos! Descrições existentes preservadas.", "success");
+          if (appliedCount > 0) {
+            showMessage(`Nomes aplicados para todos! Descrição aplicada para ${appliedCount} arquivo(s).`, "success");
+          } else {
+            showMessage("Nomes aplicados para todos! Descrições existentes preservadas.", "success");
+          }
         }
       }
 
@@ -1349,10 +1436,16 @@
           if (index === currentFileIndex) {
             status = "current";
             statusText = "Atual";
+          } else if (item.keepOriginal) {
+            status = "original";
+            statusText = "Original";
           } else if (item.newName && item.description) {
             status = "done";
             statusText = "✓";
           }
+          
+          // Determinar se o campo de nome deve estar desabilitado
+          const nameDisabled = item.keepOriginal ? 'disabled' : '';
           
           row.innerHTML = `
             <td>
@@ -1367,12 +1460,13 @@
               <input 
                 type="text" 
                 class="editable-input" 
-                value="${item.newName}" 
+                value="${item.keepOriginal ? item.originalName : item.newName}" 
                 data-index="${index}" 
                 data-field="newName"
                 data-row="${index}"
                 data-col="1"
-                placeholder="Nome do arquivo..."
+                placeholder="${item.keepOriginal ? 'Nome original mantido' : 'Nome do arquivo...'}"
+                ${nameDisabled}
               />
             </td>
             <td>
@@ -1411,8 +1505,12 @@
           input.addEventListener("input", (e) => {
             const index = parseInt(e.target.dataset.index);
             const field = e.target.dataset.field;
-            fileData[index][field] = e.target.value;
-            updateButtonStates();
+            
+            // Só atualizar o fileData se não for um campo desabilitado
+            if (!e.target.disabled) {
+              fileData[index][field] = e.target.value;
+              updateButtonStates();
+            }
             
             // Atualizar estado do botão de copiar quando descrição muda
             if (field === "description") {
@@ -1443,7 +1541,14 @@
         const copyBtn = row.querySelector('button[onclick*="copyDescription"]');
         
         // Atualizar com os dados salvos no fileData
-        if (nameInput) nameInput.value = fileData[index].newName || "";
+        if (nameInput && !fileData[index].keepOriginal) {
+          nameInput.value = fileData[index].newName || "";
+          nameInput.disabled = false;
+        } else if (nameInput && fileData[index].keepOriginal) {
+          nameInput.value = fileData[index].originalName;
+          nameInput.disabled = true;
+        }
+        
         if (descInput) descInput.value = fileData[index].description || "";
         
         // Atualizar estado do botão de copiar
@@ -1475,6 +1580,8 @@
         } else if (e.key === "Enter") {
           e.preventDefault();
           navigateCell(0, 1);
+        } else if (e.key === "Escape") {
+          closeModal();
         }
       }
 
@@ -1490,7 +1597,7 @@
 
         // Focar nova célula
         const newInput = document.querySelector(`input[data-row="${newRow}"][data-col="${newCol}"]`);
-        if (newInput) {
+        if (newInput && !newInput.disabled) {
           newInput.focus();
           currentCell = { row: newRow, col: newCol };
         }
@@ -1500,13 +1607,13 @@
       function updateButtonStates() {
         const hasFiles = files.length > 0;
         const hasAllNames = fileData.length > 0 && fileData.every(item => 
-          item.newName.trim() !== ""
+          item.newName.trim() !== "" || item.keepOriginal
         );
 
         applyCurrentBtn.disabled = currentFileIndex === -1;
         applyAllBtn.disabled = !hasFiles;
         exportCsvBtn.disabled = !hasFiles;
-        downloadBtn.disabled = !hasAllNames; // Só precisa de nomes, descrição é opcional
+        downloadBtn.disabled = !hasAllNames;
       }
 
       // Copiar descrição
@@ -1542,9 +1649,11 @@
           return;
         }
 
-        let csvContent = "Nome Original\tNovo Nome\tDescrição\n";
+        let csvContent = "Nome Original\tNovo Nome\tDescrição\tTipo\n";
         fileData.forEach(item => {
-          csvContent += `${item.originalName}\t${item.newName}\t${item.description}\n`;
+          const type = item.keepOriginal ? "Nome Original Mantido" : "Renomeado";
+          const newName = item.keepOriginal ? item.originalName : item.newName;
+          csvContent += `${item.originalName}\t${newName}\t${item.description}\t${type}\n`;
         });
 
         const blob = new Blob([csvContent], { type: 'text/plain;charset=utf-8' });
@@ -1561,7 +1670,7 @@
       // Download ZIP
       function downloadFiles() {
         const hasAllNames = fileData.every(item => 
-          item.newName.trim() !== ""
+          item.newName.trim() !== "" || item.keepOriginal
         );
 
         if (!hasAllNames) {
@@ -1592,10 +1701,11 @@
           const zip = new JSZip();
           const promises = fileData.map((item) => {
             return new Promise((resolve) => {
-              if (!item.newName.trim()) { resolve(); return; }
+              const finalName = item.keepOriginal ? item.originalName : (item.newName.trim() || item.originalName);
+              
               const reader = new FileReader();
               reader.onload = (e) => {
-                zip.file(item.newName, e.target.result);
+                zip.file(finalName, e.target.result);
                 resolve();
               };
               reader.readAsArrayBuffer(item.file);
@@ -1607,7 +1717,7 @@
             .then((blob) => {
               const link = document.createElement("a");
               link.href = URL.createObjectURL(blob);
-              link.download = "arquivos_renomeados.zip";
+              link.download = "arquivos_processados.zip";
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
@@ -1654,16 +1764,21 @@
         files = [];
         fileData = [];
         currentFileIndex = -1;
-        customNumberingPattern = null; // Resetar padrão personalizado
+        customNumberingPattern = null;
         fileInput.value = "";
         prefixInput.value = "";
         suffixInput.value = "";
         addNumbering.checked = true;
-        separatorSelect.value = ",";
+        separatorSelect.value = ", ";
+        keepOriginalName.checked = false;
+
+        // Reabilitar controles
+        toggleNameControls();
 
         document.querySelectorAll('input[type="checkbox"][id^="elemento_"], input[type="checkbox"][id^="dano_"], input[type="checkbox"][id^="localizacao_"]')
           .forEach(cb => cb.checked = false);
 
+        selectedOrder = [];
         fileCounter.textContent = "0 arquivos";
         currentFileSection.style.display = "none";
         progressInfo.textContent = "-";
