@@ -863,32 +863,29 @@
       // ✅ Modal customizado para confirmações (bonito e profissional)
       // ✅ Suporte a ESC para fechar modal
       // ✅ Botão de copiar descrição na tabela
+      // ✅ Aplicar texto digitado manualmente ao clicar "Aplicar Atual"
+      // ✅ Numeração sequencial personalizada (ex: F-20 → F-21, F-22...)
 
       // Dados dos grupos de palavras (compactados para economia de espaço)
       const elementos = [
         "ALA",
-        "APARELHO DE APOIO", 
-        "ARCO",
-        "ATERRO",
-        "BERCO", 
-        "BLOCO",
-        "CALÇADA",
-        "CORTINA",
-        "DEFENSA",
-        "ESTACA",
-        "GUARDA CORPO",
-        "JUNTA",
-        "LAJE", 
-        "LONGARINA",
-        "MURO",
-        "PAVIMENTO",
-        "PILAR",
-        "SAPATA", 
-        "TRANSVERSINA", 
-        "TRAVESSA",
-        "TRELIÇA",
-        "TUBULÃO",
-        "VIGA T OU I"
+        "APOIO",
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "PAREDE FRONTAL",
       ];
 
       const danos = [
@@ -945,11 +942,16 @@
       ];
 
       const localizacao = [
-        "DIAGONAL",
         "INFERIOR",
+        "SUPERIOR",
         "LD",
         "LE",
-        "SUPERIOR",
+        "TRAMO",
+        "APOIO",
+        "SUPERESTRUTURA",
+        "MESOESTRUTURA",
+        "INFRAESTRUTURA",
+        "DIAGONAL",
         "TABULEIRO",
         "TRANSIÇÃO 01",
         "TRANSIÇÃO 02",   
@@ -987,6 +989,9 @@
       let currentFileIndex = -1;
       let currentCell = { row: 0, col: 1 }; // Para navegação Excel
       let selectedOrder = []; // Array para rastrear ordem de seleção
+      
+      // Variáveis para numeração personalizada
+      let customNumberingPattern = null; // Armazena padrão detectado: {prefix: "F-", startNumber: 20}
 
       // Event listeners
       fileInput.addEventListener("change", handleFileSelect);
@@ -1010,6 +1015,42 @@
 
       // Teclas de navegação
       document.addEventListener("keydown", handleKeyNavigation);
+
+      // Detectar padrão de numeração personalizada
+      function detectAndSetNumberingPattern(manualName) {
+        // Remover extensão para análise
+        const nameWithoutExt = manualName.substring(0, manualName.lastIndexOf('.')) || manualName;
+        
+        // Regex para detectar padrões como: F-20, IMG-001, Photo_15, etc.
+        const patterns = [
+          /^(.+?)[-_\s](\d+)$/, // F-20, IMG_001, Photo 15
+          /^(.+?)(\d+)$/, // F20, IMG001
+        ];
+        
+        for (const pattern of patterns) {
+          const match = nameWithoutExt.match(pattern);
+          if (match) {
+            const prefix = match[1];
+            const number = parseInt(match[2]);
+            
+            if (!isNaN(number)) {
+              customNumberingPattern = {
+                prefix: prefix,
+                startNumber: number,
+                separator: match[0].includes('-') ? '-' : 
+                          match[0].includes('_') ? '_' : 
+                          match[0].includes(' ') ? ' ' : ''
+              };
+              
+              showMessage(`Padrão detectado: ${prefix}${customNumberingPattern.separator}${number}+`, "info");
+              return;
+            }
+          }
+        }
+        
+        // Se não detectou padrão, manter null
+        customNumberingPattern = null;
+      }
 
       // Inicialização
       initializeWordsGrids();
@@ -1089,8 +1130,22 @@
         }
       }
 
-      // Gerar nome (sem extensão editável)
+      // Gerar nome (com suporte a numeração personalizada)
       function generateName(index) {
+        // Se há padrão personalizado detectado, usar ele
+        if (customNumberingPattern) {
+          const currentNumber = customNumberingPattern.startNumber + index;
+          const name = customNumberingPattern.prefix + 
+                      customNumberingPattern.separator + 
+                      String(currentNumber).padStart(String(customNumberingPattern.startNumber).length, "0");
+          
+          // Adicionar extensão original
+          const originalFile = files[index];
+          const extension = originalFile.name.substring(originalFile.name.lastIndexOf("."));
+          return name + extension;
+        }
+        
+        // Lógica original se não há padrão personalizado
         const prefix = prefixInput.value.trim();
         const suffix = suffixInput.value.trim();
         const shouldAddNumber = addNumbering.checked;
@@ -1173,9 +1228,26 @@
       function applyToCurrent() {
         if (currentFileIndex === -1) return;
         
-        // Salvar os dados do arquivo atual
-        fileData[currentFileIndex].newName = generateName(currentFileIndex);
-        fileData[currentFileIndex].description = generateDescription();
+        // Verificar se há texto digitado manualmente na tabela
+        const currentRow = document.querySelector(`tr[data-index="${currentFileIndex}"]`);
+        let manualName = "";
+        let manualDescription = "";
+        
+        if (currentRow) {
+          const nameInput = currentRow.querySelector('input[data-field="newName"]');
+          const descInput = currentRow.querySelector('input[data-field="description"]');
+          manualName = nameInput ? nameInput.value.trim() : "";
+          manualDescription = descInput ? descInput.value.trim() : "";
+        }
+        
+        // Usar texto manual se existir, senão gerar automaticamente
+        fileData[currentFileIndex].newName = manualName || generateName(currentFileIndex);
+        fileData[currentFileIndex].description = manualDescription || generateDescription();
+        
+        // Detectar padrão de numeração se foi digitado manualmente
+        if (manualName && currentFileIndex === 0) {
+          detectAndSetNumberingPattern(manualName);
+        }
         
         // Atualizar a linha da tabela com os dados salvos
         updateTableRow(currentFileIndex);
@@ -1207,12 +1279,27 @@
         let appliedCount = 0;
         
         fileData.forEach((item, index) => {
-          // Sempre aplicar novo nome
-          item.newName = generateName(index);
+          // Verificar se há texto digitado manualmente na tabela para este arquivo
+          const row = document.querySelector(`tr[data-index="${index}"]`);
+          let manualName = "";
+          let manualDescription = "";
           
-          // Só aplicar descrição se não existir ainda OU se houver uma seleção atual
-          if (!item.description || currentDescription) {
-            if (currentDescription) {
+          if (row) {
+            const nameInput = row.querySelector('input[data-field="newName"]');
+            const descInput = row.querySelector('input[data-field="description"]');
+            manualName = nameInput ? nameInput.value.trim() : "";
+            manualDescription = descInput ? descInput.value.trim() : "";
+          }
+          
+          // Para nome: usar manual se existir, senão gerar
+          item.newName = manualName || generateName(index);
+          
+          // Para descrição: só aplicar se não existir ainda OU se houver uma seleção atual
+          if (!item.description || currentDescription || manualDescription) {
+            if (manualDescription) {
+              item.description = manualDescription;
+              appliedCount++;
+            } else if (currentDescription) {
               item.description = currentDescription;
               appliedCount++;
             }
@@ -1567,6 +1654,7 @@
         files = [];
         fileData = [];
         currentFileIndex = -1;
+        customNumberingPattern = null; // Resetar padrão personalizado
         fileInput.value = "";
         prefixInput.value = "";
         suffixInput.value = "";
