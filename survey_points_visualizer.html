@@ -420,6 +420,46 @@
         border-radius: 5px;
         border: 1px solid #1976d2;
       }
+
+      .methodology-section {
+        margin-top: 25px;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        border: 2px solid #6c757d;
+      }
+
+      .methodology-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .methodology-card {
+        background: white;
+        padding: 12px;
+        border-radius: 6px;
+        border: 2px solid;
+      }
+
+      .methodology-transversal {
+        border-color: #d32f2f;
+      }
+
+      .methodology-longitudinal {
+        border-color: #ff9800;
+      }
+
+      .methodology-skew {
+        border-color: #2196f3;
+      }
+
+      @media (max-width: 768px) {
+        .methodology-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -787,6 +827,43 @@
         
         <!-- Resumo Executivo -->
         <div id="executiveSummary" style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border-left: 4px solid #007bff;"></div>
+
+        <!-- Seção de Metodologia -->
+        <div class="methodology-section">
+          <h4 style="margin: 0 0 15px 0; color: #495057; text-align: center;">📐 Metodologia de Análise Aplicada</h4>
+          <div class="methodology-grid">
+            <div class="methodology-card methodology-transversal">
+              <div style="font-weight: bold; color: #d32f2f; margin-bottom: 8px;">🔄 INCLINAÇÕES TRANSVERSAIS (≤5%)</div>
+              <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                <strong>✓ LD_INÍCIO ↔ LE_INÍCIO</strong><br>
+                <em>Lado direito com lado esquerdo no mesmo ponto</em><br><br>
+                <strong>✓ LD_FINAL ↔ LE_FINAL</strong><br>
+                <em>Lado direito com lado esquerdo no mesmo ponto</em>
+              </div>
+            </div>
+            <div class="methodology-card methodology-longitudinal">
+              <div style="font-weight: bold; color: #ff9800; margin-bottom: 8px;">↕️ INCLINAÇÕES LONGITUDINAIS (≤2,5%)</div>
+              <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                <strong>✓ LD_INÍCIO ↔ LD_FINAL</strong><br>
+                <em>Mesmo lado direito entre pontos</em><br><br>
+                <strong>✓ LE_INÍCIO ↔ LE_FINAL</strong><br>
+                <em>Mesmo lado esquerdo entre pontos</em>
+              </div>
+            </div>
+            <div class="methodology-card methodology-skew">
+              <div style="font-weight: bold; color: #2196f3; margin-bottom: 8px;">📐 ANÁLISE DE ESCONSIDADE</div>
+              <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                <strong>✓ Ângulo de Esconsidade</strong><br>
+                <em>Desvio da perpendicularidade</em><br><br>
+                <strong>✓ Largura Útil = Largura × cos(θ)</strong><br>
+                <em>Largura efetiva para veículos</em>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 12px; font-size: 12px; color: #6c757d;">
+            <strong>Boas Práticas da Engenharia de Pontes</strong> - Sistema automatizado de análise técnica de tabuleiros com detecção de esconsidade
+          </div>
+        </div>
       </div>
 
       <div id="errorMsg"></div>

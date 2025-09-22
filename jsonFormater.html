@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatador de Mensagens JSON</title>
+    <style>
+        /* ===== FORMATADOR DE MENSAGENS JSON - VERSÃO 2.1 ===== */
+        
+        /* ===== SISTEMA DE VARIÁVEIS ===== */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            
+            --border-color: #ddd;
+            --border-light: #dee2e6;
+        }
+
+        /* ===== TEMA ESCURO ===== */
+        [data-theme="dark"] {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #404040;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #999999;
+            
+            --border-color: #555555;
+            --border-light: #666666;
+        }
+
+        /* ===== ESTILOS GERAIS ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .container {
+            box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+        }
+
+        /* ===== CABEÇALHO ===== */
+        h1 {
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 14px;
+            padding: 10px;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-radius: 8px;
+            border: 1px solid var(--primary-color);
+        }
+
+        [data-theme="dark"] .subtitle {
+            background: linear-gradient(135deg, #1e3a8a, #4c1d95);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* ===== SELETOR DE TEMA ===== */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .theme-selector select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-selector label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        /* ===== ENTRADA DE DADOS ===== */
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .csv-section {
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            transition: all 0.3s ease;
+        }
+
+        .csv-input {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .csv-input label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        /* ===== BOTÕES ===== */
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-copy {
+            background: var(--success-color);
+        }
+
+        .btn-copy:hover {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        /* ===== CONTROLES ===== */
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* ===== ÁREA DE SAÍDA ===== */
+        .output-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        /* ===== MENSAGENS ===== */
+        .message-item {
+            background: var(--bg-secondary);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .message-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .message-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-light);
+            padding-top: 10px;
+        }
+
+        .message-date {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .message-author {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        /* ===== MENSAGENS DE STATUS ===== */
+        .error {
+            color: white;
+            background: var(--danger-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: white;
+            background: var(--success-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px;
+        }
+
+        .empty-state div {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* ===== RESPONSIVIDADE ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+                padding: 8px;
+                margin-bottom: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px 20px;
+                margin: 5px 0;
+                width: 100%;
+                max-width: 250px;
+            }
+
+            textarea {
+                height: 150px;
+                font-size: 11px;
+            }
+
+            .message-text {
+                font-size: 14px;
+            }
+
+            .message-meta {
+                font-size: 12px;
+            }
+
+            .theme-selector {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 20px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                padding: 8px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subtitle {
+                font-size: 11px;
+                padding: 6px;
+            }
+
+            textarea {
+                height: 120px;
+                font-size: 10px;
+                padding: 8px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 8px 16px;
+            }
+
+            .message-item {
+                padding: 15px;
+            }
+
+            .message-text {
+                font-size: 13px;
+            }
+        }
+
+        /* ===== TRANSIÇÕES SUAVES ===== */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Seletor de Tema -->
+    <div class="theme-selector">
+        <label for="themeSelect">Tema:</label>
+        <select id="themeSelect">
+            <option value="light">Claro</option>
+            <option value="dark">Escuro</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <h1>📝 Formatador de Mensagens JSON</h1>
+        <div class="subtitle">Cole seu JSON e obtenha mensagens formatadas no padrão desejado</div>
+        
+        <div class="input-section">
+            <div class="csv-section">
+                <div class="csv-input">
+                    <label for="jsonInput" class="section-title">JSON das Mensagens:</label>
+                    <textarea id="jsonInput" placeholder='[
+    {
+        "idMensagem": "86d1df16-7ca3-4bf9-bded-3111f868d9cd",
+        "mensagem": "Bom dia, segue para avaliação.",
+        "nomeUsuario": "Murilo Vieira Rocha",
+        "perfil": "Inspetor",
+        "dataHistorico": "2025-09-15 12:46:07",
+        "status": "Em cadastro"
+    }
+]'></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="processBtn">🔄 Processar Mensagens</button>
+            <button id="clearBtn" class="btn-secondary">🗑️ Limpar Tudo</button>
+            <button id="copyBtn" class="btn-copy" style="display: none;">📋 Copiar Resultado</button>
+        </div>
+        
+        <div id="messages"></div>
+        
+        <div id="output" class="output-section" style="display: none;">
+            <div class="empty-state">
+                <div>📄</div>
+                <p>Nenhuma mensagem processada ainda</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Versão: 2.1
+        
+        // Elementos DOM
+        const jsonInput = document.getElementById('jsonInput');
+        const processBtn = document.getElementById('processBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const messagesDiv = document.getElementById('messages');
+        const outputDiv = document.getElementById('output');
+        const themeSelect = document.getElementById('themeSelect');
+
+        // Event Listeners
+        processBtn.addEventListener('click', processMessages);
+        clearBtn.addEventListener('click', clearAll);
+        copyBtn.addEventListener('click', copyResult);
+        themeSelect.addEventListener('change', changeTheme);
+
+        // Inicialização
+        initializeTheme();
+
+        /**
+         * Processa as mensagens do JSON
+         */
+        function processMessages() {
+            const jsonText = jsonInput.value.trim();
+            
+            if (!jsonText) {
+                showError('Por favor, cole o JSON das mensagens.');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(jsonText);
+                const messages = Array.isArray(data) ? data : [data];
+                
+                if (messages.length === 0) {
+                    showError('Nenhuma mensagem encontrada no JSON.');
+                    return;
+                }
+
+                const formattedMessages = formatMessages(messages);
+                displayMessages(formattedMessages);
+                showSuccess(`${messages.length} mensagem(ns) processada(s) com sucesso!`);
+                
+            } catch (error) {
+                showError(`Erro ao processar JSON: ${error.message}`);
+            }
+        }
+
+        /**
+         * Formata as mensagens para exibição
+         * @param {Array} messages - Array de mensagens
+         * @returns {Array} Mensagens formatadas
+         */
+        function formatMessages(messages) {
+            return messages.map(msg => {
+                const formattedDate = formatDate(msg.dataHistorico);
+                const authorInfo = `${msg.nomeUsuario} - ${msg.perfil}`;
+                
+                return {
+                    text: msg.mensagem,
+                    date: formattedDate,
+                    author: authorInfo,
+                    raw: `${msg.mensagem}\n${formattedDate}\n${authorInfo}`
+                };
+            });
+        }
+
+        /**
+         * Formata data para padrão brasileiro
+         * @param {string} dateString - String da data
+         * @returns {string} Data formatada
+         */
+        function formatDate(dateString) {
+            if (!dateString) return 'Data não informada';
+            
+            try {
+                const date = new Date(dateString.replace(' ', 'T'));
+                return date.toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            } catch {
+                return dateString;
+            }
+        }
+
+        /**
+         * Exibe as mensagens formatadas na tela
+         * @param {Array} formattedMessages - Mensagens formatadas
+         */
+        function displayMessages(formattedMessages) {
+            outputDiv.style.display = 'block';
+            outputDiv.innerHTML = '';
+            
+            formattedMessages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-item';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-text">${msg.text}</div>
+                    <div class="message-meta">
+                        <div class="message-date">${msg.date}</div>
+                        <div class="message-author">${msg.author}</div>
+                    </div>
+                `;
+                
+                outputDiv.appendChild(messageDiv);
+            });
+            
+            copyBtn.style.display = 'inline-block';
+        }
+
+        /**
+         * Limpa todos os campos e resultados
+         */
+        function clearAll() {
+            jsonInput.value = '';
+            messagesDiv.innerHTML = '';
+            outputDiv.style.display = 'none';
+            copyBtn.style.display = 'none';
+        }
+
+        /**
+         * Copia o resultado formatado para área de transferência
+         */
+        function copyResult() {
+            const messageItems = outputDiv.querySelectorAll('.message-item');
+            let result = '';
+            
+            messageItems.forEach((item, index) => {
+                const text = item.querySelector('.message-text').textContent;
+                const date = item.querySelector('.message-date').textContent;
+                const author = item.querySelector('.message-author').textContent;
+                
+                result += `${text}\n${date}\n${author}`;
+                if (index < messageItems.length - 1) {
+                    result += '\n\n';
+                }
+            });
+            
+            navigator.clipboard.writeText(result).then(() => {
+                showSuccess('Resultado copiado para a área de transferência!');
+            }).catch(() => {
+                showError('Erro ao copiar. Tente selecionar manualmente.');
+            });
+        }
+
+        /**
+         * Exibe mensagem de erro
+         * @param {string} message - Mensagem de erro
+         */
+        function showError(message) {
+            messagesDiv.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        /**
+         * Exibe mensagem de sucesso
+         * @param {string} message - Mensagem de sucesso
+         */
+        function showSuccess(message) {
+            messagesDiv.innerHTML = `<div class="success">✅ ${message}</div>`;
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        /**
+         * Altera o tema da aplicação
+         */
+        function changeTheme() {
+            const theme = themeSelect.value;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('selectedTheme', theme);
+        }
+
+        /**
+         * Inicializa o tema salvo
+         */
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'light';
+            themeSelect.value = savedTheme;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+</body>
+</html>
