@@ -379,6 +379,12 @@
             margin-bottom: 8px;
         }
 
+        .response-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
         .saved-response-label {
             font-size: 12px;
             font-weight: 600;
@@ -394,6 +400,32 @@
             font-size: 14px;
             line-height: 1.5;
             color: var(--text-primary);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .action-btn.copy-btn {
+            color: var(--info);
+        }
+
+        .action-btn.copy-btn:hover {
+            background: rgba(8, 145, 178, 0.1);
         }
 
         .edit-response-btn {
@@ -586,7 +618,7 @@ Jéssica Fall Nogueira Chaves - Avaliador'></textarea>
     </div>
 
     <script>
-        // Versão: 4.0 - Sistema de Chat/Resposta implementado
+        // Versão: 4.1 - Adicionado botão para copiar resposta individual
         
         let messages = [];
         let completionStates = new Map();
@@ -849,16 +881,36 @@ Jéssica Fall Nogueira Chaves - Avaliador'></textarea>
                 <div class="saved-response">
                     <div class="saved-response-header">
                         <span class="saved-response-label">✅ Sua Resposta</span>
-                        <div>
+                        <div class="response-actions">
                             <span class="saved-response-date">${response.date}</span>
-                            <button class="edit-response-btn" onclick="editResponse(${index})">
-                                Editar
+                            <button class="action-btn copy-btn" onclick="copyResponse(${index})" title="Copiar resposta">
+                                📋 Copiar
+                            </button>
+                            <button class="action-btn" onclick="editResponse(${index})" title="Editar resposta">
+                                ✏️ Editar
                             </button>
                         </div>
                     </div>
-                    <div class="saved-response-text">${response.text}</div>
+                    <div class="saved-response-text" id="response-text-${index}">${response.text}</div>
                 </div>
             `;
+        }
+
+        /**
+         * Copia o texto de uma resposta específica
+         */
+        function copyResponse(index) {
+            const response = messageResponses.get(index);
+            if (!response) {
+                showAlert('Resposta não encontrada', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(response.text).then(() => {
+                showAlert('Resposta copiada para a área de transferência!', 'success');
+            }).catch(() => {
+                showAlert('Erro ao copiar. Tente novamente.', 'error');
+            });
         }
 
         /**
