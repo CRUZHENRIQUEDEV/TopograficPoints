@@ -391,6 +391,135 @@
         background: linear-gradient(45deg, #8e44ad, #7d3c98);
       }
 
+      /* Estilos para o preview de imagem */
+      .image-preview {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        max-width: 90vw;
+        max-height: 90vh;
+        display: none;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+      }
+
+      .image-preview.show {
+        display: block;
+        opacity: 1;
+        pointer-events: all;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .image-preview.loading {
+        display: block;
+        opacity: 1;
+        pointer-events: none;
+      }
+
+      .preview-header {
+        color: white;
+        margin-bottom: 15px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .preview-image {
+        max-width: 100%;
+        max-height: 60vh;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        display: block;
+        margin: 0 auto;
+      }
+
+      .preview-info {
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 15px;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .preview-coords {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+      }
+
+      .preview-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        color: white;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+      }
+
+      .preview-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+
+      .preview-loading {
+        text-align: center;
+        color: white;
+        padding: 40px;
+        font-size: 16px;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid #3498db;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Indicadores visuais nos marcadores */
+      .leaflet-marker-icon {
+        transition: all 0.3s ease;
+      }
+
+      .leaflet-marker-icon:hover {
+        filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 152, 219, 0.6));
+      }
+
       @media (max-width: 768px) {
         .main-container {
           padding: 1rem;
@@ -435,6 +564,20 @@
         .leaflet-popup-content {
           width: 250px !important;
         }
+
+        .image-preview {
+          padding: 15px;
+          max-width: 95vw;
+          max-height: 95vh;
+        }
+
+        .preview-image {
+          max-height: 50vh;
+        }
+
+        .preview-header {
+          font-size: 16px;
+        }
       }
 
       /* Animações */
@@ -473,6 +616,25 @@
     </style>
   </head>
   <body>
+    <!-- Preview de imagem -->
+    <div id="imagePreview" class="image-preview">
+      <button class="preview-close" onclick="closePreview()">&times;</button>
+      <div class="preview-content">
+        <div class="preview-loading">
+          <div class="loading-spinner"></div>
+          <div>Carregando imagem...</div>
+        </div>
+        <div class="preview-loaded" style="display: none;">
+          <div class="preview-header" id="previewTitle"></div>
+          <img class="preview-image" id="previewImg" alt="Preview da imagem">
+          <div class="preview-info">
+            <div id="previewInfo"></div>
+            <div class="preview-coords" id="previewCoords"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="main-container">
       <div class="container">
         <h1>📷 Conversor de Imagens Georreferenciadas para GeoJSON</h1>
@@ -481,6 +643,7 @@
           <p>
             <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
             gera um arquivo GeoJSON que pode ser importado no QGIS. Além disso, você pode renomear as fotos diretamente no mapa e baixar um ZIP com os arquivos renomeados.
+            <br><strong>✨ Novidade:</strong> Passe o mouse sobre os marcadores no mapa por 3 segundos para ver um preview da imagem!
           </p>
         </div>
 
@@ -556,9 +719,12 @@
     </div>
 
     <script>
+      // Versão: 2.0
+      
       // Variáveis globais
       let imagePoints = [];
       let originalFiles = new Map(); // Para armazenar os arquivos originais
+      let imageDataMap = new Map(); // Para armazenar os dados das imagens (base64)
       let renamedFiles = new Map(); // Para armazenar os novos nomes
       let processedImages = 0;
       let imagesWithGeo = 0;
@@ -566,6 +732,8 @@
       let map; // Variável para o mapa
       let markersLayer; // Camada para os marcadores
       let currentTileLayer; // Camada de tiles atual
+      let previewTimeout; // Timeout para o preview
+      let isPreviewOpen = false; // Controle do preview
 
       // Elementos DOM
       const dropZone = document.getElementById("dropZone");
@@ -578,6 +746,7 @@
       const progress = document.querySelector(".progress");
       const layerSelector = document.getElementById("layerSelector");
       const maxZoomBtn = document.getElementById("maxZoomBtn");
+      const imagePreview = document.getElementById("imagePreview");
 
       // Definir diferentes camadas de tile com zoom máximo aprimorado
       const tileLayers = {
@@ -693,6 +862,22 @@
             createPopupContent(point, index, currentName, isRenamed)
           );
 
+          // Adicionar eventos de preview da imagem
+          marker.on('mouseover', function(e) {
+            if (!isPreviewOpen) {
+              previewTimeout = setTimeout(() => {
+                showImagePreview(point, currentName, isRenamed);
+              }, 3000); // 3 segundos
+            }
+          });
+
+          marker.on('mouseout', function(e) {
+            if (previewTimeout) {
+              clearTimeout(previewTimeout);
+              previewTimeout = null;
+            }
+          });
+
           markersLayer.addLayer(marker);
           bounds.extend([point.latitude, point.longitude]);
         });
@@ -702,6 +887,89 @@
           map.fitBounds(bounds, { padding: [20, 20] });
         }
       }
+
+      // Mostrar preview da imagem
+      function showImagePreview(point, currentName, isRenamed) {
+        if (isPreviewOpen) return;
+
+        isPreviewOpen = true;
+        
+        // Mostrar o preview com loading
+        imagePreview.classList.add('loading');
+        imagePreview.style.display = 'block';
+        
+        // Resetar conteúdo
+        document.querySelector('.preview-loading').style.display = 'block';
+        document.querySelector('.preview-loaded').style.display = 'none';
+
+        // Carregar dados da imagem
+        const imageData = imageDataMap.get(point.filename);
+        if (imageData) {
+          // Carregar imagem
+          const img = document.getElementById('previewImg');
+          img.onload = function() {
+            // Atualizar informações
+            document.getElementById('previewTitle').innerHTML = 
+              `📷 ${isRenamed ? '<span class="renamed-indicator">✏️ ' + currentName + '</span>' : currentName}`;
+            
+            document.getElementById('previewInfo').innerHTML = 
+              `${isRenamed ? `<div style="color: #7f8c8d; font-style: italic;">Original: ${point.filename}</div>` : ''}
+               <div><strong>Data/Hora:</strong> ${point.datetime || "N/A"}</div>`;
+            
+            document.getElementById('previewCoords').innerHTML = 
+              `<strong>Coordenadas:</strong><br>
+               Latitude: ${point.latitude.toFixed(8)}<br>
+               Longitude: ${point.longitude.toFixed(8)}`;
+
+            // Mostrar conteúdo carregado
+            document.querySelector('.preview-loading').style.display = 'none';
+            document.querySelector('.preview-loaded').style.display = 'block';
+            
+            // Remover classe loading e adicionar show
+            imagePreview.classList.remove('loading');
+            imagePreview.classList.add('show');
+          };
+          
+          img.onerror = function() {
+            closePreview();
+          };
+          
+          img.src = imageData;
+        } else {
+          closePreview();
+        }
+      }
+
+      // Fechar preview
+      function closePreview() {
+        if (previewTimeout) {
+          clearTimeout(previewTimeout);
+          previewTimeout = null;
+        }
+        
+        isPreviewOpen = false;
+        imagePreview.classList.remove('show', 'loading');
+        
+        // Esconder após a animação
+        setTimeout(() => {
+          if (!imagePreview.classList.contains('show')) {
+            imagePreview.style.display = 'none';
+          }
+        }, 400);
+      }
+
+      // Event listeners para fechar preview
+      imagePreview.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closePreview();
+        }
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && isPreviewOpen) {
+          closePreview();
+        }
+      });
 
       // Criar conteúdo do popup com opção de renomear
       function createPopupContent(point, index, currentName, isRenamed) {
@@ -854,6 +1122,7 @@
         // Reset
         imagePoints = [];
         originalFiles.clear();
+        imageDataMap.clear();
         renamedFiles.clear();
         processedImages = 0;
         imagesWithGeo = 0;
@@ -878,6 +1147,9 @@
         if (markersLayer) {
           markersLayer.clearLayers();
         }
+
+        // Fechar preview se estiver aberto
+        closePreview();
 
         // Processar cada arquivo
         Array.from(files).forEach((file, index) => {
@@ -927,6 +1199,29 @@
               if (isValidCoordinate(lat, lng)) {
                 imagesWithGeo++;
                 document.getElementById("geoImages").textContent = imagesWithGeo;
+
+                // Armazenar dados da imagem (redimensionada para melhor performance)
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calcular dimensões para redimensionar (máximo 800px na maior dimensão)
+                const maxSize = 800;
+                let { width, height } = img;
+                
+                if (width > height && width > maxSize) {
+                  height = (height * maxSize) / width;
+                  width = maxSize;
+                } else if (height > maxSize) {
+                  width = (width * maxSize) / height;
+                  height = maxSize;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Armazenar a imagem redimensionada
+                imageDataMap.set(file.name, canvas.toDataURL('image/jpeg', 0.85));
 
                 // Adicionar ao array de pontos
                 imagePoints.push({
