@@ -1,0 +1,1497 @@
+<!-- Versão: 2.0 -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNIT - Gerenciador de Estruturas</title>
+
+    <!-- CSS Externos -->
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"
+    />
+
+    <style>
+      /* Reset e configurações base */
+      * {
+        box-sizing: border-box;
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        overflow: hidden;
+      }
+
+      /* Layout principal */
+      .app-container {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: var(--bg-secondary);
+        border-right: 2px solid var(--border-color);
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .sidebar h2 {
+        margin: 0 0 10px 0;
+        color: var(--primary-color);
+        font-size: 18px;
+        text-align: center;
+      }
+
+      /* Área principal */
+      .main-area {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .header {
+        background: var(--bg-secondary);
+        border-bottom: 2px solid var(--border-color);
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 20px;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* Mapa */
+      .map-container {
+        position: relative;
+        background: var(--bg-tertiary);
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+
+      .map-overlay {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 1000;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 8px;
+        display: flex;
+        gap: 8px;
+      }
+
+      /* Painel de detalhes */
+      .details-panel {
+        background: var(--bg-secondary);
+        border-left: 2px solid var(--border-color);
+        padding: 16px;
+        overflow-y: auto;
+      }
+
+      /* Seção de carregamento */
+      .load-section {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--info-color)
+        );
+        color: white;
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .load-section h3,
+      .load-section p {
+        color: white !important;
+        margin: 0 0 8px 0;
+      }
+
+      .load-section .instructions {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 12px;
+        border-radius: 6px;
+        margin: 12px 0;
+        text-align: left;
+        font-size: 13px;
+      }
+
+      .load-section .instructions ol {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+
+      /* Botões */
+      .btn {
+        background: var(--primary-color);
+        color: white !important;
+        border: 1px solid var(--primary-color);
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-block;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin: 4px;
+      }
+
+      .btn:hover {
+        background: var(--success-color);
+        border-color: var(--success-color);
+      }
+
+      .btn:disabled {
+        background: var(--secondary-color);
+        border-color: var(--secondary-color);
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: var(--warning-color);
+        border-color: var(--warning-color);
+      }
+
+      .btn-danger {
+        background: var(--danger-color);
+        border-color: var(--danger-color);
+      }
+
+      .btn-full {
+        width: 100%;
+        margin: 8px 0;
+      }
+
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      /* Formulários */
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 6px;
+        font-size: 13px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        font-size: 13px;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: var(--bg-secondary);
+      }
+
+      .form-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .form-select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 13px;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      /* Estatísticas */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        background: var(--bg-tertiary);
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+
+      .stat-number {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--primary-color);
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+
+      /* Lista de resultados */
+      .results-container {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-tertiary);
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .results-header {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .result-item {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-light);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .result-item:hover {
+        background: var(--bg-secondary);
+      }
+
+      .result-item.selected {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .result-title {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      .result-info {
+        font-size: 11px;
+        opacity: 0.8;
+        line-height: 1.4;
+      }
+
+      /* Card de ponte */
+      .bridge-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      .bridge-header {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+      }
+
+      .bridge-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 4px;
+      }
+
+      .bridge-code {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-family: monospace;
+      }
+
+      .bridge-section {
+        margin-bottom: 12px;
+        padding: 10px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        border-left: 3px solid var(--primary-color);
+      }
+
+      .bridge-section-title {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 12px;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+
+      .bridge-info {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .bridge-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      /* Loading */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white !important;
+        font-size: 16px;
+      }
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 12px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Welcome message */
+      .welcome {
+        text-align: center;
+        padding: 32px 16px;
+        color: var(--text-secondary);
+      }
+
+      .welcome h3 {
+        color: var(--primary-color);
+        margin-bottom: 16px;
+      }
+
+      .welcome ul {
+        text-align: left;
+        max-width: 280px;
+        margin: 16px auto;
+      }
+
+      /* Hidden state */
+      .hidden {
+        display: none !important;
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .app-container {
+          grid-template-columns: 280px 1fr;
+        }
+
+        .content-grid {
+          grid-template-columns: 1fr 320px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .app-container {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+
+        .sidebar {
+          max-height: 40vh;
+          overflow-y: auto;
+        }
+
+        .content-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: 50vh 1fr;
+        }
+
+        .details-panel {
+          border-left: none;
+          border-top: 2px solid var(--border-color);
+        }
+
+        .map-overlay {
+          top: 8px;
+          right: 8px;
+        }
+      }
+
+      /* Tema escuro específico */
+      [data-theme="dark"] .load-section h3,
+      [data-theme="dark"] .load-section p,
+      [data-theme="dark"] .loading-overlay {
+        color: white !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Seletor de Tema -->
+    <div class="theme-selector">
+      <label for="themeSelect">Tema:</label>
+      <select id="themeSelect">
+        <option value="default">Padrão</option>
+        <option value="dark" selected>Escuro</option>
+        <option value="corporate">Corporativo</option>
+        <option value="green">Verde</option>
+        <option value="high-contrast">Alto Contraste</option>
+        <option value="minimal">Minimalista</option>
+        <option value="purple-tech">Roxo Tech</option>
+      </select>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <div id="loadingText">Carregando...</div>
+    </div>
+
+    <div class="app-container">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>🌉 Painel de Controle</h2>
+
+        <!-- Seção de carregamento -->
+        <div class="load-section" id="loadSection">
+          <h3>📁 Carregar Dados</h3>
+          <p>Selecione os arquivos JSON das estruturas</p>
+          <button class="btn btn-full" id="loadBtn">Carregar Arquivos</button>
+          <div
+            class="btn-small"
+            style="margin-top: 8px; font-size: 11px; opacity: 0.9"
+          >
+            💡 Brave: Pode precisar habilitar File System Access
+          </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="stats-grid hidden" id="statsSection">
+          <div class="stat-card">
+            <span class="stat-number" id="totalCount">0</span>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="filteredCount">0</span>
+            <div class="stat-label">Filtradas</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="statesCount">0</span>
+            <div class="stat-label">Estados</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="roadsCount">0</span>
+            <div class="stat-label">Rodovias</div>
+          </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="form-group hidden" id="searchSection">
+          <label class="form-label">🔍 Buscar</label>
+          <input
+            type="text"
+            class="form-input"
+            id="searchInput"
+            placeholder="ID, nome, município, rodovia..."
+          />
+        </div>
+
+        <!-- Filtros -->
+        <div class="hidden" id="filtersSection">
+          <div class="form-group">
+            <label class="form-label">🗺️ Região</label>
+            <select class="form-select" id="regionFilter">
+              <option value="">Todas as regiões</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🏛️ Estado</label>
+            <select class="form-select" id="stateFilter">
+              <option value="">Todos os estados</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🛣️ Rodovia</label>
+            <select class="form-select" id="roadFilter">
+              <option value="">Todas as rodovias</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🌉 Estrutura</label>
+            <select class="form-select" id="structureFilter">
+              <option value="">Todas as estruturas</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📏 Comprimento (m)</label>
+            <div class="form-row">
+              <input
+                type="number"
+                class="form-input"
+                id="lengthMin"
+                placeholder="Mín"
+              />
+              <input
+                type="number"
+                class="form-input"
+                id="lengthMax"
+                placeholder="Máx"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🛣️ Quilometragem</label>
+            <div class="form-row">
+              <input
+                type="number"
+                class="form-input"
+                id="kmMin"
+                placeholder="Mín"
+              />
+              <input
+                type="number"
+                class="form-input"
+                id="kmMax"
+                placeholder="Máx"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📅 Ano Construção</label>
+            <div class="form-row">
+              <input
+                type="number"
+                class="form-input"
+                id="yearMin"
+                placeholder="Mín"
+              />
+              <input
+                type="number"
+                class="form-input"
+                id="yearMax"
+                placeholder="Máx"
+              />
+            </div>
+          </div>
+
+          <button class="btn btn-secondary btn-full" id="clearBtn">
+            🗑️ Limpar Filtros
+          </button>
+        </div>
+
+        <!-- Resultados -->
+        <div class="hidden" id="resultsSection">
+          <div class="results-container">
+            <div class="results-header">
+              <span id="resultsCount">0 estruturas</span>
+              <button class="btn btn-small" id="exportBtn">📥</button>
+            </div>
+            <div id="resultsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área principal -->
+      <div class="main-area">
+        <div class="header">
+          <h1>🌉 DNIT - Gerenciador de Estruturas</h1>
+          <div class="hidden" id="mapControls">
+            <button class="btn btn-small" id="fitMapBtn">🎯 Ajustar</button>
+            <button class="btn btn-small" id="clustersBtn">📍 Clusters</button>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="map-container">
+            <div id="map"></div>
+            <div class="map-overlay hidden" id="mapOverlay">
+              <div style="font-size: 11px; color: var(--text-secondary)">
+                Clique nas estruturas para ver detalhes
+              </div>
+            </div>
+          </div>
+
+          <div class="details-panel">
+            <div class="welcome" id="welcomePanel">
+              <h3>👋 Bem-vindo!</h3>
+              <p>
+                Carregue os arquivos JSON para começar a visualizar as
+                estruturas do DNIT.
+              </p>
+
+              <h4>🚀 Funcionalidades:</h4>
+              <ul>
+                <li>🗺️ Mapa interativo com clusters</li>
+                <li>🔍 Busca e filtros avançados</li>
+                <li>📊 Estatísticas em tempo real</li>
+                <li>📥 Exportação de dados</li>
+                <li>🎨 Múltiplos temas visuais</li>
+                <li>📱 Interface responsiva</li>
+              </ul>
+
+              <p><strong>Compatível com até 6500+ estruturas</strong></p>
+            </div>
+
+            <div class="hidden" id="bridgePanel">
+              <!-- Detalhes da ponte selecionada -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+
+    <script>
+      class StructureManager {
+        constructor() {
+          this.structures = [];
+          this.filteredStructures = [];
+          this.selectedStructure = null;
+          this.map = null;
+          this.markersLayer = null;
+          this.clustersEnabled = true;
+          this.searchIndex = new Map();
+          this.filterOptions = {
+            regions: new Set(),
+            states: new Set(),
+            roads: new Set(),
+            structures: new Set(),
+          };
+
+          this.init();
+        }
+
+        init() {
+          this.initElements();
+          this.initEventListeners();
+          this.initTheme();
+          this.initMap();
+          this.checkBrowserSupport();
+        }
+
+        initElements() {
+          // Loading
+          this.loadingOverlay = document.getElementById("loadingOverlay");
+          this.loadingText = document.getElementById("loadingText");
+
+          // Load section
+          this.loadBtn = document.getElementById("loadBtn");
+
+          // Stats
+          this.statsSection = document.getElementById("statsSection");
+          this.totalCount = document.getElementById("totalCount");
+          this.filteredCount = document.getElementById("filteredCount");
+          this.statesCount = document.getElementById("statesCount");
+          this.roadsCount = document.getElementById("roadsCount");
+
+          // Search & Filters
+          this.searchSection = document.getElementById("searchSection");
+          this.filtersSection = document.getElementById("filtersSection");
+          this.searchInput = document.getElementById("searchInput");
+          this.regionFilter = document.getElementById("regionFilter");
+          this.stateFilter = document.getElementById("stateFilter");
+          this.roadFilter = document.getElementById("roadFilter");
+          this.structureFilter = document.getElementById("structureFilter");
+          this.lengthMin = document.getElementById("lengthMin");
+          this.lengthMax = document.getElementById("lengthMax");
+          this.kmMin = document.getElementById("kmMin");
+          this.kmMax = document.getElementById("kmMax");
+          this.yearMin = document.getElementById("yearMin");
+          this.yearMax = document.getElementById("yearMax");
+          this.clearBtn = document.getElementById("clearBtn");
+
+          // Results
+          this.resultsSection = document.getElementById("resultsSection");
+          this.resultsCount = document.getElementById("resultsCount");
+          this.resultsList = document.getElementById("resultsList");
+          this.exportBtn = document.getElementById("exportBtn");
+
+          // Map controls
+          this.mapControls = document.getElementById("mapControls");
+          this.mapOverlay = document.getElementById("mapOverlay");
+          this.fitMapBtn = document.getElementById("fitMapBtn");
+          this.clustersBtn = document.getElementById("clustersBtn");
+
+          // Panels
+          this.welcomePanel = document.getElementById("welcomePanel");
+          this.bridgePanel = document.getElementById("bridgePanel");
+        }
+
+        initEventListeners() {
+          // Load
+          this.loadBtn.addEventListener("click", () => this.handleLoadFiles());
+
+          // Search
+          this.searchInput.addEventListener("input", (e) =>
+            this.handleSearch(e.target.value)
+          );
+
+          // Filters
+          [
+            this.regionFilter,
+            this.stateFilter,
+            this.roadFilter,
+            this.structureFilter,
+          ].forEach((filter) => {
+            filter.addEventListener("change", () => this.applyFilters());
+          });
+
+          [
+            this.lengthMin,
+            this.lengthMax,
+            this.kmMin,
+            this.kmMax,
+            this.yearMin,
+            this.yearMax,
+          ].forEach((input) => {
+            input.addEventListener("input", () => {
+              clearTimeout(this.filterTimeout);
+              this.filterTimeout = setTimeout(() => this.applyFilters(), 500);
+            });
+          });
+
+          this.clearBtn.addEventListener("click", () => this.clearFilters());
+          this.exportBtn.addEventListener("click", () => this.exportData());
+
+          // Map controls
+          this.fitMapBtn.addEventListener("click", () => this.fitMapBounds());
+          this.clustersBtn.addEventListener("click", () =>
+            this.toggleClusters()
+          );
+        }
+
+        initTheme() {
+          const themeSelect = document.getElementById("themeSelect");
+          const savedTheme = localStorage.getItem("dnit-theme") || "dark";
+
+          if (savedTheme !== "default") {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+          }
+          themeSelect.value = savedTheme;
+
+          themeSelect.addEventListener("change", (e) => {
+            const theme = e.target.value;
+            if (theme === "default") {
+              document.documentElement.removeAttribute("data-theme");
+            } else {
+              document.documentElement.setAttribute("data-theme", theme);
+            }
+            localStorage.setItem("dnit-theme", theme);
+          });
+        }
+
+        initMap() {
+          this.map = L.map("map").setView([-14.235, -51.925], 5);
+
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors",
+          }).addTo(this.map);
+
+          this.markersLayer = L.markerClusterGroup({
+            chunkedLoading: true,
+            maxClusterRadius: 50,
+          });
+          this.map.addLayer(this.markersLayer);
+        }
+
+        checkBrowserSupport() {
+          const supportsFileSystemAccess = "showDirectoryPicker" in window;
+          const isBrave =
+            (navigator.brave && navigator.brave.isBrave) ||
+            navigator.userAgent.includes("Brave");
+
+          if (!supportsFileSystemAccess || isBrave) {
+            this.loadBtn.innerHTML = "⚠️ Método Alternativo";
+            this.loadBtn.addEventListener("click", () =>
+              this.showAlternativeMethod()
+            );
+          }
+        }
+
+        async handleLoadFiles() {
+          try {
+            if ("showDirectoryPicker" in window) {
+              const dirHandle = await window.showDirectoryPicker();
+              await this.loadFromDirectory(dirHandle);
+            } else {
+              this.showAlternativeMethod();
+            }
+          } catch (error) {
+            if (error.name !== "AbortError") {
+              console.error("Erro ao carregar:", error);
+              this.showAlternativeMethod();
+            }
+          }
+        }
+
+        showAlternativeMethod() {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.multiple = true;
+          input.accept = ".json";
+
+          input.onchange = async (e) => {
+            const files = Array.from(e.target.files).filter((f) =>
+              f.name.endsWith(".json")
+            );
+            if (files.length > 0) {
+              await this.loadFromFiles(files);
+            }
+          };
+
+          input.click();
+        }
+
+        async loadFromDirectory(dirHandle) {
+          this.showLoading("Escaneando arquivos...");
+
+          const files = [];
+          for await (const [name, handle] of dirHandle.entries()) {
+            if (
+              handle.kind === "file" &&
+              name.toLowerCase().endsWith(".json")
+            ) {
+              files.push(handle);
+            }
+          }
+
+          if (files.length === 0) {
+            throw new Error("Nenhum arquivo JSON encontrado");
+          }
+
+          await this.processFiles(files, true);
+        }
+
+        async loadFromFiles(files) {
+          this.showLoading("Carregando arquivos...");
+          await this.processFiles(files, false);
+        }
+
+        async processFiles(files, isDirectory) {
+          const batchSize = 50;
+          this.structures = [];
+
+          for (let i = 0; i < files.length; i += batchSize) {
+            const batch = files.slice(i, i + batchSize);
+            this.updateLoadingText(
+              `Processando ${i + 1}-${Math.min(
+                i + batchSize,
+                files.length
+              )} de ${files.length}...`
+            );
+
+            const promises = batch.map(async (fileHandle) => {
+              try {
+                const file = isDirectory
+                  ? await fileHandle.getFile()
+                  : fileHandle;
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                if (data.id && data.latitude && data.longitude) {
+                  return data;
+                }
+                return null;
+              } catch (error) {
+                console.warn("Erro ao processar arquivo:", error);
+                return null;
+              }
+            });
+
+            const results = await Promise.all(promises);
+            this.structures.push(...results.filter((s) => s !== null));
+
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+
+          if (this.structures.length === 0) {
+            throw new Error("Nenhuma estrutura válida encontrada");
+          }
+
+          this.updateLoadingText("Processando dados...");
+          await this.processLoadedData();
+        }
+
+        async processLoadedData() {
+          // Construir índices
+          this.filterOptions.regions.clear();
+          this.filterOptions.states.clear();
+          this.filterOptions.roads.clear();
+          this.filterOptions.structures.clear();
+          this.searchIndex.clear();
+
+          this.structures.forEach((structure) => {
+            // Filtros
+            if (structure.uf?.regiao)
+              this.filterOptions.regions.add(structure.uf.regiao);
+            if (structure.uf?.sigla)
+              this.filterOptions.states.add(structure.uf.sigla);
+            if (structure.br?.nome)
+              this.filterOptions.roads.add(structure.br.nome);
+            if (structure.naturezaEstrutura?.name)
+              this.filterOptions.structures.add(
+                structure.naturezaEstrutura.name
+              );
+
+            // Índice de busca
+            const searchText = [
+              structure.id,
+              structure.codigoSgo,
+              structure.identificacao,
+              structure.municipio?.nome,
+              structure.uf?.name,
+              structure.br?.nome,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase();
+
+            this.searchIndex.set(structure.id, searchText);
+          });
+
+          this.populateFilterOptions();
+          this.showInterface();
+          this.filteredStructures = [...this.structures];
+          this.updateStats();
+          this.updateResults();
+          this.updateMap();
+          this.hideLoading();
+        }
+
+        populateFilterOptions() {
+          // Regiões
+          const regions = Array.from(this.filterOptions.regions).sort();
+          this.regionFilter.innerHTML =
+            '<option value="">Todas as regiões</option>';
+          regions.forEach((region) => {
+            this.regionFilter.innerHTML += `<option value="${region}">${region}</option>`;
+          });
+
+          // Estados
+          const states = Array.from(this.filterOptions.states).sort();
+          this.stateFilter.innerHTML =
+            '<option value="">Todos os estados</option>';
+          states.forEach((state) => {
+            this.stateFilter.innerHTML += `<option value="${state}">${state}</option>`;
+          });
+
+          // Rodovias
+          const roads = Array.from(this.filterOptions.roads).sort((a, b) => {
+            return parseInt(a) - parseInt(b);
+          });
+          this.roadFilter.innerHTML =
+            '<option value="">Todas as rodovias</option>';
+          roads.forEach((road) => {
+            this.roadFilter.innerHTML += `<option value="${road}">BR-${road}</option>`;
+          });
+
+          // Estruturas
+          const structures = Array.from(this.filterOptions.structures).sort();
+          this.structureFilter.innerHTML =
+            '<option value="">Todas as estruturas</option>';
+          structures.forEach((structure) => {
+            this.structureFilter.innerHTML += `<option value="${structure}">${structure}</option>`;
+          });
+        }
+
+        showInterface() {
+          this.statsSection.classList.remove("hidden");
+          this.searchSection.classList.remove("hidden");
+          this.filtersSection.classList.remove("hidden");
+          this.resultsSection.classList.remove("hidden");
+          this.mapControls.classList.remove("hidden");
+          this.mapOverlay.classList.remove("hidden");
+          this.welcomePanel.classList.add("hidden");
+        }
+
+        updateStats() {
+          this.totalCount.textContent = this.structures.length;
+          this.filteredCount.textContent = this.filteredStructures.length;
+          this.statesCount.textContent = this.filterOptions.states.size;
+          this.roadsCount.textContent = this.filterOptions.roads.size;
+        }
+
+        handleSearch(query) {
+          if (!query.trim()) {
+            this.applyFilters();
+            return;
+          }
+
+          const terms = query
+            .toLowerCase()
+            .split(" ")
+            .filter((t) => t.length > 0);
+          this.filteredStructures = this.structures.filter((structure) => {
+            const text = this.searchIndex.get(structure.id) || "";
+            return terms.every((term) => text.includes(term));
+          });
+
+          this.updateResults();
+          this.updateMap();
+          this.updateStats();
+        }
+
+        applyFilters() {
+          const query = this.searchInput.value.trim();
+          let filtered = [...this.structures];
+
+          // Busca
+          if (query) {
+            const terms = query
+              .toLowerCase()
+              .split(" ")
+              .filter((t) => t.length > 0);
+            filtered = filtered.filter((structure) => {
+              const text = this.searchIndex.get(structure.id) || "";
+              return terms.every((term) => text.includes(term));
+            });
+          }
+
+          // Filtros
+          if (this.regionFilter.value) {
+            filtered = filtered.filter(
+              (s) => s.uf?.regiao === this.regionFilter.value
+            );
+          }
+          if (this.stateFilter.value) {
+            filtered = filtered.filter(
+              (s) => s.uf?.sigla === this.stateFilter.value
+            );
+          }
+          if (this.roadFilter.value) {
+            filtered = filtered.filter(
+              (s) => s.br?.nome === this.roadFilter.value
+            );
+          }
+          if (this.structureFilter.value) {
+            filtered = filtered.filter(
+              (s) => s.naturezaEstrutura?.name === this.structureFilter.value
+            );
+          }
+
+          // Filtros numéricos
+          const lengthMin = parseFloat(this.lengthMin.value);
+          const lengthMax = parseFloat(this.lengthMax.value);
+          const kmMin = parseFloat(this.kmMin.value);
+          const kmMax = parseFloat(this.kmMax.value);
+          const yearMin = parseInt(this.yearMin.value);
+          const yearMax = parseInt(this.yearMax.value);
+
+          if (!isNaN(lengthMin))
+            filtered = filtered.filter(
+              (s) => (s.comprimento || 0) >= lengthMin
+            );
+          if (!isNaN(lengthMax))
+            filtered = filtered.filter(
+              (s) => (s.comprimento || 0) <= lengthMax
+            );
+          if (!isNaN(kmMin))
+            filtered = filtered.filter((s) => (s.km || 0) >= kmMin);
+          if (!isNaN(kmMax))
+            filtered = filtered.filter((s) => (s.km || 0) <= kmMax);
+          if (!isNaN(yearMin))
+            filtered = filtered.filter(
+              (s) => (s.anoConstrucao || 0) >= yearMin
+            );
+          if (!isNaN(yearMax))
+            filtered = filtered.filter(
+              (s) => (s.anoConstrucao || 0) <= yearMax
+            );
+
+          this.filteredStructures = filtered;
+          this.updateResults();
+          this.updateMap();
+          this.updateStats();
+        }
+
+        updateResults() {
+          this.resultsCount.textContent = `${this.filteredStructures.length} estruturas`;
+
+          const maxDisplay = 100;
+          const display = this.filteredStructures.slice(0, maxDisplay);
+
+          this.resultsList.innerHTML = "";
+
+          if (this.filteredStructures.length > maxDisplay) {
+            const info = document.createElement("div");
+            info.className = "result-item";
+            info.style.background = "var(--warning-color)";
+            info.style.color = "white";
+            info.innerHTML = `
+                        <div class="result-title">⚠️ Mostrando ${maxDisplay} de ${this.filteredStructures.length}</div>
+                        <div class="result-info">Use filtros para refinar</div>
+                    `;
+            this.resultsList.appendChild(info);
+          }
+
+          display.forEach((structure) => {
+            const item = document.createElement("div");
+            item.className = "result-item";
+            item.dataset.id = structure.id;
+
+            item.innerHTML = `
+                        <div class="result-title">${
+                          structure.identificacao || "Sem nome"
+                        }</div>
+                        <div class="result-info">
+                            <strong>Código:</strong> ${
+                              structure.codigoSgo || "N/A"
+                            }<br>
+                            <strong>Local:</strong> ${
+                              structure.municipio?.nome || "N/A"
+                            } - ${structure.uf?.sigla || "N/A"}<br>
+                            <strong>BR:</strong> ${
+                              structure.br?.nome
+                                ? `BR-${structure.br.nome}`
+                                : "N/A"
+                            } - Km ${structure.km || "N/A"}
+                        </div>
+                    `;
+
+            item.addEventListener("click", () =>
+              this.selectStructure(structure)
+            );
+            this.resultsList.appendChild(item);
+          });
+        }
+
+        updateMap() {
+          this.markersLayer.clearLayers();
+
+          const maxMarkers = 1000;
+          const display = this.filteredStructures.slice(0, maxMarkers);
+
+          display.forEach((structure) => {
+            if (structure.latitude && structure.longitude) {
+              const marker = L.marker([
+                structure.latitude,
+                structure.longitude,
+              ]);
+
+              const popup = `
+                            <div style="min-width: 200px;">
+                                <h4>${
+                                  structure.identificacao || "Sem nome"
+                                }</h4>
+                                <p><strong>Código:</strong> ${
+                                  structure.codigoSgo || "N/A"
+                                }</p>
+                                <p><strong>Local:</strong> ${
+                                  structure.municipio?.nome || "N/A"
+                                } - ${structure.uf?.sigla || "N/A"}</p>
+                                <p><strong>BR:</strong> ${
+                                  structure.br?.nome
+                                    ? `BR-${structure.br.nome}`
+                                    : "N/A"
+                                } - Km ${structure.km || "N/A"}</p>
+                                <button onclick="window.structureManager.selectStructure(window.structureManager.structures.find(s => s.id === '${
+                                  structure.id
+                                }'))" 
+                                        style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                                    Ver Detalhes
+                                </button>
+                            </div>
+                        `;
+
+              marker.bindPopup(popup);
+              this.markersLayer.addLayer(marker);
+            }
+          });
+        }
+
+        selectStructure(structure) {
+          this.selectedStructure = structure;
+
+          // Visual feedback na lista
+          document.querySelectorAll(".result-item").forEach((item) => {
+            item.classList.remove("selected");
+          });
+          const item = document.querySelector(`[data-id="${structure.id}"]`);
+          if (item) {
+            item.classList.add("selected");
+            item.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+
+          // Mostrar detalhes
+          this.showStructureDetails(structure);
+
+          // Centralizar no mapa
+          if (structure.latitude && structure.longitude) {
+            this.map.setView([structure.latitude, structure.longitude], 15);
+          }
+        }
+
+        showStructureDetails(structure) {
+          this.bridgePanel.classList.remove("hidden");
+
+          this.bridgePanel.innerHTML = `
+                    <div class="bridge-card">
+                        <div class="bridge-header">
+                            <div class="bridge-title">${
+                              structure.identificacao || "Estrutura sem nome"
+                            }</div>
+                            <div class="bridge-code">ID: ${structure.id}</div>
+                            <div class="bridge-code">Código SGO: ${
+                              structure.codigoSgo || "N/A"
+                            }</div>
+                        </div>
+                        
+                        <div class="bridge-section">
+                            <div class="bridge-section-title">📍 Localização</div>
+                            <div class="bridge-info">
+                                <div class="bridge-grid">
+                                    <div><strong>Município:</strong><br>${
+                                      structure.municipio?.nome || "N/A"
+                                    }</div>
+                                    <div><strong>UF:</strong><br>${
+                                      structure.uf?.name || "N/A"
+                                    } (${structure.uf?.sigla || "N/A"})</div>
+                                </div>
+                                <div class="bridge-grid">
+                                    <div><strong>Região:</strong><br>${
+                                      structure.uf?.regiao || "N/A"
+                                    }</div>
+                                    <div><strong>Rodovia:</strong><br>${
+                                      structure.br?.nome
+                                        ? `BR-${structure.br.nome}`
+                                        : "N/A"
+                                    }</div>
+                                </div>
+                                <div class="bridge-grid">
+                                    <div><strong>Km:</strong><br>${
+                                      structure.km || "N/A"
+                                    }</div>
+                                    <div><strong>Altitude:</strong><br>${
+                                      structure.altitude || "N/A"
+                                    }m</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bridge-section">
+                            <div class="bridge-section-title">🏗️ Características</div>
+                            <div class="bridge-info">
+                                <div class="bridge-grid">
+                                    <div><strong>Natureza:</strong><br>${
+                                      structure.naturezaEstrutura?.name || "N/A"
+                                    }</div>
+                                    <div><strong>Ano:</strong><br>${
+                                      structure.anoConstrucao || "N/A"
+                                    }</div>
+                                </div>
+                                <div class="bridge-grid">
+                                    <div><strong>Comprimento:</strong><br>${
+                                      structure.comprimento || "N/A"
+                                    }m</div>
+                                    <div><strong>Largura:</strong><br>${
+                                      structure.largura || "N/A"
+                                    }m</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bridge-section">
+                            <div class="bridge-section-title">🏛️ Administração</div>
+                            <div class="bridge-info">
+                                <div><strong>Administradora:</strong><br>${
+                                  structure.administradora?.razaoSocial || "N/A"
+                                }</div>
+                                <div><strong>Superintendência:</strong><br>${
+                                  structure.superintendencia?.nome || "N/A"
+                                }</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        }
+
+        clearFilters() {
+          this.searchInput.value = "";
+          this.regionFilter.value = "";
+          this.stateFilter.value = "";
+          this.roadFilter.value = "";
+          this.structureFilter.value = "";
+          this.lengthMin.value = "";
+          this.lengthMax.value = "";
+          this.kmMin.value = "";
+          this.kmMax.value = "";
+          this.yearMin.value = "";
+          this.yearMax.value = "";
+
+          this.filteredStructures = [...this.structures];
+          this.updateResults();
+          this.updateMap();
+          this.updateStats();
+        }
+
+        exportData() {
+          if (this.filteredStructures.length === 0) return;
+
+          const headers = [
+            "ID",
+            "Código SGO",
+            "Identificação",
+            "Município",
+            "UF",
+            "Região",
+            "Rodovia",
+            "Km",
+            "Natureza",
+            "Comprimento",
+            "Largura",
+            "Ano",
+            "Latitude",
+            "Longitude",
+          ];
+
+          const csv = [
+            headers.join(","),
+            ...this.filteredStructures.map((s) =>
+              [
+                s.id || "",
+                s.codigoSgo || "",
+                `"${(s.identificacao || "").replace(/"/g, '""')}"`,
+                s.municipio?.nome || "",
+                s.uf?.sigla || "",
+                s.uf?.regiao || "",
+                s.br?.nome || "",
+                s.km || "",
+                s.naturezaEstrutura?.name || "",
+                s.comprimento || "",
+                s.largura || "",
+                s.anoConstrucao || "",
+                s.latitude || "",
+                s.longitude || "",
+              ].join(",")
+            ),
+          ].join("\n");
+
+          const blob = new Blob([csv], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `estruturas_dnit_${
+            new Date().toISOString().split("T")[0]
+          }.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+
+        fitMapBounds() {
+          if (this.markersLayer.getLayers().length > 0) {
+            this.map.fitBounds(this.markersLayer.getBounds(), {
+              padding: [20, 20],
+            });
+          }
+        }
+
+        toggleClusters() {
+          this.clustersEnabled = !this.clustersEnabled;
+          this.clustersBtn.textContent = this.clustersEnabled
+            ? "📍 Clusters"
+            : "📍 Individual";
+
+          if (this.clustersEnabled) {
+            this.map.addLayer(this.markersLayer);
+          } else {
+            this.map.removeLayer(this.markersLayer);
+            this.markersLayer.getLayers().forEach((marker) => {
+              this.map.addLayer(marker);
+            });
+          }
+        }
+
+        showLoading(text) {
+          this.loadingText.textContent = text;
+          this.loadingOverlay.classList.remove("hidden");
+        }
+
+        updateLoadingText(text) {
+          this.loadingText.textContent = text;
+        }
+
+        hideLoading() {
+          this.loadingOverlay.classList.add("hidden");
+        }
+      }
+
+      // Inicializar aplicação
+      window.structureManager = new StructureManager();
+    </script>
+  </body>
+</html>
