@@ -1,0 +1,664 @@
+<!-- Versão: 1.1 -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNIT JSON Downloader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <style>
+      /* Estilos específicos para o downloader */
+      .upload-area {
+        border: 3px dashed var(--primary-color);
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        background-color: var(--bg-tertiary);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin: 20px 0;
+      }
+
+      .upload-area:hover,
+      .upload-area.drag-over {
+        background-color: var(--bg-secondary);
+        border-color: var(--success-color);
+      }
+
+      .folder-selector {
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+        text-align: center;
+      }
+
+      .folder-status {
+        color: var(--success-color);
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      .progress-container {
+        margin: 20px 0;
+        display: none;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: var(--bg-tertiary);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background-color: var(--primary-color);
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+
+      .log-area {
+        margin-top: 20px;
+        max-height: 300px;
+        overflow-y: auto;
+        background-color: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 15px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        display: none;
+      }
+
+      .success {
+        color: var(--success-color);
+      }
+      .error {
+        color: var(--danger-color);
+      }
+      .info {
+        color: var(--info-color);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+
+      .stat-box {
+        background-color: var(--bg-tertiary);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+      }
+
+      .download-type-selector {
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+
+      .download-type-selector input[type="radio"] {
+        margin-right: 8px;
+      }
+
+      .download-type-selector label {
+        margin-right: 20px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Seletor de Tema -->
+    <div class="theme-selector">
+      <label for="themeSelect">🎨 Tema:</label>
+      <select id="themeSelect">
+        <option value="default">Padrão</option>
+        <option value="dark">Escuro</option>
+        <option value="corporate">Corporativo</option>
+        <option value="green">Verde</option>
+        <option value="high-contrast">Alto Contraste</option>
+        <option value="minimal">Minimalista</option>
+        <option value="purple-tech">Roxo Tech</option>
+      </select>
+    </div>
+
+    <div class="container">
+      <h1>🌉 DNIT JSON Downloader</h1>
+      <div class="subtitle">
+        Sistema para download automático de dados de obras do DNIT via API
+      </div>
+
+      <div class="upload-area" id="uploadArea">
+        <div>
+          <h3>📁 Arraste o arquivo CSV aqui ou clique para selecionar</h3>
+          <p>
+            Arquivo deve conter as colunas: <strong>Id</strong> e
+            <strong>CodigoSgo</strong>
+          </p>
+          <small>Formato esperado: Id;CodigoSgo;Identificacao;Uf;Br;Km</small>
+        </div>
+        <input type="file" id="csvFile" accept=".csv" style="display: none" />
+      </div>
+
+      <div class="stats" id="stats" style="display: none">
+        <div class="stat-box">
+          <div class="stat-number" id="totalCount">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="successCount">0</div>
+          <div class="stat-label">Sucessos</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="errorCount">0</div>
+          <div class="stat-label">Erros</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="pendingCount">0</div>
+          <div class="stat-label">Pendentes</div>
+        </div>
+      </div>
+
+      <div
+        class="download-type-selector"
+        id="downloadTypeSelector"
+        style="display: none"
+      >
+        <h3>🔽 Tipo de Download:</h3>
+        <div>
+          <input
+            type="radio"
+            id="folderMode"
+            name="downloadMode"
+            value="folder"
+            checked
+          />
+          <label for="folderMode"
+            >📂 Salvar em pasta específica (Chrome/Edge)</label
+          >
+        </div>
+        <div>
+          <input
+            type="radio"
+            id="individualMode"
+            name="downloadMode"
+            value="individual"
+          />
+          <label for="individualMode"
+            >📥 Downloads individuais (Compatível com todos os browsers)</label
+          >
+        </div>
+      </div>
+
+      <div class="folder-selector" id="folderSelector" style="display: none">
+        <button id="selectFolderBtn">📂 Selecionar Pasta de Destino</button>
+        <div
+          class="folder-status"
+          id="folderStatus"
+          style="display: none"
+        ></div>
+      </div>
+
+      <div class="controls">
+        <button id="startDownloadBtn" style="display: none" disabled>
+          ⬇️ Iniciar Download
+        </button>
+        <button id="pauseBtn" style="display: none">⏸️ Pausar</button>
+        <button id="stopBtn" style="display: none">⏹️ Parar</button>
+      </div>
+
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p id="progressText">0 / 0 processados</p>
+      </div>
+
+      <div class="log-area" id="logArea"></div>
+    </div>
+
+    <script>
+      class DnitDownloader {
+        constructor() {
+          this.csvData = [];
+          this.directoryHandle = null;
+          this.isRunning = false;
+          this.isPaused = false;
+          this.isStopped = false;
+          this.currentIndex = 0;
+          this.downloadMode = "folder";
+          this.stats = {
+            total: 0,
+            success: 0,
+            error: 0,
+            pending: 0,
+          };
+
+          this.initializeElements();
+          this.setupEventListeners();
+          this.setupThemeSelector();
+          this.checkBrowserCapabilities();
+        }
+
+        initializeElements() {
+          this.uploadArea = document.getElementById("uploadArea");
+          this.csvFile = document.getElementById("csvFile");
+          this.downloadTypeSelector = document.getElementById(
+            "downloadTypeSelector"
+          );
+          this.folderSelector = document.getElementById("folderSelector");
+          this.selectFolderBtn = document.getElementById("selectFolderBtn");
+          this.folderStatus = document.getElementById("folderStatus");
+          this.startDownloadBtn = document.getElementById("startDownloadBtn");
+          this.pauseBtn = document.getElementById("pauseBtn");
+          this.stopBtn = document.getElementById("stopBtn");
+          this.progressContainer = document.getElementById("progressContainer");
+          this.progressFill = document.getElementById("progressFill");
+          this.progressText = document.getElementById("progressText");
+          this.logArea = document.getElementById("logArea");
+          this.statsDiv = document.getElementById("stats");
+        }
+
+        setupEventListeners() {
+          // Upload area events
+          this.uploadArea.addEventListener("click", () => this.csvFile.click());
+          this.uploadArea.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.add("drag-over");
+          });
+          this.uploadArea.addEventListener("dragleave", () => {
+            this.uploadArea.classList.remove("drag-over");
+          });
+          this.uploadArea.addEventListener("drop", (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove("drag-over");
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+              this.handleFileUpload(files[0]);
+            }
+          });
+
+          // File input
+          this.csvFile.addEventListener("change", (e) => {
+            if (e.target.files.length > 0) {
+              this.handleFileUpload(e.target.files[0]);
+            }
+          });
+
+          // Download mode selector
+          document
+            .querySelectorAll('input[name="downloadMode"]')
+            .forEach((radio) => {
+              radio.addEventListener("change", (e) => {
+                this.downloadMode = e.target.value;
+                this.updateDownloadModeUI();
+              });
+            });
+
+          // Buttons
+          this.selectFolderBtn.addEventListener("click", () =>
+            this.selectFolder()
+          );
+          this.startDownloadBtn.addEventListener("click", () =>
+            this.startDownload()
+          );
+          this.pauseBtn.addEventListener("click", () => this.togglePause());
+          this.stopBtn.addEventListener("click", () => this.stopDownload());
+        }
+
+        setupThemeSelector() {
+          const themeSelect = document.getElementById("themeSelect");
+          const savedTheme = localStorage.getItem("selectedTheme") || "default";
+
+          // Aplicar tema salvo
+          if (savedTheme !== "default") {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+          }
+          themeSelect.value = savedTheme;
+
+          // Listener para mudança de tema
+          themeSelect.addEventListener("change", (e) => {
+            const selectedTheme = e.target.value;
+            if (selectedTheme === "default") {
+              document.documentElement.removeAttribute("data-theme");
+            } else {
+              document.documentElement.setAttribute(
+                "data-theme",
+                selectedTheme
+              );
+            }
+            localStorage.setItem("selectedTheme", selectedTheme);
+          });
+        }
+
+        checkBrowserCapabilities() {
+          const supportsFileSystemAccess = "showDirectoryPicker" in window;
+          if (!supportsFileSystemAccess) {
+            // Force individual mode if browser doesn't support File System Access API
+            document.getElementById("individualMode").checked = true;
+            document.getElementById("folderMode").disabled = true;
+            document.querySelector('label[for="folderMode"]').style.opacity =
+              "0.5";
+            this.downloadMode = "individual";
+            this.log(
+              "Browser não suporta seleção de pasta. Usando modo de downloads individuais.",
+              "info"
+            );
+          }
+        }
+
+        handleFileUpload(file) {
+          if (!file.name.toLowerCase().endsWith(".csv")) {
+            alert("Por favor, selecione um arquivo CSV");
+            return;
+          }
+
+          Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            delimiter: ";", // Forçar delimiter para ponto e vírgula
+            complete: (results) => {
+              this.csvData = results.data;
+              this.validateCsvData();
+            },
+            error: (error) => {
+              this.log(`Erro ao ler CSV: ${error.message}`, "error");
+            },
+          });
+        }
+
+        validateCsvData() {
+          if (this.csvData.length === 0) {
+            this.log("Arquivo CSV está vazio", "error");
+            return;
+          }
+
+          // Verificar se as colunas existem
+          const firstRow = this.csvData[0];
+          if (!firstRow.Id || !firstRow.CodigoSgo) {
+            this.log(
+              'CSV deve conter colunas "Id" e "CodigoSgo". Colunas encontradas: ' +
+                Object.keys(firstRow).join(", "),
+              "error"
+            );
+            return;
+          }
+
+          // Filtrar linhas válidas (que tenham Id e CodigoSgo)
+          this.csvData = this.csvData.filter((row) => row.Id && row.CodigoSgo);
+
+          if (this.csvData.length === 0) {
+            this.log("Nenhuma linha válida encontrada no CSV", "error");
+            return;
+          }
+
+          this.stats.total = this.csvData.length;
+          this.stats.pending = this.csvData.length;
+          this.updateStats();
+
+          this.log(
+            `CSV carregado com sucesso: ${this.csvData.length} registros válidos`,
+            "success"
+          );
+          this.log(
+            `Primeiro registro: ${this.csvData[0].CodigoSgo} (${this.csvData[0].Id})`,
+            "info"
+          );
+
+          this.downloadTypeSelector.style.display = "block";
+          this.updateDownloadModeUI();
+          this.statsDiv.style.display = "grid";
+        }
+
+        updateDownloadModeUI() {
+          if (this.downloadMode === "folder") {
+            this.folderSelector.style.display = "block";
+            this.startDownloadBtn.disabled = !this.directoryHandle;
+          } else {
+            this.folderSelector.style.display = "none";
+            this.startDownloadBtn.disabled = false;
+          }
+          this.startDownloadBtn.style.display = "inline-block";
+        }
+
+        async selectFolder() {
+          if (!("showDirectoryPicker" in window)) {
+            this.log(
+              "Seu browser não suporta seleção de pasta. Use o modo de downloads individuais.",
+              "error"
+            );
+            return;
+          }
+
+          try {
+            this.directoryHandle = await window.showDirectoryPicker();
+            this.folderStatus.textContent = `✅ Pasta selecionada: ${this.directoryHandle.name}`;
+            this.folderStatus.style.display = "block";
+            this.log(
+              `Pasta selecionada: ${this.directoryHandle.name}`,
+              "success"
+            );
+            this.startDownloadBtn.disabled = false;
+          } catch (error) {
+            if (error.name !== "AbortError") {
+              this.log(`Erro ao selecionar pasta: ${error.message}`, "error");
+            } else {
+              this.log("Seleção de pasta cancelada", "info");
+            }
+          }
+        }
+
+        async startDownload() {
+          if (this.isRunning) return;
+
+          this.isRunning = true;
+          this.isPaused = false;
+          this.isStopped = false;
+          this.currentIndex = 0;
+          this.stats.success = 0;
+          this.stats.error = 0;
+          this.stats.pending = this.csvData.length;
+
+          this.startDownloadBtn.style.display = "none";
+          this.pauseBtn.style.display = "inline-block";
+          this.stopBtn.style.display = "inline-block";
+          this.progressContainer.style.display = "block";
+          this.logArea.style.display = "block";
+
+          this.log(
+            `Iniciando downloads em modo: ${
+              this.downloadMode === "folder"
+                ? "pasta específica"
+                : "downloads individuais"
+            }...`,
+            "info"
+          );
+
+          for (let i = this.currentIndex; i < this.csvData.length; i++) {
+            if (!this.isRunning || this.isStopped) break;
+
+            while (this.isPaused && !this.isStopped) {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
+            if (this.isStopped) break;
+
+            this.currentIndex = i;
+            await this.downloadJson(this.csvData[i]);
+            this.updateProgress();
+
+            // Delay entre requisições para evitar sobrecarga
+            if (i < this.csvData.length - 1 && !this.isStopped) {
+              await new Promise((resolve) => setTimeout(resolve, 300));
+            }
+          }
+
+          this.finishDownload();
+        }
+
+        async downloadJson(record) {
+          const url = `https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/CadastroOae/${record.Id}/dadosbasicos`;
+
+          try {
+            const response = await fetch(url, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+              mode: "cors",
+            });
+
+            if (!response.ok) {
+              throw new Error(
+                `HTTP ${response.status}: ${response.statusText}`
+              );
+            }
+
+            const jsonData = await response.json();
+            await this.saveJsonFile(record.CodigoSgo, jsonData);
+
+            this.stats.success++;
+            this.stats.pending--;
+            this.log(`✓ ${record.CodigoSgo}: Download concluído`, "success");
+          } catch (error) {
+            this.stats.error++;
+            this.stats.pending--;
+            this.log(`✗ ${record.CodigoSgo}: ${error.message}`, "error");
+
+            // Log detalhado do erro para debug
+            if (error.name === "TypeError" && error.message.includes("fetch")) {
+              this.log(
+                `   → Possível problema de CORS ou conectividade`,
+                "error"
+              );
+            }
+          }
+
+          this.updateStats();
+        }
+
+        async saveJsonFile(codigoSgo, jsonData) {
+          const fileName = `${codigoSgo}.json`;
+          const jsonString = JSON.stringify(jsonData, null, 2);
+
+          if (this.downloadMode === "individual" || !this.directoryHandle) {
+            // Fallback para downloads individuais
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } else {
+            // Use File System Access API
+            try {
+              const fileHandle = await this.directoryHandle.getFileHandle(
+                fileName,
+                { create: true }
+              );
+              const writable = await fileHandle.createWritable();
+              await writable.write(jsonString);
+              await writable.close();
+            } catch (error) {
+              throw new Error(`Erro ao salvar arquivo: ${error.message}`);
+            }
+          }
+        }
+
+        updateProgress() {
+          const progress =
+            ((this.currentIndex + 1) / this.csvData.length) * 100;
+          this.progressFill.style.width = `${progress}%`;
+          this.progressText.textContent = `${this.currentIndex + 1} / ${
+            this.csvData.length
+          } processados`;
+        }
+
+        updateStats() {
+          document.getElementById("totalCount").textContent = this.stats.total;
+          document.getElementById("successCount").textContent =
+            this.stats.success;
+          document.getElementById("errorCount").textContent = this.stats.error;
+          document.getElementById("pendingCount").textContent =
+            this.stats.pending;
+        }
+
+        togglePause() {
+          this.isPaused = !this.isPaused;
+          this.pauseBtn.textContent = this.isPaused
+            ? "▶️ Continuar"
+            : "⏸️ Pausar";
+          this.log(
+            this.isPaused ? "Download pausado" : "Download retomado",
+            "info"
+          );
+        }
+
+        stopDownload() {
+          this.isStopped = true;
+          this.isRunning = false;
+          this.log("Download interrompido pelo usuário", "info");
+          this.finishDownload();
+        }
+
+        finishDownload() {
+          this.isRunning = false;
+          this.pauseBtn.style.display = "none";
+          this.stopBtn.style.display = "none";
+          this.startDownloadBtn.style.display = "inline-block";
+          this.startDownloadBtn.disabled =
+            this.downloadMode === "folder" && !this.directoryHandle;
+          this.startDownloadBtn.textContent = "🔄 Reiniciar Download";
+
+          const message = this.isStopped
+            ? `\n⏹️ Download interrompido!\n✓ Sucessos: ${this.stats.success}\n✗ Erros: ${this.stats.error}\n⏸️ Não processados: ${this.stats.pending}`
+            : `\n🎉 Processo finalizado!\n✓ Sucessos: ${this.stats.success}\n✗ Erros: ${this.stats.error}`;
+
+          this.log(message, "info");
+        }
+
+        log(message, type = "info") {
+          const timestamp = new Date().toLocaleTimeString();
+          const logEntry = document.createElement("div");
+          logEntry.className = type;
+          logEntry.textContent = `[${timestamp}] ${message}`;
+          this.logArea.appendChild(logEntry);
+          this.logArea.scrollTop = this.logArea.scrollHeight;
+        }
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new DnitDownloader();
+      });
+    </script>
+  </body>
+</html>
