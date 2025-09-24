@@ -305,11 +305,18 @@
         font-size: 1.1rem;
       }
 
-      /* Customização do popup do Leaflet */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Customização adicional do popup com rodovias */
       .leaflet-popup-content {
         color: #333;
         font-size: 14px;
-        width: 280px !important;
+        width: 320px !important;
+        max-height: 500px;
+        overflow-y: auto;
       }
 
       .leaflet-popup-content h4 {
@@ -380,6 +387,15 @@
 
       .popup-btn.danger:hover {
         background: #c0392b;
+      }
+
+      /* Indicadores visuais nos marcadores */
+      .leaflet-marker-icon {
+        transition: all 0.3s ease;
+      }
+
+      .leaflet-marker-icon:hover {
+        filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 152, 219, 0.6));
       }
 
       /* Botão especial para baixar ZIP */
@@ -506,18 +522,16 @@
         margin-bottom: 15px;
       }
 
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+      /* Indicador de arquivo renomeado */
+      .renamed-indicator {
+        color: #2ecc71;
+        font-weight: bold;
       }
 
-      /* Indicadores visuais nos marcadores */
-      .leaflet-marker-icon {
-        transition: all 0.3s ease;
-      }
-
-      .leaflet-marker-icon:hover {
-        filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 152, 219, 0.6));
+      .original-name {
+        color: #7f8c8d;
+        font-style: italic;
+        text-decoration: line-through;
       }
 
       @media (max-width: 768px) {
@@ -562,7 +576,7 @@
         }
 
         .leaflet-popup-content {
-          width: 250px !important;
+          width: 280px !important;
         }
 
         .image-preview {
@@ -601,18 +615,6 @@
       .container:nth-child(3) {
         animation-delay: 0.3s;
       }
-
-      /* Indicador de arquivo renomeado */
-      .renamed-indicator {
-        color: #2ecc71;
-        font-weight: bold;
-      }
-
-      .original-name {
-        color: #7f8c8d;
-        font-style: italic;
-        text-decoration: line-through;
-      }
     </style>
   </head>
   <body>
@@ -643,7 +645,8 @@
           <p>
             <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
             gera um arquivo GeoJSON que pode ser importado no QGIS. Além disso, você pode renomear as fotos diretamente no mapa e baixar um ZIP com os arquivos renomeados.
-            <br><strong>✨ Novidade:</strong> Passe o mouse sobre os marcadores no mapa por 3 segundos para ver um preview da imagem!
+            <br><strong>✨ Novidade:</strong> Passe o mouse sobre os marcadores no mapa por 2 segundos para ver um preview da imagem!
+            <br><strong>🛣️ Integração DNIT:</strong> Clique nos marcadores para ver informações das rodovias próximas automaticamente!
           </p>
         </div>
 
@@ -719,7 +722,7 @@
     </div>
 
     <script>
-      // Versão: 2.0
+      // Versão: 2.1
       
       // Variáveis globais
       let imagePoints = [];
@@ -734,6 +737,7 @@
       let currentTileLayer; // Camada de tiles atual
       let previewTimeout; // Timeout para o preview
       let isPreviewOpen = false; // Controle do preview
+      let rodoviaCache = new Map(); // Cache para dados de rodovias
 
       // Elementos DOM
       const dropZone = document.getElementById("dropZone");
@@ -747,6 +751,83 @@
       const layerSelector = document.getElementById("layerSelector");
       const maxZoomBtn = document.getElementById("maxZoomBtn");
       const imagePreview = document.getElementById("imagePreview");
+
+      // Função para consultar API do DNIT com controle de erro
+      async function consultarRodoviasDNIT(lat, lng) {
+        try {
+          const dataRef = new Date().toISOString().split('T')[0];
+          const url = `https://servicos.dnit.gov.br/sgplan/apigeo/rotas/localizarkm?lng=${lng}&lat=${lat}&r=250&data=${dataRef}`;
+          
+          console.log(`Consultando DNIT: ${url}`);
+          
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            mode: 'cors'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Erro na API DNIT: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log(`Resposta DNIT: ${JSON.stringify(data)}`);
+          
+          return data;
+        } catch (error) {
+          console.error(`Erro ao consultar DNIT: ${error.message}`);
+          return null;
+        }
+      }
+
+      // Função para processar dados das rodovias
+      function processarDadosRodovias(dadosDNIT) {
+        if (!dadosDNIT || !Array.isArray(dadosDNIT)) {
+          return { rodovias: [] };
+        }
+        
+        const rodovias = dadosDNIT.map(item => ({
+          br: item.br || 'N/A',
+          km: item.km || '0',
+          uf: item.uf || 'N/A',
+          tipoTrecho: item.tipoTrecho || 'N/A',
+          versao: item.versao || 'N/A'
+        }));
+        
+        return { rodovias };
+      }
+
+      // Função para gerar HTML das informações de rodovias (formato compacto)
+      function gerarHtmlRodovias(dadosProcessados, coordenadas) {
+        if (!dadosProcessados || !dadosProcessados.rodovias || dadosProcessados.rodovias.length === 0) {
+          return `
+            <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+              <div style="font-size: 11px; color: #6c757d;">
+                Nenhuma rodovia encontrada
+              </div>
+            </div>
+          `;
+        }
+        
+        const rodovias = dadosProcessados.rodovias;
+        
+        // Lista compacta das rodovias
+        const listaRodovias = rodovias.map(rodovia => {
+          const isKmZero = parseFloat(rodovia.km) === 0;
+          const alertIcon = isKmZero ? ' ⚠️' : '';
+          
+          return `BR-${rodovia.br} (Km ${rodovia.km})${alertIcon}`;
+        }).join(' • ');
+        
+        return `
+          <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 2px;">Rodovias:</div>
+            <div style="font-size: 12px; color: #495057;">${listaRodovias}</div>
+          </div>
+        `;
+      }
 
       // Definir diferentes camadas de tile com zoom máximo aprimorado
       const tileLayers = {
@@ -858,9 +939,23 @@
           const currentName = renamedFiles.get(point.filename) || point.filename;
           const isRenamed = renamedFiles.has(point.filename);
           
-          const marker = L.marker([point.latitude, point.longitude]).bindPopup(
-            createPopupContent(point, index, currentName, isRenamed)
-          );
+          const marker = L.marker([point.latitude, point.longitude]);
+          
+          // Criar popup com evento de abertura para consultar rodovias
+          const popup = L.popup({
+            maxWidth: 350,
+            minWidth: 320
+          }).setContent(createPopupContent(point, index, currentName, isRenamed));
+          
+          marker.bindPopup(popup);
+          
+          // Event listener para quando o popup é aberto
+          marker.on('popupopen', function(e) {
+            // Aguardar um pequeno delay para garantir que o DOM esteja renderizado
+            setTimeout(() => {
+              consultarRodoviasParaPopup(point, index);
+            }, 100);
+          });
 
           // Adicionar eventos de preview da imagem
           marker.on('mouseover', function(e) {
@@ -971,35 +1066,109 @@
         }
       });
 
-      // Criar conteúdo do popup com opção de renomear
+      // Criar conteúdo do popup com opção de renomear primeiro e rodovias no final
       function createPopupContent(point, index, currentName, isRenamed) {
         const fileNameWithoutExt = currentName.substring(0, currentName.lastIndexOf('.')) || currentName;
         const fileExt = currentName.substring(currentName.lastIndexOf('.')) || '';
         
         return `
-          <h4>📷 ${isRenamed ? '<span class="renamed-indicator">✏️ ' + currentName + '</span>' : currentName}</h4>
-          ${isRenamed ? `<p class="original-name">Original: ${point.filename}</p>` : ''}
-          <p><strong>Coordenadas:</strong><br>
-          Lat: ${point.latitude.toFixed(8)}<br>
-          Lng: ${point.longitude.toFixed(8)}</p>
-          <p><strong>Data/Hora:</strong><br>
-          ${point.datetime || "N/A"}</p>
-          
-          <div class="rename-section">
-            <p><strong>Renomear arquivo:</strong></p>
-            <input type="text" id="newName_${index}" class="rename-input" 
-                   value="${fileNameWithoutExt}" placeholder="Novo nome do arquivo">
-            <div class="popup-buttons">
-              <button class="popup-btn success" onclick="renameFile(${index}, '${point.filename}', '${fileExt}')">
-                ✓ Renomear
-              </button>
-              <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
-                🔍 Zoom Max
-              </button>
-              ${isRenamed ? `<button class="popup-btn danger" onclick="resetFileName('${point.filename}', ${index})">↶ Desfazer</button>` : ''}
+          <div style="width: 320px;">
+            <h4>📷 ${isRenamed ? '<span class="renamed-indicator">✏️ ' + currentName + '</span>' : currentName}</h4>
+            ${isRenamed ? `<p class="original-name">Original: ${point.filename}</p>` : ''}
+            <p><strong>Coordenadas:</strong><br>
+            Lat: ${point.latitude.toFixed(8)}<br>
+            Lng: ${point.longitude.toFixed(8)}</p>
+            <p><strong>Data/Hora:</strong><br>
+            ${point.datetime || "N/A"}</p>
+            
+            <div class="rename-section">
+              <p><strong>Renomear arquivo:</strong></p>
+              <input type="text" id="newName_${index}" class="rename-input" 
+                     value="${fileNameWithoutExt}" placeholder="Novo nome do arquivo">
+              <div class="popup-buttons">
+                <button class="popup-btn success" onclick="renameFile(${index}, '${point.filename}', '${fileExt}')">
+                  ✓ Renomear
+                </button>
+                <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
+                  🔍 Zoom Max
+                </button>
+                ${isRenamed ? `<button class="popup-btn danger" onclick="resetFileName('${point.filename}', ${index})">↶ Desfazer</button>` : ''}
+              </div>
+            </div>
+            
+            <!-- Seção de Rodovias (compacta no final) -->
+            <div id="rodoviaInfo_${index}">
+              <div id="rodoviaLoading_${index}" style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; text-align: center;">
+                <div style="display: inline-block; width: 12px; height: 12px; border: 2px solid #ddd; border-radius: 50%; border-top: 2px solid #6c757d; animation: spin 1s linear infinite; margin-right: 5px;"></div>
+                <span style="font-size: 11px; color: #6c757d;">Consultando rodovias...</span>
+              </div>
+              <div id="rodoviaContent_${index}" style="display: none;"></div>
             </div>
           </div>
         `;
+      }
+
+      // Função chamada quando o popup é aberto para consultar rodovias
+      async function consultarRodoviasParaPopup(point, index) {
+        const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
+        
+        // Verificar cache
+        if (rodoviaCache.has(coordKey)) {
+          exibirRodoviasNoPopup(rodoviaCache.get(coordKey), index, point);
+          return;
+        }
+        
+        try {
+          // Consultar API do DNIT
+          const dadosDNIT = await consultarRodoviasDNIT(point.latitude, point.longitude);
+          const dadosProcessados = processarDadosRodovias(dadosDNIT);
+          
+          // Armazenar no cache
+          rodoviaCache.set(coordKey, dadosProcessados);
+          
+          // Exibir resultados
+          exibirRodoviasNoPopup(dadosProcessados, index, point);
+          
+        } catch (error) {
+          console.error('Erro ao consultar rodovias:', error);
+          exibirErroRodovias(index);
+        }
+      }
+
+      // Função para exibir rodovias no popup
+      function exibirRodoviasNoPopup(dadosProcessados, index, point) {
+        const loadingDiv = document.getElementById(`rodoviaLoading_${index}`);
+        const contentDiv = document.getElementById(`rodoviaContent_${index}`);
+        
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (contentDiv) {
+          contentDiv.innerHTML = gerarHtmlRodovias(dadosProcessados, {
+            lat: point.latitude,
+            lng: point.longitude
+          });
+          contentDiv.style.display = 'block';
+        }
+      }
+
+      // Função para exibir erro na consulta de rodovias
+      function exibirErroRodovias(index) {
+        const loadingDiv = document.getElementById(`rodoviaLoading_${index}`);
+        const contentDiv = document.getElementById(`rodoviaContent_${index}`);
+        
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (contentDiv) {
+          contentDiv.innerHTML = `
+            <div style="padding: 10px; background: #ffebee; border: 1px solid #f44336; border-radius: 5px; text-align: center;">
+              <div style="color: #d32f2f; font-size: 13px; font-weight: bold;">
+                ❌ Erro ao consultar rodovias
+              </div>
+              <div style="color: #666; font-size: 11px; margin-top: 3px;">
+                Verifique sua conexão com a internet
+              </div>
+            </div>
+          `;
+          contentDiv.style.display = 'block';
+        }
       }
 
       // Função para renomear arquivo
@@ -1124,6 +1293,7 @@
         originalFiles.clear();
         imageDataMap.clear();
         renamedFiles.clear();
+        rodoviaCache.clear();
         processedImages = 0;
         imagesWithGeo = 0;
         totalImages = files.length;
