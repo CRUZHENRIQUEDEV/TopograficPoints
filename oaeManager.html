@@ -1299,16 +1299,39 @@
         showStructureDetails(structure) {
           this.bridgePanel.classList.remove("hidden");
 
+          // Função auxiliar para formatar arrays
+          const formatArray = (arr, fieldName) => {
+            if (!arr || !Array.isArray(arr) || arr.length === 0) return "N/A";
+            return arr
+              .map((item) => item[fieldName] || item.name || item)
+              .join(", ");
+          };
+
+          // Função auxiliar para formatar coordenadas
+          const formatCoordinate = (coord) => {
+            if (!coord) return "N/A";
+            return typeof coord === "number" ? coord.toFixed(6) : coord;
+          };
+
           this.bridgePanel.innerHTML = `
                     <div class="bridge-card">
                         <div class="bridge-header">
                             <div class="bridge-title">${
                               structure.identificacao || "Estrutura sem nome"
                             }</div>
-                            <div class="bridge-code">ID: ${structure.id}</div>
+                            <div class="bridge-code">ID: ${
+                              structure.id || "N/A"
+                            }</div>
                             <div class="bridge-code">Código SGO: ${
                               structure.codigoSgo || "N/A"
                             }</div>
+                            ${
+                              structure.codigoSnv
+                                ? `<div class="bridge-code">Código SNV: ${
+                                    structure.codigoSnv
+                                  } (${structure.versaoSnv || "N/A"})</div>`
+                                : ""
+                            }
                         </div>
                         
                         <div class="bridge-section">
@@ -1340,28 +1363,57 @@
                                       structure.altitude || "N/A"
                                     }m</div>
                                 </div>
+                                <div class="bridge-grid">
+                                    <div><strong>Latitude:</strong><br>${formatCoordinate(
+                                      structure.latitude
+                                    )}</div>
+                                    <div><strong>Longitude:</strong><br>${formatCoordinate(
+                                      structure.longitude
+                                    )}</div>
+                                </div>
+                                ${
+                                  structure.municipio?.ibge
+                                    ? `<div><strong>Código IBGE:</strong><br>${structure.municipio.ibge}</div>`
+                                    : ""
+                                }
                             </div>
                         </div>
                         
                         <div class="bridge-section">
-                            <div class="bridge-section-title">🏗️ Características</div>
+                            <div class="bridge-section-title">🏗️ Características Técnicas</div>
                             <div class="bridge-info">
                                 <div class="bridge-grid">
                                     <div><strong>Natureza:</strong><br>${
                                       structure.naturezaEstrutura?.name || "N/A"
                                     }</div>
-                                    <div><strong>Ano:</strong><br>${
+                                    <div><strong>Ano Construção:</strong><br>${
                                       structure.anoConstrucao || "N/A"
                                     }</div>
                                 </div>
                                 <div class="bridge-grid">
                                     <div><strong>Comprimento:</strong><br>${
-                                      structure.comprimento || "N/A"
-                                    }m</div>
+                                      structure.comprimento
+                                        ? `${structure.comprimento}m`
+                                        : "N/A"
+                                    }</div>
                                     <div><strong>Largura:</strong><br>${
-                                      structure.largura || "N/A"
-                                    }m</div>
+                                      structure.largura
+                                        ? `${structure.largura}m`
+                                        : "N/A"
+                                    }</div>
                                 </div>
+                                ${
+                                  structure.tipoTrem
+                                    ? `<div class="bridge-grid">
+                                    <div><strong>Tipo Trem:</strong><br>${
+                                      structure.tipoTrem.name || "N/A"
+                                    }</div>
+                                    <div><strong>Classe:</strong><br>${
+                                      structure.tipoTrem.value || "N/A"
+                                    }</div>
+                                </div>`
+                                    : ""
+                                }
                             </div>
                         </div>
                         
@@ -1371,9 +1423,96 @@
                                 <div><strong>Administradora:</strong><br>${
                                   structure.administradora?.razaoSocial || "N/A"
                                 }</div>
+                                ${
+                                  structure.administradora?.nomeFantasia &&
+                                  structure.administradora.nomeFantasia !==
+                                    structure.administradora.razaoSocial
+                                    ? `<div><strong>Nome Fantasia:</strong><br>${structure.administradora.nomeFantasia}</div>`
+                                    : ""
+                                }
+                                ${
+                                  structure.tipoAdministracao
+                                    ? `<div><strong>Tipo Administração:</strong><br>${
+                                        structure.tipoAdministracao.name ||
+                                        "N/A"
+                                      }</div>`
+                                    : ""
+                                }
                                 <div><strong>Superintendência:</strong><br>${
                                   structure.superintendencia?.nome || "N/A"
                                 }</div>
+                                ${
+                                  structure.superintendencia?.sigla
+                                    ? `<div><strong>Sigla:</strong><br>${structure.superintendencia.sigla}</div>`
+                                    : ""
+                                }
+                                ${
+                                  structure.unidadeLocal
+                                    ? `<div><strong>Unidade Local:</strong><br>${
+                                        structure.unidadeLocal.nome || "N/A"
+                                      }</div>`
+                                    : ""
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="bridge-section">
+                            <div class="bridge-section-title">👷 Projeto e Construção</div>
+                            <div class="bridge-info">
+                                <div class="bridge-grid">
+                                    <div><strong>Projetista:</strong><br>${
+                                      structure.projetista?.razaoSocial || "N/A"
+                                    }</div>
+                                    <div><strong>Construtora:</strong><br>${
+                                      structure.construtora?.razaoSocial ||
+                                      "N/A"
+                                    }</div>
+                                </div>
+                                ${
+                                  structure.localizacaoProjeto
+                                    ? `<div><strong>Localização Projeto:</strong><br>${structure.localizacaoProjeto}</div>`
+                                    : ""
+                                }
+                                ${
+                                  structure.localizacaoDocumentosConstrucao
+                                    ? `<div><strong>Docs. Construção:</strong><br>${structure.localizacaoDocumentosConstrucao}</div>`
+                                    : ""
+                                }
+                                ${
+                                  structure.localizacaoDocumentosDiversos
+                                    ? `<div><strong>Docs. Diversos:</strong><br>${structure.localizacaoDocumentosDiversos}</div>`
+                                    : ""
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="bridge-section">
+                            <div class="bridge-section-title">🔍 Inspeção</div>
+                            <div class="bridge-info">
+                                ${
+                                  structure.periodoInspecao
+                                    ? `<div><strong>Período Inspeção:</strong><br>A cada ${structure.periodoInspecao} anos</div>`
+                                    : ""
+                                }
+                                ${
+                                  structure.melhorEpocaInicial ||
+                                  structure.melhorEpocaFinal
+                                    ? `<div><strong>Melhor Época:</strong><br>${
+                                        structure.melhorEpocaInicial || "N/A"
+                                      } a ${
+                                        structure.melhorEpocaFinal || "N/A"
+                                      }</div>`
+                                    : ""
+                                }
+                                ${
+                                  structure.equipamentosNecessarios &&
+                                  structure.equipamentosNecessarios.length > 0
+                                    ? `<div><strong>Equipamentos Necessários:</strong><br>${formatArray(
+                                        structure.equipamentosNecessarios,
+                                        "name"
+                                      )}</div>`
+                                    : ""
+                                }
                             </div>
                         </div>
                     </div>
