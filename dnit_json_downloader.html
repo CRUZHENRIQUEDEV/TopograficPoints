@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DNIT JSON Downloader</title>
+    <title>JSON Downloader</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/themes.css" />
@@ -148,9 +148,9 @@
     </div>
 
     <div class="container">
-      <h1>🌉 DNIT JSON Downloader</h1>
+      <h1>🌉 JSON Downloader</h1>
       <div class="subtitle">
-        Sistema para download automático de dados de obras do DNIT via API
+        Sistema para download automático de dados de obras do via API
       </div>
 
       <div class="upload-area" id="uploadArea">
@@ -243,7 +243,7 @@
     </div>
 
     <script>
-      class DnitDownloader {
+      class Downloader {
         constructor() {
           this.csvData = [];
           this.directoryHandle = null;
@@ -657,7 +657,7 @@
 
       // Initialize when page loads
       document.addEventListener("DOMContentLoaded", () => {
-        new DnitDownloader();
+        new Downloader();
       });
     </script>
   </body>
