@@ -494,6 +494,17 @@
         </div>
       </div>
 
+      <!-- Seção de Informações de Rodovias DNIT -->
+      <div id="rodoviaInfo" class="limits-info" style="display: none; background: linear-gradient(135deg, #fff3e0, #e8f5e8); border: 2px solid #ff9800;">
+        <h3 style="margin: 0 0 10px 0; color: #e65100;">🛣️ Informações da Rodovia (DNIT)</h3>
+        <div id="rodoviaContent" class="limits-grid">
+          <!-- Conteúdo será preenchido dinamicamente -->
+        </div>
+        <div style="margin-top: 8px; font-size: 11px; color: #e65100; text-align: center;">
+          <strong>Fonte:</strong> API DNIT - Consulta automática baseada nas coordenadas dos pontos
+        </div>
+      </div>
+
       <!-- Seção de Diagramas de Esconsidade -->
       <div class="esconsidade-diagrams">
         <h2>📐 Conceitos de Esconsidade em Tabuleiros de Ponte</h2>
@@ -871,6 +882,7 @@
     </div>
 
     <script>
+      // Versão: 1.0
       // Variáveis globais para zoom, dados e rotação
       let currentZoom = 2.0; // Zoom padrão 200%
       let currentPoints1 = {};
@@ -880,6 +892,141 @@
       // Limites técnicos
       const LIMIT_TRANSVERSAL = 5.0; // 5%
       const LIMIT_LONGITUDINAL = 2.5; // 2.5%
+      
+      // Função para consultar API do DNIT
+      async function consultarRodoviasDNIT(lat, lng) {
+        try {
+          const dataRef = new Date().toISOString().split('T')[0];
+          const url = `https://servicos.dnit.gov.br/sgplan/apigeo/rotas/localizarkm?lng=${lng}&lat=${lat}&r=250&data=${dataRef}`;
+          
+          debugLog(`Consultando DNIT: ${url}`);
+          
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            mode: 'cors'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Erro na API DNIT: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          debugLog(`Resposta DNIT: ${JSON.stringify(data)}`);
+          
+          return data;
+        } catch (error) {
+          debugLog(`Erro ao consultar DNIT: ${error.message}`);
+          return [];
+        }
+      }
+      
+      // Função para processar dados das rodovias
+      function processarDadosRodovias(dadosRodovias) {
+        if (!dadosRodovias || dadosRodovias.length === 0) {
+          return null;
+        }
+        
+        // Agrupar por BR
+        const rodoviasPorBR = {};
+        dadosRodovias.forEach(rodovia => {
+          const br = rodovia.br;
+          if (!rodoviasPorBR[br]) {
+            rodoviasPorBR[br] = [];
+          }
+          rodoviasPorBR[br].push(rodovia);
+        });
+        
+        // Encontrar BR principal (mais próxima ou primeira encontrada)
+        const brPrincipal = Object.keys(rodoviasPorBR)[0];
+        const dadosPrincipais = rodoviasPorBR[brPrincipal][0];
+        
+        return {
+          br: dadosPrincipais.br,
+          km: parseFloat(dadosPrincipais.km).toFixed(3),
+          uf: dadosPrincipais.uf,
+          tipoTrecho: dadosPrincipais.sg_tp_trecho,
+          versao: dadosPrincipais.versao,
+          totalRodovias: dadosRodovias.length,
+          todasBRs: Object.keys(rodoviasPorBR)
+        };
+      }
+      
+      // Função para exibir informações das rodovias
+      function exibirInformacoesRodovias(dadosProcessados, pontoReferencia) {
+        const rodoviaInfo = document.getElementById('rodoviaInfo');
+        const rodoviaContent = document.getElementById('rodoviaContent');
+        
+        if (!dadosProcessados) {
+          rodoviaInfo.style.display = 'none';
+          return;
+        }
+        
+        const tipoTrechoTexto = dadosProcessados.tipoTrecho === 'B' ? 'Bidirecional' : 
+                               dadosProcessados.tipoTrecho === 'U' ? 'Unidirecional' : 
+                               dadosProcessados.tipoTrecho || 'N/A';
+        
+        rodoviaContent.innerHTML = `
+          <div class="limit-item" style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 2px solid #1976d2;">
+            <div style="font-weight: bold; color: #1976d2; font-size: 16px;">🛣️ RODOVIA PRINCIPAL</div>
+            <div style="font-size: 24px; font-weight: bold; color: #1976d2;">BR-${dadosProcessados.br}</div>
+            <div style="font-size: 12px; color: #1565c0;">Estado: ${dadosProcessados.uf}</div>
+          </div>
+          <div class="limit-item" style="background: linear-gradient(135deg, #fff3e0, #e8f5e8); border: 2px solid #ff9800;">
+            <div style="font-weight: bold; color: #e65100; font-size: 16px;">📍 QUILOMETRAGEM</div>
+            <div style="font-size: 24px; font-weight: bold; color: #e65100;">Km ${dadosProcessados.km}</div>
+            <div style="font-size: 12px; color: #bf360c;">Tipo: ${tipoTrechoTexto}</div>
+          </div>
+          ${dadosProcessados.totalRodovias > 1 ? `
+          <div class="limit-item" style="background: linear-gradient(135deg, #f3e5f5, #e8f5e8); border: 2px solid #9c27b0; grid-column: 1 / -1;">
+            <div style="font-weight: bold; color: #7b1fa2; font-size: 14px;">🗺️ RODOVIAS PRÓXIMAS</div>
+            <div style="font-size: 16px; font-weight: bold; color: #7b1fa2;">${dadosProcessados.todasBRs.map(br => `BR-${br}`).join(', ')}</div>
+            <div style="font-size: 12px; color: #4a148c;">Total encontradas: ${dadosProcessados.totalRodovias}</div>
+          </div>
+          ` : ''}
+          <div class="limit-item" style="background: linear-gradient(135deg, #e8f5e8, #fff3e0); border: 2px solid #4caf50; grid-column: 1 / -1;">
+            <div style="font-weight: bold; color: #2e7d32; font-size: 12px;">📌 PONTO DE REFERÊNCIA USADO</div>
+            <div style="font-size: 14px; font-weight: bold; color: #388e3c;">${pontoReferencia}</div>
+            <div style="font-size: 11px; color: #1b5e20;">Coordenadas usadas para consulta DNIT</div>
+          </div>
+        `;
+        
+        rodoviaInfo.style.display = 'block';
+      }
+      
+      // Função para obter coordenada de referência (preferencialmente LD_INICIO_OAE)
+      function obterCoordenadaReferencia(points) {
+        // Prioridade: LD_INICIO_OAE
+        let pontoReferencia = Object.values(points).find(p => 
+          (p.code && p.code.includes("LD_INICIO_OAE")) || 
+          (p.name && p.name.includes("LD_INICIO_OAE"))
+        );
+        
+        // Se não encontrou LD_INICIO, tenta LE_INICIO
+        if (!pontoReferencia) {
+          pontoReferencia = Object.values(points).find(p => 
+            (p.code && p.code.includes("LE_INICIO_OAE")) || 
+            (p.name && p.name.includes("LE_INICIO_OAE"))
+          );
+        }
+        
+        // Se ainda não encontrou, pega o primeiro ponto com coordenadas válidas
+        if (!pontoReferencia) {
+          pontoReferencia = Object.values(points).find(p => p.lat && p.long);
+        }
+        
+        if (!pontoReferencia || !pontoReferencia.lat || !pontoReferencia.long) {
+          return null;
+        }
+        
+        return {
+          lat: parseFloat(pontoReferencia.lat),
+          lng: parseFloat(pontoReferencia.long),
+          nomePonto: pontoReferencia.code || pontoReferencia.name || 'Ponto não identificado'
+        };
+      }
       
       function debugLog(message) {
         console.log(message);
@@ -1072,6 +1219,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         document.getElementById('csvData1').value = '';
         document.getElementById('csvData2').value = '';
         document.getElementById('infoPanel').style.display = 'none';
+        document.getElementById('rodoviaInfo').style.display = 'none';
         document.getElementById('errorMsg').innerHTML = '';
         document.getElementById('debugInfo').innerHTML = '';
         document.getElementById('debugInfo').style.display = 'none';
@@ -2326,7 +2474,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                 <div style="font-weight: bold; color: #007bff;">🌉 Distância Total</div>
                 <div style="font-size: 16px; font-weight: bold; color: #007bff; margin: 5px 0;">${crossDistance.toFixed(3)}m</div>
                 <div style="font-size: 12px; color: #6c757d;">LE(1) ↔ LD(2)</div>
-              </div>
+            </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: ${crossElevation >= 0 ? '#4caf50' : '#f44336'};">📏 Diferença Elevação</div>
                 <div style="font-size: 16px; font-weight: bold; color: ${crossElevation >= 0 ? '#4caf50' : '#f44336'}; margin: 5px 0;">${crossElevation >= 0 ? '+' : ''}${crossElevation.toFixed(3)}m</div>
@@ -2454,7 +2602,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #9c27b0;">📏 Largura Média</div>
                 <div style="font-size: 18px; font-weight: bold; color: #9c27b0; margin: 5px 0;">${media1Largura.toFixed(3)} m</div>
-              </div>
+            </div>
               <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
                 <div style="font-weight: bold; color: #ff9800;">📐 Comprimento Médio</div>
                 <div style="font-size: 18px; font-weight: bold; color: #ff9800; margin: 5px 0;">${media1Comprimento.toFixed(3)} m</div>
@@ -2622,12 +2770,39 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
             return;
           }
 
+          // Consultar informações da rodovia DNIT
+          consultarInformacoesRodovia(points1);
+
           debugLog("Iniciando visualização...");
           drawVisualization(points1, points2);
         } catch (error) {
           console.error("Erro:", error);
           debugLog(`ERRO: ${error.message}`);
           errorMsg.innerHTML = `<div class="error">❌ Erro ao processar dados: ${error.message}</div>`;
+        }
+      }
+      
+      // Função para consultar informações da rodovia
+      async function consultarInformacoesRodovia(points) {
+        try {
+          const coordRef = obterCoordenadaReferencia(points);
+          
+          if (!coordRef) {
+            debugLog("Não foi possível obter coordenada de referência para consulta DNIT");
+            exibirInformacoesRodovias(null, null);
+            return;
+          }
+          
+          debugLog(`Usando ponto de referência: ${coordRef.nomePonto} (${coordRef.lat}, ${coordRef.lng})`);
+          
+          const dadosRodovias = await consultarRodoviasDNIT(coordRef.lat, coordRef.lng);
+          const dadosProcessados = processarDadosRodovias(dadosRodovias);
+          
+          exibirInformacoesRodovias(dadosProcessados, coordRef.nomePonto);
+          
+        } catch (error) {
+          debugLog(`Erro ao consultar informações da rodovia: ${error.message}`);
+          exibirInformacoesRodovias(null, null);
         }
       }
 
