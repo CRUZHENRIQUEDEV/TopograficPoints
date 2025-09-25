@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatador de Mensagens - Sistema de Controle</title>
     <style>
-        /* Versão: 3.1 - Recriado do zero com parser inteligente */
+        /* Versão: 4.3 - Sistema completo com backup automático e importação */
         
         :root {
             --primary: #2563eb;
@@ -189,6 +189,32 @@
         .btn-success { background: var(--success); color: white; }
         .btn-info { background: var(--info); color: white; }
         .btn-secondary { background: var(--bg-quaternary); color: var(--text-primary); }
+
+        .import-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .import-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .import-section p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .import-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
         .messages-section {
             background: var(--bg-secondary);
@@ -428,20 +454,6 @@
             background: rgba(8, 145, 178, 0.1);
         }
 
-        .edit-response-btn {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-size: 12px;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        .edit-response-btn:hover {
-            background: rgba(37, 99, 235, 0.1);
-        }
-
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -496,39 +508,220 @@
             opacity: 0.5;
         }
 
+        /* Modal de Backup Automático */
+        .backup-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .backup-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .backup-modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px var(--shadow);
+            border: 1px solid var(--border);
+            transform: scale(0.9);
+            animation: modalSlideUp 0.3s ease forwards;
+        }
+
+        .backup-modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .backup-modal-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .backup-modal-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .backup-modal-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .backup-modal-body {
+            margin-bottom: 25px;
+        }
+
+        .backup-stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .backup-stat {
+            text-align: center;
+        }
+
+        .backup-stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .backup-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .backup-modal-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .backup-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .backup-btn-primary {
+            background: var(--success);
+            color: white;
+        }
+
+        .backup-btn-primary:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+
+        .backup-btn-secondary {
+            background: var(--bg-quaternary);
+            color: var(--text-primary);
+        }
+
+        .backup-btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .backup-btn-danger {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .backup-btn-danger:hover {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+        }
+
+        .backup-timer-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 999;
+            display: none;
+        }
+
+        .backup-timer-info.show {
+            display: block;
+            animation: slideInUp 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideUp {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .app-container { padding: 15px; }
-            
             .header h1 { font-size: 2rem; }
-            
             .controls {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
             .btn {
                 justify-content: center;
                 padding: 14px 20px;
             }
-            
             .status-bar {
                 flex-direction: column;
                 align-items: stretch;
                 text-align: center;
             }
-            
             .message-meta {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
             }
-            
             .theme-toggle {
                 position: relative;
                 top: auto;
                 right: auto;
                 margin-bottom: 20px;
                 align-self: center;
+            }
+            .import-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .backup-modal-actions {
+                flex-direction: column;
+            }
+            .backup-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .backup-btn {
+                min-width: auto;
             }
         }
 
@@ -588,6 +781,28 @@ maria - Avaliador'></textarea>
                     <button class="btn btn-info" onclick="downloadTxt()" style="display: none;" id="downloadBtn">
                         <span>💾</span> Download TXT
                     </button>
+                    <button class="btn btn-secondary" onclick="toggleAutoBackup()" id="toggleBackupBtn" style="display: none;">
+                        <span id="backupBtnIcon">🔄</span> <span id="backupBtnText">Auto Backup</span>
+                    </button>
+                </div>
+
+                <!-- Seção de Importação de TXT -->
+                <div class="import-section">
+                    <h3>📥 Importar Respostas Anteriores</h3>
+                    <p>Selecione um arquivo TXT exportado anteriormente para recuperar as respostas já dadas</p>
+                    <div class="import-controls">
+                        <input 
+                            type="file" 
+                            id="txtFile" 
+                            accept=".txt" 
+                            style="display: none;"
+                            onchange="handleFileImport(this)"
+                        >
+                        <button class="btn btn-info" onclick="document.getElementById('txtFile').click()">
+                            <span>📁</span> Selecionar TXT
+                        </button>
+                        <span id="fileName" style="color: var(--text-muted); font-size: 14px;"></span>
+                    </div>
                 </div>
 
                 <div id="alerts"></div>
@@ -615,23 +830,360 @@ maria - Avaliador'></textarea>
                 </div>
             </section>
         </main>
+
+        <!-- Modal de Backup Automático -->
+        <div class="backup-modal" id="backupModal">
+            <div class="backup-modal-content">
+                <div class="backup-modal-header">
+                    <span class="backup-modal-icon">💾</span>
+                    <h3 class="backup-modal-title">Backup Automático</h3>
+                    <p class="backup-modal-subtitle">Hora de salvar seu progresso!</p>
+                </div>
+                
+                <div class="backup-modal-body">
+                    <div class="backup-stats">
+                        <div class="backup-stat">
+                            <div class="backup-stat-number" id="backupTotalResponses">0</div>
+                            <div class="backup-stat-label">Respostas</div>
+                        </div>
+                        <div class="backup-stat">
+                            <div class="backup-stat-number" id="backupCompletedMessages">0</div>
+                            <div class="backup-stat-label">Corrigidas</div>
+                        </div>
+                        <div class="backup-stat">
+                            <div class="backup-stat-number" id="backupPendingMessages">0</div>
+                            <div class="backup-stat-label">Pendentes</div>
+                        </div>
+                    </div>
+                    
+                    <p style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+                        Você gostaria de fazer o download do seu progresso atual?
+                    </p>
+                </div>
+                
+                <div class="backup-modal-actions">
+                    <button class="backup-btn backup-btn-primary" onclick="confirmBackup()">
+                        <span>💾</span> Salvar Agora
+                    </button>
+                    <button class="backup-btn backup-btn-secondary" onclick="snoozeBackup()">
+                        <span>⏰</span> Adiar 5min
+                    </button>
+                    <button class="backup-btn backup-btn-danger" onclick="disableBackup()">
+                        <span>❌</span> Desabilitar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer de Backup -->
+        <div class="backup-timer-info" id="backupTimerInfo">
+            <span>🕐</span> Próximo backup em: <strong id="backupCountdown">--:--</strong>
+        </div>
     </div>
 
     <script>
-        // Versão: 4.1 - Adicionado botão para copiar resposta individual
+        // Versão: 4.3 - Sistema completo com backup automático e importação CORRIGIDO
         
         let messages = [];
         let completionStates = new Map();
         let messageResponses = new Map();
+        let importedResponses = new Map();
+
+        // Sistema de Backup Automático
+        let backupTimer = null;
+        let backupInterval = 5 * 60 * 1000; // 5 minutos
+        let backupEnabled = true;
+        let nextBackupTime = null;
+        let countdownInterval = null;
 
         // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
             initializeTheme();
+            initializeBackupSystem();
         });
 
-        /**
-         * Processa os dados de entrada - JSON ou texto formatado
-         */
+        function initializeBackupSystem() {
+            const savedPreference = localStorage.getItem('autoBackupEnabled');
+            if (savedPreference !== null) {
+                backupEnabled = JSON.parse(savedPreference);
+            }
+            
+            if (backupEnabled) {
+                startBackupTimer();
+            }
+        }
+
+        function startBackupTimer() {
+            if (!backupEnabled) return;
+            
+            clearTimeout(backupTimer);
+            clearInterval(countdownInterval);
+            
+            nextBackupTime = new Date(Date.now() + backupInterval);
+            
+            backupTimer = setTimeout(function() {
+                checkAndPromptBackup();
+            }, backupInterval);
+            
+            startBackupCountdown();
+            
+            console.log('Backup automático iniciado - próximo em 5 minutos');
+        }
+
+        function startBackupCountdown() {
+            const timerInfo = document.getElementById('backupTimerInfo');
+            const countdown = document.getElementById('backupCountdown');
+            
+            if (!backupEnabled || !nextBackupTime) {
+                timerInfo.classList.remove('show');
+                return;
+            }
+            
+            if (messageResponses.size > 0) {
+                timerInfo.classList.add('show');
+            }
+            
+            countdownInterval = setInterval(function() {
+                const now = new Date();
+                const timeLeft = nextBackupTime - now;
+                
+                if (timeLeft <= 0) {
+                    countdown.textContent = '00:00';
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                
+                const minutes = Math.floor(timeLeft / 60000);
+                const seconds = Math.floor((timeLeft % 60000) / 1000);
+                countdown.textContent = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+            }, 1000);
+        }
+
+        function checkAndPromptBackup() {
+            if (messages.length === 0 || messageResponses.size === 0) {
+                if (backupEnabled) {
+                    startBackupTimer();
+                }
+                return;
+            }
+            
+            updateBackupModalStats();
+            showBackupModal();
+        }
+
+        function updateBackupModalStats() {
+            const totalResponses = messageResponses.size;
+            let completed = 0;
+            
+            completionStates.forEach(function(isCompleted) {
+                if (isCompleted) completed++;
+            });
+            
+            const pending = messages.length - completed;
+            
+            document.getElementById('backupTotalResponses').textContent = totalResponses;
+            document.getElementById('backupCompletedMessages').textContent = completed;
+            document.getElementById('backupPendingMessages').textContent = pending;
+        }
+
+        function showBackupModal() {
+            const modal = document.getElementById('backupModal');
+            modal.classList.add('show');
+            
+            clearInterval(countdownInterval);
+            document.getElementById('backupTimerInfo').classList.remove('show');
+        }
+
+        function hideBackupModal() {
+            const modal = document.getElementById('backupModal');
+            modal.classList.remove('show');
+        }
+
+        function confirmBackup() {
+            hideBackupModal();
+            downloadTxt();
+            showAlert('Backup realizado com sucesso!', 'success');
+            
+            if (backupEnabled) {
+                startBackupTimer();
+            }
+        }
+
+        function snoozeBackup() {
+            hideBackupModal();
+            showAlert('Backup adiado por 5 minutos', 'success');
+            
+            if (backupEnabled) {
+                startBackupTimer();
+            }
+        }
+
+        function disableBackup() {
+            backupEnabled = false;
+            localStorage.setItem('autoBackupEnabled', 'false');
+            
+            clearTimeout(backupTimer);
+            clearInterval(countdownInterval);
+            
+            hideBackupModal();
+            document.getElementById('backupTimerInfo').classList.remove('show');
+            
+            showAlert('Backup automático desabilitado', 'success');
+        }
+
+        function enableAutoBackup() {
+            backupEnabled = true;
+            localStorage.setItem('autoBackupEnabled', 'true');
+            startBackupTimer();
+            showAlert('Backup automático reabilitado!', 'success');
+        }
+
+        function handleFileImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.txt')) {
+                showAlert('Por favor, selecione um arquivo TXT válido', 'error');
+                return;
+            }
+
+            const fileName = document.getElementById('fileName');
+            fileName.textContent = 'Arquivo selecionado: ' + file.name;
+            fileName.style.color = 'var(--success)';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const txtContent = e.target.result;
+                    const parsedResponses = parseTxtFile(txtContent);
+                    
+                    if (parsedResponses.size === 0) {
+                        showAlert('Nenhuma resposta válida encontrada no arquivo TXT', 'error');
+                        return;
+                    }
+
+                    importedResponses = parsedResponses;
+                    showAlert(parsedResponses.size + ' resposta(s) importada(s) do arquivo TXT!', 'success');
+                    
+                    if (messages.length > 0) {
+                        mergeImportedResponses();
+                    }
+                    
+                } catch (error) {
+                    showAlert('Erro ao processar arquivo TXT: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file, 'utf-8');
+        }
+
+        function parseTxtFile(txtContent) {
+            const responses = new Map();
+            const lines = txtContent.split('\n');
+            
+            let currentMessageText = '';
+            let currentResponse = '';
+            let inResponseSection = false;
+            let responseDate = '';
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line.startsWith('MENSAGEM ORIGINAL')) {
+                    if (currentMessageText && currentResponse) {
+                        const messageKey = normalizeMessageForMatching(currentMessageText);
+                        responses.set(messageKey, {
+                            text: currentResponse.trim(),
+                            date: responseDate || new Date().toLocaleString('pt-BR')
+                        });
+                    }
+                    
+                    currentMessageText = '';
+                    currentResponse = '';
+                    inResponseSection = false;
+                    responseDate = '';
+                    continue;
+                }
+                
+                if (line === 'SUA RESPOSTA:') {
+                    inResponseSection = true;
+                    continue;
+                }
+                
+                if (line.startsWith('Respondido em:')) {
+                    responseDate = line.replace('Respondido em:', '').trim();
+                    continue;
+                }
+                
+                if (line.startsWith('===') || line.startsWith('---') || 
+                    line.startsWith('CONTROLE DE') || line.startsWith('Gerado em:') || 
+                    line.startsWith('Total:') || line.startsWith('Sistema de Controle') ||
+                    line.includes('✅') || line.includes('⏳') || line === '') {
+                    continue;
+                }
+                
+                if (isDateTimeLine(line) || isAuthorRoleLine(line)) {
+                    continue;
+                }
+                
+                if (inResponseSection) {
+                    if (currentResponse) currentResponse += '\n';
+                    currentResponse += line;
+                } else if (!inResponseSection && line) {
+                    if (currentMessageText) currentMessageText += ' ';
+                    currentMessageText += line;
+                }
+            }
+            
+            if (currentMessageText && currentResponse) {
+                const messageKey = normalizeMessageForMatching(currentMessageText);
+                responses.set(messageKey, {
+                    text: currentResponse.trim(),
+                    date: responseDate || new Date().toLocaleString('pt-BR')
+                });
+            }
+            
+            return responses;
+        }
+
+        function isDateTimeLine(line) {
+            return /\d{2}\/\d{2}\/\d{4}/.test(line) && /\d{2}:\d{2}:\d{2}/.test(line);
+        }
+
+        function isAuthorRoleLine(line) {
+            return line.includes(' - ') && !line.match(/^\d+\./) && line.length < 100 && !line.includes(':');
+        }
+
+        function normalizeMessageForMatching(text) {
+            return text
+                .toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function mergeImportedResponses() {
+            let mergedCount = 0;
+            
+            messages.forEach(function(message, index) {
+                const messageKey = normalizeMessageForMatching(message.text);
+                const importedResponse = importedResponses.get(messageKey);
+                
+                if (importedResponse && !messageResponses.has(index)) {
+                    messageResponses.set(index, importedResponse);
+                    completionStates.set(index, true);
+                    mergedCount++;
+                }
+            });
+            
+            if (mergedCount > 0) {
+                renderMessages();
+                showAlert(mergedCount + ' resposta(s) recuperada(s) e aplicada(s) às mensagens atuais!', 'success');
+            } else {
+                showAlert('Nenhuma correspondência encontrada entre as mensagens atuais e o arquivo importado', 'error');
+            }
+        }
+
         function processData() {
             const input = document.getElementById('inputData').value.trim();
             
@@ -649,47 +1201,48 @@ maria - Avaliador'></textarea>
                 }
 
                 messages = parsedMessages;
-                renderMessages();
-                showAlert(`${messages.length} mensagem(ns) processada(s) com sucesso!`, 'success');
                 
-                // Mostrar botões e seção
+                if (importedResponses.size > 0) {
+                    mergeImportedResponses();
+                } else {
+                    renderMessages();
+                }
+                
+                showAlert(messages.length + ' mensagem(ns) processada(s) com sucesso!', 'success');
+                
                 document.getElementById('messagesSection').style.display = 'block';
                 document.getElementById('copyBtn').style.display = 'flex';
                 document.getElementById('downloadBtn').style.display = 'flex';
+                document.getElementById('toggleBackupBtn').style.display = 'flex';
+                updateBackupButton();
                 
             } catch (error) {
-                showAlert(`Erro ao processar dados: ${error.message}`, 'error');
+                showAlert('Erro ao processar dados: ' + error.message, 'error');
             }
         }
 
-        /**
-         * Parser inteligente - detecta formato automaticamente
-         */
         function parseInput(input) {
-            // Tentar JSON primeiro
             try {
                 const jsonData = JSON.parse(input);
                 const messagesArray = Array.isArray(jsonData) ? jsonData : [jsonData];
                 
-                return messagesArray.map(msg => ({
-                    text: msg.mensagem || msg.message || msg.texto || '',
-                    author: msg.nomeUsuario || msg.author || msg.usuario || 'Usuário',
-                    role: msg.perfil || msg.role || msg.cargo || 'Sistema',
-                    date: formatDateTime(msg.dataHistorico || msg.date || msg.data || new Date().toISOString())
-                }));
+                return messagesArray.map(function(msg) {
+                    return {
+                        text: msg.mensagem || msg.message || msg.texto || '',
+                        author: msg.nomeUsuario || msg.author || msg.usuario || 'Usuário',
+                        role: msg.perfil || msg.role || msg.cargo || 'Sistema',
+                        date: formatDateTime(msg.dataHistorico || msg.date || msg.data || new Date().toISOString())
+                    };
+                });
                 
             } catch (jsonError) {
-                // Se não for JSON, tentar texto formatado
                 return parseFormattedText(input);
             }
         }
 
-        /**
-         * Parser para texto formatado
-         */
         function parseFormattedText(text) {
             const messages = [];
-            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            const lines = text.split('\n').map(function(line) { return line.trim(); }).filter(function(line) { return line; });
             
             let currentMessage = null;
             let messageText = '';
@@ -697,9 +1250,7 @@ maria - Avaliador'></textarea>
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 
-                // Detectar linha de data
                 if (isDateLine(line)) {
-                    // Salvar mensagem anterior se existir
                     if (currentMessage && messageText) {
                         messages.push({
                             text: messageText.trim(),
@@ -709,11 +1260,10 @@ maria - Avaliador'></textarea>
                         });
                     }
                     
-                    // Resetar para próxima mensagem
                     const dateMatch = line.match(/(\d{2}\/\d{2}\/\d{4}),?\s*(\d{2}:\d{2}:\d{2})/);
                     if (dateMatch) {
                         currentMessage = {
-                            date: formatDateTime(`${dateMatch[1]} ${dateMatch[2]}`),
+                            date: formatDateTime(dateMatch[1] + ' ' + dateMatch[2]),
                             author: 'Usuário',
                             role: 'Sistema'
                         };
@@ -722,7 +1272,6 @@ maria - Avaliador'></textarea>
                     continue;
                 }
                 
-                // Detectar linha de autor
                 if (isAuthorLine(line)) {
                     const parts = line.split(' - ');
                     if (parts.length >= 2 && currentMessage) {
@@ -732,14 +1281,12 @@ maria - Avaliador'></textarea>
                     continue;
                 }
                 
-                // Linha de conteúdo da mensagem
                 if (currentMessage) {
                     if (messageText) messageText += ' ';
                     messageText += line;
                 }
             }
             
-            // Adicionar última mensagem
             if (currentMessage && messageText) {
                 messages.push({
                     text: messageText.trim(),
@@ -752,33 +1299,37 @@ maria - Avaliador'></textarea>
             return messages;
         }
 
-        /**
-         * Verifica se é linha de data
-         */
         function isDateLine(line) {
             return /\d{2}\/\d{2}\/\d{4}/.test(line);
         }
 
-        /**
-         * Verifica se é linha de autor
-         */
         function isAuthorLine(line) {
             return line.includes(' - ') && !line.match(/^\d+\./) && line.length < 100;
         }
 
-        /**
-         * Formata data para padrão brasileiro
-         */
         function formatDateTime(dateInput) {
             try {
                 let date;
                 
                 if (typeof dateInput === 'string') {
-                    // Se já está no formato brasileiro
                     if (dateInput.includes('/')) {
-                        const [datePart, timePart] = dateInput.split(/[,\s]+/);
-                        const [day, month, year] = datePart.split('/');
-                        date = new Date(year, month - 1, day, ...(timePart ? timePart.split(':') : [0, 0, 0]));
+                        const parts = dateInput.split(/[,\s]+/);
+                        const datePart = parts[0];
+                        const timePart = parts[1];
+                        const dateComponents = datePart.split('/');
+                        const day = parseInt(dateComponents[0], 10);
+                        const month = parseInt(dateComponents[1], 10);
+                        const year = parseInt(dateComponents[2], 10);
+                        
+                        if (timePart) {
+                            const timeComponents = timePart.split(':');
+                            const hour = parseInt(timeComponents[0], 10);
+                            const minute = parseInt(timeComponents[1], 10);
+                            const second = parseInt(timeComponents[2], 10) || 0;
+                            date = new Date(year, month - 1, day, hour, minute, second);
+                        } else {
+                            date = new Date(year, month - 1, day);
+                        }
                     } else {
                         date = new Date(dateInput);
                     }
@@ -799,52 +1350,44 @@ maria - Avaliador'></textarea>
             }
         }
 
-        /**
-         * Renderiza as mensagens na tela
-         */
         function renderMessages() {
             const container = document.getElementById('messagesList');
             container.innerHTML = '';
             
-            messages.forEach((message, index) => {
+            messages.forEach(function(message, index) {
                 const isCompleted = completionStates.get(index) || false;
                 const savedResponse = messageResponses.get(index);
                 
                 const messageCard = document.createElement('div');
-                messageCard.className = `message-card ${isCompleted ? 'completed' : ''}`;
+                messageCard.className = 'message-card' + (isCompleted ? ' completed' : '');
                 messageCard.setAttribute('data-message-id', index);
                 
-                messageCard.innerHTML = `
-                    <div class="message-header">
-                        <div class="checkbox-container">
-                            <input 
-                                type="checkbox" 
-                                class="message-checkbox" 
-                                ${isCompleted ? 'checked' : ''}
-                                onchange="toggleCompletion(${index})"
-                            >
-                        </div>
-                        <div class="message-content">
-                            <div class="message-text">${message.text}</div>
-                            <div class="message-meta">
-                                <div>
-                                    <strong>${message.author}</strong> - ${message.role}<br>
-                                    <small>${message.date}</small>
-                                </div>
-                                <div class="status-badge ${isCompleted ? 'completed' : 'pending'}">
-                                    ${isCompleted ? '✅ Corrigido' : '⏳ Pendente'}
-                                </div>
-                            </div>
-                            
-                            <div class="response-section">
-                                ${savedResponse ? 
+                messageCard.innerHTML = 
+                    '<div class="message-header">' +
+                        '<div class="checkbox-container">' +
+                            '<input type="checkbox" class="message-checkbox" ' +
+                            (isCompleted ? 'checked' : '') +
+                            ' onchange="toggleCompletion(' + index + ')">' +
+                        '</div>' +
+                        '<div class="message-content">' +
+                            '<div class="message-text">' + message.text + '</div>' +
+                            '<div class="message-meta">' +
+                                '<div>' +
+                                    '<strong>' + message.author + '</strong> - ' + message.role + '<br>' +
+                                    '<small>' + message.date + '</small>' +
+                                '</div>' +
+                                '<div class="status-badge ' + (isCompleted ? 'completed' : 'pending') + '">' +
+                                    (isCompleted ? '✅ Corrigido' : '⏳ Pendente') +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="response-section">' +
+                                (savedResponse ? 
                                     generateSavedResponseHtml(savedResponse, index) : 
                                     generateResponseInputHtml(index)
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
+                                ) +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
                 
                 container.appendChild(messageCard);
             });
@@ -852,53 +1395,37 @@ maria - Avaliador'></textarea>
             updateStatusCounter();
         }
 
-        /**
-         * Gera HTML para campo de resposta
-         */
         function generateResponseInputHtml(index) {
-            return `
-                <div class="response-header">
-                    <span class="response-label">💬 Sua Resposta:</span>
-                </div>
-                <textarea 
-                    id="response-${index}" 
-                    class="response-textarea" 
-                    placeholder="Digite sua resposta para esta mensagem..."
-                ></textarea>
-                <div class="response-controls">
-                    <button class="response-btn btn-save-response" onclick="saveResponse(${index})">
-                        Salvar Resposta
-                    </button>
-                </div>
-            `;
+            return '<div class="response-header">' +
+                    '<span class="response-label">💬 Sua Resposta:</span>' +
+                '</div>' +
+                '<textarea id="response-' + index + '" class="response-textarea" ' +
+                'placeholder="Digite sua resposta para esta mensagem..."></textarea>' +
+                '<div class="response-controls">' +
+                    '<button class="response-btn btn-save-response" onclick="saveResponse(' + index + ')">' +
+                        'Salvar Resposta' +
+                    '</button>' +
+                '</div>';
         }
 
-        /**
-         * Gera HTML para resposta salva
-         */
         function generateSavedResponseHtml(response, index) {
-            return `
-                <div class="saved-response">
-                    <div class="saved-response-header">
-                        <span class="saved-response-label">✅ Sua Resposta</span>
-                        <div class="response-actions">
-                            <span class="saved-response-date">${response.date}</span>
-                            <button class="action-btn copy-btn" onclick="copyResponse(${index})" title="Copiar resposta">
-                                📋 Copiar
-                            </button>
-                            <button class="action-btn" onclick="editResponse(${index})" title="Editar resposta">
-                                ✏️ Editar
-                            </button>
-                        </div>
-                    </div>
-                    <div class="saved-response-text" id="response-text-${index}">${response.text}</div>
-                </div>
-            `;
+            return '<div class="saved-response">' +
+                    '<div class="saved-response-header">' +
+                        '<span class="saved-response-label">✅ Sua Resposta</span>' +
+                        '<div class="response-actions">' +
+                            '<span class="saved-response-date">' + response.date + '</span>' +
+                            '<button class="action-btn copy-btn" onclick="copyResponse(' + index + ')" title="Copiar resposta">' +
+                                '📋 Copiar' +
+                            '</button>' +
+                            '<button class="action-btn" onclick="editResponse(' + index + ')" title="Editar resposta">' +
+                                '✏️ Editar' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="saved-response-text" id="response-text-' + index + '">' + response.text + '</div>' +
+                '</div>';
         }
 
-        /**
-         * Copia o texto de uma resposta específica
-         */
         function copyResponse(index) {
             const response = messageResponses.get(index);
             if (!response) {
@@ -906,18 +1433,15 @@ maria - Avaliador'></textarea>
                 return;
             }
 
-            navigator.clipboard.writeText(response.text).then(() => {
+            navigator.clipboard.writeText(response.text).then(function() {
                 showAlert('Resposta copiada para a área de transferência!', 'success');
-            }).catch(() => {
+            }).catch(function() {
                 showAlert('Erro ao copiar. Tente novamente.', 'error');
             });
         }
 
-        /**
-         * Salva resposta de uma mensagem
-         */
         function saveResponse(index) {
-            const textarea = document.getElementById(`response-${index}`);
+            const textarea = document.getElementById('response-' + index);
             const responseText = textarea.value.trim();
             
             if (!responseText) {
@@ -933,42 +1457,36 @@ maria - Avaliador'></textarea>
             messageResponses.set(index, response);
             renderMessages();
             showAlert('Resposta salva com sucesso!', 'success');
-        }
-
-        /**
-         * Edita resposta existente
-         */
-        function editResponse(index) {
-            const savedResponse = messageResponses.get(index);
             
-            // Substituir resposta salva por campo de edição
-            const responseSection = document.querySelector(`[data-message-id="${index}"] .response-section`);
-            if (responseSection) {
-                responseSection.innerHTML = `
-                    <div class="response-header">
-                        <span class="response-label">✏️ Editando Resposta:</span>
-                    </div>
-                    <textarea 
-                        id="response-${index}" 
-                        class="response-textarea"
-                    >${savedResponse.text}</textarea>
-                    <div class="response-controls">
-                        <button class="response-btn btn-save-response" onclick="updateResponse(${index})">
-                            Atualizar Resposta
-                        </button>
-                        <button class="response-btn btn-clear-response" onclick="cancelEdit(${index})">
-                            Cancelar
-                        </button>
-                    </div>
-                `;
+            if (messageResponses.size === 1 && backupEnabled && !backupTimer) {
+                startBackupTimer();
             }
         }
 
-        /**
-         * Atualiza resposta editada
-         */
+        function editResponse(index) {
+            const savedResponse = messageResponses.get(index);
+            
+            const responseSection = document.querySelector('[data-message-id="' + index + '"] .response-section');
+            if (responseSection) {
+                responseSection.innerHTML = 
+                    '<div class="response-header">' +
+                        '<span class="response-label">✏️ Editando Resposta:</span>' +
+                    '</div>' +
+                    '<textarea id="response-' + index + '" class="response-textarea">' + 
+                    savedResponse.text + '</textarea>' +
+                    '<div class="response-controls">' +
+                        '<button class="response-btn btn-save-response" onclick="updateResponse(' + index + ')">' +
+                            'Atualizar Resposta' +
+                        '</button>' +
+                        '<button class="response-btn btn-clear-response" onclick="cancelEdit(' + index + ')">' +
+                            'Cancelar' +
+                        '</button>' +
+                    '</div>';
+            }
+        }
+
         function updateResponse(index) {
-            const textarea = document.getElementById(`response-${index}`);
+            const textarea = document.getElementById('response-' + index);
             const responseText = textarea.value.trim();
             
             if (!responseText) {
@@ -986,30 +1504,21 @@ maria - Avaliador'></textarea>
             showAlert('Resposta atualizada com sucesso!', 'success');
         }
 
-        /**
-         * Cancela edição
-         */
         function cancelEdit(index) {
             renderMessages();
         }
 
-        /**
-         * Alterna o estado de conclusão de uma mensagem
-         */
         function toggleCompletion(index) {
             const isCompleted = !completionStates.get(index);
             completionStates.set(index, isCompleted);
             renderMessages();
         }
 
-        /**
-         * Atualiza contador de status
-         */
         function updateStatusCounter() {
             const total = messages.length;
             let done = 0;
             
-            completionStates.forEach(isCompleted => {
+            completionStates.forEach(function(isCompleted) {
                 if (isCompleted) done++;
             });
             
@@ -1020,22 +1529,16 @@ maria - Avaliador'></textarea>
             document.getElementById('pendingCount').textContent = pending;
         }
 
-        /**
-         * Copia resultado para área de transferência
-         */
         function copyToClipboard() {
             const content = generateTextOutput();
             
-            navigator.clipboard.writeText(content).then(() => {
+            navigator.clipboard.writeText(content).then(function() {
                 showAlert('Conteúdo copiado para a área de transferência!', 'success');
-            }).catch(() => {
+            }).catch(function() {
                 showAlert('Erro ao copiar. Tente novamente.', 'error');
             });
         }
 
-        /**
-         * Faz download do arquivo TXT
-         */
         function downloadTxt() {
             const content = generateTextOutput(true);
             const timestamp = new Date().toLocaleString('pt-BR').replace(/[\/\s:]/g, '-');
@@ -1045,7 +1548,7 @@ maria - Avaliador'></textarea>
             
             const link = document.createElement('a');
             link.href = url;
-            link.download = `controle-correcoes-${timestamp}.txt`;
+            link.download = 'controle-correcoes-' + timestamp + '.txt';
             
             document.body.appendChild(link);
             link.click();
@@ -1055,10 +1558,7 @@ maria - Avaliador'></textarea>
             showAlert('Arquivo baixado com sucesso!', 'success');
         }
 
-        /**
-         * Gera conteúdo formatado para export
-         */
-        function generateTextOutput(includeHeader = false) {
+        function generateTextOutput(includeHeader) {
             let content = '';
             
             if (includeHeader) {
@@ -1066,88 +1566,87 @@ maria - Avaliador'></textarea>
                 let done = 0;
                 let withResponses = 0;
                 
-                completionStates.forEach(isCompleted => {
+                completionStates.forEach(function(isCompleted) {
                     if (isCompleted) done++;
                 });
                 
-                messageResponses.forEach(() => {
+                messageResponses.forEach(function() {
                     withResponses++;
                 });
                 
-                content += `CONTROLE DE CORREÇÕES E RESPOSTAS\n`;
-                content += `Gerado em: ${new Date().toLocaleString('pt-BR')}\n`;
-                content += `Total: ${total} | Corrigidas: ${done} | Com Resposta: ${withResponses} | Pendentes: ${total - done}\n`;
-                content += `${'='.repeat(70)}\n\n`;
+                content += 'CONTROLE DE CORREÇÕES E RESPOSTAS\n';
+                content += 'Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n';
+                content += 'Total: ' + total + ' | Corrigidas: ' + done + ' | Com Resposta: ' + withResponses + ' | Pendentes: ' + (total - done) + '\n';
+                content += '======================================================================\n\n';
             }
             
-            messages.forEach((message, index) => {
+            messages.forEach(function(message, index) {
                 const isCompleted = completionStates.get(index) || false;
                 const response = messageResponses.get(index);
                 const status = isCompleted ? ' ✅ CORRIGIDO' : ' ⏳ PENDENTE';
                 
-                content += `MENSAGEM ORIGINAL${status}\n`;
-                content += `${message.text}\n`;
-                content += `${message.date}\n`;
-                content += `${message.author} - ${message.role}\n\n`;
+                content += 'MENSAGEM ORIGINAL' + status + '\n';
+                content += message.text + '\n';
+                content += message.date + '\n';
+                content += message.author + ' - ' + message.role + '\n\n';
                 
                 if (response) {
-                    content += `SUA RESPOSTA:\n`;
-                    content += `${response.text}\n`;
-                    content += `Respondido em: ${response.date}\n`;
+                    content += 'SUA RESPOSTA:\n';
+                    content += response.text + '\n';
+                    content += 'Respondido em: ' + response.date + '\n';
                 }
                 
                 if (index < messages.length - 1) {
-                    content += `${'-'.repeat(50)}\n\n`;
+                    content += '--------------------------------------------------\n\n';
                 }
             });
             
             if (includeHeader) {
-                content += `\n${'='.repeat(70)}\n`;
-                content += `Sistema de Controle - Formatador de Mensagens v3.1`;
+                content += '\n======================================================================\n';
+                content += 'Sistema de Controle - Formatador de Mensagens v4.3';
             }
             
             return content;
         }
 
-        /**
-         * Limpa tudo
-         */
         function clearAll() {
             document.getElementById('inputData').value = '';
             document.getElementById('messagesSection').style.display = 'none';
             document.getElementById('copyBtn').style.display = 'none';
             document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('toggleBackupBtn').style.display = 'none';
             document.getElementById('alerts').innerHTML = '';
+            
+            document.getElementById('txtFile').value = '';
+            document.getElementById('fileName').textContent = '';
+            
+            clearTimeout(backupTimer);
+            clearInterval(countdownInterval);
+            document.getElementById('backupTimerInfo').classList.remove('show');
+            backupTimer = null;
             
             messages = [];
             completionStates.clear();
             messageResponses.clear();
+            importedResponses.clear();
         }
 
-        /**
-         * Exibe alertas
-         */
         function showAlert(message, type) {
             const alertsContainer = document.getElementById('alerts');
             const alert = document.createElement('div');
             
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `
-                <span>${type === 'success' ? '✅' : '❌'}</span>
-                <span>${message}</span>
-            `;
+            alert.className = 'alert alert-' + type;
+            alert.innerHTML = '<span>' + (type === 'success' ? '✅' : '❌') + '</span>' +
+                             '<span>' + message + '</span>';
             
             alertsContainer.innerHTML = '';
             alertsContainer.appendChild(alert);
             
-            setTimeout(() => {
+            setTimeout(function() {
                 alert.remove();
             }, 5000);
         }
 
-        /**
-         * Alterna tema
-         */
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
@@ -1160,9 +1659,33 @@ maria - Avaliador'></textarea>
             icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
         }
 
-        /**
-         * Inicializa tema
-         */
+        function toggleAutoBackup() {
+            if (backupEnabled) {
+                disableBackup();
+            } else {
+                enableAutoBackup();
+            }
+            updateBackupButton();
+        }
+
+        function updateBackupButton() {
+            const btn = document.getElementById('toggleBackupBtn');
+            const icon = document.getElementById('backupBtnIcon');
+            const text = document.getElementById('backupBtnText');
+            
+            if (backupEnabled) {
+                icon.textContent = '✅';
+                text.textContent = 'Auto Backup ON';
+                btn.style.background = 'var(--success)';
+                btn.style.color = 'white';
+            } else {
+                icon.textContent = '⏸️';
+                text.textContent = 'Auto Backup OFF';
+                btn.style.background = 'var(--bg-quaternary)';
+                btn.style.color = 'var(--text-primary)';
+            }
+        }
+
         function initializeTheme() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1170,6 +1693,24 @@ maria - Avaliador'></textarea>
             const icon = document.getElementById('theme-icon');
             icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
         }
+
+        // Event listeners
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('backupModal');
+            if (e.target === modal) {
+                snoozeBackup();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                if (messageResponses.size > 0) {
+                    downloadTxt();
+                    showAlert('Backup manual realizado!', 'success');
+                }
+            }
+        });
     </script>
 </body>
 </html>
