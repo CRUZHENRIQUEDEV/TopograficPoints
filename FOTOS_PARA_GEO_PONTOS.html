@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <!-- Versão: 3.0 -->
+    <!-- Versão: 4.3 -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
-      Conversor de Imagens Georreferenciadas para KML - OAE Support
+      Conversor de Imagens Georreferenciadas para KML/KMZ - OAE Support
     </title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 
@@ -25,12 +25,7 @@
 
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(
-          135deg,
-          #2c3e50 0%,
-          #34495e 50%,
-          #2c3e50 100%
-        );
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
         min-height: 100vh;
         color: #ffffff;
         overflow-x: hidden;
@@ -84,39 +79,7 @@
         color: white;
       }
 
-      /* Toggle para zonas de drone */
-      .drone-toggle {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 8px;
-        padding: 8px 12px;
-        color: white;
-        cursor: pointer;
-        font-size: 14px;
-        backdrop-filter: blur(5px);
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .drone-toggle:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
-      }
-
-      .drone-toggle.active {
-        background: linear-gradient(45deg, #e74c3c, #c0392b);
-        border-color: #e74c3c;
-        box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
-      }
-
-      .drone-icon {
-        font-size: 16px;
-      }
-
-      h1,
-      h2 {
+      h1, h2 {
         color: #ffffff;
         font-weight: 700;
         margin-bottom: 1rem;
@@ -147,26 +110,6 @@
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
-      }
-
-      .container::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.1),
-          transparent
-        );
-        transition: left 0.5s ease;
-      }
-
-      .container:hover::before {
-        left: 100%;
       }
 
       .container:hover {
@@ -225,6 +168,22 @@
         box-shadow: none;
       }
 
+      .btn-kmz {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+      }
+
+      .btn-kmz:hover {
+        background: linear-gradient(45deg, #c0392b, #a93226);
+      }
+
+      .btn-zip {
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+      }
+
+      .btn-zip:hover {
+        background: linear-gradient(45deg, #8e44ad, #7d3c98);
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -235,8 +194,7 @@
         backdrop-filter: blur(5px);
       }
 
-      th,
-      td {
+      th, td {
         border: 1px solid rgba(255, 255, 255, 0.2);
         padding: 12px;
         text-align: left;
@@ -264,65 +222,6 @@
         backdrop-filter: blur(5px);
         z-index: 1;
         position: relative;
-      }
-
-      /* Legenda das zonas de drone */
-      .drone-legend {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-        min-width: 200px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        display: none;
-      }
-
-      .drone-legend.active {
-        display: block;
-      }
-
-      .drone-legend h4 {
-        color: #2c3e50;
-        margin-bottom: 10px;
-        font-size: 14px;
-        font-weight: 600;
-      }
-
-      .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        font-size: 12px;
-        color: #333;
-      }
-
-      .legend-color {
-        width: 20px;
-        height: 15px;
-        border-radius: 3px;
-        margin-right: 8px;
-        border: 1px solid rgba(0, 0, 0, 0.2);
-      }
-
-      .legend-color.prohibited {
-        background: rgba(231, 76, 60, 0.7);
-      }
-
-      .legend-color.restricted {
-        background: rgba(241, 196, 15, 0.7);
-      }
-
-      .legend-color.permitted {
-        background: rgba(46, 204, 113, 0.7);
-      }
-
-      .legend-color.airport {
-        background: rgba(155, 89, 182, 0.7);
       }
 
       .progress-bar {
@@ -403,101 +302,125 @@
         100% { transform: rotate(360deg); }
       }
 
-      /* Customização adicional do popup com rodovias */
-      .leaflet-popup-content {
-        color: #333;
-        font-size: 14px;
-        width: 320px !important;
-        max-height: 500px;
-        overflow-y: auto;
+      /* Indicador de arquivo renomeado */
+      .renamed-indicator {
+        color: #2ecc71;
+        font-weight: bold;
       }
 
-      .leaflet-popup-content h4 {
-        margin: 0 0 10px 0;
-        color: #2c3e50;
+      .original-name {
+        color: #7f8c8d;
+        font-style: italic;
+        text-decoration: line-through;
       }
 
-      /* Estilos para os campos de renomeação no popup */
-      .rename-section {
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #ddd;
-      }
-
-      .rename-input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 14px;
-        margin-bottom: 10px;
-        font-family: inherit;
-      }
-
-      .rename-input:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-      }
-
-      .popup-buttons {
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-      }
-
-      .popup-btn {
-        background: #3498db;
+      .drone-toggle {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 8px 12px;
         color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 5px;
         cursor: pointer;
-        font-size: 12px;
-        font-weight: 500;
-        transition: background 0.3s ease;
-        flex: 1;
-        min-width: 80px;
-      }
-
-      .popup-btn:hover {
-        background: #2980b9;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .popup-btn.success {
-        background: #2ecc71;
-      }
-
-      .popup-btn.success:hover {
-        background: #27ae60;
-      }
-
-      .popup-btn.danger {
-        background: #e74c3c;
-      }
-
-      .popup-btn.danger:hover {
-        background: #c0392b;
-      }
-
-      /* Indicadores visuais nos marcadores */
-      .leaflet-marker-icon {
+        font-size: 14px;
+        backdrop-filter: blur(5px);
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
-      .leaflet-marker-icon:hover {
-        filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 152, 219, 0.6));
+      .drone-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
       }
 
-      /* Botão especial para baixar ZIP */
-      .btn-zip {
-        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+      .drone-toggle.active {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border-color: #e74c3c;
+        box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
       }
 
-      .btn-zip:hover {
-        background: linear-gradient(45deg, #8e44ad, #7d3c98);
+      .drone-icon {
+        font-size: 16px;
+      }
+
+      /* Legenda das zonas de drone */
+      .drone-legend {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        min-width: 200px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: none;
+      }
+
+      .drone-legend.active {
+        display: block;
+      }
+
+      .drone-legend h4 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: #333;
+      }
+
+      .legend-color {
+        width: 20px;
+        height: 15px;
+        border-radius: 3px;
+        margin-right: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+      }
+
+      .legend-color.prohibited {
+        background: rgba(231, 76, 60, 0.7);
+      }
+
+      .legend-color.restricted {
+        background: rgba(241, 196, 15, 0.7);
+      }
+
+      .legend-color.permitted {
+        background: rgba(46, 204, 113, 0.7);
+      }
+
+      .legend-color.airport {
+        background: rgba(155, 89, 182, 0.7);
+      }
+
+      /* Loading para zonas de drone */
+      .drone-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        z-index: 10000;
+        text-align: center;
+        backdrop-filter: blur(5px);
+        display: none;
+      }
+
+      .drone-loading.active {
+        display: block;
       }
 
       /* Estilos para o preview de imagem */
@@ -615,124 +538,92 @@
         margin-bottom: 15px;
       }
 
-      /* Loading para zonas de drone */
-      .drone-loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.8);
+      /* Customização adicional do popup */
+      .leaflet-popup-content {
+        color: #333;
+        font-size: 14px;
+        width: 320px !important;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .leaflet-popup-content h4 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+      }
+
+      /* Estilos para os campos de renomeação no popup */
+      .rename-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #ddd;
+      }
+
+      .rename-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-bottom: 10px;
+        font-family: inherit;
+      }
+
+      .rename-input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+      }
+
+      .popup-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      .popup-btn {
+        background: #3498db;
         color: white;
-        padding: 20px;
-        border-radius: 10px;
-        z-index: 10000;
-        text-align: center;
-        backdrop-filter: blur(5px);
-        display: none;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+        flex: 1;
+        min-width: 80px;
       }
 
-      .drone-loading.active {
-        display: block;
+      .popup-btn:hover {
+        background: #2980b9;
+        transform: none;
+        box-shadow: none;
       }
 
-      /* Indicador de arquivo renomeado */
-      .renamed-indicator {
-        color: #2ecc71;
-        font-weight: bold;
+      .popup-btn.success {
+        background: #2ecc71;
       }
 
-      .original-name {
-        color: #7f8c8d;
-        font-style: italic;
-        text-decoration: line-through;
+      .popup-btn.success:hover {
+        background: #27ae60;
       }
 
-      @media (max-width: 768px) {
-        .main-container {
-          padding: 1rem;
-        }
-
-        h1 {
-          font-size: 1.8rem;
-        }
-
-        .container {
-          padding: 1.5rem;
-        }
-
-        .map-header {
-          padding: 1rem;
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .map-controls {
-          justify-content: center;
-        }
-
-        #dropZone {
-          padding: 20px;
-        }
-
-        table {
-          font-size: 14px;
-        }
-
-        th,
-        td {
-          padding: 8px;
-        }
-
-        #map {
-          height: 50vh;
-          min-height: 300px;
-        }
-
-        .leaflet-popup-content {
-          width: 280px !important;
-        }
-
-        .image-preview {
-          padding: 15px;
-          max-width: 95vw;
-          max-height: 95vh;
-        }
-
-        .preview-image {
-          max-height: 50vh;
-        }
-
-        .preview-header {
-          font-size: 16px;
-        }
-
-        .drone-legend {
-          right: 5px;
-          top: 5px;
-          min-width: 180px;
-        }
+      .popup-btn.danger {
+        background: #e74c3c;
       }
 
-      /* Animações */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .popup-btn.danger:hover {
+        background: #c0392b;
       }
 
-      .container:nth-child(1) {
-        animation-delay: 0.1s;
+      /* Indicadores visuais nos marcadores */
+      .leaflet-marker-icon {
+        transition: all 0.3s ease;
       }
-      .container:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      .container:nth-child(3) {
-        animation-delay: 0.3s;
+
+      .leaflet-marker-icon:hover {
+        filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 152, 219, 0.6));
       }
     </style>
   </head>
@@ -764,21 +655,22 @@
 
     <div class="main-container">
       <div class="container">
-        <h1>📷 Conversor de Imagens Georreferenciadas para KML</h1>
+        <h1>Conversor de Imagens Georreferenciadas para KML/KMZ</h1>
 
         <div class="note">
           <p>
             <strong>Nota:</strong> Este sistema extrai coordenadas GPS de fotos e
-            gera um arquivo KML compatível com Google Earth, QGIS e outros softwares GIS. Além disso, você pode renomear as fotos diretamente no mapa e baixar um ZIP com os arquivos renomeados.
+            gera arquivos KML/KMZ compatíveis com Google Earth, QGIS e outros softwares GIS. Além disso, você pode renomear as fotos diretamente no mapa e baixar um ZIP com os arquivos renomeados.
             <br><strong>✨ Novidade:</strong> Passe o mouse sobre os marcadores no mapa por 2 segundos para ver um preview da imagem!
             <br><strong>🛣️ Integração DNIT:</strong> Clique nos marcadores para ver informações das rodovias próximas automaticamente!
             <br><strong>🚁 Zonas de Drone:</strong> Ative o toggle "Zonas de Drone" no mapa para visualizar áreas permitidas e restritas para voo de drones!
             <br><strong>📂 Importação KML:</strong> Importe arquivos KML existentes para combinar com suas fotos georreferenciadas!
+            <br><strong>🗜️ Exportação KMZ:</strong> Baixe um arquivo KMZ com as imagens embutidas para melhor experiência no Google Earth!
           </p>
         </div>
 
         <div id="dropZone">
-          <h3>📁 Arraste e solte imagens aqui</h3>
+          <h3>Arraste e solte imagens aqui</h3>
           <p>ou</p>
           <input
             type="file"
@@ -788,23 +680,25 @@
             style="display: none"
           />
           <button onclick="document.getElementById('fileInput').click()">
-            📂 Selecionar Imagens
+            Selecionar Imagens
           </button>
           <button onclick="importKMLFile()" style="background: linear-gradient(45deg, #9b59b6, #8e44ad);">
-            📥 Importar KML
+            Importar KML
           </button>
         </div>
 
-        <div class="progress-bar" style="display: none">
-          <div class="progress" style="width: 0%">0%</div>
+        <div id="debugInfo" class="debug-info" style="display: none;"></div>
+
+        <div class="progress-bar" id="progressBar" style="display: none">
+          <div class="progress" id="progress" style="width: 0%">0%</div>
         </div>
 
-        <h2>📍 Pontos Extraídos</h2>
+        <h2>Pontos Extraídos</h2>
         <div id="stats">
-          <p>📊 Total de imagens: <span id="totalImages">0</span></p>
-          <p>🗺️ Imagens com geolocalização: <span id="geoImages">0</span></p>
-          <p>📥 Pontos importados do KML: <span id="importedPoints">0</span></p>
-          <p>✏️ Imagens renomeadas: <span id="renamedImages">0</span></p>
+          <p>Total de imagens: <span id="totalImages">0</span></p>
+          <p>Imagens com geolocalização: <span id="geoImages">0</span></p>
+          <p>Pontos importados do KML: <span id="importedPoints">0</span></p>
+          <p>Imagens renomeadas: <span id="renamedImages">0</span></p>
         </div>
 
         <table id="resultsTable">
@@ -822,16 +716,17 @@
         </table>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-          <button id="downloadKmlBtn" disabled>💾 Baixar KML</button>
-          <button id="downloadCsvBtn" disabled>📊 Baixar CSV</button>
-          <button id="downloadZipBtn" class="btn-zip" disabled>📦 Baixar ZIP com Fotos</button>
+          <button id="downloadKmlBtn" disabled>Baixar KML</button>
+          <button id="downloadKmzBtn" class="btn-kmz" disabled>Baixar KMZ</button>
+          <button id="downloadCsvBtn" disabled>Baixar CSV</button>
+          <button id="downloadZipBtn" class="btn-zip" disabled>Baixar ZIP com Fotos</button>
         </div>
       </div>
     </div>
 
     <div class="map-container">
       <div class="map-header">
-        <h2>🗺️ Mapa de Pontos</h2>
+        <h2>Mapa de Pontos</h2>
         <div class="map-controls">
           <select id="layerSelector">
             <option value="osm">OpenStreetMap</option>
@@ -843,7 +738,7 @@
             <span class="drone-icon">🚁</span>
             <span>Zonas de Drone</span>
           </div>
-          <button id="maxZoomBtn">🔍 Zoom Máximo</button>
+          <button id="maxZoomBtn">Zoom Máximo</button>
         </div>
       </div>
       <div id="map">
@@ -878,7 +773,7 @@
     </div>
 
     <script>
-      // Versão: 4.1
+      // Versão: 4.3
       
       // Variáveis globais
       let imagePoints = [];
@@ -906,18 +801,29 @@
       const fileInput = document.getElementById("fileInput");
       const resultsBody = document.getElementById("resultsBody");
       const downloadKmlBtn = document.getElementById("downloadKmlBtn");
+      const downloadKmzBtn = document.getElementById("downloadKmzBtn");
       const downloadCsvBtn = document.getElementById("downloadCsvBtn");
       const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const progressBar = document.querySelector(".progress-bar");
-      const progress = document.querySelector(".progress");
+      const progressBar = document.getElementById("progressBar");
+      const progress = document.getElementById("progress");
       const layerSelector = document.getElementById("layerSelector");
       const maxZoomBtn = document.getElementById("maxZoomBtn");
-      const imagePreview = document.getElementById("imagePreview");
       const droneToggle = document.getElementById("droneToggle");
       const droneLegend = document.getElementById("droneLegend");
       const droneLoading = document.getElementById("droneLoading");
+      const imagePreview = document.getElementById("imagePreview");
+      const debugInfo = document.getElementById("debugInfo");
 
-      // FUNÇÃO PARA IMPORTAR KML - FUNCIONAL
+      // Função de debug
+      function debugLog(message) {
+        console.log(message);
+        if (debugInfo) {
+          debugInfo.innerHTML += message + "<br>";
+          debugInfo.style.display = "block";
+        }
+      }
+
+      // FUNÇÃO PARA IMPORTAR KML
       window.importKMLFile = function() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -945,23 +851,18 @@
               const points = parseKML(kmlContent);
               
               if (points.length > 0) {
-                // Adicionar pontos importados
                 importedPoints.push(...points);
                 importedCount = importedPoints.length;
                 
-                // Atualizar interface
                 document.getElementById("importedPoints").textContent = importedCount;
                 updateResultsTable();
                 
-                // Habilitar botões
                 if (imagePoints.length + importedPoints.length > 0) {
                   downloadKmlBtn.disabled = false;
                   downloadCsvBtn.disabled = false;
                 }
                 
-                // Atualizar mapa
                 plotPointsOnMap();
-                
                 alert(`Sucesso! ${points.length} pontos importados do KML.`);
               } else {
                 alert('Nenhum ponto válido encontrado no arquivo KML.');
@@ -985,91 +886,26 @@
         input.click();
       };
 
-      // FUNÇÃO PARA PARSEAR KML - FUNCIONAL
-      function parseKML(kmlContent) {
-        try {
-          const parser = new DOMParser();
-          const kmlDoc = parser.parseFromString(kmlContent, "text/xml");
-          
-          // Verificar erros de parsing
-          const parseError = kmlDoc.querySelector("parsererror");
-          if (parseError) {
-            throw new Error("Arquivo KML inválido");
-          }
-          
-          const points = [];
-          const placemarks = kmlDoc.querySelectorAll("Placemark");
-          
-          placemarks.forEach((placemark, index) => {
-            const nameEl = placemark.querySelector("name");
-            const coordsEl = placemark.querySelector("coordinates");
-            
-            if (coordsEl) {
-              const coordsText = coordsEl.textContent.trim();
-              // Formato KML: longitude,latitude,altitude
-              const coords = coordsText.split(',');
-              
-              if (coords.length >= 2) {
-                const lng = parseFloat(coords[0].trim());
-                const lat = parseFloat(coords[1].trim());
-                
-                if (!isNaN(lat) && !isNaN(lng) && 
-                    lat >= -90 && lat <= 90 && 
-                    lng >= -180 && lng <= 180) {
-                  
-                  const name = nameEl ? nameEl.textContent.trim() : `Ponto_Importado_${index + 1}`;
-                  const descEl = placemark.querySelector("description");
-                  const description = descEl ? descEl.textContent : '';
-                  
-                  // Tentar extrair data/hora da descrição
-                  let datetime = null;
-                  const dateMatch = description.match(/(\d{4}[-\/]\d{2}[-\/]\d{2})/);
-                  if (dateMatch) {
-                    datetime = dateMatch[1];
-                  }
-                  
-                  points.push({
-                    filename: name,
-                    latitude: lat,
-                    longitude: lng,
-                    datetime: datetime,
-                    imported: true,
-                    description: description
-                  });
-                }
-              }
-            }
-          });
-          
-          return points;
-        } catch (error) {
-          throw new Error('Erro ao processar KML: ' + error.message);
-        }
-      }
-
       // Função para parsear arquivo KML
       function parseKML(kmlContent) {
         try {
-          console.log('Iniciando parse do KML');
+          debugLog('Iniciando parse do KML');
           const parser = new DOMParser();
           const kmlDoc = parser.parseFromString(kmlContent, "text/xml");
           
-          // Verificar se há erros no XML
           const parseError = kmlDoc.getElementsByTagName("parsererror");
           if (parseError.length > 0) {
-            console.error('Erro de parse XML:', parseError[0].textContent);
-            throw new Error("XML inválido: " + parseError[0].textContent);
+            throw new Error("XML inválido");
           }
           
           const placemarks = kmlDoc.getElementsByTagName("Placemark");
-          console.log('Placemarks encontrados:', placemarks.length);
+          debugLog(`Placemarks encontrados: ${placemarks.length}`);
           const points = [];
           
           for (let i = 0; i < placemarks.length; i++) {
             const placemark = placemarks[i];
             const nameElement = placemark.getElementsByTagName("name")[0];
             
-            // Tentar encontrar coordenadas em diferentes estruturas
             let coordinatesElement = null;
             const pointElement = placemark.getElementsByTagName("Point")[0];
             
@@ -1077,93 +913,47 @@
               coordinatesElement = pointElement.getElementsByTagName("coordinates")[0];
             }
             
-            // Se não encontrar Point, tentar LineString (alguns KMLs usam isso)
-            if (!coordinatesElement) {
-              const lineElement = placemark.getElementsByTagName("LineString")[0];
-              if (lineElement) {
-                coordinatesElement = lineElement.getElementsByTagName("coordinates")[0];
-              }
-            }
-            
-            // Se não encontrar ainda, tentar Polygon
-            if (!coordinatesElement) {
-              const polygonElement = placemark.getElementsByTagName("Polygon")[0];
-              if (polygonElement) {
-                const outerBoundary = polygonElement.getElementsByTagName("outerBoundaryIs")[0];
-                if (outerBoundary) {
-                  const linearRing = outerBoundary.getElementsByTagName("LinearRing")[0];
-                  if (linearRing) {
-                    coordinatesElement = linearRing.getElementsByTagName("coordinates")[0];
-                  }
-                }
-              }
-            }
-            
             if (coordinatesElement) {
               const coordsText = coordinatesElement.textContent.trim();
-              console.log('Coordenadas encontradas:', coordsText);
-              
-              // Separar por espaços ou quebras de linha, depois por vírgula
               const coordPairs = coordsText.split(/[\s\n]+/).filter(pair => pair.trim());
               const firstCoordPair = coordPairs[0];
               
               if (firstCoordPair) {
                 const coords = firstCoordPair.split(',');
-                console.log('Coords splitadas:', coords);
                 
                 if (coords.length >= 2) {
                   const lng = parseFloat(coords[0]);
                   const lat = parseFloat(coords[1]);
-                  console.log('Lat:', lat, 'Lng:', lng);
                   
                   if (isValidCoordinate(lat, lng)) {
                     const name = nameElement ? nameElement.textContent.trim() : `Ponto_Importado_${i + 1}`;
-                    
-                    // Extrair dados adicionais da descrição se houver
-                    const descElement = placemark.getElementsByTagName("description")[0];
-                    let description = '';
-                    let datetime = null;
-                    
-                    if (descElement) {
-                      description = descElement.textContent;
-                      // Tentar extrair data/hora da descrição
-                      const dateMatch = description.match(/Data\/Hora:\s*([^\n<]+)/);
-                      if (dateMatch) {
-                        datetime = dateMatch[1].trim();
-                      }
-                    }
                     
                     const point = {
                       filename: name,
                       latitude: lat,
                       longitude: lng,
-                      datetime: datetime,
+                      datetime: null,
                       imported: true,
-                      description: description
+                      description: ''
                     };
                     
-                    console.log('Ponto adicionado:', point);
                     points.push(point);
-                  } else {
-                    console.warn('Coordenadas inválidas:', lat, lng);
                   }
                 }
               }
-            } else {
-              console.warn('Nenhuma coordenada encontrada no placemark', i);
             }
           }
           
-          console.log('Total de pontos parseados:', points.length);
+          debugLog(`Total de pontos parseados: ${points.length}`);
           return points;
         } catch (error) {
-          console.error('Erro ao parsear KML:', error);
+          debugLog(`Erro ao parsear KML: ${error.message}`);
           throw error;
         }
       }
 
       // Função para gerar arquivo KML
-      function generateKML() {
+      function generateKML(forKMZ = false) {
         const allPoints = [...imagePoints, ...importedPoints];
         
         if (allPoints.length === 0) return null;
@@ -1173,70 +963,12 @@
   <Document>
     <name>Pontos Georreferenciados</name>
     <description>Arquivo KML gerado pelo Conversor de Imagens Georreferenciadas - ZenithSolutions OAE Support</description>
-    
-    <!-- Estilos para diferentes tipos de zona -->
-    <Style id="prohibited">
-      <IconStyle>
-        <color>ff0000ff</color>
-        <scale>1.2</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
-        </Icon>
-      </IconStyle>
-    </Style>
-    
-    <Style id="restricted">
-      <IconStyle>
-        <color>ff00ffff</color>
-        <scale>1.2</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
-        </Icon>
-      </IconStyle>
-    </Style>
-    
-    <Style id="permitted">
-      <IconStyle>
-        <color>ff00ff00</color>
-        <scale>1.2</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
-        </Icon>
-      </IconStyle>
-    </Style>
-    
-    <Style id="imported">
-      <IconStyle>
-        <color>ffff00ff</color>
-        <scale>1.0</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
-        </Icon>
-      </IconStyle>
-    </Style>
 `;
 
         allPoints.forEach((point, index) => {
           const currentName = renamedFiles.get(point.filename) || point.filename;
           const isRenamed = renamedFiles.has(point.filename);
           const isImported = point.imported || false;
-          
-          // Determinar estilo baseado na zona de drone ou se foi importado
-          let styleUrl = '#permitted';
-          if (isImported) {
-            styleUrl = '#imported';
-          } else if (point.droneZone) {
-            switch (point.droneZone.zona) {
-              case 'prohibited':
-                styleUrl = '#prohibited';
-                break;
-              case 'restricted':
-                styleUrl = '#restricted';
-                break;
-              default:
-                styleUrl = '#permitted';
-            }
-          }
           
           // Construir descrição detalhada
           let description = `<![CDATA[
@@ -1250,6 +982,14 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             description += `<p><strong>Data/Hora:</strong> ${point.datetime}</p>`;
           }
           
+          // Para KMZ, incluir referência à imagem se disponível
+          if (forKMZ && !isImported && imageDataMap.has(point.filename)) {
+            const imageFilename = (renamedFiles.get(point.filename) || point.filename).replace(/\.[^/.]+$/, ".jpg");
+            description += `
+<p><strong>Imagem:</strong></p>
+<img src="images/${imageFilename}" width="300" alt="${currentName}"/>`;
+          }
+          
           if (isRenamed && !isImported) {
             description += `<p><strong>Nome Original:</strong> ${point.filename}</p>`;
             description += `<p><strong>Status:</strong> Arquivo renomeado</p>`;
@@ -1261,37 +1001,12 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             description += `<p><strong>Tipo:</strong> Extraído de imagem georreferenciada</p>`;
           }
           
-          // Informações da zona de drone
-          if (point.droneZone) {
-            const zoneIcon = point.droneZone.zona === 'prohibited' ? '🚫' : 
-                            point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
-            description += `
-<p><strong>${zoneIcon} Zona de Drone:</strong> ${point.droneZone.descricao}</p>`;
-            
-            if (point.droneZone.aeroporto) {
-              description += `<p><strong>Aeroporto mais próximo:</strong> ${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</p>`;
-            }
-          }
-          
-          // Informações de rodovias (se disponível no cache)
-          const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
-          if (rodoviaCache.has(coordKey)) {
-            const rodoviaData = rodoviaCache.get(coordKey);
-            if (rodoviaData && rodoviaData.rodovias && rodoviaData.rodovias.length > 0) {
-              description += `<p><strong>🛣️ Rodovias próximas:</strong></p>`;
-              rodoviaData.rodovias.forEach(r => {
-                description += `<p style="margin-left: 10px;">• BR-${r.br} - Km ${r.km} (${r.uf})</p>`;
-              });
-            }
-          }
-          
           description += `]]>`;
           
           kmlContent += `
     <Placemark>
       <name>${escapeXml(currentName)}</name>
       <description>${description}</description>
-      <styleUrl>${styleUrl}</styleUrl>
       <Point>
         <coordinates>${point.longitude},${point.latitude},0</coordinates>
       </Point>
@@ -1303,6 +1018,79 @@ Longitude: ${point.longitude.toFixed(8)}</p>
 </kml>`;
         
         return kmlContent;
+      }
+
+      // Nova função para gerar arquivo KMZ
+      async function generateKMZ() {
+        if (imagePoints.length === 0) {
+          alert('Nenhuma imagem georreferenciada disponível para KMZ.');
+          return;
+        }
+
+        try {
+          debugLog('Iniciando geração do KMZ');
+          
+          // Carregar JSZip se necessário
+          await new Promise((resolve, reject) => {
+            if (window.JSZip) {
+              resolve();
+              return;
+            }
+
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+            script.onload = resolve;
+            script.onerror = () => reject(new Error("Erro ao carregar JSZip"));
+            document.head.appendChild(script);
+          });
+
+          const zip = new JSZip();
+          
+          // Gerar KML específico para KMZ
+          const kmlContent = generateKML(true);
+          zip.file("doc.kml", kmlContent);
+          
+          // Criar pasta de imagens
+          const imagesFolder = zip.folder("images");
+          
+          // Adicionar cada imagem ao ZIP
+          const imagePromises = imagePoints.map(async (point) => {
+            if (imageDataMap.has(point.filename)) {
+              const imageData = imageDataMap.get(point.filename);
+              const currentName = renamedFiles.get(point.filename) || point.filename;
+              
+              // Converter nome para .jpg
+              const imageFilename = currentName.replace(/\.[^/.]+$/, ".jpg");
+              
+              // Converter data URL para blob
+              const response = await fetch(imageData);
+              const blob = await response.blob();
+              const arrayBuffer = await blob.arrayBuffer();
+              
+              imagesFolder.file(imageFilename, arrayBuffer);
+              debugLog(`Adicionada imagem: ${imageFilename}`);
+            }
+          });
+          
+          await Promise.all(imagePromises);
+          
+          // Gerar o arquivo KMZ
+          const kmzBlob = await zip.generateAsync({ type: "blob" });
+          
+          // Download
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(kmzBlob);
+          link.download = "pontos_georreferenciados.kmz";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          debugLog('KMZ gerado com sucesso');
+          
+        } catch (error) {
+          debugLog(`Erro ao gerar KMZ: ${error.message}`);
+          alert('Erro ao gerar arquivo KMZ: ' + error.message);
+        }
       }
 
       // Função para escapar caracteres especiais XML
@@ -1323,6 +1111,8 @@ Longitude: ${point.longitude.toFixed(8)}</p>
       function combineAllPoints() {
         return [...imagePoints, ...importedPoints];
       }
+
+      // Consulta rodovias DNIT
       async function consultarRodoviasDNIT(lat, lng) {
         try {
           const dataRef = new Date().toISOString().split('T')[0];
@@ -1348,7 +1138,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         }
       }
 
-      // Função para consultar aeroportos via Overpass API
+      // Consulta aeroportos via Overpass API
       async function consultarAeroportosOverpass(bbox) {
         const query = `
           [out:json][timeout:30];
@@ -1416,7 +1206,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         return aeroportos;
       }
 
-      // Função para determinar zona de restrição baseada na distância de aeroportos
+      // Determinar zona de restrição baseada na distância de aeroportos
       function determinarZonaRestricao(lat, lng, aeroportos) {
         let menorDistancia = Infinity;
         let aeroportoMaisProximo = null;
@@ -1497,7 +1287,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           const bounds = map.getBounds();
           const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
           
-          // Criar cache key baseado na bbox
           const cacheKey = bbox;
           
           let aeroportos;
@@ -1508,7 +1297,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             airportCache.set(cacheKey, aeroportos);
           }
 
-          // Limpar camada anterior
           if (!droneZonesLayer) {
             droneZonesLayer = L.layerGroup().addTo(map);
           } else {
@@ -1526,7 +1314,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
 
             const marker = L.marker([aeroporto.lat, aeroporto.lng], { icon: airportIcon });
             
-            // Popup com informações do aeroporto
             const popupContent = `
               <div style="min-width: 200px;">
                 <h4>✈️ ${aeroporto.name}</h4>
@@ -1547,7 +1334,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             marker.bindPopup(popupContent);
             droneZonesLayer.addLayer(marker);
 
-            // Adicionar círculos de restrição
+            // Círculos de restrição
             const circle5km = L.circle([aeroporto.lat, aeroporto.lng], {
               radius: 5000,
               fillColor: 'rgba(231, 76, 60, 0.3)',
@@ -1568,7 +1355,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             droneZonesLayer.addLayer(circle5km);
           });
 
-          // Se há pontos de imagem, verificar zonas para cada um
           if (imagePoints.length > 0) {
             atualizarZonasParaPontos(aeroportos);
           }
@@ -1605,7 +1391,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         return { rodovias };
       }
 
-      // Função para gerar HTML das informações de rodovias (formato compacto)
+      // Gerar HTML das informações de rodovias
       function gerarHtmlRodovias(dadosProcessados, coordenadas) {
         if (!dadosProcessados || !dadosProcessados.rodovias || dadosProcessados.rodovias.length === 0) {
           return `
@@ -1619,7 +1405,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         
         const rodovias = dadosProcessados.rodovias;
         
-        // Lista compacta das rodovias
         const listaRodovias = rodovias.map(rodovia => {
           const isKmZero = parseFloat(rodovia.km) === 0;
           const alertIcon = isKmZero ? ' ⚠️' : '';
@@ -1635,7 +1420,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         `;
       }
 
-      // Definir diferentes camadas de tile com zoom máximo aprimorado
+      // Definir diferentes camadas de tile
       const tileLayers = {
         osm: {
           url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -1669,7 +1454,8 @@ Longitude: ${point.longitude.toFixed(8)}</p>
 
       // Inicializar o mapa
       function initMap() {
-        // Criar o mapa centrado no Brasil com configurações aprimoradas
+        debugLog('Inicializando mapa');
+        
         map = L.map("map", {
           maxZoom: 25,
           minZoom: 2,
@@ -1677,13 +1463,9 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           worldCopyJump: true
         }).setView([-15.7942, -47.8825], 4);
 
-        // Adicionar camada inicial (OpenStreetMap)
         switchTileLayer('osm');
-
-        // Criar camada para os marcadores
         markersLayer = L.layerGroup().addTo(map);
 
-        // Event listeners
         layerSelector.addEventListener('change', function() {
           switchTileLayer(this.value);
         });
@@ -1714,159 +1496,11 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           }
         });
 
-        // Se já temos pontos, plotá-los
         if (imagePoints.length > 0) {
           plotPointsOnMap();
         }
-      }
-
-      // Trocar camada de tile
-      function switchTileLayer(layerType) {
-        if (currentTileLayer) {
-          map.removeLayer(currentTileLayer);
-        }
-
-        const layer = tileLayers[layerType];
-        currentTileLayer = L.tileLayer(layer.url, layer.options).addTo(map);
-        map.options.maxZoom = layer.options.maxZoom;
-      }
-
-      // Plotar pontos no mapa
-      function plotPointsOnMap() {
-        if (!map || !markersLayer) return;
-
-        markersLayer.clearLayers();
-
-        const allPoints = combineAllPoints();
-        if (allPoints.length === 0) return;
-
-        let bounds = L.latLngBounds();
-
-        allPoints.forEach((point, index) => {
-          const currentName = renamedFiles.get(point.filename) || point.filename;
-          const isRenamed = renamedFiles.has(point.filename);
-          const isImported = point.imported || false;
-          
-          // Criar ícone personalizado baseado na zona de drone ou se foi importado
-          let markerIcon;
-          if (isImported) {
-            markerIcon = L.divIcon({
-              className: 'custom-marker',
-              html: `<div style="background: #9b59b6; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📍</div>`,
-              iconSize: [25, 25],
-              iconAnchor: [12.5, 12.5]
-            });
-          } else if (droneZonesActive && point.droneZone) {
-            const zoneColor = point.droneZone.zona === 'prohibited' ? '#e74c3c' : 
-                             point.droneZone.zona === 'restricted' ? '#f39c12' : '#27ae60';
-            
-            markerIcon = L.divIcon({
-              className: 'custom-marker',
-              html: `<div style="background: ${zoneColor}; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📷</div>`,
-              iconSize: [25, 25],
-              iconAnchor: [12.5, 12.5]
-            });
-          } else {
-            markerIcon = new L.Icon.Default();
-          }
-          
-          const marker = L.marker([point.latitude, point.longitude], { icon: markerIcon });
-          
-          // Criar popup - diferente para pontos importados
-          const popup = L.popup({
-            maxWidth: 350,
-            minWidth: 320
-          });
-          
-          if (isImported) {
-            popup.setContent(createImportedPopupContent(point, index));
-          } else {
-            popup.setContent(createPopupContent(point, index, currentName, isRenamed));
-          }
-          
-          marker.bindPopup(popup);
-          
-          // Event listener para quando o popup é aberto (só para pontos de imagem)
-          if (!isImported) {
-            marker.on('popupopen', function(e) {
-              setTimeout(() => {
-                consultarRodoviasParaPopup(point, index);
-              }, 100);
-            });
-
-            // Adicionar eventos de preview da imagem
-            marker.on('mouseover', function(e) {
-              if (!isPreviewOpen) {
-                previewTimeout = setTimeout(() => {
-                  showImagePreview(point, currentName, isRenamed);
-                }, 2000);
-              }
-            });
-
-            marker.on('mouseout', function(e) {
-              if (previewTimeout) {
-                clearTimeout(previewTimeout);
-                previewTimeout = null;
-              }
-            });
-          }
-
-          markersLayer.addLayer(marker);
-          bounds.extend([point.latitude, point.longitude]);
-        });
-
-        // Ajustar o zoom para mostrar todos os pontos
-        if (allPoints.length > 0) {
-          map.fitBounds(bounds, { padding: [20, 20] });
-        }
-
-        // Se zonas de drone estão ativas, recarregar
-        if (droneZonesActive) {
-          setTimeout(() => {
-            carregarZonasDrone();
-          }, 500);
-        }
-      }
-
-      // Criar conteúdo do popup para pontos importados
-      function createImportedPopupContent(point, index) {
-        let droneInfo = '';
-        if (droneZonesActive && point.droneZone) {
-          const zoneIcon = point.droneZone.zona === 'prohibited' ? '🚫' : 
-                          point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
-          
-          droneInfo = `
-            <div style="margin-top: 10px; padding: 8px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 5px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
-              <div style="font-size: 12px; color: #495057; margin-bottom: 2px;"><strong>${zoneIcon} Zona de Drone:</strong></div>
-              <div style="font-size: 11px; color: #6c757d;">${point.droneZone.descricao}</div>
-              ${point.droneZone.aeroporto ? `<div style="font-size: 10px; color: #6c757d;">Aeroporto: ${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
-            </div>
-          `;
-        }
         
-        return `
-          <div style="width: 320px;">
-            <h4>📍 ${point.filename} <span style="color: #9b59b6; font-size: 12px;">(Importado)</span></h4>
-            <p><strong>Coordenadas:</strong><br>
-            Lat: ${point.latitude.toFixed(8)}<br>
-            Lng: ${point.longitude.toFixed(8)}</p>
-            ${point.datetime ? `<p><strong>Data/Hora:</strong><br>${point.datetime}</p>` : ''}
-            ${point.description ? `<p><strong>Descrição:</strong><br>${point.description}</p>` : ''}
-            
-            ${droneInfo}
-            
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-              <div class="popup-buttons">
-                <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
-                  🔍 Zoom Max
-                </button>
-                <button class="popup-btn danger" onclick="removeImportedPoint(${index})">
-                  🗑️ Remover
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
+        debugLog('Mapa inicializado com sucesso');
       }
 
       // Mostrar preview da imagem
@@ -1885,11 +1519,9 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         if (imageData) {
           const img = document.getElementById('previewImg');
           img.onload = function() {
-            // Informações básicas
             let infoHtml = `${isRenamed ? `<div style="color: #7f8c8d; font-style: italic;">Original: ${point.filename}</div>` : ''}
                <div><strong>Data/Hora:</strong> ${point.datetime || "N/A"}</div>`;
 
-            // Adicionar informação de zona de drone se disponível
             if (point.droneZone) {
               const zoneIcon = point.droneZone.zona === 'prohibited' ? '🚫' : 
                               point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
@@ -1947,17 +1579,304 @@ Longitude: ${point.longitude.toFixed(8)}</p>
       }
 
       // Event listeners para fechar preview
-      imagePreview.addEventListener('click', function(e) {
-        if (e.target === this) {
-          closePreview();
-        }
-      });
+      if (imagePreview) {
+        imagePreview.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closePreview();
+          }
+        });
+      }
 
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && isPreviewOpen) {
           closePreview();
         }
       });
+
+      // Função para renomear arquivo
+      function renameFile(index, originalFilename, fileExt) {
+        const newNameInput = document.getElementById(`newName_${index}`);
+        const newName = newNameInput.value.trim();
+        
+        if (!newName) {
+          alert('Por favor, insira um nome válido.');
+          return;
+        }
+        
+        const fullNewName = newName + fileExt;
+        
+        const existingNames = Array.from(renamedFiles.values());
+        const originalNames = imagePoints.map(p => p.filename);
+        
+        if (existingNames.includes(fullNewName) || originalNames.includes(fullNewName)) {
+          if (renamedFiles.get(originalFilename) !== fullNewName) {
+            alert('Este nome já está sendo usado por outro arquivo.');
+            return;
+          }
+        }
+        
+        renamedFiles.set(originalFilename, fullNewName);
+        updateResultsTable();
+        updateStats();
+        plotPointsOnMap();
+        downloadZipBtn.disabled = false;
+        map.closePopup();
+      }
+
+      // Função para resetar nome do arquivo
+      function resetFileName(originalFilename, index) {
+        renamedFiles.delete(originalFilename);
+        updateResultsTable();
+        updateStats();
+        plotPointsOnMap();
+        
+        if (renamedFiles.size === 0) {
+          downloadZipBtn.disabled = true;
+        }
+        
+        map.closePopup();
+      }
+
+      // Função para remover ponto importado
+      function removeImportedPoint(index) {
+        if (confirm('Tem certeza que deseja remover este ponto importado?')) {
+          const allPoints = combineAllPoints();
+          const imagePointsCount = imagePoints.length;
+          
+          if (index >= imagePointsCount) {
+            const importedIndex = index - imagePointsCount;
+            importedPoints.splice(importedIndex, 1);
+            importedCount = importedPoints.length;
+            
+            document.getElementById("importedPoints").textContent = importedCount;
+            
+            updateResultsTable();
+            plotPointsOnMap();
+            
+            map.closePopup();
+            
+            const totalPoints = imagePoints.length + importedPoints.length;
+            if (totalPoints === 0) {
+              downloadKmlBtn.disabled = true;
+              downloadCsvBtn.disabled = true;
+            }
+          }
+        }
+      }
+
+      // Atualizar estatísticas
+      function updateStats() {
+        document.getElementById("renamedImages").textContent = renamedFiles.size;
+        document.getElementById("importedPoints").textContent = importedCount;
+      }
+
+      // Consultar rodovias para popup
+      async function consultarRodoviasParaPopup(point, index) {
+        const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
+        
+        if (rodoviaCache.has(coordKey)) {
+          exibirRodoviasNoPopup(rodoviaCache.get(coordKey), index, point);
+          return;
+        }
+        
+        try {
+          const dadosDNIT = await consultarRodoviasDNIT(point.latitude, point.longitude);
+          const dadosProcessados = processarDadosRodovias(dadosDNIT);
+          
+          rodoviaCache.set(coordKey, dadosProcessados);
+          exibirRodoviasNoPopup(dadosProcessados, index, point);
+          
+        } catch (error) {
+          console.error('Erro ao consultar rodovias:', error);
+          exibirErroRodovias(index);
+        }
+      }
+
+      // Exibir rodovias no popup
+      function exibirRodoviasNoPopup(dadosProcessados, index, point) {
+        const loadingDiv = document.getElementById(`rodoviaLoading_${index}`);
+        const contentDiv = document.getElementById(`rodoviaContent_${index}`);
+        
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (contentDiv) {
+          contentDiv.innerHTML = gerarHtmlRodovias(dadosProcessados, {
+            lat: point.latitude,
+            lng: point.longitude
+          });
+          contentDiv.style.display = 'block';
+        }
+      }
+
+      // Exibir erro na consulta de rodovias
+      function exibirErroRodovias(index) {
+        const loadingDiv = document.getElementById(`rodoviaLoading_${index}`);
+        const contentDiv = document.getElementById(`rodoviaContent_${index}`);
+        
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (contentDiv) {
+          contentDiv.innerHTML = `
+            <div style="padding: 10px; background: #ffebee; border: 1px solid #f44336; border-radius: 5px; text-align: center;">
+              <div style="color: #d32f2f; font-size: 13px; font-weight: bold;">
+                ❌ Erro ao consultar rodovias
+              </div>
+              <div style="color: #666; font-size: 11px; margin-top: 3px;">
+                Verifique sua conexão com a internet
+              </div>
+            </div>
+          `;
+          contentDiv.style.display = 'block';
+        }
+      }
+
+      // Trocar camada de tile
+      function switchTileLayer(layerType) {
+        if (currentTileLayer) {
+          map.removeLayer(currentTileLayer);
+        }
+
+        const layer = tileLayers[layerType];
+        currentTileLayer = L.tileLayer(layer.url, layer.options).addTo(map);
+        map.options.maxZoom = layer.options.maxZoom;
+      }
+
+      // Plotar pontos no mapa
+      function plotPointsOnMap() {
+        if (!map || !markersLayer) return;
+
+        debugLog('Plotando pontos no mapa');
+        markersLayer.clearLayers();
+
+        const allPoints = combineAllPoints();
+        if (allPoints.length === 0) return;
+
+        let bounds = L.latLngBounds();
+
+        allPoints.forEach((point, index) => {
+          const currentName = renamedFiles.get(point.filename) || point.filename;
+          const isRenamed = renamedFiles.has(point.filename);
+          const isImported = point.imported || false;
+          
+          // Criar ícone personalizado baseado na zona de drone ou se foi importado
+          let markerIcon;
+          if (isImported) {
+            markerIcon = L.divIcon({
+              className: 'custom-marker',
+              html: `<div style="background: #9b59b6; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📍</div>`,
+              iconSize: [25, 25],
+              iconAnchor: [12.5, 12.5]
+            });
+          } else if (droneZonesActive && point.droneZone) {
+            const zoneColor = point.droneZone.zona === 'prohibited' ? '#e74c3c' : 
+                             point.droneZone.zona === 'restricted' ? '#f39c12' : '#27ae60';
+            
+            markerIcon = L.divIcon({
+              className: 'custom-marker',
+              html: `<div style="background: ${zoneColor}; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📷</div>`,
+              iconSize: [25, 25],
+              iconAnchor: [12.5, 12.5]
+            });
+          } else {
+            markerIcon = new L.Icon.Default();
+          }
+          
+          const marker = L.marker([point.latitude, point.longitude], { icon: markerIcon });
+          
+          const popup = L.popup({
+            maxWidth: 350,
+            minWidth: 320
+          });
+          
+          if (isImported) {
+            popup.setContent(createImportedPopupContent(point, index));
+          } else {
+            popup.setContent(createPopupContent(point, index, currentName, isRenamed));
+          }
+          
+          marker.bindPopup(popup);
+          
+          // Event listener para quando o popup é aberto (só para pontos de imagem)
+          if (!isImported) {
+            marker.on('popupopen', function(e) {
+              setTimeout(() => {
+                consultarRodoviasParaPopup(point, index);
+              }, 100);
+            });
+
+            // Adicionar eventos de preview da imagem
+            marker.on('mouseover', function(e) {
+              if (!isPreviewOpen) {
+                previewTimeout = setTimeout(() => {
+                  showImagePreview(point, currentName, isRenamed);
+                }, 2000);
+              }
+            });
+
+            marker.on('mouseout', function(e) {
+              if (previewTimeout) {
+                clearTimeout(previewTimeout);
+                previewTimeout = null;
+              }
+            });
+          }
+
+          markersLayer.addLayer(marker);
+          bounds.extend([point.latitude, point.longitude]);
+        });
+
+        if (allPoints.length > 0) {
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
+
+        // Se zonas de drone estão ativas, recarregar
+        if (droneZonesActive) {
+          setTimeout(() => {
+            carregarZonasDrone();
+          }, 500);
+        }
+        
+        debugLog(`Plotados ${allPoints.length} pontos no mapa`);
+      }
+
+      // Criar conteúdo do popup para pontos importados
+      function createImportedPopupContent(point, index) {
+        let droneInfo = '';
+        if (droneZonesActive && point.droneZone) {
+          const zoneIcon = point.droneZone.zona === 'prohibited' ? '🚫' : 
+                          point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
+          
+          droneInfo = `
+            <div style="margin-top: 10px; padding: 8px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 5px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
+              <div style="font-size: 12px; color: #495057; margin-bottom: 2px;"><strong>${zoneIcon} Zona de Drone:</strong></div>
+              <div style="font-size: 11px; color: #6c757d;">${point.droneZone.descricao}</div>
+              ${point.droneZone.aeroporto ? `<div style="font-size: 10px; color: #6c757d;">Aeroporto: ${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
+            </div>
+          `;
+        }
+        
+        return `
+          <div style="width: 320px;">
+            <h4>📍 ${point.filename} <span style="color: #9b59b6; font-size: 12px;">(Importado)</span></h4>
+            <p><strong>Coordenadas:</strong><br>
+            Lat: ${point.latitude.toFixed(8)}<br>
+            Lng: ${point.longitude.toFixed(8)}</p>
+            ${point.datetime ? `<p><strong>Data/Hora:</strong><br>${point.datetime}</p>` : ''}
+            ${point.description ? `<p><strong>Descrição:</strong><br>${point.description}</p>` : ''}
+            
+            ${droneInfo}
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+              <div class="popup-buttons">
+                <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
+                  🔍 Zoom Max
+                </button>
+                <button class="popup-btn danger" onclick="removeImportedPoint(${index})">
+                  🗑️ Remover
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
 
       // Criar conteúdo do popup
       function createPopupContent(point, index, currentName, isRenamed) {
@@ -2017,142 +1936,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         `;
       }
 
-      // Função chamada quando o popup é aberto para consultar rodovias
-      async function consultarRodoviasParaPopup(point, index) {
-        const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
-        
-        if (rodoviaCache.has(coordKey)) {
-          exibirRodoviasNoPopup(rodoviaCache.get(coordKey), index, point);
-          return;
-        }
-        
-        try {
-          const dadosDNIT = await consultarRodoviasDNIT(point.latitude, point.longitude);
-          const dadosProcessados = processarDadosRodovias(dadosDNIT);
-          
-          rodoviaCache.set(coordKey, dadosProcessados);
-          exibirRodoviasNoPopup(dadosProcessados, index, point);
-          
-        } catch (error) {
-          console.error('Erro ao consultar rodovias:', error);
-          exibirErroRodovias(index);
-        }
-      }
-
-      // Função para exibir rodovias no popup
-      function exibirRodoviasNoPopup(dadosProcessados, index, point) {
-        const loadingDiv = document.getElementById(`rodoviaLoading_${index}`);
-        const contentDiv = document.getElementById(`rodoviaContent_${index}`);
-        
-        if (loadingDiv) loadingDiv.style.display = 'none';
-        if (contentDiv) {
-          contentDiv.innerHTML = gerarHtmlRodovias(dadosProcessados, {
-            lat: point.latitude,
-            lng: point.longitude
-          });
-          contentDiv.style.display = 'block';
-        }
-      }
-
-      // Função para exibir erro na consulta de rodovias
-      function exibirErroRodovias(index) {
-        const loadingDiv = document.getElementById(`rodoviaLoading_${index}`);
-        const contentDiv = document.getElementById(`rodoviaContent_${index}`);
-        
-        if (loadingDiv) loadingDiv.style.display = 'none';
-        if (contentDiv) {
-          contentDiv.innerHTML = `
-            <div style="padding: 10px; background: #ffebee; border: 1px solid #f44336; border-radius: 5px; text-align: center;">
-              <div style="color: #d32f2f; font-size: 13px; font-weight: bold;">
-                ❌ Erro ao consultar rodovias
-              </div>
-              <div style="color: #666; font-size: 11px; margin-top: 3px;">
-                Verifique sua conexão com a internet
-              </div>
-            </div>
-          `;
-          contentDiv.style.display = 'block';
-        }
-      }
-
-      // Função para renomear arquivo
-      function renameFile(index, originalFilename, fileExt) {
-        const newNameInput = document.getElementById(`newName_${index}`);
-        const newName = newNameInput.value.trim();
-        
-        if (!newName) {
-          alert('Por favor, insira um nome válido.');
-          return;
-        }
-        
-        const fullNewName = newName + fileExt;
-        
-        const existingNames = Array.from(renamedFiles.values());
-        const originalNames = imagePoints.map(p => p.filename);
-        
-        if (existingNames.includes(fullNewName) || originalNames.includes(fullNewName)) {
-          if (renamedFiles.get(originalFilename) !== fullNewName) {
-            alert('Este nome já está being usado por outro arquivo.');
-            return;
-          }
-        }
-        
-        renamedFiles.set(originalFilename, fullNewName);
-        updateResultsTable();
-        updateStats();
-        plotPointsOnMap();
-        downloadZipBtn.disabled = false;
-        map.closePopup();
-      }
-
-      // Função para resetar nome do arquivo
-      function resetFileName(originalFilename, index) {
-        renamedFiles.delete(originalFilename);
-        updateResultsTable();
-        updateStats();
-        plotPointsOnMap();
-        
-        if (renamedFiles.size === 0) {
-          downloadZipBtn.disabled = true;
-        }
-        
-        map.closePopup();
-      }
-
-      // Função para remover ponto importado
-      function removeImportedPoint(index) {
-        if (confirm('Tem certeza que deseja remover este ponto importado?')) {
-          // Encontrar o ponto importado no array
-          const allPoints = combineAllPoints();
-          const imagePointsCount = imagePoints.length;
-          
-          if (index >= imagePointsCount) {
-            const importedIndex = index - imagePointsCount;
-            importedPoints.splice(importedIndex, 1);
-            importedCount = importedPoints.length;
-            
-            // Atualizar estatísticas
-            document.getElementById("importedPoints").textContent = importedCount;
-            
-            // Atualizar tabela
-            updateResultsTable();
-            
-            // Replotar pontos
-            plotPointsOnMap();
-            
-            // Fechar popup
-            map.closePopup();
-            
-            // Verificar se ainda há pontos para habilitar/desabilitar botões
-            const totalPoints = imagePoints.length + importedPoints.length;
-            if (totalPoints === 0) {
-              downloadKmlBtn.disabled = true;
-              downloadCsvBtn.disabled = true;
-            }
-          }
-        }
-      }
-
       // Atualizar tabela de resultados (incluindo pontos importados)
       function updateResultsTable() {
         resultsBody.innerHTML = "";
@@ -2181,27 +1964,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         });
       }
 
-      // Atualizar estatísticas
-      function updateStats() {
-        document.getElementById("renamedImages").textContent = renamedFiles.size;
-        document.getElementById("importedPoints").textContent = importedCount;
-      }
-
-      // Atualizar zonas para todos os pontos (incluindo importados)
-      function atualizarZonasParaTodos(aeroportos) {
-        // Atualizar pontos das imagens
-        imagePoints.forEach((point, index) => {
-          const zona = determinarZonaRestricao(point.latitude, point.longitude, aeroportos);
-          point.droneZone = zona;
-        });
-        
-        // Atualizar pontos importados
-        importedPoints.forEach((point, index) => {
-          const zona = determinarZonaRestricao(point.latitude, point.longitude, aeroportos);
-          point.droneZone = zona;
-        });
-      }
-
       // Setup de eventos
       dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -2225,25 +1987,25 @@ Longitude: ${point.longitude.toFixed(8)}</p>
 
       // Função principal para processar os arquivos
       function handleFiles(files) {
-        if (!files || files.length === 0) return;
+        if (!files || files.length === 0) {
+          debugLog('Nenhum arquivo selecionado');
+          return;
+        }
+
+        debugLog(`Processando ${files.length} arquivos`);
 
         // Reset
         imagePoints = [];
-        importedPoints = [];
         originalFiles.clear();
         imageDataMap.clear();
         renamedFiles.clear();
-        rodoviaCache.clear();
-        airportCache.clear();
         processedImages = 0;
         imagesWithGeo = 0;
         totalImages = files.length;
-        importedCount = 0;
         resultsBody.innerHTML = "";
 
         document.getElementById("totalImages").textContent = totalImages;
         document.getElementById("geoImages").textContent = "0";
-        document.getElementById("importedPoints").textContent = "0";
         document.getElementById("renamedImages").textContent = "0";
 
         progressBar.style.display = "block";
@@ -2251,6 +2013,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         progress.textContent = "0%";
 
         downloadKmlBtn.disabled = true;
+        downloadKmzBtn.disabled = true;
         downloadCsvBtn.disabled = true;
         downloadZipBtn.disabled = true;
 
@@ -2258,23 +2021,30 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           markersLayer.clearLayers();
         }
 
-        if (droneZonesLayer) {
-          droneZonesLayer.clearLayers();
+        // Verificar se EXIF está disponível
+        if (typeof EXIF === 'undefined') {
+          debugLog('ERRO: Biblioteca EXIF não carregada');
+          alert('Erro: Biblioteca EXIF não foi carregada. Recarregue a página.');
+          return;
         }
-
-        closePreview();
 
         Array.from(files).forEach((file, index) => {
           if (!file.type.startsWith("image/")) {
+            debugLog(`Arquivo ${file.name} não é uma imagem`);
             updateProgress();
             return;
           }
 
+          debugLog(`Processando imagem: ${file.name}`);
           originalFiles.set(file.name, file);
 
           const reader = new FileReader();
           reader.onload = function (e) {
             processImage(file, e.target.result);
+          };
+          reader.onerror = function() {
+            debugLog(`Erro ao ler arquivo: ${file.name}`);
+            updateProgress();
           };
           reader.readAsDataURL(file);
         });
@@ -2282,70 +2052,100 @@ Longitude: ${point.longitude.toFixed(8)}</p>
 
       // Processa uma imagem individual
       function processImage(file, dataUrl) {
+        debugLog(`Processando imagem: ${file.name}`);
+        
         const img = new Image();
         img.onload = function () {
-          EXIF.getData(img, function () {
-            let lat = null;
-            let lng = null;
-            let datetime = null;
+          debugLog(`Imagem carregada: ${file.name}`);
+          
+          try {
+            EXIF.getData(img, function () {
+              let lat = null;
+              let lng = null;
+              let datetime = null;
 
-            if (EXIF.getTag(this, "GPSLatitude")) {
-              lat = convertDMSToDD(
-                EXIF.getTag(this, "GPSLatitude"),
-                EXIF.getTag(this, "GPSLatitudeRef")
-              );
+              const gpsLat = EXIF.getTag(this, "GPSLatitude");
+              const gpsLng = EXIF.getTag(this, "GPSLongitude");
+              
+              debugLog(`GPS Latitude: ${gpsLat}, GPS Longitude: ${gpsLng}`);
 
-              lng = convertDMSToDD(
-                EXIF.getTag(this, "GPSLongitude"),
-                EXIF.getTag(this, "GPSLongitudeRef")
-              );
+              if (gpsLat && gpsLng) {
+                lat = convertDMSToDD(
+                  gpsLat,
+                  EXIF.getTag(this, "GPSLatitudeRef")
+                );
 
-              if (EXIF.getTag(this, "DateTimeOriginal")) {
-                datetime = EXIF.getTag(this, "DateTimeOriginal");
-              }
+                lng = convertDMSToDD(
+                  gpsLng,
+                  EXIF.getTag(this, "GPSLongitudeRef")
+                );
 
-              if (isValidCoordinate(lat, lng)) {
-                imagesWithGeo++;
-                document.getElementById("geoImages").textContent = imagesWithGeo;
-
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                const maxSize = 800;
-                let { width, height } = img;
-                
-                if (width > height && width > maxSize) {
-                  height = (height * maxSize) / width;
-                  width = maxSize;
-                } else if (height > maxSize) {
-                  width = (width * maxSize) / height;
-                  height = maxSize;
+                const dateTimeOriginal = EXIF.getTag(this, "DateTimeOriginal");
+                if (dateTimeOriginal) {
+                  datetime = dateTimeOriginal;
                 }
-                
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                imageDataMap.set(file.name, canvas.toDataURL('image/jpeg', 0.85));
 
-                imagePoints.push({
-                  filename: file.name,
-                  latitude: lat,
-                  longitude: lng,
-                  datetime: datetime,
-                });
+                debugLog(`Coordenadas convertidas: Lat=${lat}, Lng=${lng}`);
 
-                const row = resultsBody.insertRow();
-                row.insertCell(0).textContent = file.name;
-                row.insertCell(1).textContent = lat.toFixed(8);
-                row.insertCell(2).textContent = lng.toFixed(8);
-                row.insertCell(3).textContent = datetime || "N/A";
+                if (isValidCoordinate(lat, lng)) {
+                  imagesWithGeo++;
+                  document.getElementById("geoImages").textContent = imagesWithGeo;
+
+                  // Criar versão redimensionada da imagem para economizar memória
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  
+                  const maxSize = 800;
+                  let { width, height } = img;
+                  
+                  if (width > height && width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                  } else if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                  }
+                  
+                  canvas.width = width;
+                  canvas.height = height;
+                  ctx.drawImage(img, 0, 0, width, height);
+                  
+                  imageDataMap.set(file.name, canvas.toDataURL('image/jpeg', 0.85));
+
+                  imagePoints.push({
+                    filename: file.name,
+                    latitude: lat,
+                    longitude: lng,
+                    datetime: datetime,
+                  });
+
+                  const row = resultsBody.insertRow();
+                  row.insertCell(0).textContent = file.name;
+                  row.insertCell(1).textContent = lat.toFixed(8);
+                  row.insertCell(2).textContent = lng.toFixed(8);
+                  row.insertCell(3).textContent = datetime || "N/A";
+                  
+                  debugLog(`Ponto adicionado: ${file.name}`);
+                } else {
+                  debugLog(`Coordenadas inválidas para: ${file.name}`);
+                }
+              } else {
+                debugLog(`Sem coordenadas GPS em: ${file.name}`);
               }
-            }
 
+              updateProgress();
+            });
+          } catch (error) {
+            debugLog(`Erro ao processar EXIF de ${file.name}: ${error.message}`);
             updateProgress();
-          });
+          }
         };
+        
+        img.onerror = function() {
+          debugLog(`Erro ao carregar imagem: ${file.name}`);
+          updateProgress();
+        };
+        
         img.src = dataUrl;
       }
 
@@ -2356,13 +2156,23 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         progress.style.width = percentage + "%";
         progress.textContent = percentage + "%";
 
+        debugLog(`Progresso: ${processedImages}/${totalImages} (${percentage}%)`);
+
         if (processedImages === totalImages) {
           const totalPoints = imagePoints.length + importedPoints.length;
           if (totalPoints > 0) {
             downloadKmlBtn.disabled = false;
             downloadCsvBtn.disabled = false;
+            
+            // Habilitar KMZ apenas se há imagens com geolocalização
+            if (imagePoints.length > 0) {
+              downloadKmzBtn.disabled = false;
+            }
+            
             plotPointsOnMap();
           }
+          
+          debugLog(`Processamento concluído: ${imagePoints.length} imagens com GPS de ${totalImages} total`);
         }
       }
 
@@ -2393,7 +2203,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         );
       }
 
-      // Gera e faz download do KML
+      // Event listeners dos botões de download
       downloadKmlBtn.addEventListener("click", () => {
         const allPoints = combineAllPoints();
         if (allPoints.length === 0) return;
@@ -2412,26 +2222,25 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         downloadAnchor.remove();
       });
 
-      // Gera e faz download do CSV (incluindo pontos importados)
+      downloadKmzBtn.addEventListener("click", () => {
+        generateKMZ();
+      });
+
       downloadCsvBtn.addEventListener("click", () => {
         const allPoints = combineAllPoints();
         if (allPoints.length === 0) return;
 
-        let csvContent = "Nome do Arquivo,Nome Original,Latitude,Longitude,Data/Hora,Tipo,Renomeado,Zona Drone,Aeroporto Próximo,Distância (km)\n";
+        let csvContent = "Nome do Arquivo,Nome Original,Latitude,Longitude,Data/Hora,Tipo\n";
 
         allPoints.forEach((point) => {
           const currentName = renamedFiles.get(point.filename) || point.filename;
-          const isRenamed = renamedFiles.has(point.filename);
           const isImported = point.imported || false;
           const tipo = isImported ? 'Importado' : 'Imagem';
-          const droneZone = point.droneZone ? point.droneZone.descricao : '';
-          const nearestAirport = point.droneZone && point.droneZone.aeroporto ? point.droneZone.aeroporto.name : '';
-          const distance = point.droneZone ? point.droneZone.distancia.toFixed(1) : '';
-          const originalName = isImported ? point.filename : point.filename;
+          const originalName = point.filename;
           
           csvContent += `"${currentName}","${originalName}",${String(point.latitude)},${String(
             point.longitude
-          )},"${point.datetime || ""}","${tipo}","${isRenamed ? 'Sim' : 'Não'}","${droneZone}","${nearestAirport}","${distance}"\n`;
+          )},"${point.datetime || ""}","${tipo}"\n`;
         });
 
         const dataStr =
@@ -2461,7 +2270,6 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         document.head.appendChild(script);
       }
 
-      // Gera e faz download do ZIP com fotos renomeadas
       downloadZipBtn.addEventListener("click", () => {
         if (imagePoints.length === 0) return;
 
@@ -2508,7 +2316,21 @@ Longitude: ${point.longitude.toFixed(8)}</p>
 
       // Inicializar o mapa quando a página carregar
       document.addEventListener("DOMContentLoaded", function () {
+        debugLog('DOM carregado, inicializando aplicação');
         initMap();
+        
+        // Teste básico das bibliotecas
+        if (typeof EXIF === 'undefined') {
+          debugLog('ERRO: EXIF não carregado');
+        } else {
+          debugLog('EXIF carregado com sucesso');
+        }
+        
+        if (typeof L === 'undefined') {
+          debugLog('ERRO: Leaflet não carregado');
+        } else {
+          debugLog('Leaflet carregado com sucesso');
+        }
       });
     </script>
   </body>
