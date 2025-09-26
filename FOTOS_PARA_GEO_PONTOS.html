@@ -687,8 +687,6 @@
           </button>
         </div>
 
-        <div id="debugInfo" class="debug-info" style="display: none;"></div>
-
         <div class="progress-bar" id="progressBar" style="display: none">
           <div class="progress" id="progress" style="width: 0%">0%</div>
         </div>
@@ -812,15 +810,10 @@
       const droneLegend = document.getElementById("droneLegend");
       const droneLoading = document.getElementById("droneLoading");
       const imagePreview = document.getElementById("imagePreview");
-      const debugInfo = document.getElementById("debugInfo");
 
-      // Função de debug
+      // Função de debug - apenas console
       function debugLog(message) {
         console.log(message);
-        if (debugInfo) {
-          debugInfo.innerHTML += message + "<br>";
-          debugInfo.style.display = "block";
-        }
       }
 
       // FUNÇÃO PARA IMPORTAR KML
