@@ -838,25 +838,57 @@
           }
           
           const reader = new FileReader();
-          reader.onload = function(event) {
+          reader.onload = async function(event) {
             try {
               const kmlContent = event.target.result;
               const points = parseKML(kmlContent);
               
               if (points.length > 0) {
+                // Consultar rodovias para cada ponto importado
+                debugLog(`Consultando rodovias para ${points.length} pontos importados`);
+                const progressMsg = `Consultando rodovias para pontos importados...`;
+                
+                for (let i = 0; i < points.length; i++) {
+                  const point = points[i];
+                  console.log(`Consultando rodovias para ponto ${i + 1}/${points.length}: ${point.filename}`);
+                  
+                  try {
+                    const dadosDNIT = await consultarRodoviasDNIT(point.latitude, point.longitude);
+                    const dadosProcessados = processarDadosRodovias(dadosDNIT);
+                    
+                    // Cache das rodovias para este ponto
+                    const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
+                    rodoviaCache.set(coordKey, dadosProcessados);
+                    
+                    // Adicionar informações de rodovias ao ponto
+                    point.rodovias = dadosProcessados;
+                    
+                    // Pequena pausa para não sobrecarregar a API
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                  } catch (error) {
+                    console.warn(`Erro ao consultar rodovias para ${point.filename}:`, error);
+                    point.rodovias = { rodovias: [] };
+                  }
+                }
+                
+                // Adicionar pontos importados
                 importedPoints.push(...points);
                 importedCount = importedPoints.length;
                 
+                // Atualizar interface
                 document.getElementById("importedPoints").textContent = importedCount;
                 updateResultsTable();
                 
+                // Habilitar botões
                 if (imagePoints.length + importedPoints.length > 0) {
                   downloadKmlBtn.disabled = false;
                   downloadCsvBtn.disabled = false;
                 }
                 
+                // Atualizar mapa
                 plotPointsOnMap();
-                alert(`Sucesso! ${points.length} pontos importados do KML.`);
+                
+                alert(`Sucesso! ${points.length} pontos importados do KML com informações de rodovias.`);
               } else {
                 alert('Nenhum ponto válido encontrado no arquivo KML.');
               }
@@ -1845,6 +1877,29 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             </div>
           `;
         }
+
+        // Informações de rodovias para pontos importados
+        let rodoviaInfo = '';
+        if (point.rodovias && point.rodovias.rodovias && point.rodovias.rodovias.length > 0) {
+          const listaRodovias = point.rodovias.rodovias.map(rodovia => {
+            const isKmZero = parseFloat(rodovia.km) === 0;
+            const alertIcon = isKmZero ? ' ⚠️' : '';
+            return `BR-${rodovia.br} (Km ${rodovia.km})${alertIcon}`;
+          }).join(' • ');
+          
+          rodoviaInfo = `
+            <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+              <div style="font-size: 11px; color: #6c757d; margin-bottom: 2px;">🛣️ Rodovias:</div>
+              <div style="font-size: 12px; color: #495057;">${listaRodovias}</div>
+            </div>
+          `;
+        } else if (point.rodovias) {
+          rodoviaInfo = `
+            <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+              <div style="font-size: 11px; color: #6c757d;">🛣️ Nenhuma rodovia encontrada</div>
+            </div>
+          `;
+        }
         
         return `
           <div style="width: 320px;">
@@ -1856,6 +1911,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             ${point.description ? `<p><strong>Descrição:</strong><br>${point.description}</p>` : ''}
             
             ${droneInfo}
+            ${rodoviaInfo}
             
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
               <div class="popup-buttons">
