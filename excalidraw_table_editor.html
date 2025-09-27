@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excalidraw Table Editor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #2b2d42;
+        color: #ffffff;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: #3d405b;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #f2cc8f;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .license-info {
+        background: #4a4d6a;
+        border: 1px solid #5a5d7a;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 12px;
+        color: #edf2f4;
+        text-align: center;
+      }
+
+      .section {
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid #5a5d7a;
+        border-radius: 8px;
+        background: #4a4d6a;
+      }
+
+      .section.compact {
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .section h3 {
+        color: #f2cc8f;
+        margin-bottom: 10px;
+        font-weight: 500;
+        font-size: 16px;
+      }
+
+      .section.main {
+        margin-bottom: 20px;
+        padding: 20px;
+      }
+
+      .section.main h3 {
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      .form-group {
+        margin-bottom: 10px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #edf2f4;
+        font-size: 12px;
+      }
+
+      input[type="number"],
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #5a5d7a;
+        border-radius: 4px;
+        font-size: 12px;
+        background: #2b2d42;
+        color: #ffffff;
+      }
+
+      input[type="number"],
+      input[type="text"] {
+        max-width: 80px;
+      }
+
+      select {
+        max-width: 140px;
+      }
+
+      input[type="checkbox"] {
+        width: auto;
+        margin-right: 6px;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .checkbox-group label {
+        margin-bottom: 0;
+        margin-left: 6px;
+        font-size: 12px;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: end;
+      }
+
+      .form-row .form-group {
+        flex: 1;
+        min-width: 70px;
+      }
+
+      .number-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .number-input-group input {
+        padding-right: 25px;
+      }
+
+      .number-controls {
+        position: absolute;
+        right: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .number-btn {
+        width: 16px;
+        height: 14px;
+        background: #5a5d7a;
+        border: none;
+        border-radius: 2px;
+        color: #f2cc8f;
+        font-size: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        line-height: 1;
+      }
+
+      .number-btn:hover {
+        background: #f2cc8f;
+        color: #2b2d42;
+      }
+
+      .color-input {
+        width: 50px !important;
+        height: 32px;
+        padding: 2px;
+        cursor: pointer;
+      }
+
+      button {
+        background: #f2cc8f;
+        color: #2b2d42;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      button:hover {
+        background: #e9c46a;
+      }
+
+      .button-copy {
+        background: #81b29a;
+      }
+
+      .button-copy:hover {
+        background: #6a9c89;
+      }
+
+      .status {
+        margin: 15px 0;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: 500;
+      }
+
+      .status.success {
+        background: #405d4a;
+        color: #81b29a;
+        border: 1px solid #81b29a;
+      }
+
+      .status.error {
+        background: #5d4040;
+        color: #e07a5f;
+        border: 1px solid #e07a5f;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .style-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .style-group {
+        background: #3d405b;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #5a5d7a;
+      }
+
+      .style-group h4 {
+        color: #f2cc8f;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+
+      .cell-grid {
+        max-height: 600px;
+        overflow: auto;
+        border: 1px solid #5a5d7a;
+        border-radius: 6px;
+        background: #3d405b;
+        margin-bottom: 20px;
+      }
+
+      .cell-grid table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .cell-grid th,
+      .cell-grid td {
+        border: 1px solid #5a5d7a;
+        padding: 6px;
+        text-align: center;
+        background: #2b2d42;
+        min-width: 60px;
+        position: relative;
+      }
+
+      .cell-grid th {
+        background: #4a4d6a;
+        color: #f2cc8f;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        font-size: 12px;
+      }
+
+      .cell-grid th:first-child {
+        min-width: 40px;
+        width: 40px;
+        max-width: 40px;
+      }
+
+      .resize-handle {
+        position: absolute;
+        background: transparent;
+        z-index: 15;
+      }
+
+      .resize-handle.col {
+        top: 0;
+        right: -3px;
+        width: 6px;
+        height: 100%;
+        cursor: col-resize;
+      }
+
+      .resize-handle.row {
+        bottom: -3px;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        cursor: row-resize;
+      }
+
+      .resize-handle:hover {
+        background: #f2cc8f;
+        opacity: 0.3;
+      }
+
+      .resizing {
+        user-select: none;
+      }
+
+      .cell-grid input {
+        width: 100%;
+        min-width: 100%;
+        box-sizing: border-box;
+        padding: 4px;
+        border: none;
+        background: transparent;
+        color: #ffffff;
+        text-align: center;
+        font-size: 12px;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+      }
+
+      .cell-grid input:focus {
+        background: #4a4d6a;
+        outline: 2px solid #f2cc8f;
+        border-radius: 3px;
+      }
+
+      .table-info {
+        background: #3d405b;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #5a5d7a;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .table-info h4 {
+        color: #f2cc8f;
+        margin-bottom: 10px;
+        font-size: 14px;
+        grid-column: 1 / -1;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+      }
+
+      .info-label {
+        color: #edf2f4;
+        font-weight: 500;
+      }
+
+      .info-value {
+        color: #f2cc8f;
+        font-weight: 600;
+      }
+
+      .paste-hint {
+        background: #4a4d6a;
+        border: 1px solid #f2cc8f;
+        border-radius: 4px;
+        padding: 8px;
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: #f2cc8f;
+        text-align: center;
+      }
+
+      .documentation {
+        background: #4a4d6a;
+        border: 1px solid #5a5d7a;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 12px;
+        color: #edf2f4;
+      }
+
+      .documentation h4 {
+        color: #f2cc8f;
+        margin-bottom: 10px;
+      }
+
+      .documentation ul {
+        margin-left: 20px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Excalidraw Table Editor</h1>
+
+      <!-- License Information -->
+      <div class="license-info">
+        <strong>MIT License</strong> - This tool is open source and free to use,
+        modify, copy, and distribute. Feel free to adapt it for your needs or
+        integrate it into your projects.
+      </div>
+
+      <!-- Documentation -->
+      <div class="documentation">
+        <h4>How to Use</h4>
+        <ul>
+          <li>
+            <strong>Configure:</strong> Set table dimensions, position, and
+            styling options
+          </li>
+          <li>
+            <strong>Fill Cells:</strong> Click cells to edit or paste CSV data
+            in cell A1 for automatic expansion
+          </li>
+          <li>
+            <strong>Resize:</strong> Drag column/row borders for manual sizing
+            or use auto-adjust buttons
+          </li>
+          <li>
+            <strong>Export:</strong> Click "Copy to Clipboard" then paste in
+            Excalidraw with Ctrl+V
+          </li>
+        </ul>
+        <p>
+          <strong>Features:</strong> Supports up to 1000 rows × 100 columns,
+          individual column/row sizing, CSV import, and direct Excalidraw
+          integration.
+        </p>
+      </div>
+
+      <!-- Table Configuration -->
+      <div class="section compact">
+        <h3>1. Configure Table</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rows">Rows:</label>
+            <div class="number-input-group">
+              <input type="number" id="rows" value="3" min="1" max="1000" />
+              <div class="number-controls">
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('rows', 1)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('rows', -1)"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cols">Columns:</label>
+            <div class="number-input-group">
+              <input type="number" id="cols" value="3" min="1" max="100" />
+              <div class="number-controls">
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('cols', 1)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('cols', -1)"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cellWidth">Width (px):</label>
+            <div class="number-input-group">
+              <input
+                type="number"
+                id="cellWidth"
+                value="120"
+                min="20"
+                max="500"
+                step="10"
+              />
+              <div class="number-controls">
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('cellWidth', 10)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('cellWidth', -10)"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cellHeight">Height (px):</label>
+            <div class="number-input-group">
+              <input
+                type="number"
+                id="cellHeight"
+                value="50"
+                min="20"
+                max="200"
+                step="10"
+              />
+              <div class="number-controls">
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('cellHeight', 10)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('cellHeight', -10)"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="startX">Position X:</label>
+            <div class="number-input-group">
+              <input type="number" id="startX" value="100" step="10" />
+              <div class="number-controls">
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('startX', 10)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('startX', -10)"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="startY">Position Y:</label>
+            <div class="number-input-group">
+              <input type="number" id="startY" value="100" step="10" />
+              <div class="number-controls">
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('startY', 10)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="number-btn"
+                  onclick="adjustNumber('startY', -10)"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="groupTable" checked />
+            <label for="groupTable">Group elements</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Styling -->
+      <div class="section compact">
+        <h3>2. Customize Style</h3>
+        <div class="style-section">
+          <div class="style-group">
+            <h4>Cells</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="strokeWidth">Border:</label>
+                <div class="number-input-group">
+                  <input
+                    type="number"
+                    id="strokeWidth"
+                    value="2"
+                    min="1"
+                    max="10"
+                  />
+                  <div class="number-controls">
+                    <button
+                      type="button"
+                      class="number-btn"
+                      onclick="adjustNumber('strokeWidth', 1)"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      class="number-btn"
+                      onclick="adjustNumber('strokeWidth', -1)"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="strokeColor">Border color:</label>
+                <input
+                  type="color"
+                  id="strokeColor"
+                  value="#1e1e1e"
+                  class="color-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="backgroundColor">Background color:</label>
+                <input
+                  type="color"
+                  id="backgroundColor"
+                  value="#ffffff"
+                  class="color-input"
+                />
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" id="roundedCorners" />
+                <label for="roundedCorners">Rounded corners</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <h4>Text</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fontFamily">Font:</label>
+                <select id="fontFamily">
+                  <option value="1">Virgil</option>
+                  <option value="2">Helvetica</option>
+                  <option value="3">Cascadia</option>
+                  <option value="4">Assistant</option>
+                  <option value="5" selected>Excalidraw</option>
+                  <option value="6">Lilita One</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="fontSize">Size:</label>
+                <div class="number-input-group">
+                  <input
+                    type="number"
+                    id="fontSize"
+                    value="12"
+                    min="8"
+                    max="72"
+                  />
+                  <div class="number-controls">
+                    <button
+                      type="button"
+                      class="number-btn"
+                      onclick="adjustNumber('fontSize', 2)"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      class="number-btn"
+                      onclick="adjustNumber('fontSize', -2)"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="textColor">Text color:</label>
+                <input
+                  type="color"
+                  id="textColor"
+                  value="#1e1e1e"
+                  class="color-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cell Content -->
+      <div class="section main">
+        <h3>3. Fill Cells</h3>
+        <div class="paste-hint">
+          Tip: Paste CSV data in the first cell (A1) to automatically expand the
+          table
+        </div>
+        <div style="margin-bottom: 10px">
+          <button
+            type="button"
+            onclick="autoAdjustColumns()"
+            style="background: #8d99ae; margin-right: 10px"
+          >
+            Auto Adjust Columns
+          </button>
+          <button
+            type="button"
+            onclick="autoAdjustRows()"
+            style="background: #8d99ae"
+          >
+            Auto Adjust Rows
+          </button>
+        </div>
+        <div class="cell-grid" id="cellGrid">
+          <!-- Grid will be generated dynamically -->
+        </div>
+      </div>
+
+      <!-- Table Information -->
+      <div class="table-info">
+        <h4>Table Information</h4>
+        <div class="info-item">
+          <span class="info-label">Dimensions:</span>
+          <span class="info-value" id="previewDimensions">3x3</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Total size:</span>
+          <span class="info-value" id="previewSize">360x150 px</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Position:</span>
+          <span class="info-value" id="previewPosition">x:100, y:100</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Total cells:</span>
+          <span class="info-value" id="previewCells">9</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Filled cells:</span>
+          <span class="info-value" id="previewFilled">0</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Grouped:</span>
+          <span class="info-value" id="previewGrouped">Yes</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="section">
+        <h3>4. Generate Table</h3>
+        <button class="button-copy" onclick="copyTableToClipboard()">
+          Copy to Paste in Excalidraw
+        </button>
+        <div id="generateStatus" class="status hidden"></div>
+      </div>
+    </div>
+
+    <script>
+      // Global variables
+      let cellData = [];
+      let columnWidths = [];
+      let rowHeights = [];
+      let resizing = null;
+      let startMousePos = 0;
+      let startSize = 0;
+
+      // Function to adjust numbers with buttons
+      function adjustNumber(inputId, increment) {
+        const input = document.getElementById(inputId);
+        const currentValue = parseInt(input.value) || 0;
+        const min = parseInt(input.min) || -Infinity;
+        const max = parseInt(input.max) || Infinity;
+
+        let newValue = currentValue + increment;
+        newValue = Math.max(min, Math.min(max, newValue));
+
+        input.value = newValue;
+        input.dispatchEvent(new Event("input"));
+      }
+
+      // Initialize dimensions
+      function initializeDimensions(rows, cols) {
+        const defaultWidth =
+          parseInt(document.getElementById("cellWidth").value) || 120;
+        const defaultHeight =
+          parseInt(document.getElementById("cellHeight").value) || 50;
+
+        while (columnWidths.length < cols) {
+          columnWidths.push(defaultWidth);
+        }
+
+        while (rowHeights.length < rows) {
+          rowHeights.push(defaultHeight);
+        }
+      }
+
+      // Generate cell grid
+      function generateCellGrid() {
+        const rows = parseInt(document.getElementById("rows").value) || 3;
+        const cols = parseInt(document.getElementById("cols").value) || 3;
+
+        initializeDimensions(rows, cols);
+
+        // Resize data array
+        const oldData = cellData;
+        cellData = [];
+        for (let i = 0; i < rows; i++) {
+          cellData[i] = [];
+          for (let j = 0; j < cols; j++) {
+            cellData[i][j] = (oldData[i] && oldData[i][j]) || "";
+          }
+        }
+
+        // Generate table HTML
+        let html = '<table><thead><tr><th style="width: 40px;"></th>';
+        for (let col = 0; col < cols; col++) {
+          html += `<th style="width: ${columnWidths[col]}px;" data-col="${col}">
+                    ${String.fromCharCode(65 + col)}
+                    <div class="resize-handle col" onmousedown="startResize(event, 'col', ${col})"></div>
+                </th>`;
+        }
+        html += "</tr></thead><tbody>";
+
+        for (let row = 0; row < rows; row++) {
+          html += `<tr style="height: ${rowHeights[row]}px;" data-row="${row}">
+                    <th style="width: 40px;">${row + 1}
+                        <div class="resize-handle row" onmousedown="startResize(event, 'row', ${row})"></div>
+                    </th>`;
+          for (let col = 0; col < cols; col++) {
+            const isFirstCell = row === 0 && col === 0;
+            html += `<td style="width: ${
+              columnWidths[col]
+            }px;"><input type="text" value="${cellData[row][col]}" 
+                             onchange="updateCellData(${row}, ${col}, this.value)"
+                             oninput="updateInfo()"
+                             onpaste="handlePaste(event, ${row}, ${col})"
+                             placeholder="${
+                               isFirstCell ? "Paste CSV here..." : ""
+                             }"></td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+
+        document.getElementById("cellGrid").innerHTML = html;
+      }
+
+      // Resizing functions
+      function startResize(event, type, index) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        resizing = { type, index };
+        startMousePos = type === "col" ? event.clientX : event.clientY;
+        startSize = type === "col" ? columnWidths[index] : rowHeights[index];
+
+        document.body.classList.add("resizing");
+        document.addEventListener("mousemove", handleResize);
+        document.addEventListener("mouseup", stopResize);
+      }
+
+      function handleResize(event) {
+        if (!resizing) return;
+
+        const currentMousePos =
+          resizing.type === "col" ? event.clientX : event.clientY;
+        const delta = currentMousePos - startMousePos;
+        const newSize = Math.max(30, startSize + delta);
+
+        if (resizing.type === "col") {
+          updateColumnWidth(resizing.index, newSize);
+        } else {
+          updateRowHeight(resizing.index, newSize);
+        }
+      }
+
+      function stopResize(event) {
+        if (!resizing) return;
+
+        document.body.classList.remove("resizing");
+        document.removeEventListener("mousemove", handleResize);
+        document.removeEventListener("mouseup", stopResize);
+
+        resizing = null;
+        updateInfo();
+      }
+
+      function updateColumnWidth(colIndex, newWidth) {
+        columnWidths[colIndex] = Math.round(newWidth);
+
+        const table = document
+          .getElementById("cellGrid")
+          .querySelector("table");
+        const headerCell = table.querySelector(`th[data-col="${colIndex}"]`);
+        if (headerCell) {
+          headerCell.style.width = newWidth + "px";
+        }
+
+        // Update all cells in this specific column
+        const rows = table.querySelectorAll("tbody tr");
+        rows.forEach((row) => {
+          const cell = row.children[colIndex + 1];
+          if (cell) {
+            cell.style.width = newWidth + "px";
+            // Also update the input inside the cell
+            const input = cell.querySelector("input");
+            if (input) {
+              input.style.width = newWidth - 8 + "px"; // Subtract padding
+              input.style.minWidth = newWidth - 8 + "px";
+            }
+          }
+        });
+      }
+
+      function updateRowHeight(rowIndex, newHeight) {
+        rowHeights[rowIndex] = Math.round(newHeight);
+
+        const table = document
+          .getElementById("cellGrid")
+          .querySelector("table");
+        const row = table.querySelector(`tr[data-row="${rowIndex}"]`);
+        if (row) {
+          row.style.height = newHeight + "px";
+        }
+      }
+
+      // Update cell data
+      function updateCellData(row, col, value) {
+        if (!cellData[row]) cellData[row] = [];
+        cellData[row][col] = value;
+        updateInfo();
+      }
+
+      // Handle paste
+      function handlePaste(event, row, col) {
+        if (row !== 0 || col !== 0) return;
+
+        event.preventDefault();
+
+        const pastedText = (
+          event.clipboardData || window.clipboardData
+        ).getData("text");
+
+        if (
+          pastedText &&
+          (pastedText.includes("\t") ||
+            pastedText.includes("\n") ||
+            pastedText.split(",").length > 1)
+        ) {
+          processCsvData(pastedText);
+        } else {
+          event.target.value = pastedText;
+          updateCellData(row, col, pastedText);
+        }
+      }
+
+      // Process CSV data
+      function processCsvData(csvText) {
+        try {
+          const lines = csvText
+            .trim()
+            .split("\n")
+            .filter((line) => line.trim() !== "");
+          let maxCols = 0;
+          const parsedData = [];
+
+          for (let i = 0; i < lines.length; i++) {
+            const separator = lines[i].includes("\t") ? "\t" : ",";
+            const cells = lines[i].split(separator);
+            parsedData[i] = cells.map((cell) =>
+              cell.trim().replace(/^"(.*)"$/, "$1")
+            );
+            maxCols = Math.max(maxCols, cells.length);
+          }
+
+          const currentRows = parseInt(document.getElementById("rows").value);
+          const currentCols = parseInt(document.getElementById("cols").value);
+
+          if (lines.length > currentRows) {
+            document.getElementById("rows").value = Math.min(
+              lines.length,
+              1000
+            );
+          }
+
+          if (maxCols > currentCols) {
+            document.getElementById("cols").value = Math.min(maxCols, 100);
+          }
+
+          if (lines.length > currentRows || maxCols > currentCols) {
+            generateCellGrid();
+          }
+
+          // Process all data without limitation
+          for (let i = 0; i < parsedData.length; i++) {
+            for (let j = 0; j < parsedData[i].length; j++) {
+              if (!cellData[i]) cellData[i] = [];
+              cellData[i][j] = parsedData[i][j] || "";
+            }
+          }
+
+          generateCellGrid();
+          updateInfo();
+          showStatus(
+            `Data imported! Table expanded to ${lines.length}x${maxCols}`,
+            "success"
+          );
+        } catch (error) {
+          showStatus("Error processing data: " + error.message, "error");
+        }
+      }
+
+      // Update information
+      function updateInfo() {
+        const rows = parseInt(document.getElementById("rows").value) || 3;
+        const cols = parseInt(document.getElementById("cols").value) || 3;
+        const startX = parseInt(document.getElementById("startX").value) || 100;
+        const startY = parseInt(document.getElementById("startY").value) || 100;
+        const groupTable = document.getElementById("groupTable").checked;
+
+        initializeDimensions(rows, cols);
+
+        const totalWidth = columnWidths
+          .slice(0, cols)
+          .reduce((sum, width) => sum + (width || 120), 0);
+        const totalHeight = rowHeights
+          .slice(0, rows)
+          .reduce((sum, height) => sum + (height || 50), 0);
+
+        let filledCells = 0;
+        for (let i = 0; i < rows; i++) {
+          for (let j = 0; j < cols; j++) {
+            if (cellData[i] && cellData[i][j] && cellData[i][j].trim()) {
+              filledCells++;
+            }
+          }
+        }
+
+        document.getElementById(
+          "previewDimensions"
+        ).textContent = `${rows}x${cols}`;
+        document.getElementById(
+          "previewSize"
+        ).textContent = `${totalWidth}x${totalHeight} px`;
+        document.getElementById(
+          "previewPosition"
+        ).textContent = `x:${startX}, y:${startY}`;
+        document.getElementById("previewCells").textContent = rows * cols;
+        document.getElementById("previewFilled").textContent = filledCells;
+        document.getElementById("previewGrouped").textContent = groupTable
+          ? "Yes"
+          : "No";
+      }
+
+      // Auto adjust column widths
+      function autoAdjustColumns() {
+        const rows = parseInt(document.getElementById("rows").value) || 3;
+        const cols = parseInt(document.getElementById("cols").value) || 3;
+        const table = document
+          .getElementById("cellGrid")
+          .querySelector("table");
+
+        // Create temporary canvas to measure text
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.font = "12px sans-serif"; // Same font-size as inputs
+
+        for (let col = 0; col < cols; col++) {
+          let maxWidth = 60; // Minimum width
+
+          // Measure header width
+          const headerText = String.fromCharCode(65 + col);
+          const headerWidth = ctx.measureText(headerText).width + 20; // + padding
+          maxWidth = Math.max(maxWidth, headerWidth);
+
+          // Measure content width for each cell in column
+          for (let row = 0; row < rows; row++) {
+            const cellText = (cellData[row] && cellData[row][col]) || "";
+            if (cellText.trim()) {
+              const textWidth = ctx.measureText(cellText).width + 20; // + padding
+              maxWidth = Math.max(maxWidth, textWidth);
+            }
+          }
+
+          // Limit maximum width
+          maxWidth = Math.min(maxWidth, 300);
+
+          // Apply new width
+          updateColumnWidth(col, maxWidth);
+          columnWidths[col] = maxWidth;
+        }
+
+        updateInfo();
+        showStatus("Columns auto-adjusted!", "success");
+      }
+
+      // Auto adjust row heights
+      function autoAdjustRows() {
+        const rows = parseInt(document.getElementById("rows").value) || 3;
+        const cols = parseInt(document.getElementById("cols").value) || 3;
+
+        for (let row = 0; row < rows; row++) {
+          let maxHeight = 35; // Minimum height
+
+          // Check if any cell in row has long content
+          for (let col = 0; col < cols; col++) {
+            const cellText = (cellData[row] && cellData[row][col]) || "";
+            if (cellText.length > 20) {
+              maxHeight = 50; // Higher height for long text
+            } else if (cellText.length > 10) {
+              maxHeight = Math.max(maxHeight, 42); // Medium height
+            }
+          }
+
+          // Apply new height
+          updateRowHeight(row, maxHeight);
+          rowHeights[row] = maxHeight;
+        }
+
+        updateInfo();
+        showStatus("Rows auto-adjusted!", "success");
+      }
+
+      // Generate table elements
+      function generateTableElements() {
+        const rows = parseInt(document.getElementById("rows").value);
+        const cols = parseInt(document.getElementById("cols").value);
+        const startX = parseInt(document.getElementById("startX").value);
+        const startY = parseInt(document.getElementById("startY").value);
+        const strokeWidth = parseInt(
+          document.getElementById("strokeWidth").value
+        );
+        const strokeColor = document.getElementById("strokeColor").value;
+        const backgroundColor =
+          document.getElementById("backgroundColor").value;
+        const roundedCorners =
+          document.getElementById("roundedCorners").checked;
+        const fontFamily = parseInt(
+          document.getElementById("fontFamily").value
+        );
+        const fontSize = parseInt(document.getElementById("fontSize").value);
+        const textColor = document.getElementById("textColor").value;
+        const groupTable = document.getElementById("groupTable").checked;
+
+        const tableElements = [];
+        const groupId = groupTable ? generateId() : null;
+
+        let currentY = startY;
+
+        for (let row = 0; row < rows; row++) {
+          let currentX = startX;
+          const cellHeight = rowHeights[row] || 50;
+
+          for (let col = 0; col < cols; col++) {
+            const cellWidth = columnWidths[col] || 120;
+
+            const cellElement = {
+              type: "rectangle",
+              version: 1,
+              versionNonce: Math.floor(Math.random() * 2000000000),
+              isDeleted: false,
+              id: generateId(),
+              fillStyle: "solid",
+              strokeWidth: strokeWidth,
+              strokeStyle: "solid",
+              roughness: 0,
+              opacity: 100,
+              angle: 0,
+              x: currentX,
+              y: currentY,
+              strokeColor: strokeColor,
+              backgroundColor:
+                backgroundColor === "#ffffff" ? "transparent" : backgroundColor,
+              width: cellWidth,
+              height: cellHeight,
+              seed: Math.floor(Math.random() * 2000000000),
+              groupIds: groupId ? [groupId] : [],
+              frameId: null,
+              roundness: roundedCorners ? { type: 3 } : null,
+              boundElements: [],
+              updated: Date.now(),
+              link: null,
+              locked: false,
+              customData: {
+                tableCell: true,
+                row: row,
+                col: col,
+              },
+            };
+
+            tableElements.push(cellElement);
+
+            const cellText = (cellData[row] && cellData[row][col]) || "";
+            if (cellText.trim()) {
+              const textWidth = cellText.length * fontSize * 0.6;
+              const textElement = {
+                type: "text",
+                version: 1,
+                versionNonce: Math.floor(Math.random() * 2000000000),
+                isDeleted: false,
+                id: generateId(),
+                fillStyle: "solid",
+                strokeWidth: strokeWidth,
+                strokeStyle: "solid",
+                roughness: 1,
+                opacity: 100,
+                angle: 0,
+                x: currentX + cellWidth / 2 - textWidth / 2,
+                y: currentY + cellHeight / 2 - fontSize / 2,
+                strokeColor: textColor,
+                backgroundColor: "transparent",
+                width: textWidth,
+                height: fontSize * 1.25,
+                seed: Math.floor(Math.random() * 2000000000),
+                groupIds: groupId ? [groupId] : [],
+                frameId: null,
+                roundness: null,
+                boundElements: [],
+                updated: Date.now(),
+                link: null,
+                locked: false,
+                fontSize: fontSize,
+                fontFamily: fontFamily,
+                text: cellText,
+                textAlign: "center",
+                verticalAlign: "middle",
+                containerId: cellElement.id,
+                originalText: cellText,
+                autoResize: true,
+                lineHeight: 1.25,
+              };
+
+              cellElement.boundElements.push({
+                type: "text",
+                id: textElement.id,
+              });
+
+              tableElements.push(textElement);
+            }
+
+            currentX += cellWidth;
+          }
+
+          currentY += cellHeight;
+        }
+
+        return tableElements;
+      }
+
+      // Copy to clipboard
+      async function copyTableToClipboard() {
+        try {
+          const tableElements = generateTableElements();
+
+          const clipboardData = {
+            type: "excalidraw/clipboard",
+            elements: tableElements,
+            files: {},
+          };
+
+          await navigator.clipboard.writeText(JSON.stringify(clipboardData));
+          showStatus(
+            "Table copied! Paste in Excalidraw with Ctrl+V",
+            "success"
+          );
+        } catch (error) {
+          showStatus("Error copying to clipboard: " + error.message, "error");
+        }
+      }
+
+      // Generate unique ID
+      function generateId() {
+        const chars =
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let result = "";
+        for (let i = 0; i < 20; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+      }
+
+      // Show status
+      function showStatus(message, type) {
+        const statusElement = document.getElementById("generateStatus");
+        statusElement.textContent = message;
+        statusElement.className = `status ${type}`;
+        statusElement.classList.remove("hidden");
+
+        if (type === "success") {
+          setTimeout(() => {
+            statusElement.classList.add("hidden");
+          }, 5000);
+        }
+      }
+
+      // Event listeners
+      document.getElementById("rows").addEventListener("input", () => {
+        generateCellGrid();
+        updateInfo();
+      });
+
+      document.getElementById("cols").addEventListener("input", () => {
+        generateCellGrid();
+        updateInfo();
+      });
+
+      [
+        "cellWidth",
+        "cellHeight",
+        "startX",
+        "startY",
+        "strokeWidth",
+        "strokeColor",
+        "backgroundColor",
+        "roundedCorners",
+        "fontFamily",
+        "fontSize",
+        "textColor",
+        "groupTable",
+      ].forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener("input", updateInfo);
+          element.addEventListener("change", updateInfo);
+        }
+      });
+
+      // Initialization
+      generateCellGrid();
+      updateInfo();
+    </script>
+  </body>
+</html>
