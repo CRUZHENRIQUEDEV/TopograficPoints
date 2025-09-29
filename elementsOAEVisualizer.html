@@ -1,4 +1,4 @@
-<!-- Versão: 1.5 -->
+<!-- Versão: 1.6 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -119,12 +119,30 @@
             opacity: 0.9;
         }
 
+        .tramo-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.7em;
+        }
+
+        .contador-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
         .tramo-content {
             padding: 20px;
         }
 
         .grupo-section {
             margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fafbfc;
         }
 
         .grupo-title {
@@ -134,6 +152,18 @@
             color: #0056b3;
             border-left: 4px solid #667eea;
             margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+        }
+
+        .grupo-contador {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
         }
 
         .elemento-group {
@@ -161,6 +191,18 @@
             font-weight: bold;
             color: #495057;
             flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .elemento-contador {
+            background: #ffc107;
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: bold;
         }
 
         .btn-copiar {
@@ -360,29 +402,25 @@
                 }
                 
                 // Identifica TRAMO COMPLEMENTAR
-                // Verifica se a primeira coluna não vazia é "COMPLEMENTAR" e não é o grupo de elementos
                 const primeiraColuna = partes[0]?.trim().toUpperCase();
                 if (primeiraColuna === 'COMPLEMENTAR' && !linhaUpper.includes('ELEMENTOS')) {
                     tramoAtual = 'COMPLEMENTAR';
                     grupoAtual = null;
-                    console.log('Detectado TRAMO: COMPLEMENTAR');
                     return;
                 }
                 
-                // Identifica TRAMO numerado (TRAMO 01, TRAMO 02, etc)
+                // Identifica TRAMO numerado
                 if (linhaUpper.match(/TRAMO\s+\d+/) && !linhaUpper.includes('ELEMENTOS')) {
                     tramoAtual = linhaUpper.match(/TRAMO\s+\d+/)[0];
                     grupoAtual = null;
-                    console.log('Detectado TRAMO:', tramoAtual);
                     return;
                 }
                 
-                // Identifica GRUPO (ELEMENTOS DE... ou ELEMENTOS COMPLEMENTARES)
+                // Identifica GRUPO
                 if (linhaUpper.includes('ELEMENTOS DE') || linhaUpper.includes('ELEMENTOS COMPLEMENTARES')) {
                     const textoGrupo = partes.find(p => p.trim().toUpperCase().includes('ELEMENTOS'));
                     if (textoGrupo) {
                         grupoAtual = textoGrupo.trim().toUpperCase();
-                        console.log('Detectado GRUPO:', grupoAtual);
                     }
                     return;
                 }
@@ -394,9 +432,7 @@
                     const nomeTipo = partes[2]?.trim() || '';
                     const transicao = partes[3]?.trim() || '';
                     
-                    // Se tem nome do tipo válido
                     if (nomeTipo && nomeTipo !== '' && nomeTipo !== 'NOME DO TIPO') {
-                        // Extrai TODAS as dimensões não vazias (colunas 4 em diante)
                         const dimensoes = [];
                         for (let i = 4; i < partes.length; i++) {
                             const valor = partes[i]?.trim();
@@ -419,7 +455,6 @@
                 }
             });
 
-            console.log('Dados processados:', dados);
             dadosGlobais = dados;
             renderizarDados(dados);
         }
@@ -428,7 +463,6 @@
             const output = document.getElementById('output');
             output.innerHTML = '';
 
-            // Ordem desejada para os grupos
             const ordemGrupos = {
                 'ELEMENTOS DE TRANSIÇÃO': 1,
                 'ELEMENTOS DE SUPERESTRUTURA': 2,
@@ -437,6 +471,14 @@
             };
 
             Object.keys(dados).forEach(tramo => {
+                // Conta total de elementos no tramo
+                let totalElementosTramo = 0;
+                Object.keys(dados[tramo]).forEach(grupo => {
+                    Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
+                        totalElementosTramo += dados[tramo][grupo][nomeTipo].length;
+                    });
+                });
+                
                 const tramoCard = document.createElement('div');
                 tramoCard.className = 'tramo-card';
                 
@@ -444,7 +486,10 @@
                 tramoHeader.className = 'tramo-header';
                 tramoHeader.innerHTML = `
                     <span>${tramo}</span>
-                    <span class="collapse-icon">▼</span>
+                    <div class="tramo-info">
+                        <span class="contador-badge">Subtotal Tramo: ${totalElementosTramo}</span>
+                        <span class="collapse-icon">▼</span>
+                    </div>
                 `;
                 tramoHeader.onclick = function() {
                     tramoCard.classList.toggle('collapsed');
@@ -453,7 +498,6 @@
                 const tramoContent = document.createElement('div');
                 tramoContent.className = 'tramo-content';
 
-                // Ordena os grupos conforme ordem definida
                 const gruposOrdenados = Object.keys(dados[tramo]).sort((a, b) => {
                     const ordemA = ordemGrupos[a] || 999;
                     const ordemB = ordemGrupos[b] || 999;
@@ -461,12 +505,21 @@
                 });
 
                 gruposOrdenados.forEach(grupo => {
+                    // Conta total de elementos no grupo
+                    let totalElementosGrupo = 0;
+                    Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
+                        totalElementosGrupo += dados[tramo][grupo][nomeTipo].length;
+                    });
+                    
                     const grupoSection = document.createElement('div');
                     grupoSection.className = 'grupo-section';
                     
                     const grupoTitle = document.createElement('div');
                     grupoTitle.className = 'grupo-title';
-                    grupoTitle.textContent = grupo;
+                    grupoTitle.innerHTML = `
+                        <span>${grupo}</span>
+                        <span class="grupo-contador">Subtotal Grupo: ${totalElementosGrupo}</span>
+                    `;
                     grupoSection.appendChild(grupoTitle);
 
                     Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
@@ -484,7 +537,10 @@
                         
                         const elementoNome = document.createElement('div');
                         elementoNome.className = 'elemento-nome';
-                        elementoNome.textContent = nomeTipo;
+                        elementoNome.innerHTML = `
+                            <span>${nomeTipo}</span>
+                            <span class="elemento-contador">Qtd: ${elementos.length}</span>
+                        `;
                         
                         const btnCopiar = document.createElement('button');
                         btnCopiar.className = 'btn-copiar';
@@ -504,13 +560,11 @@
                             const elementoItem = document.createElement('div');
                             elementoItem.className = 'elemento-item';
                             
-                            // Info (Nome com Mark + Transição)
                             const infoDiv = document.createElement('div');
                             infoDiv.className = 'item-info';
                             
                             const nome = document.createElement('div');
                             nome.className = 'item-nome';
-                            // Adiciona o codigo ao nome se existir
                             nome.textContent = item.codigo ? `${item.codigo} - ${nomeTipo}` : nomeTipo;
                             infoDiv.appendChild(nome);
                             
@@ -523,7 +577,6 @@
                             
                             elementoItem.appendChild(infoDiv);
                             
-                            // Dimensões (editáveis)
                             const dimensoesDiv = document.createElement('div');
                             dimensoesDiv.className = 'item-dimensoes';
                             
@@ -533,7 +586,6 @@
                                 dimensao.textContent = dim;
                                 dimensao.title = 'Clique para editar';
                                 
-                                // Adiciona evento de clique para editar
                                 dimensao.onclick = function() {
                                     editarDimensao(dimensao, tramo, grupo, nomeTipo, itemIndex, dimIndex);
                                 };
@@ -564,7 +616,6 @@
         function editarDimensao(elementoSpan, tramo, grupo, nomeTipo, itemIndex, dimIndex) {
             const valorAtual = elementoSpan.textContent;
             
-            // Cria input para edição
             const input = document.createElement('input');
             input.type = 'text';
             input.value = valorAtual;
@@ -577,11 +628,9 @@
             input.focus();
             input.select();
             
-            // Função para salvar
             const salvar = () => {
                 const novoValor = input.value.trim();
                 if (novoValor) {
-                    // Atualiza nos dados globais
                     dadosGlobais[tramo][grupo][nomeTipo][itemIndex].dimensoes[dimIndex] = novoValor;
                     elementoSpan.textContent = novoValor;
                     elementoSpan.classList.remove('editing');
@@ -592,7 +641,6 @@
                 }
             };
             
-            // Salva ao pressionar Enter
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     salvar();
@@ -602,16 +650,13 @@
                 }
             });
             
-            // Salva ao perder foco
             input.addEventListener('blur', salvar);
         }
 
         function copiarDimensoes(elementos, chave, btnElement, groupElement) {
-            // Concatena todas as dimensões: TAB entre colunas (dimensões) e ENTER entre linhas (elementos)
             const linhas = elementos.map(item => item.dimensoes.join('\t'));
             const todasDimensoes = linhas.join('\n');
             
-            // Copia para clipboard
             navigator.clipboard.writeText(todasDimensoes).then(() => {
                 estadoCopiado[chave] = true;
                 btnElement.classList.add('copiado');
@@ -620,11 +665,8 @@
                 mostrarToast('Dimensões copiadas (formato Excel)!');
             }).catch(err => {
                 mostrarToast('Erro ao copiar!', 'error');
-                console.error('Erro ao copiar:', err);
             });
         }
-
-        
 
         function mostrarToast(mensagem, tipo = 'success') {
             const toast = document.getElementById('toast');
