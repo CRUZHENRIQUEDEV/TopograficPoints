@@ -1,0 +1,639 @@
+<!-- Versão: 1.4 -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador SGE - Elementos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .upload-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            margin-top: 15px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .btn-process {
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-process:hover {
+            transform: scale(1.05);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tramo-card {
+            margin-bottom: 25px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .tramo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.4em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tramo-header:hover {
+            opacity: 0.9;
+        }
+
+        .tramo-content {
+            padding: 20px;
+        }
+
+        .grupo-section {
+            margin-bottom: 30px;
+        }
+
+        .grupo-title {
+            background: #e7f3ff;
+            padding: 12px 20px;
+            font-weight: bold;
+            color: #0056b3;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+        }
+
+        .elemento-group {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .elemento-group.copiado {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .elemento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .elemento-nome {
+            font-weight: bold;
+            color: #495057;
+            flex: 1;
+        }
+
+        .btn-copiar {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-copiar:hover {
+            background: #764ba2;
+        }
+
+        .btn-copiar.copiado {
+            background: #28a745;
+        }
+
+        .elemento-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .elemento-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            gap: 15px;
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-nome {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .item-transicao {
+            color: #6c757d;
+            font-size: 0.85em;
+            font-style: italic;
+        }
+
+        .item-dimensoes {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .dimensao {
+            background: #e7f3ff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 500;
+            color: #0056b3;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .dimensao:hover {
+            background: #d0e7ff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dimensao.editing {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+
+        .dimensao input {
+            background: transparent;
+            border: none;
+            font-family: monospace;
+            font-weight: 500;
+            color: #0056b3;
+            width: 80px;
+            text-align: center;
+            padding: 0;
+        }
+
+        .dimensao input:focus {
+            outline: none;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s;
+        }
+
+        .collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .collapsed .tramo-content {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Visualizador SGE - Elementos</h1>
+            <p>Organize e gerencie dimensões de elementos estruturais</p>
+            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">💡 Clique nas dimensões para editá-las</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <h3>📁 Carregar Arquivo CSV</h3>
+                <p>Clique aqui para selecionar um arquivo ou cole o conteúdo abaixo</p>
+                <input type="file" id="fileInput" accept=".csv,.txt">
+            </div>
+            <textarea id="csvInput" placeholder="Ou cole o conteúdo do CSV aqui..."></textarea>
+            <button class="btn-process" onclick="processarDados()">🔍 Processar Dados</button>
+        </div>
+
+        <div class="content" id="output"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Armazena estado de elementos copiados
+        const estadoCopiado = {};
+        
+        // Armazena os dados processados para edição
+        let dadosGlobais = {};
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('csvInput').value = event.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function processarDados() {
+            const csvText = document.getElementById('csvInput').value;
+            if (!csvText || csvText.trim() === '') {
+                mostrarToast('Por favor, carregue ou cole os dados primeiro!', 'error');
+                return;
+            }
+
+            const linhas = csvText.split('\n');
+            
+            let tramoAtual = null;
+            let grupoAtual = null;
+            const dados = {};
+
+            linhas.forEach((linha) => {
+                if (!linha || linha.trim() === '') return;
+                
+                const partes = linha.split('\t');
+                const linhaUpper = linha.toUpperCase();
+                
+                // Pula cabeçalho
+                if (linhaUpper.includes('ELEMENTOS SGE') || (linhaUpper.includes('MARK') && linhaUpper.includes('CODIGO'))) {
+                    return;
+                }
+                
+                // Identifica TRAMO COMPLEMENTAR
+                // Verifica se a primeira coluna não vazia é "COMPLEMENTAR" e não é o grupo de elementos
+                const primeiraColuna = partes[0]?.trim().toUpperCase();
+                if (primeiraColuna === 'COMPLEMENTAR' && !linhaUpper.includes('ELEMENTOS')) {
+                    tramoAtual = 'COMPLEMENTAR';
+                    grupoAtual = null;
+                    console.log('Detectado TRAMO: COMPLEMENTAR');
+                    return;
+                }
+                
+                // Identifica TRAMO numerado (TRAMO 01, TRAMO 02, etc)
+                if (linhaUpper.match(/TRAMO\s+\d+/) && !linhaUpper.includes('ELEMENTOS')) {
+                    tramoAtual = linhaUpper.match(/TRAMO\s+\d+/)[0];
+                    grupoAtual = null;
+                    console.log('Detectado TRAMO:', tramoAtual);
+                    return;
+                }
+                
+                // Identifica GRUPO (ELEMENTOS DE... ou ELEMENTOS COMPLEMENTARES)
+                if (linhaUpper.includes('ELEMENTOS DE') || linhaUpper.includes('ELEMENTOS COMPLEMENTARES')) {
+                    const textoGrupo = partes.find(p => p.trim().toUpperCase().includes('ELEMENTOS'));
+                    if (textoGrupo) {
+                        grupoAtual = textoGrupo.trim().toUpperCase();
+                        console.log('Detectado GRUPO:', grupoAtual);
+                    }
+                    return;
+                }
+                
+                // Processa elemento
+                if (tramoAtual && grupoAtual) {
+                    const mark = partes[0]?.trim() || '';
+                    const codigo = partes[1]?.trim() || '';
+                    const nomeTipo = partes[2]?.trim() || '';
+                    const transicao = partes[3]?.trim() || '';
+                    
+                    // Se tem nome do tipo válido
+                    if (nomeTipo && nomeTipo !== '' && nomeTipo !== 'NOME DO TIPO') {
+                        // Extrai TODAS as dimensões não vazias (colunas 4 em diante)
+                        const dimensoes = [];
+                        for (let i = 4; i < partes.length; i++) {
+                            const valor = partes[i]?.trim();
+                            if (valor && valor !== '') {
+                                dimensoes.push(valor);
+                            }
+                        }
+                        
+                        if (!dados[tramoAtual]) dados[tramoAtual] = {};
+                        if (!dados[tramoAtual][grupoAtual]) dados[tramoAtual][grupoAtual] = {};
+                        if (!dados[tramoAtual][grupoAtual][nomeTipo]) dados[tramoAtual][grupoAtual][nomeTipo] = [];
+                        
+                        dados[tramoAtual][grupoAtual][nomeTipo].push({
+                            mark,
+                            codigo,
+                            transicao,
+                            dimensoes
+                        });
+                    }
+                }
+            });
+
+            console.log('Dados processados:', dados);
+            dadosGlobais = dados;
+            renderizarDados(dados);
+        }
+
+        function renderizarDados(dados) {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+
+            // Ordem desejada para os grupos
+            const ordemGrupos = {
+                'ELEMENTOS DE TRANSIÇÃO': 1,
+                'ELEMENTOS DE SUPERESTRUTURA': 2,
+                'ELEMENTOS DE APOIO': 3,
+                'ELEMENTOS COMPLEMENTARES': 4
+            };
+
+            Object.keys(dados).forEach(tramo => {
+                const tramoCard = document.createElement('div');
+                tramoCard.className = 'tramo-card';
+                
+                const tramoHeader = document.createElement('div');
+                tramoHeader.className = 'tramo-header';
+                tramoHeader.innerHTML = `
+                    <span>${tramo}</span>
+                    <span class="collapse-icon">▼</span>
+                `;
+                tramoHeader.onclick = function() {
+                    tramoCard.classList.toggle('collapsed');
+                };
+                
+                const tramoContent = document.createElement('div');
+                tramoContent.className = 'tramo-content';
+
+                // Ordena os grupos conforme ordem definida
+                const gruposOrdenados = Object.keys(dados[tramo]).sort((a, b) => {
+                    const ordemA = ordemGrupos[a] || 999;
+                    const ordemB = ordemGrupos[b] || 999;
+                    return ordemA - ordemB;
+                });
+
+                gruposOrdenados.forEach(grupo => {
+                    const grupoSection = document.createElement('div');
+                    grupoSection.className = 'grupo-section';
+                    
+                    const grupoTitle = document.createElement('div');
+                    grupoTitle.className = 'grupo-title';
+                    grupoTitle.textContent = grupo;
+                    grupoSection.appendChild(grupoTitle);
+
+                    Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
+                        const elementos = dados[tramo][grupo][nomeTipo];
+                        const chaveElemento = `${tramo}_${grupo}_${nomeTipo}`;
+                        
+                        const elementoGroup = document.createElement('div');
+                        elementoGroup.className = 'elemento-group';
+                        if (estadoCopiado[chaveElemento]) {
+                            elementoGroup.classList.add('copiado');
+                        }
+
+                        const elementoHeader = document.createElement('div');
+                        elementoHeader.className = 'elemento-header';
+                        
+                        const elementoNome = document.createElement('div');
+                        elementoNome.className = 'elemento-nome';
+                        elementoNome.textContent = nomeTipo;
+                        
+                        const btnCopiar = document.createElement('button');
+                        btnCopiar.className = 'btn-copiar';
+                        if (estadoCopiado[chaveElemento]) {
+                            btnCopiar.classList.add('copiado');
+                        }
+                        btnCopiar.innerHTML = estadoCopiado[chaveElemento] ? '✓ Copiado' : '📋 Copiar Dimensões';
+                        btnCopiar.onclick = () => copiarDimensoes(elementos, chaveElemento, btnCopiar, elementoGroup);
+                        
+                        elementoHeader.appendChild(elementoNome);
+                        elementoHeader.appendChild(btnCopiar);
+                        
+                        const elementoItems = document.createElement('div');
+                        elementoItems.className = 'elemento-items';
+                        
+                        elementos.forEach((item, itemIndex) => {
+                            const elementoItem = document.createElement('div');
+                            elementoItem.className = 'elemento-item';
+                            
+                            // Info (Nome com Mark + Transição)
+                            const infoDiv = document.createElement('div');
+                            infoDiv.className = 'item-info';
+                            
+                            const nome = document.createElement('div');
+                            nome.className = 'item-nome';
+                            // Adiciona o mark ao nome se existir
+                            nome.textContent = item.mark ? `${item.mark} - ${nomeTipo}` : nomeTipo;
+                            infoDiv.appendChild(nome);
+                            
+                            if (item.transicao) {
+                                const transicao = document.createElement('div');
+                                transicao.className = 'item-transicao';
+                                transicao.textContent = item.transicao;
+                                infoDiv.appendChild(transicao);
+                            }
+                            
+                            elementoItem.appendChild(infoDiv);
+                            
+                            // Dimensões (editáveis)
+                            const dimensoesDiv = document.createElement('div');
+                            dimensoesDiv.className = 'item-dimensoes';
+                            
+                            item.dimensoes.forEach((dim, dimIndex) => {
+                                const dimensao = document.createElement('span');
+                                dimensao.className = 'dimensao';
+                                dimensao.textContent = dim;
+                                dimensao.title = 'Clique para editar';
+                                
+                                // Adiciona evento de clique para editar
+                                dimensao.onclick = function() {
+                                    editarDimensao(dimensao, tramo, grupo, nomeTipo, itemIndex, dimIndex);
+                                };
+                                
+                                dimensoesDiv.appendChild(dimensao);
+                            });
+                            
+                            elementoItem.appendChild(dimensoesDiv);
+                            elementoItems.appendChild(elementoItem);
+                        });
+                        
+                        elementoGroup.appendChild(elementoHeader);
+                        elementoGroup.appendChild(elementoItems);
+                        grupoSection.appendChild(elementoGroup);
+                    });
+
+                    tramoContent.appendChild(grupoSection);
+                });
+
+                tramoCard.appendChild(tramoHeader);
+                tramoCard.appendChild(tramoContent);
+                output.appendChild(tramoCard);
+            });
+
+            mostrarToast('Dados processados com sucesso!');
+        }
+
+        function editarDimensao(elementoSpan, tramo, grupo, nomeTipo, itemIndex, dimIndex) {
+            const valorAtual = elementoSpan.textContent;
+            
+            // Cria input para edição
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = valorAtual;
+            input.style.width = '80px';
+            
+            elementoSpan.textContent = '';
+            elementoSpan.appendChild(input);
+            elementoSpan.classList.add('editing');
+            
+            input.focus();
+            input.select();
+            
+            // Função para salvar
+            const salvar = () => {
+                const novoValor = input.value.trim();
+                if (novoValor) {
+                    // Atualiza nos dados globais
+                    dadosGlobais[tramo][grupo][nomeTipo][itemIndex].dimensoes[dimIndex] = novoValor;
+                    elementoSpan.textContent = novoValor;
+                    elementoSpan.classList.remove('editing');
+                    mostrarToast('Dimensão atualizada!');
+                } else {
+                    elementoSpan.textContent = valorAtual;
+                    elementoSpan.classList.remove('editing');
+                }
+            };
+            
+            // Salva ao pressionar Enter
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    salvar();
+                } else if (e.key === 'Escape') {
+                    elementoSpan.textContent = valorAtual;
+                    elementoSpan.classList.remove('editing');
+                }
+            });
+            
+            // Salva ao perder foco
+            input.addEventListener('blur', salvar);
+        }
+
+        function copiarDimensoes(elementos, chave, btnElement, groupElement) {
+            // Concatena todas as dimensões: TAB entre colunas (dimensões) e ENTER entre linhas (elementos)
+            const linhas = elementos.map(item => item.dimensoes.join('\t'));
+            const todasDimensoes = linhas.join('\n');
+            
+            // Copia para clipboard
+            navigator.clipboard.writeText(todasDimensoes).then(() => {
+                estadoCopiado[chave] = true;
+                btnElement.classList.add('copiado');
+                btnElement.innerHTML = '✓ Copiado';
+                groupElement.classList.add('copiado');
+                mostrarToast('Dimensões copiadas (formato Excel)!');
+            }).catch(err => {
+                mostrarToast('Erro ao copiar!', 'error');
+                console.error('Erro ao copiar:', err);
+            });
+        }
+
+        function mostrarToast(mensagem, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensagem;
+            toast.style.background = tipo === 'error' ? '#dc3545' : '#28a745';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
