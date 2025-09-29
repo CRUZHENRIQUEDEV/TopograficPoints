@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatador de Mensagens - Sistema de Controle</title>
     <style>
-        /* Versão: 4.3 - Sistema completo com backup automático e importação */
+        /* Versão: 5.0 - Sistema com filtro de perfil do usuário */
         
         :root {
             --primary: #2563eb;
@@ -106,6 +106,96 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 10px var(--shadow);
+        }
+
+        .profile-selector {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .profile-selector h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .profile-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .profile-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 25px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+
+        .profile-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .profile-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .profile-option label {
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .profile-option.selected {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(8, 145, 178, 0.1));
+            border-color: var(--primary);
+        }
+
+        .profile-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .profile-info strong {
+            color: var(--primary);
+        }
+
+        .filter-stats {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--warning);
+            font-weight: 600;
+            display: none;
+        }
+
+        .filter-stats.show {
+            display: block;
         }
 
         .main-content {
@@ -508,7 +598,6 @@
             opacity: 0.5;
         }
 
-        /* Modal de Backup Automático */
         .backup-modal {
             display: none;
             position: fixed;
@@ -723,12 +812,20 @@
             .backup-btn {
                 min-width: auto;
             }
+            .profile-options {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .profile-option {
+                min-width: auto;
+            }
         }
 
         @media (max-width: 480px) {
             .header { padding: 20px 15px; }
             .input-section, .messages-section { padding: 20px; }
             .message-card { padding: 15px; }
+            .profile-selector { padding: 20px; }
         }
     </style>
 </head>
@@ -744,6 +841,24 @@
             <p>Sistema de controle de correções e formatação inteligente</p>
         </header>
 
+        <section class="profile-selector">
+            <h2>👤 Seu Perfil</h2>
+            <div class="profile-options">
+                <div class="profile-option selected" onclick="selectProfile('Inspetor')">
+                    <input type="radio" id="profileInspetor" name="userProfile" value="Inspetor" checked>
+                    <label for="profileInspetor">🔍 Inspetor</label>
+                </div>
+                <div class="profile-option" onclick="selectProfile('Avaliador')">
+                    <input type="radio" id="profileAvaliador" name="userProfile" value="Avaliador">
+                    <label for="profileAvaliador">📝 Avaliador</label>
+                </div>
+            </div>
+            <div class="profile-info">
+                💡 <strong>Dica:</strong> Mensagens do seu próprio perfil serão filtradas automaticamente
+            </div>
+            <div class="filter-stats" id="filterStats"></div>
+        </section>
+
         <main class="main-content">
             <section class="input-section">
                 <h2>📝 Entrada de Dados</h2>
@@ -754,15 +869,15 @@
                         placeholder='Cole aqui seus dados em qualquer um destes formatos:
 
 🔹 JSON:
-[{"mensagem": "Texto da mensagem", "nomeUsuario": "Nome", "perfil": "Cargo", "dataHistorico": "2025-09-19 21:49:27"}]
+[{"mensagem": "Texto da mensagem", "nomeUsuario": "João Silva", "perfil": "Avaliador", "dataHistorico": "2025-09-19 21:49:27"}]
 
 🔹 TEXTO FORMATADO:
 19/09/2025, 21:49:27
-maria - Avaliador
+Maria Santos - Avaliador
 
 27. Texto da mensagem aqui
 19/09/2025, 21:49:32
-maria - Avaliador'></textarea>
+Maria Santos - Avaliador'></textarea>
                     <div class="format-hint">
                         💡 <strong>Dica:</strong> O sistema detecta automaticamente se você colou JSON ou texto formatado
                     </div>
@@ -786,7 +901,6 @@ maria - Avaliador'></textarea>
                     </button>
                 </div>
 
-                <!-- Seção de Importação de TXT -->
                 <div class="import-section">
                     <h3>📥 Importar Respostas Anteriores</h3>
                     <p>Selecione um arquivo TXT exportado anteriormente para recuperar as respostas já dadas</p>
@@ -831,7 +945,6 @@ maria - Avaliador'></textarea>
             </section>
         </main>
 
-        <!-- Modal de Backup Automático -->
         <div class="backup-modal" id="backupModal">
             <div class="backup-modal-content">
                 <div class="backup-modal-header">
@@ -875,32 +988,61 @@ maria - Avaliador'></textarea>
             </div>
         </div>
 
-        <!-- Timer de Backup -->
         <div class="backup-timer-info" id="backupTimerInfo">
             <span>🕐</span> Próximo backup em: <strong id="backupCountdown">--:--</strong>
         </div>
     </div>
 
     <script>
-        // Versão: 4.3 - Sistema completo com backup automático e importação CORRIGIDO
+        // Versão: 5.0 - Sistema com filtro de perfil do usuário
         
         let messages = [];
+        let allMessages = [];
         let completionStates = new Map();
         let messageResponses = new Map();
         let importedResponses = new Map();
+        let userProfile = 'Inspetor';
 
-        // Sistema de Backup Automático
         let backupTimer = null;
-        let backupInterval = 5 * 60 * 1000; // 5 minutos
+        let backupInterval = 5 * 60 * 1000;
         let backupEnabled = true;
         let nextBackupTime = null;
         let countdownInterval = null;
 
-        // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
             initializeTheme();
             initializeBackupSystem();
+            initializeUserProfile();
         });
+
+        function initializeUserProfile() {
+            const savedProfile = localStorage.getItem('userProfile');
+            if (savedProfile) {
+                userProfile = savedProfile;
+                selectProfile(userProfile);
+            }
+        }
+
+        function selectProfile(profile) {
+            userProfile = profile;
+            localStorage.setItem('userProfile', profile);
+            
+            const options = document.querySelectorAll('.profile-option');
+            options.forEach(function(option) {
+                option.classList.remove('selected');
+            });
+            
+            const radio = document.getElementById('profile' + profile);
+            if (radio) {
+                radio.checked = true;
+                radio.closest('.profile-option').classList.add('selected');
+            }
+            
+            if (allMessages.length > 0) {
+                filterMessagesByProfile();
+                renderMessages();
+            }
+        }
 
         function initializeBackupSystem() {
             const savedPreference = localStorage.getItem('autoBackupEnabled');
@@ -926,8 +1068,6 @@ maria - Avaliador'></textarea>
             }, backupInterval);
             
             startBackupCountdown();
-            
-            console.log('Backup automático iniciado - próximo em 5 minutos');
         }
 
         function startBackupCountdown() {
@@ -1200,7 +1340,8 @@ maria - Avaliador'></textarea>
                     return;
                 }
 
-                messages = parsedMessages;
+                allMessages = parsedMessages;
+                filterMessagesByProfile();
                 
                 if (importedResponses.size > 0) {
                     mergeImportedResponses();
@@ -1208,7 +1349,15 @@ maria - Avaliador'></textarea>
                     renderMessages();
                 }
                 
-                showAlert(messages.length + ' mensagem(ns) processada(s) com sucesso!', 'success');
+                const filteredCount = allMessages.length - messages.length;
+                let alertMessage = messages.length + ' mensagem(ns) processada(s) com sucesso!';
+                
+                if (filteredCount > 0) {
+                    alertMessage += ' (' + filteredCount + ' mensagem(ns) do seu perfil foram filtradas)';
+                    showFilterStats(filteredCount);
+                }
+                
+                showAlert(alertMessage, 'success');
                 
                 document.getElementById('messagesSection').style.display = 'block';
                 document.getElementById('copyBtn').style.display = 'flex';
@@ -1219,6 +1368,37 @@ maria - Avaliador'></textarea>
             } catch (error) {
                 showAlert('Erro ao processar dados: ' + error.message, 'error');
             }
+        }
+
+        function filterMessagesByProfile() {
+            messages = allMessages.filter(function(message) {
+                return message.role !== userProfile;
+            });
+            
+            const newCompletionStates = new Map();
+            const newMessageResponses = new Map();
+            
+            let newIndex = 0;
+            allMessages.forEach(function(message, oldIndex) {
+                if (message.role !== userProfile) {
+                    if (completionStates.has(oldIndex)) {
+                        newCompletionStates.set(newIndex, completionStates.get(oldIndex));
+                    }
+                    if (messageResponses.has(oldIndex)) {
+                        newMessageResponses.set(newIndex, messageResponses.get(oldIndex));
+                    }
+                    newIndex++;
+                }
+            });
+            
+            completionStates = newCompletionStates;
+            messageResponses = newMessageResponses;
+        }
+
+        function showFilterStats(filteredCount) {
+            const filterStats = document.getElementById('filterStats');
+            filterStats.textContent = '⚠️ ' + filteredCount + ' mensagem(ns) do perfil "' + userProfile + '" foram filtradas e não aparecem na lista';
+            filterStats.classList.add('show');
         }
 
         function parseInput(input) {
@@ -1603,7 +1783,7 @@ maria - Avaliador'></textarea>
             
             if (includeHeader) {
                 content += '\n======================================================================\n';
-                content += 'Sistema de Controle - Formatador de Mensagens v4.3';
+                content += 'Sistema de Controle - Formatador de Mensagens v5.0';
             }
             
             return content;
@@ -1620,12 +1800,17 @@ maria - Avaliador'></textarea>
             document.getElementById('txtFile').value = '';
             document.getElementById('fileName').textContent = '';
             
+            const filterStats = document.getElementById('filterStats');
+            filterStats.classList.remove('show');
+            filterStats.textContent = '';
+            
             clearTimeout(backupTimer);
             clearInterval(countdownInterval);
             document.getElementById('backupTimerInfo').classList.remove('show');
             backupTimer = null;
             
             messages = [];
+            allMessages = [];
             completionStates.clear();
             messageResponses.clear();
             importedResponses.clear();
@@ -1694,7 +1879,6 @@ maria - Avaliador'></textarea>
             icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
         }
 
-        // Event listeners
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('backupModal');
             if (e.target === modal) {
