@@ -1,4 +1,4 @@
-<!-- Versão: 1.4 -->
+<!-- Versão: 1.5 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -510,8 +510,8 @@
                             
                             const nome = document.createElement('div');
                             nome.className = 'item-nome';
-                            // Adiciona o mark ao nome se existir
-                            nome.textContent = item.mark ? `${item.mark} - ${nomeTipo}` : nomeTipo;
+                            // Adiciona o codigo ao nome se existir
+                            nome.textContent = item.codigo ? `${item.codigo} - ${nomeTipo}` : nomeTipo;
                             infoDiv.appendChild(nome);
                             
                             if (item.transicao) {
