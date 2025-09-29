@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatador de Mensagens - Sistema de Controle</title>
     <style>
-        /* Versão: 5.0 - Sistema com filtro de perfil do usuário */
+        /* Versão: 5.1 - Sistema com destaque visual por perfil */
         
         :root {
             --primary: #2563eb;
@@ -181,23 +181,6 @@
             color: var(--primary);
         }
 
-        .filter-stats {
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(234, 179, 8, 0.1);
-            border: 1px solid var(--warning);
-            border-radius: 6px;
-            text-align: center;
-            font-size: 13px;
-            color: var(--warning);
-            font-weight: 600;
-            display: none;
-        }
-
-        .filter-stats.show {
-            display: block;
-        }
-
         .main-content {
             display: grid;
             gap: 30px;
@@ -352,12 +335,24 @@
             position: relative;
         }
 
-        .message-card.completed {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05));
-            border-color: var(--success);
+        .message-card.own-message {
+            opacity: 0.6;
+            background: var(--bg-tertiary);
+            border-style: dashed;
         }
 
-        .message-card:hover {
+        .message-card.other-message {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .message-card.other-message.completed {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05));
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .message-card.other-message:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px var(--shadow);
         }
@@ -395,6 +390,11 @@
             border-left: 4px solid var(--primary);
         }
 
+        .message-card.own-message .message-text {
+            border-left-color: var(--text-muted);
+            opacity: 0.8;
+        }
+
         .message-meta {
             display: flex;
             justify-content: space-between;
@@ -404,6 +404,18 @@
             font-size: 14px;
             color: var(--text-secondary);
             margin-bottom: 15px;
+        }
+
+        .own-message-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--text-muted);
         }
 
         .response-section {
@@ -854,9 +866,8 @@
                 </div>
             </div>
             <div class="profile-info">
-                💡 <strong>Dica:</strong> Mensagens do seu próprio perfil serão filtradas automaticamente
+                💡 <strong>Dica:</strong> Suas mensagens aparecem discretas (sem resposta). Mensagens de outros estão destacadas (com campo de resposta)
             </div>
-            <div class="filter-stats" id="filterStats"></div>
         </section>
 
         <main class="main-content">
@@ -994,10 +1005,9 @@ Maria Santos - Avaliador'></textarea>
     </div>
 
     <script>
-        // Versão: 5.0 - Sistema com filtro de perfil do usuário
+        // Versão: 5.1 - Sistema com destaque visual por perfil
         
         let messages = [];
-        let allMessages = [];
         let completionStates = new Map();
         let messageResponses = new Map();
         let importedResponses = new Map();
@@ -1038,8 +1048,7 @@ Maria Santos - Avaliador'></textarea>
                 radio.closest('.profile-option').classList.add('selected');
             }
             
-            if (allMessages.length > 0) {
-                filterMessagesByProfile();
+            if (messages.length > 0) {
                 renderMessages();
             }
         }
@@ -1114,12 +1123,18 @@ Maria Santos - Avaliador'></textarea>
         function updateBackupModalStats() {
             const totalResponses = messageResponses.size;
             let completed = 0;
+            let totalRespondable = 0;
             
-            completionStates.forEach(function(isCompleted) {
-                if (isCompleted) completed++;
+            messages.forEach(function(message, index) {
+                if (message.role !== userProfile) {
+                    totalRespondable++;
+                    if (completionStates.get(index)) {
+                        completed++;
+                    }
+                }
             });
             
-            const pending = messages.length - completed;
+            const pending = totalRespondable - completed;
             
             document.getElementById('backupTotalResponses').textContent = totalResponses;
             document.getElementById('backupCompletedMessages').textContent = completed;
@@ -1309,7 +1324,7 @@ Maria Santos - Avaliador'></textarea>
                 const messageKey = normalizeMessageForMatching(message.text);
                 const importedResponse = importedResponses.get(messageKey);
                 
-                if (importedResponse && !messageResponses.has(index)) {
+                if (importedResponse && !messageResponses.has(index) && message.role !== userProfile) {
                     messageResponses.set(index, importedResponse);
                     completionStates.set(index, true);
                     mergedCount++;
@@ -1340,8 +1355,7 @@ Maria Santos - Avaliador'></textarea>
                     return;
                 }
 
-                allMessages = parsedMessages;
-                filterMessagesByProfile();
+                messages = parsedMessages;
                 
                 if (importedResponses.size > 0) {
                     mergeImportedResponses();
@@ -1349,12 +1363,12 @@ Maria Santos - Avaliador'></textarea>
                     renderMessages();
                 }
                 
-                const filteredCount = allMessages.length - messages.length;
-                let alertMessage = messages.length + ' mensagem(ns) processada(s) com sucesso!';
+                const ownMessages = messages.filter(function(msg) { return msg.role === userProfile; }).length;
+                const otherMessages = messages.length - ownMessages;
                 
-                if (filteredCount > 0) {
-                    alertMessage += ' (' + filteredCount + ' mensagem(ns) do seu perfil foram filtradas)';
-                    showFilterStats(filteredCount);
+                let alertMessage = messages.length + ' mensagem(ns) processada(s) com sucesso!';
+                if (ownMessages > 0) {
+                    alertMessage += ' (' + ownMessages + ' suas, ' + otherMessages + ' para responder)';
                 }
                 
                 showAlert(alertMessage, 'success');
@@ -1368,37 +1382,6 @@ Maria Santos - Avaliador'></textarea>
             } catch (error) {
                 showAlert('Erro ao processar dados: ' + error.message, 'error');
             }
-        }
-
-        function filterMessagesByProfile() {
-            messages = allMessages.filter(function(message) {
-                return message.role !== userProfile;
-            });
-            
-            const newCompletionStates = new Map();
-            const newMessageResponses = new Map();
-            
-            let newIndex = 0;
-            allMessages.forEach(function(message, oldIndex) {
-                if (message.role !== userProfile) {
-                    if (completionStates.has(oldIndex)) {
-                        newCompletionStates.set(newIndex, completionStates.get(oldIndex));
-                    }
-                    if (messageResponses.has(oldIndex)) {
-                        newMessageResponses.set(newIndex, messageResponses.get(oldIndex));
-                    }
-                    newIndex++;
-                }
-            });
-            
-            completionStates = newCompletionStates;
-            messageResponses = newMessageResponses;
-        }
-
-        function showFilterStats(filteredCount) {
-            const filterStats = document.getElementById('filterStats');
-            filterStats.textContent = '⚠️ ' + filteredCount + ' mensagem(ns) do perfil "' + userProfile + '" foram filtradas e não aparecem na lista';
-            filterStats.classList.add('show');
         }
 
         function parseInput(input) {
@@ -1535,40 +1518,65 @@ Maria Santos - Avaliador'></textarea>
             container.innerHTML = '';
             
             messages.forEach(function(message, index) {
+                const isOwnMessage = message.role === userProfile;
                 const isCompleted = completionStates.get(index) || false;
                 const savedResponse = messageResponses.get(index);
                 
                 const messageCard = document.createElement('div');
-                messageCard.className = 'message-card' + (isCompleted ? ' completed' : '');
+                const cardClasses = ['message-card'];
+                
+                if (isOwnMessage) {
+                    cardClasses.push('own-message');
+                } else {
+                    cardClasses.push('other-message');
+                    if (isCompleted) {
+                        cardClasses.push('completed');
+                    }
+                }
+                
+                messageCard.className = cardClasses.join(' ');
                 messageCard.setAttribute('data-message-id', index);
                 
-                messageCard.innerHTML = 
-                    '<div class="message-header">' +
-                        '<div class="checkbox-container">' +
-                            '<input type="checkbox" class="message-checkbox" ' +
-                            (isCompleted ? 'checked' : '') +
-                            ' onchange="toggleCompletion(' + index + ')">' +
-                        '</div>' +
-                        '<div class="message-content">' +
-                            '<div class="message-text">' + message.text + '</div>' +
-                            '<div class="message-meta">' +
-                                '<div>' +
-                                    '<strong>' + message.author + '</strong> - ' + message.role + '<br>' +
-                                    '<small>' + message.date + '</small>' +
-                                '</div>' +
-                                '<div class="status-badge ' + (isCompleted ? 'completed' : 'pending') + '">' +
-                                    (isCompleted ? '✅ Corrigido' : '⏳ Pendente') +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="response-section">' +
-                                (savedResponse ? 
-                                    generateSavedResponseHtml(savedResponse, index) : 
-                                    generateResponseInputHtml(index)
-                                ) +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
+                let cardContent = '<div class="message-header">';
                 
+                if (!isOwnMessage) {
+                    cardContent += '<div class="checkbox-container">' +
+                                  '<input type="checkbox" class="message-checkbox" ' +
+                                  (isCompleted ? 'checked' : '') +
+                                  ' onchange="toggleCompletion(' + index + ')">' +
+                                  '</div>';
+                }
+                
+                cardContent += '<div class="message-content">' +
+                              '<div class="message-text">' + message.text + '</div>' +
+                              '<div class="message-meta">' +
+                                  '<div>' +
+                                      '<strong>' + message.author + '</strong> - ' + message.role + '<br>' +
+                                      '<small>' + message.date + '</small>' +
+                                  '</div>';
+                
+                if (isOwnMessage) {
+                    cardContent += '<div class="own-message-badge">📤 Sua Mensagem</div>';
+                } else {
+                    cardContent += '<div class="status-badge ' + (isCompleted ? 'completed' : 'pending') + '">' +
+                                  (isCompleted ? '✅ Corrigido' : '⏳ Pendente') +
+                                  '</div>';
+                }
+                
+                cardContent += '</div>';
+                
+                if (!isOwnMessage) {
+                    cardContent += '<div class="response-section">' +
+                                  (savedResponse ? 
+                                      generateSavedResponseHtml(savedResponse, index) : 
+                                      generateResponseInputHtml(index)
+                                  ) +
+                                  '</div>';
+                }
+                
+                cardContent += '</div></div>';
+                
+                messageCard.innerHTML = cardContent;
                 container.appendChild(messageCard);
             });
             
@@ -1697,12 +1705,18 @@ Maria Santos - Avaliador'></textarea>
         function updateStatusCounter() {
             const total = messages.length;
             let done = 0;
+            let totalRespondable = 0;
             
-            completionStates.forEach(function(isCompleted) {
-                if (isCompleted) done++;
+            messages.forEach(function(message, index) {
+                if (message.role !== userProfile) {
+                    totalRespondable++;
+                    if (completionStates.get(index)) {
+                        done++;
+                    }
+                }
             });
             
-            const pending = total - done;
+            const pending = totalRespondable - done;
             
             document.getElementById('totalCount').textContent = total;
             document.getElementById('doneCount').textContent = done;
@@ -1745,9 +1759,15 @@ Maria Santos - Avaliador'></textarea>
                 const total = messages.length;
                 let done = 0;
                 let withResponses = 0;
+                let totalRespondable = 0;
                 
-                completionStates.forEach(function(isCompleted) {
-                    if (isCompleted) done++;
+                messages.forEach(function(message, index) {
+                    if (message.role !== userProfile) {
+                        totalRespondable++;
+                        if (completionStates.get(index)) {
+                            done++;
+                        }
+                    }
                 });
                 
                 messageResponses.forEach(function() {
@@ -1755,22 +1775,30 @@ Maria Santos - Avaliador'></textarea>
                 });
                 
                 content += 'CONTROLE DE CORREÇÕES E RESPOSTAS\n';
+                content += 'Perfil Ativo: ' + userProfile + '\n';
                 content += 'Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n';
-                content += 'Total: ' + total + ' | Corrigidas: ' + done + ' | Com Resposta: ' + withResponses + ' | Pendentes: ' + (total - done) + '\n';
+                content += 'Total: ' + total + ' | Para Responder: ' + totalRespondable + ' | Corrigidas: ' + done + ' | Com Resposta: ' + withResponses + ' | Pendentes: ' + (totalRespondable - done) + '\n';
                 content += '======================================================================\n\n';
             }
             
             messages.forEach(function(message, index) {
+                const isOwnMessage = message.role === userProfile;
                 const isCompleted = completionStates.get(index) || false;
                 const response = messageResponses.get(index);
-                const status = isCompleted ? ' ✅ CORRIGIDO' : ' ⏳ PENDENTE';
+                
+                let status = '';
+                if (isOwnMessage) {
+                    status = ' 📤 SUA MENSAGEM';
+                } else {
+                    status = isCompleted ? ' ✅ CORRIGIDO' : ' ⏳ PENDENTE';
+                }
                 
                 content += 'MENSAGEM ORIGINAL' + status + '\n';
                 content += message.text + '\n';
                 content += message.date + '\n';
                 content += message.author + ' - ' + message.role + '\n\n';
                 
-                if (response) {
+                if (response && !isOwnMessage) {
                     content += 'SUA RESPOSTA:\n';
                     content += response.text + '\n';
                     content += 'Respondido em: ' + response.date + '\n';
@@ -1783,7 +1811,7 @@ Maria Santos - Avaliador'></textarea>
             
             if (includeHeader) {
                 content += '\n======================================================================\n';
-                content += 'Sistema de Controle - Formatador de Mensagens v5.0';
+                content += 'Sistema de Controle - Formatador de Mensagens v5.1';
             }
             
             return content;
@@ -1800,17 +1828,12 @@ Maria Santos - Avaliador'></textarea>
             document.getElementById('txtFile').value = '';
             document.getElementById('fileName').textContent = '';
             
-            const filterStats = document.getElementById('filterStats');
-            filterStats.classList.remove('show');
-            filterStats.textContent = '';
-            
             clearTimeout(backupTimer);
             clearInterval(countdownInterval);
             document.getElementById('backupTimerInfo').classList.remove('show');
             backupTimer = null;
             
             messages = [];
-            allMessages = [];
             completionStates.clear();
             messageResponses.clear();
             importedResponses.clear();
