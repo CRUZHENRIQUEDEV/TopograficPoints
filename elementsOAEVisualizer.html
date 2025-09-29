@@ -1,4 +1,4 @@
-<!-- Versão: 1.6 -->
+<!-- Versão: 1.9 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -241,6 +241,13 @@
             background: white;
             border-radius: 4px;
             gap: 15px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .elemento-item:hover {
+            border-left-color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .item-info {
@@ -252,12 +259,6 @@
         .item-nome {
             font-weight: 600;
             color: #495057;
-        }
-
-        .item-transicao {
-            color: #6c757d;
-            font-size: 0.85em;
-            font-style: italic;
         }
 
         .item-dimensoes {
@@ -360,10 +361,7 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // Armazena estado de elementos copiados
         const estadoCopiado = {};
-        
-        // Armazena os dados processados para edição
         let dadosGlobais = {};
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -385,10 +383,10 @@
             }
 
             const linhas = csvText.split('\n');
-            
             let tramoAtual = null;
             let grupoAtual = null;
             const dados = {};
+            const transicoesDetectadas = new Set();
 
             linhas.forEach((linha) => {
                 if (!linha || linha.trim() === '') return;
@@ -396,8 +394,11 @@
                 const partes = linha.split('\t');
                 const linhaUpper = linha.toUpperCase();
                 
-                // Pula cabeçalho
-                if (linhaUpper.includes('ELEMENTOS SGE') || (linhaUpper.includes('MARK') && linhaUpper.includes('CODIGO'))) {
+                // Pula cabeçalhos e linhas de total
+                if (linhaUpper.includes('ELEMENTOS SGE') || 
+                    (linhaUpper.includes('CODIGO') && linhaUpper.includes('NOME DO TIPO')) ||
+                    (linhaUpper.includes('MARK') && linhaUpper.includes('CODIGO')) ||
+                    linhaUpper.includes('GRAND TOTAL')) {
                     return;
                 }
                 
@@ -410,7 +411,7 @@
                 }
                 
                 // Identifica TRAMO numerado
-                if (linhaUpper.match(/TRAMO\s+\d+/) && !linhaUpper.includes('ELEMENTOS')) {
+                if (linhaUpper.match(/^TRAMO\s+\d+/) && !linhaUpper.includes('ELEMENTOS')) {
                     tramoAtual = linhaUpper.match(/TRAMO\s+\d+/)[0];
                     grupoAtual = null;
                     return;
@@ -427,25 +428,81 @@
                 
                 // Processa elemento
                 if (tramoAtual && grupoAtual) {
-                    const mark = partes[0]?.trim() || '';
-                    const codigo = partes[1]?.trim() || '';
-                    const nomeTipo = partes[2]?.trim() || '';
-                    const transicao = partes[3]?.trim() || '';
+                    let mark = '';
+                    let codigo = '';
+                    let nomeTipo = '';
+                    let transicao = '';
+                    let dimensoesInicio = 3;
+                    
+                    // Detecta formato: pode ter MARK ou não
+                    // Se primeira coluna vazia e segunda tem conteúdo não numérico = sem MARK
+                    // Se primeira coluna tem conteúdo e segunda tem conteúdo não numérico = com MARK
+                    
+                    const col0 = partes[0]?.trim() || '';
+                    const col1 = partes[1]?.trim() || '';
+                    const col2 = partes[2]?.trim() || '';
+                    const col3 = partes[3]?.trim() || '';
+                    
+                    // Formato COM Mark: Mark | Codigo | Nome | Transição
+                    if (col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/) && !col2.match(/^TRANSIÇÃO/i)) {
+                        mark = col0;
+                        codigo = col1;
+                        nomeTipo = col2;
+                        transicao = col3;
+                        dimensoesInicio = 4;
+                    }
+                    // Formato SEM Mark: vazio | Codigo | Nome | Transição
+                    else if (!col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/)) {
+                        mark = '';
+                        codigo = col1;
+                        nomeTipo = col2;
+                        transicao = col3;
+                        dimensoesInicio = 4;
+                    }
+                    // Formato SEM Mark e SEM Codigo: vazio | Nome | Transição
+                    else if (!col0 && col1 && !col2.match(/^\d+(\.\d+)?$/)) {
+                        mark = '';
+                        codigo = '';
+                        nomeTipo = col1;
+                        transicao = col2;
+                        dimensoesInicio = 3;
+                    }
+                    // Formato COM Codigo: Codigo | Nome | Transição
+                    else if (col0 && col1 && !col1.match(/^\d+(\.\d+)?$/)) {
+                        mark = '';
+                        codigo = col0;
+                        nomeTipo = col1;
+                        transicao = col2;
+                        dimensoesInicio = 3;
+                    }
                     
                     if (nomeTipo && nomeTipo !== '' && nomeTipo !== 'NOME DO TIPO') {
                         const dimensoes = [];
-                        for (let i = 4; i < partes.length; i++) {
+                        for (let i = dimensoesInicio; i < partes.length; i++) {
                             const valor = partes[i]?.trim();
                             if (valor && valor !== '') {
                                 dimensoes.push(valor);
                             }
                         }
                         
-                        if (!dados[tramoAtual]) dados[tramoAtual] = {};
-                        if (!dados[tramoAtual][grupoAtual]) dados[tramoAtual][grupoAtual] = {};
-                        if (!dados[tramoAtual][grupoAtual][nomeTipo]) dados[tramoAtual][grupoAtual][nomeTipo] = [];
+                        // Detecta transições para separação em subgrupos
+                        if (transicao && transicao.match(/TRANSIÇÃO/i)) {
+                            transicoesDetectadas.add(transicao);
+                        }
                         
-                        dados[tramoAtual][grupoAtual][nomeTipo].push({
+                        // Determina o grupo final
+                        let grupoFinal = grupoAtual;
+                        
+                        // Se é grupo de transição e tem transição, cria subgrupo
+                        if (grupoAtual.includes('TRANSIÇÃO') && transicao && transicao.match(/TRANSIÇÃO/i)) {
+                            grupoFinal = `${grupoAtual} - ${transicao}`;
+                        }
+                        
+                        if (!dados[tramoAtual]) dados[tramoAtual] = {};
+                        if (!dados[tramoAtual][grupoFinal]) dados[tramoAtual][grupoFinal] = {};
+                        if (!dados[tramoAtual][grupoFinal][nomeTipo]) dados[tramoAtual][grupoFinal][nomeTipo] = [];
+                        
+                        dados[tramoAtual][grupoFinal][nomeTipo].push({
                             mark,
                             codigo,
                             transicao,
@@ -471,7 +528,6 @@
             };
 
             Object.keys(dados).forEach(tramo => {
-                // Conta total de elementos no tramo
                 let totalElementosTramo = 0;
                 Object.keys(dados[tramo]).forEach(grupo => {
                     Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
@@ -499,13 +555,24 @@
                 tramoContent.className = 'tramo-content';
 
                 const gruposOrdenados = Object.keys(dados[tramo]).sort((a, b) => {
-                    const ordemA = ordemGrupos[a] || 999;
-                    const ordemB = ordemGrupos[b] || 999;
-                    return ordemA - ordemB;
+                    const getOrdem = (grupo) => {
+                        if (grupo.includes('TRANSIÇÃO - TRANSIÇÃO')) {
+                            const match = grupo.match(/TRANSIÇÃO\s+(\d+)/);
+                            const numeroTransicao = match ? parseInt(match[1]) : 99;
+                            return [1, numeroTransicao];
+                        }
+                        const basePriority = ordemGrupos[grupo.split(' - ')[0]] || ordemGrupos[grupo] || 999;
+                        return [basePriority, 0];
+                    };
+                    
+                    const [prioA, subA] = getOrdem(a);
+                    const [prioB, subB] = getOrdem(b);
+                    
+                    if (prioA !== prioB) return prioA - prioB;
+                    return subA - subB;
                 });
 
                 gruposOrdenados.forEach(grupo => {
-                    // Conta total de elementos no grupo
                     let totalElementosGrupo = 0;
                     Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
                         totalElementosGrupo += dados[tramo][grupo][nomeTipo].length;
@@ -524,6 +591,18 @@
 
                     Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
                         const elementos = dados[tramo][grupo][nomeTipo];
+                        
+                        elementos.sort((a, b) => {
+                            const codigoA = a.codigo || a.mark || '';
+                            const codigoB = b.codigo || b.mark || '';
+                            
+                            if (codigoA.match(/^\d+$/) && codigoB.match(/^\d+$/)) {
+                                return parseInt(codigoA) - parseInt(codigoB);
+                            }
+                            
+                            return codigoA.localeCompare(codigoB);
+                        });
+                        
                         const chaveElemento = `${tramo}_${grupo}_${nomeTipo}`;
                         
                         const elementoGroup = document.createElement('div');
@@ -565,15 +644,9 @@
                             
                             const nome = document.createElement('div');
                             nome.className = 'item-nome';
-                            nome.textContent = item.codigo ? `${item.codigo} - ${nomeTipo}` : nomeTipo;
+                            const identificador = item.codigo || item.mark || '';
+                            nome.textContent = identificador ? `${identificador} - ${nomeTipo}` : nomeTipo;
                             infoDiv.appendChild(nome);
-                            
-                            if (item.transicao) {
-                                const transicao = document.createElement('div');
-                                transicao.className = 'item-transicao';
-                                transicao.textContent = item.transicao;
-                                infoDiv.appendChild(transicao);
-                            }
                             
                             elementoItem.appendChild(infoDiv);
                             
