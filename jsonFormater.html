@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatador de Mensagens - Sistema de Controle</title>
     <style>
-        /* Versão: 5.1 - Sistema com destaque visual por perfil */
+        /* Versão: 5.5 - Debug avançado para descobrir por que merge não executa */
         
         :root {
             --primary: #2563eb;
@@ -1209,22 +1209,48 @@ Maria Santos - Avaliador'></textarea>
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
+                    console.log('=== ARQUIVO TXT CARREGADO ===');
+                    console.log('Nome do arquivo:', file.name);
+                    console.log('Tamanho:', file.size, 'bytes');
+                    
                     const txtContent = e.target.result;
+                    console.log('Primeiros 500 caracteres:', txtContent.substring(0, 500));
+                    
                     const parsedResponses = parseTxtFile(txtContent);
                     
+                    console.log('=== PÓS-PARSE ===');
+                    console.log('Respostas parseadas:', parsedResponses.size);
+                    console.log('Mensagens carregadas no sistema:', messages.length);
+                    
                     if (parsedResponses.size === 0) {
-                        showAlert('Nenhuma resposta válida encontrada no arquivo TXT', 'error');
+                        showAlert('Nenhuma resposta válida encontrada no arquivo TXT. Verifique o console (F12) para detalhes.', 'error');
                         return;
                     }
 
                     importedResponses = parsedResponses;
-                    showAlert(parsedResponses.size + ' resposta(s) importada(s) do arquivo TXT!', 'success');
+                    showAlert(parsedResponses.size + ' resposta(s) encontrada(s) no arquivo TXT!', 'success');
+                    
+                    console.log('=== VERIFICANDO CONDIÇÕES PARA MERGE ===');
+                    console.log('messages.length:', messages.length);
+                    console.log('messages.length > 0?', messages.length > 0);
                     
                     if (messages.length > 0) {
-                        mergeImportedResponses();
+                        console.log('=== CHAMANDO mergeImportedResponses() ===');
+                        try {
+                            mergeImportedResponses();
+                            console.log('=== mergeImportedResponses() CONCLUÍDO ===');
+                        } catch (mergeError) {
+                            console.error('ERRO NO MERGE:', mergeError);
+                            showAlert('Erro ao aplicar respostas: ' + mergeError.message, 'error');
+                        }
+                    } else {
+                        console.log('❌ NÃO CHAMOU MERGE - messages.length é 0');
+                        showAlert('Carregue as mensagens primeiro antes de importar respostas', 'error');
                     }
                     
                 } catch (error) {
+                    console.error('Erro ao processar arquivo:', error);
+                    console.error('Stack trace:', error.stack);
                     showAlert('Erro ao processar arquivo TXT: ' + error.message, 'error');
                 }
             };
@@ -1240,40 +1266,63 @@ Maria Santos - Avaliador'></textarea>
             let currentResponse = '';
             let inResponseSection = false;
             let responseDate = '';
+            let totalFound = 0;
+            let isOwnMessage = false;
+            let skippedOwnMessages = 0;
+            
+            console.log('=== INICIANDO PARSE DO TXT ===');
             
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 
                 if (line.startsWith('MENSAGEM ORIGINAL')) {
-                    if (currentMessageText && currentResponse) {
+                    if (currentMessageText && currentResponse && !isOwnMessage) {
                         const messageKey = normalizeMessageForMatching(currentMessageText);
                         responses.set(messageKey, {
                             text: currentResponse.trim(),
                             date: responseDate || new Date().toLocaleString('pt-BR')
                         });
+                        totalFound++;
+                        console.log('✅ Resposta #' + totalFound + ' guardada:', currentMessageText.substring(0, 50) + '...');
+                    } else if (isOwnMessage) {
+                        skippedOwnMessages++;
+                        console.log('📤 Mensagem própria ignorada:', currentMessageText.substring(0, 50) + '...');
                     }
                     
                     currentMessageText = '';
                     currentResponse = '';
                     inResponseSection = false;
                     responseDate = '';
+                    isOwnMessage = line.includes('📤') || line.includes('SUA MENSAGEM');
+                    
+                    console.log('--- Nova mensagem detectada ---');
+                    console.log('É mensagem própria?', isOwnMessage);
+                    continue;
+                }
+                
+                if (isOwnMessage) {
                     continue;
                 }
                 
                 if (line === 'SUA RESPOSTA:') {
                     inResponseSection = true;
+                    console.log('Seção de resposta iniciada');
                     continue;
                 }
                 
                 if (line.startsWith('Respondido em:')) {
                     responseDate = line.replace('Respondido em:', '').trim();
+                    inResponseSection = false;
+                    console.log('Data da resposta:', responseDate);
                     continue;
                 }
                 
                 if (line.startsWith('===') || line.startsWith('---') || 
                     line.startsWith('CONTROLE DE') || line.startsWith('Gerado em:') || 
+                    line.startsWith('Perfil Ativo:') ||
                     line.startsWith('Total:') || line.startsWith('Sistema de Controle') ||
-                    line.includes('✅') || line.includes('⏳') || line === '') {
+                    line.includes('Para Responder:') ||
+                    line === '') {
                     continue;
                 }
                 
@@ -1290,13 +1339,20 @@ Maria Santos - Avaliador'></textarea>
                 }
             }
             
-            if (currentMessageText && currentResponse) {
+            if (currentMessageText && currentResponse && !isOwnMessage) {
                 const messageKey = normalizeMessageForMatching(currentMessageText);
                 responses.set(messageKey, {
                     text: currentResponse.trim(),
                     date: responseDate || new Date().toLocaleString('pt-BR')
                 });
+                totalFound++;
+                console.log('✅ Resposta final #' + totalFound + ' guardada:', currentMessageText.substring(0, 50) + '...');
             }
+            
+            console.log('=== RESULTADO DO PARSE ===');
+            console.log('Total de respostas encontradas:', totalFound);
+            console.log('Mensagens próprias ignoradas:', skippedOwnMessages);
+            console.log('Mapa de respostas final:', responses);
             
             return responses;
         }
@@ -1312,6 +1368,8 @@ Maria Santos - Avaliador'></textarea>
         function normalizeMessageForMatching(text) {
             return text
                 .toLowerCase()
+                .replace(/^\d+\.\s*/g, '')
+                .replace(/\t/g, ' ')
                 .replace(/[^\w\s]/g, '')
                 .replace(/\s+/g, ' ')
                 .trim();
@@ -1319,21 +1377,35 @@ Maria Santos - Avaliador'></textarea>
 
         function mergeImportedResponses() {
             let mergedCount = 0;
+            let updatedCount = 0;
             
             messages.forEach(function(message, index) {
+                if (message.role === userProfile) return;
+                
                 const messageKey = normalizeMessageForMatching(message.text);
                 const importedResponse = importedResponses.get(messageKey);
                 
-                if (importedResponse && !messageResponses.has(index) && message.role !== userProfile) {
+                if (importedResponse) {
+                    const hadResponse = messageResponses.has(index);
                     messageResponses.set(index, importedResponse);
                     completionStates.set(index, true);
-                    mergedCount++;
+                    
+                    if (hadResponse) {
+                        updatedCount++;
+                    } else {
+                        mergedCount++;
+                    }
                 }
             });
             
-            if (mergedCount > 0) {
+            if (mergedCount > 0 || updatedCount > 0) {
                 renderMessages();
-                showAlert(mergedCount + ' resposta(s) recuperada(s) e aplicada(s) às mensagens atuais!', 'success');
+                let alertMsg = '';
+                if (mergedCount > 0) alertMsg += mergedCount + ' nova(s) resposta(s)';
+                if (mergedCount > 0 && updatedCount > 0) alertMsg += ' e ';
+                if (updatedCount > 0) alertMsg += updatedCount + ' resposta(s) atualizada(s)';
+                alertMsg += ' aplicada(s) com sucesso!';
+                showAlert(alertMsg, 'success');
             } else {
                 showAlert('Nenhuma correspondência encontrada entre as mensagens atuais e o arquivo importado', 'error');
             }
@@ -1643,6 +1715,7 @@ Maria Santos - Avaliador'></textarea>
             };
             
             messageResponses.set(index, response);
+            completionStates.set(index, true);
             renderMessages();
             showAlert('Resposta salva com sucesso!', 'success');
             
@@ -1688,6 +1761,7 @@ Maria Santos - Avaliador'></textarea>
             };
             
             messageResponses.set(index, response);
+            completionStates.set(index, true);
             renderMessages();
             showAlert('Resposta atualizada com sucesso!', 'success');
         }
