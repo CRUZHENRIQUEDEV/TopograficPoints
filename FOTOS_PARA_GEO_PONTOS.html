@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <!-- Versão: 4.3 -->
+    <!-- Versão: 4.4 -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
@@ -49,7 +49,7 @@
       .map-header {
         max-width: 800px;
         margin: 0 auto;
-        padding: 2rem 2rem 1rem 2rem;
+        padding: 1.5rem 2rem 0.5rem 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -97,7 +97,7 @@
       }
 
       h2 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
       }
 
       .container {
@@ -187,27 +187,31 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px 0;
+        margin: 15px 0;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 15px;
         overflow: hidden;
         backdrop-filter: blur(5px);
+        font-size: 13px;
       }
 
       th, td {
         border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 12px;
+        padding: 6px 10px;
         text-align: left;
+        line-height: 1.3;
       }
 
       th {
         background: rgba(52, 152, 219, 0.3);
         font-weight: 600;
         color: #ffffff;
+        font-size: 13px;
       }
 
       td {
         background: rgba(255, 255, 255, 0.05);
+        font-size: 12px;
       }
 
       tbody tr:hover td {
@@ -215,8 +219,8 @@
       }
 
       #map {
-        height: 70vh;
-        min-height: 500px;
+        height: 80vh;
+        min-height: 600px;
         width: 100%;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(5px);
@@ -256,16 +260,17 @@
 
       #stats {
         background: rgba(255, 255, 255, 0.1);
-        padding: 15px;
+        padding: 12px;
         border-radius: 15px;
-        margin: 20px 0;
+        margin: 15px 0;
         backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.2);
       }
 
       #stats p {
-        margin: 5px 0;
+        margin: 4px 0;
         font-weight: 500;
+        font-size: 13px;
       }
 
       #stats span {
@@ -351,10 +356,10 @@
         right: 10px;
         background: rgba(255, 255, 255, 0.95);
         border-radius: 10px;
-        padding: 15px;
+        padding: 12px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         z-index: 1000;
-        min-width: 200px;
+        min-width: 180px;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         display: none;
@@ -366,24 +371,24 @@
 
       .drone-legend h4 {
         color: #2c3e50;
-        margin-bottom: 10px;
-        font-size: 14px;
+        margin-bottom: 8px;
+        font-size: 13px;
         font-weight: 600;
       }
 
       .legend-item {
         display: flex;
         align-items: center;
-        margin-bottom: 8px;
-        font-size: 12px;
+        margin-bottom: 6px;
+        font-size: 11px;
         color: #333;
       }
 
       .legend-color {
-        width: 20px;
-        height: 15px;
+        width: 18px;
+        height: 12px;
         border-radius: 3px;
-        margin-right: 8px;
+        margin-right: 6px;
         border: 1px solid rgba(0, 0, 0, 0.2);
       }
 
@@ -538,46 +543,64 @@
         margin-bottom: 15px;
       }
 
-      /* Customização adicional do popup */
+      /* Customização adicional do popup - COMPACTO */
       .leaflet-popup-content {
         color: #333;
-        font-size: 14px;
-        width: 320px !important;
+        font-size: 11px;
+        width: 280px !important;
         max-height: 500px;
         overflow-y: auto;
+        margin: 8px;
       }
 
       .leaflet-popup-content h4 {
-        margin: 0 0 10px 0;
+        margin: 0 0 6px 0;
         color: #2c3e50;
+        font-size: 13px;
+        line-height: 1.3;
       }
 
-      /* Estilos para os campos de renomeação no popup */
+      .leaflet-popup-content p {
+        margin: 4px 0;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .leaflet-popup-content strong {
+        font-size: 11px;
+      }
+
+      /* Estilos para os campos de renomeação no popup - COMPACTO */
       .rename-section {
-        margin-top: 15px;
-        padding-top: 15px;
+        margin-top: 8px;
+        padding-top: 8px;
         border-top: 1px solid #ddd;
+      }
+
+      .rename-section p {
+        margin-bottom: 4px;
+        font-weight: 600;
       }
 
       .rename-input {
         width: 100%;
-        padding: 8px;
+        padding: 5px;
         border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 14px;
-        margin-bottom: 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        margin-bottom: 6px;
         font-family: inherit;
       }
 
       .rename-input:focus {
         outline: none;
         border-color: #3498db;
-        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 0 3px rgba(52, 152, 219, 0.3);
       }
 
       .popup-buttons {
         display: flex;
-        gap: 5px;
+        gap: 4px;
         flex-wrap: wrap;
       }
 
@@ -585,14 +608,14 @@
         background: #3498db;
         color: white;
         border: none;
-        padding: 6px 12px;
-        border-radius: 5px;
+        padding: 4px 8px;
+        border-radius: 4px;
         cursor: pointer;
-        font-size: 12px;
+        font-size: 10px;
         font-weight: 500;
         transition: background 0.3s ease;
         flex: 1;
-        min-width: 80px;
+        min-width: 70px;
       }
 
       .popup-btn:hover {
@@ -624,6 +647,43 @@
 
       .leaflet-marker-icon:hover {
         filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 152, 219, 0.6));
+      }
+
+      /* Seção de rodovias compacta */
+      #rodoviaInfo_0 {
+        margin-top: 6px;
+      }
+
+      [id^="rodoviaLoading_"] {
+        margin-top: 6px;
+        padding: 4px;
+        background: #f8f9fa;
+        border-radius: 3px;
+        text-align: center;
+        font-size: 10px;
+      }
+
+      [id^="rodoviaContent_"] {
+        margin-top: 6px;
+      }
+
+      [id^="rodoviaContent_"] > div {
+        padding: 4px;
+        background: #f8f9fa;
+        border-radius: 3px;
+        border: 1px solid #dee2e6;
+        font-size: 10px;
+      }
+
+      [id^="rodoviaContent_"] > div > div:first-child {
+        font-size: 10px;
+        color: #6c757d;
+        margin-bottom: 2px;
+      }
+
+      [id^="rodoviaContent_"] > div > div:last-child {
+        font-size: 11px;
+        color: #495057;
       }
     </style>
   </head>
@@ -771,7 +831,7 @@
     </div>
 
     <script>
-      // Versão: 4.3
+      // Versão: 4.4
       
       // Variáveis globais
       let imagePoints = [];
@@ -1416,12 +1476,12 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         return { rodovias };
       }
 
-      // Gerar HTML das informações de rodovias
+      // Gerar HTML das informações de rodovias (COMPACTO)
       function gerarHtmlRodovias(dadosProcessados, coordenadas) {
         if (!dadosProcessados || !dadosProcessados.rodovias || dadosProcessados.rodovias.length === 0) {
           return `
-            <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
-              <div style="font-size: 11px; color: #6c757d;">
+            <div style="margin-top: 6px; padding: 4px; background: #f8f9fa; border-radius: 3px; border: 1px solid #dee2e6;">
+              <div style="font-size: 10px; color: #6c757d;">
                 Nenhuma rodovia encontrada
               </div>
             </div>
@@ -1438,9 +1498,9 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         }).join(' • ');
         
         return `
-          <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
-            <div style="font-size: 11px; color: #6c757d; margin-bottom: 2px;">Rodovias:</div>
-            <div style="font-size: 12px; color: #495057;">${listaRodovias}</div>
+          <div style="margin-top: 6px; padding: 4px; background: #f8f9fa; border-radius: 3px; border: 1px solid #dee2e6;">
+            <div style="font-size: 10px; color: #6c757d; margin-bottom: 2px;">🛣️ Rodovias:</div>
+            <div style="font-size: 11px; color: #495057;">${listaRodovias}</div>
           </div>
         `;
       }
@@ -1740,12 +1800,9 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         if (loadingDiv) loadingDiv.style.display = 'none';
         if (contentDiv) {
           contentDiv.innerHTML = `
-            <div style="padding: 10px; background: #ffebee; border: 1px solid #f44336; border-radius: 5px; text-align: center;">
-              <div style="color: #d32f2f; font-size: 13px; font-weight: bold;">
+            <div style="padding: 6px; background: #ffebee; border: 1px solid #f44336; border-radius: 4px; text-align: center;">
+              <div style="color: #d32f2f; font-size: 10px; font-weight: bold;">
                 ❌ Erro ao consultar rodovias
-              </div>
-              <div style="color: #666; font-size: 11px; margin-top: 3px;">
-                Verifique sua conexão com a internet
               </div>
             </div>
           `;
@@ -1807,8 +1864,8 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           const marker = L.marker([point.latitude, point.longitude], { icon: markerIcon });
           
           const popup = L.popup({
-            maxWidth: 350,
-            minWidth: 320
+            maxWidth: 280,
+            minWidth: 280
           });
           
           if (isImported) {
@@ -1862,7 +1919,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         debugLog(`Plotados ${allPoints.length} pontos no mapa`);
       }
 
-      // Criar conteúdo do popup para pontos importados
+      // Criar conteúdo do popup para pontos importados (COMPACTO)
       function createImportedPopupContent(point, index) {
         let droneInfo = '';
         if (droneZonesActive && point.droneZone) {
@@ -1870,10 +1927,9 @@ Longitude: ${point.longitude.toFixed(8)}</p>
                           point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
           
           droneInfo = `
-            <div style="margin-top: 10px; padding: 8px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 5px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
-              <div style="font-size: 12px; color: #495057; margin-bottom: 2px;"><strong>${zoneIcon} Zona de Drone:</strong></div>
-              <div style="font-size: 11px; color: #6c757d;">${point.droneZone.descricao}</div>
-              ${point.droneZone.aeroporto ? `<div style="font-size: 10px; color: #6c757d;">Aeroporto: ${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
+            <div style="margin-top: 6px; padding: 5px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 3px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
+              <div style="font-size: 10px; color: #495057;"><strong>${zoneIcon} ${point.droneZone.descricao}</strong></div>
+              ${point.droneZone.aeroporto ? `<div style="font-size: 9px; color: #6c757d;">${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
             </div>
           `;
         }
@@ -1888,35 +1944,33 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           }).join(' • ');
           
           rodoviaInfo = `
-            <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
-              <div style="font-size: 11px; color: #6c757d; margin-bottom: 2px;">🛣️ Rodovias:</div>
-              <div style="font-size: 12px; color: #495057;">${listaRodovias}</div>
+            <div style="margin-top: 6px; padding: 4px; background: #f8f9fa; border-radius: 3px; border: 1px solid #dee2e6;">
+              <div style="font-size: 10px; color: #6c757d; margin-bottom: 2px;">🛣️ Rodovias:</div>
+              <div style="font-size: 11px; color: #495057;">${listaRodovias}</div>
             </div>
           `;
         } else if (point.rodovias) {
           rodoviaInfo = `
-            <div style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
-              <div style="font-size: 11px; color: #6c757d;">🛣️ Nenhuma rodovia encontrada</div>
+            <div style="margin-top: 6px; padding: 4px; background: #f8f9fa; border-radius: 3px; border: 1px solid #dee2e6;">
+              <div style="font-size: 10px; color: #6c757d;">🛣️ Nenhuma rodovia encontrada</div>
             </div>
           `;
         }
         
         return `
-          <div style="width: 320px;">
-            <h4>📍 ${point.filename} <span style="color: #9b59b6; font-size: 12px;">(Importado)</span></h4>
-            <p><strong>Coordenadas:</strong><br>
-            Lat: ${point.latitude.toFixed(8)}<br>
-            Lng: ${point.longitude.toFixed(8)}</p>
-            ${point.datetime ? `<p><strong>Data/Hora:</strong><br>${point.datetime}</p>` : ''}
-            ${point.description ? `<p><strong>Descrição:</strong><br>${point.description}</p>` : ''}
+          <div>
+            <h4>📍 ${point.filename} <span style="color: #9b59b6; font-size: 10px;">(Importado)</span></h4>
+            <p style="margin: 3px 0;"><strong>Lat:</strong> ${point.latitude.toFixed(8)}<br>
+            <strong>Lng:</strong> ${point.longitude.toFixed(8)}</p>
+            ${point.datetime ? `<p style="margin: 3px 0;"><strong>Data:</strong> ${point.datetime}</p>` : ''}
             
             ${droneInfo}
             ${rodoviaInfo}
             
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
               <div class="popup-buttons">
                 <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
-                  🔍 Zoom Max
+                  🔍 Zoom
                 </button>
                 <button class="popup-btn danger" onclick="removeImportedPoint(${index})">
                   🗑️ Remover
@@ -1927,7 +1981,7 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         `;
       }
 
-      // Criar conteúdo do popup
+      // Criar conteúdo do popup (COMPACTO)
       function createPopupContent(point, index, currentName, isRenamed) {
         const fileNameWithoutExt = currentName.substring(0, currentName.lastIndexOf('.')) || currentName;
         const fileExt = currentName.substring(currentName.lastIndexOf('.')) || '';
@@ -1938,36 +1992,33 @@ Longitude: ${point.longitude.toFixed(8)}</p>
                           point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
           
           droneInfo = `
-            <div style="margin-top: 10px; padding: 8px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 5px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
-              <div style="font-size: 12px; color: #495057; margin-bottom: 2px;"><strong>${zoneIcon} Zona de Drone:</strong></div>
-              <div style="font-size: 11px; color: #6c757d;">${point.droneZone.descricao}</div>
-              ${point.droneZone.aeroporto ? `<div style="font-size: 10px; color: #6c757d;">Aeroporto: ${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
+            <div style="margin-top: 6px; padding: 5px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 3px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
+              <div style="font-size: 10px; color: #495057;"><strong>${zoneIcon} ${point.droneZone.descricao}</strong></div>
+              ${point.droneZone.aeroporto ? `<div style="font-size: 9px; color: #6c757d;">${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
             </div>
           `;
         }
         
         return `
-          <div style="width: 320px;">
+          <div>
             <h4>📷 ${isRenamed ? '<span class="renamed-indicator">✏️ ' + currentName + '</span>' : currentName}</h4>
-            ${isRenamed ? `<p class="original-name">Original: ${point.filename}</p>` : ''}
-            <p><strong>Coordenadas:</strong><br>
-            Lat: ${point.latitude.toFixed(8)}<br>
-            Lng: ${point.longitude.toFixed(8)}</p>
-            <p><strong>Data/Hora:</strong><br>
-            ${point.datetime || "N/A"}</p>
+            ${isRenamed ? `<p class="original-name" style="font-size: 10px; margin: 2px 0;">${point.filename}</p>` : ''}
+            <p style="margin: 3px 0;"><strong>Lat:</strong> ${point.latitude.toFixed(8)}<br>
+            <strong>Lng:</strong> ${point.longitude.toFixed(8)}</p>
+            <p style="margin: 3px 0;"><strong>Data:</strong> ${point.datetime || "N/A"}</p>
             
             ${droneInfo}
             
             <div class="rename-section">
-              <p><strong>Renomear arquivo:</strong></p>
+              <p style="font-size: 11px; margin-bottom: 3px;"><strong>Renomear:</strong></p>
               <input type="text" id="newName_${index}" class="rename-input" 
-                     value="${fileNameWithoutExt}" placeholder="Novo nome do arquivo">
+                     value="${fileNameWithoutExt}" placeholder="Novo nome">
               <div class="popup-buttons">
                 <button class="popup-btn success" onclick="renameFile(${index}, '${point.filename}', '${fileExt}')">
-                  ✓ Renomear
+                  ✓ OK
                 </button>
                 <button class="popup-btn" onclick="map.setView([${point.latitude}, ${point.longitude}], map.getMaxZoom())">
-                  🔍 Zoom Max
+                  🔍 Zoom
                 </button>
                 ${isRenamed ? `<button class="popup-btn danger" onclick="resetFileName('${point.filename}', ${index})">↶ Desfazer</button>` : ''}
               </div>
@@ -1975,9 +2026,8 @@ Longitude: ${point.longitude.toFixed(8)}</p>
             
             <!-- Seção de Rodovias -->
             <div id="rodoviaInfo_${index}">
-              <div id="rodoviaLoading_${index}" style="margin-top: 10px; padding: 6px; background: #f8f9fa; border-radius: 4px; text-align: center;">
-                <div style="display: inline-block; width: 12px; height: 12px; border: 2px solid #ddd; border-radius: 50%; border-top: 2px solid #6c757d; animation: spin 1s linear infinite; margin-right: 5px;"></div>
-                <span style="font-size: 11px; color: #6c757d;">Consultando rodovias...</span>
+              <div id="rodoviaLoading_${index}" style="margin-top: 6px; padding: 4px; background: #f8f9fa; border-radius: 3px; text-align: center;">
+                <span style="font-size: 10px; color: #6c757d;">Consultando rodovias...</span>
               </div>
               <div id="rodoviaContent_${index}" style="display: none;"></div>
             </div>
@@ -2000,9 +2050,9 @@ Longitude: ${point.longitude.toFixed(8)}</p>
           
           const nameCell = row.insertCell(0);
           if (isImported) {
-            nameCell.innerHTML = `<span style="color: #9b59b6;">${currentName}</span><br><small style="color: #9b59b6; font-style: italic;">(Importado do KML)</small>`;
+            nameCell.innerHTML = `<span style="color: #9b59b6;">${currentName}</span><br><small style="color: #9b59b6; font-style: italic; font-size: 10px;">(Importado)</small>`;
           } else if (isRenamed) {
-            nameCell.innerHTML = `<span class="renamed-indicator">${currentName}</span><br><small class="original-name">${point.filename}</small>`;
+            nameCell.innerHTML = `<span class="renamed-indicator">${currentName}</span><br><small class="original-name" style="font-size: 10px;">${point.filename}</small>`;
           } else {
             nameCell.textContent = currentName;
           }
