@@ -414,7 +414,7 @@
         <div class="header">
             <h1>📊 Visualizador SGE - Elementos</h1>
             <p>Organize e gerencie dimensões de elementos estruturais</p>
-            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">💡 Clique nas dimensões para editá-las | Use as setas para reordenar</p>
+            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">💡 Clique nas dimensões para editá-las | Use as setas para reordenar | Ctrl+Z = Desfazer | Ctrl+Y = Refazer</p>
         </div>
 
         <div class="upload-section">
@@ -438,6 +438,8 @@
         let nomesColunas = [];
         let ordemPorTipo = {};
         let tiposComOrdemAlterada = new Set();
+        let historicoOrdem = [];
+        let indiceHistorico = -1;
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -447,6 +449,17 @@
                     document.getElementById('csvInput').value = event.target.result;
                 };
                 reader.readAsText(file);
+            }
+        });
+
+        // Atalhos de teclado para Desfazer/Refazer
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                desfazerOrdem();
+            } else if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                refazerOrdem();
             }
         });
 
@@ -850,6 +863,21 @@
                 ordemPorTipo[nomeTipo] = Array.from({length: totalDimensoes}, (_, i) => i);
             }
             
+            // Salvar estado atual no histórico antes de modificar
+            const estadoAnterior = {
+                nomeTipo: nomeTipo,
+                ordem: [...ordemPorTipo[nomeTipo]],
+                tiposAlterados: new Set(tiposComOrdemAlterada)
+            };
+            
+            // Limpar histórico futuro se estiver no meio da pilha
+            if (indiceHistorico < historicoOrdem.length - 1) {
+                historicoOrdem = historicoOrdem.slice(0, indiceHistorico + 1);
+            }
+            
+            historicoOrdem.push(estadoAnterior);
+            indiceHistorico++;
+            
             // Trocar posições na ordem global
             const tempOrdem = ordemPorTipo[nomeTipo][dimIndex];
             ordemPorTipo[nomeTipo][dimIndex] = ordemPorTipo[nomeTipo][novoIndice];
@@ -901,6 +929,67 @@
             mostrarToast(`✓ Ordem aplicada a ${totalAfetados} elementos em ${tramosAfetados.size} tramo(s)`);
         }
 
+        function desfazerOrdem() {
+            if (indiceHistorico < 0) {
+                mostrarToast('Nada para desfazer', 'error');
+                return;
+            }
+            
+            const estadoAnterior = historicoOrdem[indiceHistorico];
+            ordemPorTipo[estadoAnterior.nomeTipo] = [...estadoAnterior.ordem];
+            tiposComOrdemAlterada = new Set(estadoAnterior.tiposAlterados);
+            
+            indiceHistorico--;
+            
+            // Reaplicar ordem aos dados
+            aplicarOrdemGlobal(estadoAnterior.nomeTipo);
+            renderizarDados(dadosGlobais);
+            
+            mostrarToast('↶ Desfeito');
+        }
+
+        function refazerOrdem() {
+            if (indiceHistorico >= historicoOrdem.length - 1) {
+                mostrarToast('Nada para refazer', 'error');
+                return;
+            }
+            
+            indiceHistorico++;
+            const estadoProximo = historicoOrdem[indiceHistorico + 1];
+            
+            if (estadoProximo) {
+                ordemPorTipo[estadoProximo.nomeTipo] = [...estadoProximo.ordem];
+                tiposComOrdemAlterada = new Set(estadoProximo.tiposAlterados);
+                
+                // Reaplicar ordem aos dados
+                aplicarOrdemGlobal(estadoProximo.nomeTipo);
+                renderizarDados(dadosGlobais);
+                
+                mostrarToast('↷ Refeito');
+            }
+        }
+
+        function aplicarOrdemGlobal(nomeTipo) {
+            Object.keys(dadosGlobais).forEach(t => {
+                Object.keys(dadosGlobais[t]).forEach(g => {
+                    if (dadosGlobais[t][g][nomeTipo]) {
+                        dadosGlobais[t][g][nomeTipo].forEach(elemento => {
+                            const dimensoesOriginais = [...elemento.dimensoes];
+                            const dimensoesReordenadas = [];
+                            
+                            ordemPorTipo[nomeTipo].forEach(indiceOriginal => {
+                                if (dimensoesOriginais[indiceOriginal]) {
+                                    dimensoesReordenadas.push(dimensoesOriginais[indiceOriginal]);
+                                }
+                            });
+                            
+                            elemento.dimensoes = dimensoesReordenadas;
+                        });
+                    }
+                });
+            });
+        }
+
         function editarDimensao(elementoSpan, tramo, grupo, nomeTipo, itemIndex, dimIndex) {
             const valorAtual = elementoSpan.textContent;
             
@@ -916,14 +1005,29 @@
             input.focus();
             input.select();
             
+            // Validação: apenas números, vírgula e ponto
+            input.addEventListener('input', (e) => {
+                const valorDigitado = e.target.value;
+                const valorLimpo = valorDigitado.replace(/[^0-9.,]/g, '');
+                if (valorDigitado !== valorLimpo) {
+                    e.target.value = valorLimpo;
+                }
+            });
+            
             const salvar = () => {
                 const novoValor = input.value.trim();
-                if (novoValor) {
+                // Validar se contém apenas números, vírgula ou ponto
+                if (novoValor && /^[0-9.,]+$/.test(novoValor)) {
                     dadosGlobais[tramo][grupo][nomeTipo][itemIndex].dimensoes[dimIndex].valor = novoValor;
                     elementoSpan.textContent = novoValor;
                     elementoSpan.classList.remove('editing');
                     mostrarToast('Dimensão atualizada!');
+                } else if (novoValor === '') {
+                    mostrarToast('Valor vazio não permitido', 'error');
+                    elementoSpan.textContent = valorAtual;
+                    elementoSpan.classList.remove('editing');
                 } else {
+                    mostrarToast('Apenas números são permitidos', 'error');
                     elementoSpan.textContent = valorAtual;
                     elementoSpan.classList.remove('editing');
                 }
