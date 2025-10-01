@@ -1,4 +1,4 @@
-<!-- Versão: 2.0 -->
+<!-- Versão: 4.0 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -22,7 +22,6 @@
     />
 
     <style>
-      /* Reset e configurações base */
       * {
         box-sizing: border-box;
         transition: background-color 0.3s ease, color 0.3s ease,
@@ -38,7 +37,6 @@
         overflow: hidden;
       }
 
-      /* Layout principal */
       .app-container {
         display: grid;
         grid-template-columns: 320px 1fr;
@@ -46,7 +44,6 @@
         width: 100vw;
       }
 
-      /* Sidebar */
       .sidebar {
         background: var(--bg-secondary);
         border-right: 2px solid var(--border-color);
@@ -64,7 +61,6 @@
         text-align: center;
       }
 
-      /* Área principal */
       .main-area {
         display: grid;
         grid-template-rows: auto 1fr;
@@ -89,12 +85,11 @@
 
       .content-grid {
         display: grid;
-        grid-template-columns: 1fr 350px;
+        grid-template-columns: 1fr 400px;
         height: 100%;
         overflow: hidden;
       }
 
-      /* Mapa */
       .map-container {
         position: relative;
         background: var(--bg-tertiary);
@@ -118,7 +113,6 @@
         gap: 8px;
       }
 
-      /* Painel de detalhes */
       .details-panel {
         background: var(--bg-secondary);
         border-left: 2px solid var(--border-color);
@@ -126,7 +120,6 @@
         overflow-y: auto;
       }
 
-      /* Seção de carregamento */
       .load-section {
         background: linear-gradient(
           135deg,
@@ -145,21 +138,6 @@
         margin: 0 0 8px 0;
       }
 
-      .load-section .instructions {
-        background: rgba(0, 0, 0, 0.2);
-        padding: 12px;
-        border-radius: 6px;
-        margin: 12px 0;
-        text-align: left;
-        font-size: 13px;
-      }
-
-      .load-section .instructions ol {
-        margin: 8px 0;
-        padding-left: 20px;
-      }
-
-      /* Botões */
       .btn {
         background: var(--primary-color);
         color: white !important;
@@ -207,7 +185,16 @@
         font-size: 12px;
       }
 
-      /* Formulários */
+      .btn-success {
+        background: var(--success-color);
+        border-color: var(--success-color);
+      }
+
+      .btn-info {
+        background: var(--info-color);
+        border-color: var(--info-color);
+      }
+
       .form-group {
         margin-bottom: 12px;
       }
@@ -236,6 +223,11 @@
         background: var(--bg-secondary);
       }
 
+      .form-input.modified {
+        border-color: var(--warning-color);
+        background: rgba(255, 193, 7, 0.1);
+      }
+
       .form-input::placeholder {
         color: var(--text-muted);
       }
@@ -256,7 +248,6 @@
         gap: 8px;
       }
 
-      /* Estatísticas */
       .stats-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -285,7 +276,6 @@
         margin-top: 4px;
       }
 
-      /* Lista de resultados */
       .results-container {
         border: 1px solid var(--border-color);
         border-radius: 6px;
@@ -333,7 +323,6 @@
         line-height: 1.4;
       }
 
-      /* Card de ponte */
       .bridge-card {
         background: var(--bg-tertiary);
         border: 1px solid var(--border-color);
@@ -388,7 +377,206 @@
         gap: 8px;
       }
 
-      /* Loading */
+      .editable-field {
+        position: relative;
+      }
+
+      .edit-mode .bridge-info {
+        background: var(--bg-tertiary);
+        padding: 8px;
+        border-radius: 4px;
+      }
+
+      .km-comparison {
+        background: linear-gradient(
+          135deg,
+          var(--info-color),
+          var(--success-color)
+        );
+        padding: 12px;
+        border-radius: 6px;
+        margin: 12px 0;
+        color: white;
+      }
+
+      .km-comparison-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+
+      .km-values {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .km-value {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      .km-label {
+        font-size: 11px;
+        opacity: 0.9;
+        margin-bottom: 4px;
+      }
+
+      .km-number {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .km-difference {
+        margin-top: 8px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        text-align: center;
+        font-size: 11px;
+      }
+
+      .km-loading {
+        background: var(--warning-color);
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        color: white;
+        font-size: 12px;
+      }
+
+      .km-error {
+        background: var(--danger-color);
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        color: white;
+        font-size: 12px;
+      }
+
+      .km-debug {
+        background: var(--bg-tertiary);
+        padding: 8px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-size: 11px;
+        font-family: monospace;
+        max-height: 200px;
+        overflow-y: auto;
+        color: var(--text-secondary);
+      }
+
+      .badge-updated {
+        display: inline-block;
+        background: var(--success-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+
+      .badge-modified {
+        display: inline-block;
+        background: var(--warning-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+
+      .comparison-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      }
+
+      .comparison-content {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 24px;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        border: 2px solid var(--border-color);
+      }
+
+      .comparison-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      .comparison-close {
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .diff-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+      }
+
+      .diff-table th,
+      .diff-table td {
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        text-align: left;
+        font-size: 12px;
+      }
+
+      .diff-table th {
+        background: var(--bg-tertiary);
+        font-weight: 600;
+      }
+
+      .diff-changed {
+        background: rgba(255, 193, 7, 0.2);
+      }
+
+      .diff-unchanged {
+        opacity: 0.5;
+      }
+
+      .batch-update-section {
+        background: linear-gradient(
+          135deg,
+          var(--info-color),
+          var(--primary-color)
+        );
+        color: white;
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      .batch-update-section h3 {
+        color: white !important;
+        margin: 0 0 8px 0;
+      }
+
       .loading-overlay {
         position: fixed;
         top: 0;
@@ -402,6 +590,7 @@
         z-index: 9999;
         color: white !important;
         font-size: 16px;
+        flex-direction: column;
       }
 
       .loading-spinner {
@@ -411,7 +600,7 @@
         border-top: 3px solid white;
         border-radius: 50%;
         animation: spin 1s linear infinite;
-        margin-right: 12px;
+        margin-bottom: 12px;
       }
 
       @keyframes spin {
@@ -423,7 +612,12 @@
         }
       }
 
-      /* Welcome message */
+      .progress-info {
+        margin-top: 12px;
+        font-size: 14px;
+        text-align: center;
+      }
+
       .welcome {
         text-align: center;
         padding: 32px 16px;
@@ -441,12 +635,10 @@
         margin: 16px auto;
       }
 
-      /* Hidden state */
       .hidden {
         display: none !important;
       }
 
-      /* Responsive */
       @media (max-width: 1024px) {
         .app-container {
           grid-template-columns: 280px 1fr;
@@ -484,7 +676,6 @@
         }
       }
 
-      /* Tema escuro específico */
       [data-theme="dark"] .load-section h3,
       [data-theme="dark"] .load-section p,
       [data-theme="dark"] .loading-overlay {
@@ -493,7 +684,6 @@
     </style>
   </head>
   <body>
-    <!-- Seletor de Tema -->
     <div class="theme-selector">
       <label for="themeSelect">Tema:</label>
       <select id="themeSelect">
@@ -507,31 +697,29 @@
       </select>
     </div>
 
-    <!-- Loading Overlay -->
     <div class="loading-overlay hidden" id="loadingOverlay">
       <div class="loading-spinner"></div>
       <div id="loadingText">Carregando...</div>
+      <div class="progress-info" id="progressInfo"></div>
     </div>
 
     <div class="app-container">
-      <!-- Sidebar -->
       <div class="sidebar">
-        <h2>🌉 Painel de Controle</h2>
+        <h2>Painel de Controle</h2>
 
-        <!-- Seção de carregamento -->
         <div class="load-section" id="loadSection">
-          <h3>📁 Carregar Dados</h3>
+          <h3>Carregar Dados</h3>
           <p>Selecione os arquivos JSON das estruturas</p>
           <button class="btn btn-full" id="loadBtn">Carregar Arquivos</button>
-          <div
-            class="btn-small"
-            style="margin-top: 8px; font-size: 11px; opacity: 0.9"
-          >
-            💡 Brave: Pode precisar habilitar File System Access
-          </div>
         </div>
 
-        <!-- Estatísticas -->
+        <div class="batch-update-section hidden" id="batchUpdateSection">
+          <h3>Atualizações em Lote</h3>
+          <button class="btn btn-full" id="updateAllBtn">
+            Atualizar Todos do Servidor
+          </button>
+        </div>
+
         <div class="stats-grid hidden" id="statsSection">
           <div class="stat-card">
             <span class="stat-number" id="totalCount">0</span>
@@ -551,9 +739,8 @@
           </div>
         </div>
 
-        <!-- Busca -->
         <div class="form-group hidden" id="searchSection">
-          <label class="form-label">🔍 Buscar</label>
+          <label class="form-label">Buscar</label>
           <input
             type="text"
             class="form-input"
@@ -562,38 +749,37 @@
           />
         </div>
 
-        <!-- Filtros -->
         <div class="hidden" id="filtersSection">
           <div class="form-group">
-            <label class="form-label">🗺️ Região</label>
+            <label class="form-label">Região</label>
             <select class="form-select" id="regionFilter">
               <option value="">Todas as regiões</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">🏛️ Estado</label>
+            <label class="form-label">Estado</label>
             <select class="form-select" id="stateFilter">
               <option value="">Todos os estados</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">🛣️ Rodovia</label>
+            <label class="form-label">Rodovia</label>
             <select class="form-select" id="roadFilter">
               <option value="">Todas as rodovias</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">🌉 Estrutura</label>
+            <label class="form-label">Estrutura</label>
             <select class="form-select" id="structureFilter">
               <option value="">Todas as estruturas</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">📏 Comprimento (m)</label>
+            <label class="form-label">Comprimento (m)</label>
             <div class="form-row">
               <input
                 type="number"
@@ -611,7 +797,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">🛣️ Quilometragem</label>
+            <label class="form-label">Quilometragem</label>
             <div class="form-row">
               <input
                 type="number"
@@ -629,7 +815,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">📅 Ano Construção</label>
+            <label class="form-label">Ano Construção</label>
             <div class="form-row">
               <input
                 type="number"
@@ -647,29 +833,30 @@
           </div>
 
           <button class="btn btn-secondary btn-full" id="clearBtn">
-            🗑️ Limpar Filtros
+            Limpar Filtros
           </button>
         </div>
 
-        <!-- Resultados -->
         <div class="hidden" id="resultsSection">
           <div class="results-container">
             <div class="results-header">
               <span id="resultsCount">0 estruturas</span>
-              <button class="btn btn-small" id="exportBtn">📥</button>
+              <button class="btn btn-small" id="exportBtn">Exportar</button>
             </div>
             <div id="resultsList"></div>
           </div>
         </div>
       </div>
 
-      <!-- Área principal -->
       <div class="main-area">
         <div class="header">
-          <h1>🌉 Gerenciador de Estruturas</h1>
+          <h1>Gerenciador de Estruturas</h1>
           <div class="hidden" id="mapControls">
-            <button class="btn btn-small" id="fitMapBtn">🎯 Ajustar</button>
-            <button class="btn btn-small" id="clustersBtn">📍 Clusters</button>
+            <button class="btn btn-small" id="fitMapBtn">Ajustar</button>
+            <button class="btn btn-small" id="clustersBtn">Clusters</button>
+            <button class="btn btn-small" id="showAllMarkersBtn">
+              Mostrar Todos
+            </button>
           </div>
         </div>
 
@@ -685,34 +872,33 @@
 
           <div class="details-panel">
             <div class="welcome" id="welcomePanel">
-              <h3>👋 Bem-vindo!</h3>
+              <h3>Bem-vindo!</h3>
               <p>
                 Carregue os arquivos JSON para começar a visualizar as
                 estruturas.
               </p>
 
-              <h4>🚀 Funcionalidades:</h4>
+              <h4>Funcionalidades:</h4>
               <ul>
-                <li>🗺️ Mapa interativo com clusters</li>
-                <li>🔍 Busca e filtros avançados</li>
-                <li>📊 Estatísticas em tempo real</li>
-                <li>📥 Exportação de dados</li>
-                <li>🎨 Múltiplos temas visuais</li>
-                <li>📱 Interface responsiva</li>
+                <li>Mapa interativo com clusters</li>
+                <li>Busca e filtros avançados</li>
+                <li>Estatísticas em tempo real</li>
+                <li>Atualização de KM via API DNIT</li>
+                <li>Edição de dados</li>
+                <li>Verificação de atualizações</li>
+                <li>Atualização em lote</li>
+                <li>Exportação de dados</li>
               </ul>
 
               <p><strong>Compatível com até 6500+ estruturas</strong></p>
             </div>
 
-            <div class="hidden" id="bridgePanel">
-              <!-- Detalhes da ponte selecionada -->
-            </div>
+            <div class="hidden" id="bridgePanel"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
 
@@ -725,6 +911,7 @@
           this.map = null;
           this.markersLayer = null;
           this.clustersEnabled = true;
+          this.showAllMarkers = false;
           this.searchIndex = new Map();
           this.filterOptions = {
             regions: new Set(),
@@ -732,6 +919,10 @@
             roads: new Set(),
             structures: new Set(),
           };
+          this.structuresMap = new Map();
+          this.fileHandlesMap = new Map();
+          this.editMode = false;
+          this.modifiedFields = new Map();
 
           this.init();
         }
@@ -745,21 +936,18 @@
         }
 
         initElements() {
-          // Loading
           this.loadingOverlay = document.getElementById("loadingOverlay");
           this.loadingText = document.getElementById("loadingText");
-
-          // Load section
+          this.progressInfo = document.getElementById("progressInfo");
           this.loadBtn = document.getElementById("loadBtn");
-
-          // Stats
+          this.updateAllBtn = document.getElementById("updateAllBtn");
+          this.batchUpdateSection =
+            document.getElementById("batchUpdateSection");
           this.statsSection = document.getElementById("statsSection");
           this.totalCount = document.getElementById("totalCount");
           this.filteredCount = document.getElementById("filteredCount");
           this.statesCount = document.getElementById("statesCount");
           this.roadsCount = document.getElementById("roadsCount");
-
-          // Search & Filters
           this.searchSection = document.getElementById("searchSection");
           this.filtersSection = document.getElementById("filtersSection");
           this.searchInput = document.getElementById("searchInput");
@@ -774,34 +962,28 @@
           this.yearMin = document.getElementById("yearMin");
           this.yearMax = document.getElementById("yearMax");
           this.clearBtn = document.getElementById("clearBtn");
-
-          // Results
           this.resultsSection = document.getElementById("resultsSection");
           this.resultsCount = document.getElementById("resultsCount");
           this.resultsList = document.getElementById("resultsList");
           this.exportBtn = document.getElementById("exportBtn");
-
-          // Map controls
           this.mapControls = document.getElementById("mapControls");
           this.mapOverlay = document.getElementById("mapOverlay");
           this.fitMapBtn = document.getElementById("fitMapBtn");
           this.clustersBtn = document.getElementById("clustersBtn");
-
-          // Panels
+          this.showAllMarkersBtn = document.getElementById("showAllMarkersBtn");
           this.welcomePanel = document.getElementById("welcomePanel");
           this.bridgePanel = document.getElementById("bridgePanel");
         }
 
         initEventListeners() {
-          // Load
           this.loadBtn.addEventListener("click", () => this.handleLoadFiles());
-
-          // Search
+          this.updateAllBtn.addEventListener("click", () =>
+            this.updateAllFromServer()
+          );
           this.searchInput.addEventListener("input", (e) =>
             this.handleSearch(e.target.value)
           );
 
-          // Filters
           [
             this.regionFilter,
             this.stateFilter,
@@ -827,11 +1009,12 @@
 
           this.clearBtn.addEventListener("click", () => this.clearFilters());
           this.exportBtn.addEventListener("click", () => this.exportData());
-
-          // Map controls
           this.fitMapBtn.addEventListener("click", () => this.fitMapBounds());
           this.clustersBtn.addEventListener("click", () =>
             this.toggleClusters()
+          );
+          this.showAllMarkersBtn.addEventListener("click", () =>
+            this.toggleShowAllMarkers()
           );
         }
 
@@ -876,10 +1059,7 @@
             navigator.userAgent.includes("Brave");
 
           if (!supportsFileSystemAccess || isBrave) {
-            this.loadBtn.innerHTML = "⚠️ Método Alternativo";
-            this.loadBtn.addEventListener("click", () =>
-              this.showAlternativeMethod()
-            );
+            this.loadBtn.innerHTML = "Método Alternativo";
           }
         }
 
@@ -926,7 +1106,7 @@
               handle.kind === "file" &&
               name.toLowerCase().endsWith(".json")
             ) {
-              files.push(handle);
+              files.push({ handle, name });
             }
           }
 
@@ -939,12 +1119,18 @@
 
         async loadFromFiles(files) {
           this.showLoading("Carregando arquivos...");
-          await this.processFiles(files, false);
+          const filesWithNames = files.map((f) => ({
+            handle: f,
+            name: f.name,
+          }));
+          await this.processFiles(filesWithNames, false);
         }
 
         async processFiles(files, isDirectory) {
           const batchSize = 50;
           this.structures = [];
+          this.structuresMap.clear();
+          this.fileHandlesMap.clear();
 
           for (let i = 0; i < files.length; i += batchSize) {
             const batch = files.slice(i, i + batchSize);
@@ -955,15 +1141,21 @@
               )} de ${files.length}...`
             );
 
-            const promises = batch.map(async (fileHandle) => {
+            const promises = batch.map(async ({ handle, name }) => {
               try {
-                const file = isDirectory
-                  ? await fileHandle.getFile()
-                  : fileHandle;
+                const file = isDirectory ? await handle.getFile() : handle;
                 const text = await file.text();
                 const data = JSON.parse(text);
 
                 if (data.id && data.latitude && data.longitude) {
+                  this.structuresMap.set(data.id, {
+                    data,
+                    fileName: name,
+                    originalData: JSON.parse(text),
+                  });
+                  if (isDirectory) {
+                    this.fileHandlesMap.set(data.id, handle);
+                  }
                   return data;
                 }
                 return null;
@@ -988,7 +1180,6 @@
         }
 
         async processLoadedData() {
-          // Construir índices
           this.filterOptions.regions.clear();
           this.filterOptions.states.clear();
           this.filterOptions.roads.clear();
@@ -996,7 +1187,6 @@
           this.searchIndex.clear();
 
           this.structures.forEach((structure) => {
-            // Filtros
             if (structure.uf?.regiao)
               this.filterOptions.regions.add(structure.uf.regiao);
             if (structure.uf?.sigla)
@@ -1008,7 +1198,6 @@
                 structure.naturezaEstrutura.name
               );
 
-            // Índice de busca
             const searchText = [
               structure.id,
               structure.codigoSgo,
@@ -1034,7 +1223,6 @@
         }
 
         populateFilterOptions() {
-          // Regiões
           const regions = Array.from(this.filterOptions.regions).sort();
           this.regionFilter.innerHTML =
             '<option value="">Todas as regiões</option>';
@@ -1042,7 +1230,6 @@
             this.regionFilter.innerHTML += `<option value="${region}">${region}</option>`;
           });
 
-          // Estados
           const states = Array.from(this.filterOptions.states).sort();
           this.stateFilter.innerHTML =
             '<option value="">Todos os estados</option>';
@@ -1050,7 +1237,6 @@
             this.stateFilter.innerHTML += `<option value="${state}">${state}</option>`;
           });
 
-          // Rodovias
           const roads = Array.from(this.filterOptions.roads).sort((a, b) => {
             return parseInt(a) - parseInt(b);
           });
@@ -1060,7 +1246,6 @@
             this.roadFilter.innerHTML += `<option value="${road}">BR-${road}</option>`;
           });
 
-          // Estruturas
           const structures = Array.from(this.filterOptions.structures).sort();
           this.structureFilter.innerHTML =
             '<option value="">Todas as estruturas</option>';
@@ -1076,6 +1261,7 @@
           this.resultsSection.classList.remove("hidden");
           this.mapControls.classList.remove("hidden");
           this.mapOverlay.classList.remove("hidden");
+          this.batchUpdateSection.classList.remove("hidden");
           this.welcomePanel.classList.add("hidden");
         }
 
@@ -1110,7 +1296,6 @@
           const query = this.searchInput.value.trim();
           let filtered = [...this.structures];
 
-          // Busca
           if (query) {
             const terms = query
               .toLowerCase()
@@ -1122,7 +1307,6 @@
             });
           }
 
-          // Filtros
           if (this.regionFilter.value) {
             filtered = filtered.filter(
               (s) => s.uf?.regiao === this.regionFilter.value
@@ -1144,7 +1328,6 @@
             );
           }
 
-          // Filtros numéricos
           const lengthMin = parseFloat(this.lengthMin.value);
           const lengthMax = parseFloat(this.lengthMax.value);
           const kmMin = parseFloat(this.kmMin.value);
@@ -1193,9 +1376,9 @@
             info.style.background = "var(--warning-color)";
             info.style.color = "white";
             info.innerHTML = `
-                        <div class="result-title">⚠️ Mostrando ${maxDisplay} de ${this.filteredStructures.length}</div>
-                        <div class="result-info">Use filtros para refinar</div>
-                    `;
+              <div class="result-title">Mostrando ${maxDisplay} de ${this.filteredStructures.length}</div>
+              <div class="result-info">Use filtros para refinar</div>
+            `;
             this.resultsList.appendChild(info);
           }
 
@@ -1204,24 +1387,33 @@
             item.className = "result-item";
             item.dataset.id = structure.id;
 
+            const hasUpdatedKm = structure.kmAtualizado !== undefined;
+            const isModified = structure._modified;
+
             item.innerHTML = `
-                        <div class="result-title">${
-                          structure.identificacao || "Sem nome"
-                        }</div>
-                        <div class="result-info">
-                            <strong>Código:</strong> ${
-                              structure.codigoSgo || "N/A"
-                            }<br>
-                            <strong>Local:</strong> ${
-                              structure.municipio?.nome || "N/A"
-                            } - ${structure.uf?.sigla || "N/A"}<br>
-                            <strong>BR:</strong> ${
-                              structure.br?.nome
-                                ? `BR-${structure.br.nome}`
-                                : "N/A"
-                            } - Km ${structure.km || "N/A"}
-                        </div>
-                    `;
+              <div class="result-title">
+                ${structure.identificacao || "Sem nome"}
+                ${
+                  hasUpdatedKm
+                    ? '<span class="badge-updated">KM ATUALIZADO</span>'
+                    : ""
+                }
+                ${
+                  isModified
+                    ? '<span class="badge-modified">MODIFICADO</span>'
+                    : ""
+                }
+              </div>
+              <div class="result-info">
+                <strong>Código:</strong> ${structure.codigoSgo || "N/A"}<br>
+                <strong>Local:</strong> ${
+                  structure.municipio?.nome || "N/A"
+                } - ${structure.uf?.sigla || "N/A"}<br>
+                <strong>BR:</strong> ${
+                  structure.br?.nome ? `BR-${structure.br.nome}` : "N/A"
+                } - Km ${structure.km || "N/A"}
+              </div>
+            `;
 
             item.addEventListener("click", () =>
               this.selectStructure(structure)
@@ -1233,7 +1425,9 @@
         updateMap() {
           this.markersLayer.clearLayers();
 
-          const maxMarkers = 1000;
+          const maxMarkers = this.showAllMarkers
+            ? this.filteredStructures.length
+            : 1000;
           const display = this.filteredStructures.slice(0, maxMarkers);
 
           display.forEach((structure) => {
@@ -1244,29 +1438,25 @@
               ]);
 
               const popup = `
-                            <div style="min-width: 200px;">
-                                <h4>${
-                                  structure.identificacao || "Sem nome"
-                                }</h4>
-                                <p><strong>Código:</strong> ${
-                                  structure.codigoSgo || "N/A"
-                                }</p>
-                                <p><strong>Local:</strong> ${
-                                  structure.municipio?.nome || "N/A"
-                                } - ${structure.uf?.sigla || "N/A"}</p>
-                                <p><strong>BR:</strong> ${
-                                  structure.br?.nome
-                                    ? `BR-${structure.br.nome}`
-                                    : "N/A"
-                                } - Km ${structure.km || "N/A"}</p>
-                                <button onclick="window.structureManager.selectStructure(window.structureManager.structures.find(s => s.id === '${
-                                  structure.id
-                                }'))" 
-                                        style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                                    Ver Detalhes
-                                </button>
-                            </div>
-                        `;
+                <div style="min-width: 200px;">
+                  <h4>${structure.identificacao || "Sem nome"}</h4>
+                  <p><strong>Código:</strong> ${
+                    structure.codigoSgo || "N/A"
+                  }</p>
+                  <p><strong>Local:</strong> ${
+                    structure.municipio?.nome || "N/A"
+                  } - ${structure.uf?.sigla || "N/A"}</p>
+                  <p><strong>BR:</strong> ${
+                    structure.br?.nome ? `BR-${structure.br.nome}` : "N/A"
+                  } - Km ${structure.km || "N/A"}</p>
+                  <button onclick="window.structureManager.selectStructure(window.structureManager.structures.find(s => s.id === '${
+                    structure.id
+                  }'))" 
+                    style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                    Ver Detalhes
+                  </button>
+                </div>
+              `;
 
               marker.bindPopup(popup);
               this.markersLayer.addLayer(marker);
@@ -1274,10 +1464,17 @@
           });
         }
 
-        selectStructure(structure) {
+        toggleShowAllMarkers() {
+          this.showAllMarkers = !this.showAllMarkers;
+          this.showAllMarkersBtn.textContent = this.showAllMarkers
+            ? `Mostrar Primeiros 1000`
+            : `Mostrar Todos (${this.filteredStructures.length})`;
+          this.updateMap();
+        }
+
+        async selectStructure(structure) {
           this.selectedStructure = structure;
 
-          // Visual feedback na lista
           document.querySelectorAll(".result-item").forEach((item) => {
             item.classList.remove("selected");
           });
@@ -1287,19 +1484,618 @@
             item.scrollIntoView({ behavior: "smooth", block: "center" });
           }
 
-          // Mostrar detalhes
           this.showStructureDetails(structure);
 
-          // Centralizar no mapa
           if (structure.latitude && structure.longitude) {
             this.map.setView([structure.latitude, structure.longitude], 15);
           }
+
+          await this.consultarKmDNIT(structure);
+        }
+
+        extrairKmDaResposta(data, structureRoadName) {
+          console.log("DEBUG - Resposta da API:", data);
+          console.log("DEBUG - Rodovia da estrutura:", structureRoadName);
+
+          const possiveisCamposKm = [
+            "km",
+            "quilometro",
+            "km_final",
+            "km_inicial",
+            "kilometro",
+          ];
+          const possiveisCamposBR = [
+            "br",
+            "codigo_br",
+            "nome_br",
+            "rodovia",
+            "numero_br",
+          ];
+
+          const tentarExtrairKm = (item) => {
+            for (const campo of possiveisCamposKm) {
+              if (item[campo] !== undefined && item[campo] !== null) {
+                const valor = parseFloat(item[campo]);
+                if (!isNaN(valor)) {
+                  console.log(`KM encontrado no campo "${campo}":`, valor);
+                  return valor;
+                }
+              }
+            }
+
+            if (item.geometria?.coordenadas?.km !== undefined) {
+              const valor = parseFloat(item.geometria.coordenadas.km);
+              if (!isNaN(valor)) {
+                console.log(
+                  "KM encontrado em geometria.coordenadas.km:",
+                  valor
+                );
+                return valor;
+              }
+            }
+
+            return null;
+          };
+
+          const tentarExtrairBR = (item) => {
+            for (const campo of possiveisCamposBR) {
+              if (item[campo] !== undefined && item[campo] !== null) {
+                const valor = String(item[campo]).replace(/[^\d]/g, "");
+                if (valor) {
+                  return valor;
+                }
+              }
+            }
+
+            if (item.geometria?.br !== undefined) {
+              return String(item.geometria.br).replace(/[^\d]/g, "");
+            }
+
+            return null;
+          };
+
+          if (Array.isArray(data)) {
+            console.log("Array com", data.length, "itens");
+
+            for (let i = 0; i < data.length; i++) {
+              const item = data[i];
+              console.log(`Analisando item ${i}:`, item);
+
+              const brItem = tentarExtrairBR(item);
+              console.log("Rodovia extraída:", brItem);
+
+              if (brItem && brItem === structureRoadName) {
+                console.log("Rodovia correspondente encontrada!");
+                const km = tentarExtrairKm(item);
+                if (km !== null) {
+                  return km;
+                }
+              }
+            }
+
+            console.log(
+              "Nenhuma rodovia correspondente, usando primeiro item com KM"
+            );
+            for (const item of data) {
+              const km = tentarExtrairKm(item);
+              if (km !== null) {
+                return km;
+              }
+            }
+          } else if (typeof data === "object" && data !== null) {
+            console.log("Objeto único");
+            return tentarExtrairKm(data);
+          }
+
+          console.log("KM não encontrado em nenhum formato");
+          return null;
+        }
+
+        async consultarKmDNIT(structure) {
+          const kmContainer = document.getElementById("kmComparisonContainer");
+          if (!kmContainer) return;
+
+          kmContainer.innerHTML = `
+            <div class="km-loading">
+              Consultando API DNIT...
+            </div>
+          `;
+
+          try {
+            const dataRef = new Date().toISOString().split("T")[0];
+            const url = `https://servicos.dnit.gov.br/sgplan/apigeo/rotas/localizarkm?lng=${structure.longitude}&lat=${structure.latitude}&r=250&data=${dataRef}`;
+
+            console.log("Consultando API:", url);
+
+            const response = await fetch(url, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+              mode: "cors",
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erro na API DNIT: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Resposta recebida:", data);
+
+            const structureRoadName = structure.br?.nome;
+            const kmAtualizado = this.extrairKmDaResposta(
+              data,
+              structureRoadName
+            );
+
+            if (kmAtualizado !== null && !isNaN(kmAtualizado)) {
+              structure.kmAtualizado = kmAtualizado;
+              structure.dnitApiResponse = data;
+              this.mostrarComparacaoKm(structure);
+            } else {
+              throw new Error(
+                "KM não encontrado ou inválido na resposta da API"
+              );
+            }
+          } catch (error) {
+            console.error("Erro ao consultar DNIT:", error);
+            kmContainer.innerHTML = `
+              <div class="km-error">
+                Erro ao consultar API DNIT: ${error.message}
+              </div>
+            `;
+          }
+        }
+
+        mostrarComparacaoKm(structure) {
+          const kmContainer = document.getElementById("kmComparisonContainer");
+          if (!kmContainer) return;
+
+          const kmOriginal = parseFloat(structure.km) || 0;
+          const kmAtualizado = parseFloat(structure.kmAtualizado) || 0;
+          const diferenca = Math.abs(kmAtualizado - kmOriginal);
+          const diferencaTexto =
+            kmAtualizado > kmOriginal
+              ? `+${diferenca.toFixed(4)} km`
+              : `-${diferenca.toFixed(4)} km`;
+
+          kmContainer.innerHTML = `
+            <div class="km-comparison">
+              <div class="km-comparison-title">Comparação de Quilometragem</div>
+              <div class="km-values">
+                <div class="km-value">
+                  <div class="km-label">KM Original</div>
+                  <div class="km-number">${kmOriginal.toFixed(4)}</div>
+                </div>
+                <div class="km-value">
+                  <div class="km-label">KM Atualizado (DNIT)</div>
+                  <div class="km-number">${kmAtualizado.toFixed(4)}</div>
+                </div>
+              </div>
+              ${
+                diferenca > 0.001
+                  ? `
+                <div class="km-difference">
+                  Diferença: ${diferencaTexto}
+                </div>
+              `
+                  : `
+                <div class="km-difference">
+                  KMs idênticos
+                </div>
+              `
+              }
+            </div>
+            <button class="btn btn-success btn-full" id="downloadUpdatedJsonBtn">
+              Baixar JSON Atualizado
+            </button>
+            <details>
+              <summary style="cursor: pointer; margin-top: 8px; font-size: 11px; opacity: 0.7;">Ver resposta da API</summary>
+              <div class="km-debug">
+                ${JSON.stringify(structure.dnitApiResponse, null, 2)}
+              </div>
+            </details>
+          `;
+
+          document
+            .getElementById("downloadUpdatedJsonBtn")
+            .addEventListener("click", () => {
+              this.downloadUpdatedJson(structure);
+            });
+        }
+
+        async fetchStructureFromServer(structureId) {
+          const url = `https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/CadastroOae/${structureId}/dadosbasicos`;
+
+          try {
+            const response = await fetch(url, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+              mode: "cors",
+            });
+
+            if (!response.ok) {
+              throw new Error(
+                `HTTP ${response.status}: ${response.statusText}`
+              );
+            }
+
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error(`Erro ao buscar estrutura ${structureId}:`, error);
+            return null;
+          }
+        }
+
+        compareStructures(local, server) {
+          const differences = [];
+
+          const compareField = (path, localValue, serverValue) => {
+            if (JSON.stringify(localValue) !== JSON.stringify(serverValue)) {
+              differences.push({
+                field: path,
+                local: localValue,
+                server: serverValue,
+              });
+            }
+          };
+
+          const fieldsToCompare = [
+            "identificacao",
+            "codigoSgo",
+            "km",
+            "comprimento",
+            "largura",
+            "anoConstrucao",
+            "altitude",
+            "latitude",
+            "longitude",
+          ];
+
+          fieldsToCompare.forEach((field) => {
+            compareField(field, local[field], server[field]);
+          });
+
+          if (local.municipio?.nome !== server.municipio?.nome) {
+            compareField(
+              "municipio.nome",
+              local.municipio?.nome,
+              server.municipio?.nome
+            );
+          }
+
+          if (local.uf?.sigla !== server.uf?.sigla) {
+            compareField("uf.sigla", local.uf?.sigla, server.uf?.sigla);
+          }
+
+          if (local.br?.nome !== server.br?.nome) {
+            compareField("br.nome", local.br?.nome, server.br?.nome);
+          }
+
+          return differences;
+        }
+
+        showComparisonModal(structure, serverData, differences) {
+          const modal = document.createElement("div");
+          modal.className = "comparison-modal";
+          modal.innerHTML = `
+            <div class="comparison-content">
+              <div class="comparison-header">
+                <h2>Comparação: ${structure.identificacao || structure.id}</h2>
+                <button class="comparison-close" id="closeComparisonBtn">X</button>
+              </div>
+              
+              ${
+                differences.length === 0
+                  ? `
+                <div style="text-align: center; padding: 32px;">
+                  <h3 style="color: var(--success-color);">Dados idênticos!</h3>
+                  <p>Os dados locais estão sincronizados com o servidor.</p>
+                </div>
+              `
+                  : `
+                <div>
+                  <p><strong>${
+                    differences.length
+                  } diferenças encontradas:</strong></p>
+                  <table class="diff-table">
+                    <thead>
+                      <tr>
+                        <th>Campo</th>
+                        <th>Valor Local</th>
+                        <th>Valor Servidor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${differences
+                        .map(
+                          (diff) => `
+                        <tr class="diff-changed">
+                          <td><strong>${diff.field}</strong></td>
+                          <td>${
+                            diff.local !== undefined && diff.local !== null
+                              ? diff.local
+                              : "N/A"
+                          }</td>
+                          <td>${
+                            diff.server !== undefined && diff.server !== null
+                              ? diff.server
+                              : "N/A"
+                          }</td>
+                        </tr>
+                      `
+                        )
+                        .join("")}
+                    </tbody>
+                  </table>
+                  <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button class="btn btn-success btn-full" id="applyServerDataBtn">
+                      Aplicar Dados do Servidor
+                    </button>
+                    <button class="btn btn-secondary btn-full" id="downloadServerJsonBtn">
+                      Baixar JSON do Servidor
+                    </button>
+                  </div>
+                </div>
+              `
+              }
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+
+          document
+            .getElementById("closeComparisonBtn")
+            .addEventListener("click", () => {
+              document.body.removeChild(modal);
+            });
+
+          if (differences.length > 0) {
+            document
+              .getElementById("applyServerDataBtn")
+              .addEventListener("click", () => {
+                this.applyServerData(structure, serverData);
+                document.body.removeChild(modal);
+              });
+
+            document
+              .getElementById("downloadServerJsonBtn")
+              .addEventListener("click", () => {
+                this.downloadServerJson(structure, serverData);
+              });
+          }
+        }
+
+        applyServerData(structure, serverData) {
+          const structureInfo = this.structuresMap.get(structure.id);
+          if (!structureInfo) return;
+
+          Object.assign(structure, serverData);
+          structureInfo.data = serverData;
+          structure._modified = true;
+
+          this.showStructureDetails(structure);
+          this.updateResults();
+
+          alert(
+            "Dados atualizados com sucesso! Não esqueça de baixar o JSON atualizado."
+          );
+        }
+
+        downloadServerJson(structure, serverData) {
+          const structureInfo = this.structuresMap.get(structure.id);
+          if (!structureInfo) return;
+
+          const jsonString = JSON.stringify(serverData, null, 2);
+          const blob = new Blob([jsonString], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${structureInfo.fileName}_servidor.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+
+        async checkServerUpdates(structure) {
+          const checkContainer = document.getElementById(
+            "serverCheckContainer"
+          );
+          if (!checkContainer) return;
+
+          checkContainer.innerHTML = `
+            <div class="km-loading">
+              Verificando atualizações no servidor...
+            </div>
+          `;
+
+          const serverData = await this.fetchStructureFromServer(structure.id);
+
+          if (!serverData) {
+            checkContainer.innerHTML = `
+              <div class="km-error">
+                Erro ao buscar dados do servidor
+              </div>
+            `;
+            return;
+          }
+
+          const differences = this.compareStructures(structure, serverData);
+
+          checkContainer.innerHTML = `
+            <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin: 12px 0;">
+              <div style="font-weight: 600; margin-bottom: 8px;">
+                ${
+                  differences.length === 0
+                    ? "Dados sincronizados com o servidor"
+                    : `${differences.length} diferenças encontradas`
+                }
+              </div>
+              <button class="btn btn-info btn-full" id="showComparisonBtn">
+                Ver Detalhes da Comparação
+              </button>
+            </div>
+          `;
+
+          document
+            .getElementById("showComparisonBtn")
+            .addEventListener("click", () => {
+              this.showComparisonModal(structure, serverData, differences);
+            });
+        }
+
+        async updateAllFromServer() {
+          if (
+            !confirm(
+              `Deseja atualizar todas as ${this.structures.length} estruturas do servidor?\n\nEsta operação pode demorar alguns minutos.`
+            )
+          ) {
+            return;
+          }
+
+          this.showLoading("Iniciando atualização em lote...");
+
+          let success = 0;
+          let errors = 0;
+          let updated = 0;
+
+          for (let i = 0; i < this.structures.length; i++) {
+            const structure = this.structures[i];
+
+            this.updateLoadingText(
+              `Processando ${i + 1} de ${this.structures.length}...`
+            );
+            this.progressInfo.textContent = `Sucessos: ${success} | Erros: ${errors} | Atualizados: ${updated}`;
+
+            try {
+              const serverData = await this.fetchStructureFromServer(
+                structure.id
+              );
+
+              if (serverData) {
+                const differences = this.compareStructures(
+                  structure,
+                  serverData
+                );
+
+                if (differences.length > 0) {
+                  Object.assign(structure, serverData);
+                  const structureInfo = this.structuresMap.get(structure.id);
+                  if (structureInfo) {
+                    structureInfo.data = serverData;
+                  }
+                  structure._modified = true;
+                  updated++;
+                }
+
+                success++;
+              } else {
+                errors++;
+              }
+            } catch (error) {
+              console.error(`Erro ao atualizar ${structure.id}:`, error);
+              errors++;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 300));
+          }
+
+          this.hideLoading();
+          this.updateResults();
+          this.updateMap();
+
+          alert(
+            `Atualização concluída!\n\nSucessos: ${success}\nErros: ${errors}\nEstrutruras atualizadas: ${updated}\n\nNão esqueça de baixar os JSONs atualizados.`
+          );
+        }
+
+        downloadUpdatedJson(structure) {
+          const structureInfo = this.structuresMap.get(structure.id);
+          if (!structureInfo) {
+            alert("Erro: Estrutura não encontrada");
+            return;
+          }
+
+          const updatedData = JSON.parse(JSON.stringify(structureInfo.data));
+
+          if (
+            structure.kmAtualizado !== undefined &&
+            !isNaN(structure.kmAtualizado)
+          ) {
+            updatedData.km = parseFloat(structure.kmAtualizado);
+          }
+
+          if (this.modifiedFields.has(structure.id)) {
+            const modifications = this.modifiedFields.get(structure.id);
+            Object.assign(updatedData, modifications);
+          }
+
+          const jsonString = JSON.stringify(updatedData, null, 2);
+          const blob = new Blob([jsonString], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = structureInfo.fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          alert(`Arquivo "${structureInfo.fileName}" baixado com sucesso!`);
+        }
+
+        toggleEditMode() {
+          this.editMode = !this.editMode;
+          this.showStructureDetails(this.selectedStructure);
+        }
+
+        handleFieldEdit(structure, field, value) {
+          if (!this.modifiedFields.has(structure.id)) {
+            this.modifiedFields.set(structure.id, {});
+          }
+
+          const modifications = this.modifiedFields.get(structure.id);
+          modifications[field] = value;
+          structure[field] = value;
+          structure._modified = true;
+
+          this.updateResults();
+        }
+
+        saveEdits(structure) {
+          if (this.modifiedFields.has(structure.id)) {
+            const modifications = this.modifiedFields.get(structure.id);
+            Object.assign(structure, modifications);
+
+            const structureInfo = this.structuresMap.get(structure.id);
+            if (structureInfo) {
+              Object.assign(structureInfo.data, modifications);
+            }
+
+            alert(
+              "Alterações salvas! Baixe o JSON atualizado para persistir as mudanças."
+            );
+          }
+
+          this.editMode = false;
+          this.showStructureDetails(structure);
+        }
+
+        cancelEdits(structure) {
+          this.modifiedFields.delete(structure.id);
+          this.editMode = false;
+
+          const structureInfo = this.structuresMap.get(structure.id);
+          if (structureInfo) {
+            Object.assign(structure, structureInfo.originalData);
+          }
+
+          this.showStructureDetails(structure);
         }
 
         showStructureDetails(structure) {
           this.bridgePanel.classList.remove("hidden");
 
-          // Função auxiliar para formatar arrays
           const formatArray = (arr, fieldName) => {
             if (!arr || !Array.isArray(arr) || arr.length === 0) return "N/A";
             return arr
@@ -1307,216 +2103,173 @@
               .join(", ");
           };
 
-          // Função auxiliar para formatar coordenadas
           const formatCoordinate = (coord) => {
             if (!coord) return "N/A";
             return typeof coord === "number" ? coord.toFixed(6) : coord;
           };
 
+          const createEditableField = (label, field, value, type = "text") => {
+            if (!this.editMode) {
+              return `<div><strong>${label}:</strong><br>${
+                value || "N/A"
+              }</div>`;
+            }
+
+            return `
+              <div class="editable-field">
+                <strong>${label}:</strong><br>
+                <input 
+                  type="${type}" 
+                  class="form-input" 
+                  data-field="${field}" 
+                  value="${value || ""}"
+                  onchange="window.structureManager.handleFieldEdit(window.structureManager.selectedStructure, '${field}', this.value)"
+                />
+              </div>
+            `;
+          };
+
           this.bridgePanel.innerHTML = `
-                    <div class="bridge-card">
-                        <div class="bridge-header">
-                            <div class="bridge-title">${
-                              structure.identificacao || "Estrutura sem nome"
-                            }</div>
-                            <div class="bridge-code">ID: ${
-                              structure.id || "N/A"
-                            }</div>
-                            <div class="bridge-code">Código SGO: ${
-                              structure.codigoSgo || "N/A"
-                            }</div>
-                            ${
-                              structure.codigoSnv
-                                ? `<div class="bridge-code">Código SNV: ${
-                                    structure.codigoSnv
-                                  } (${structure.versaoSnv || "N/A"})</div>`
-                                : ""
-                            }
-                        </div>
-                        
-                        <div class="bridge-section">
-                            <div class="bridge-section-title">📍 Localização</div>
-                            <div class="bridge-info">
-                                <div class="bridge-grid">
-                                    <div><strong>Município:</strong><br>${
-                                      structure.municipio?.nome || "N/A"
-                                    }</div>
-                                    <div><strong>UF:</strong><br>${
-                                      structure.uf?.name || "N/A"
-                                    } (${structure.uf?.sigla || "N/A"})</div>
-                                </div>
-                                <div class="bridge-grid">
-                                    <div><strong>Região:</strong><br>${
-                                      structure.uf?.regiao || "N/A"
-                                    }</div>
-                                    <div><strong>Rodovia:</strong><br>${
-                                      structure.br?.nome
-                                        ? `BR-${structure.br.nome}`
-                                        : "N/A"
-                                    }</div>
-                                </div>
-                                <div class="bridge-grid">
-                                    <div><strong>Km:</strong><br>${
-                                      structure.km || "N/A"
-                                    }</div>
-                                    <div><strong>Altitude:</strong><br>${
-                                      structure.altitude || "N/A"
-                                    }m</div>
-                                </div>
-                                <div class="bridge-grid">
-                                    <div><strong>Latitude:</strong><br>${formatCoordinate(
-                                      structure.latitude
-                                    )}</div>
-                                    <div><strong>Longitude:</strong><br>${formatCoordinate(
-                                      structure.longitude
-                                    )}</div>
-                                </div>
-                                ${
-                                  structure.municipio?.ibge
-                                    ? `<div><strong>Código IBGE:</strong><br>${structure.municipio.ibge}</div>`
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                        
-                        <div class="bridge-section">
-                            <div class="bridge-section-title">🏗️ Características Técnicas</div>
-                            <div class="bridge-info">
-                                <div class="bridge-grid">
-                                    <div><strong>Natureza:</strong><br>${
-                                      structure.naturezaEstrutura?.name || "N/A"
-                                    }</div>
-                                    <div><strong>Ano Construção:</strong><br>${
-                                      structure.anoConstrucao || "N/A"
-                                    }</div>
-                                </div>
-                                <div class="bridge-grid">
-                                    <div><strong>Comprimento:</strong><br>${
-                                      structure.comprimento
-                                        ? `${structure.comprimento}m`
-                                        : "N/A"
-                                    }</div>
-                                    <div><strong>Largura:</strong><br>${
-                                      structure.largura
-                                        ? `${structure.largura}m`
-                                        : "N/A"
-                                    }</div>
-                                </div>
-                                ${
-                                  structure.tipoTrem
-                                    ? `<div class="bridge-grid">
-                                    <div><strong>Tipo Trem:</strong><br>${
-                                      structure.tipoTrem.name || "N/A"
-                                    }</div>
-                                    <div><strong>Classe:</strong><br>${
-                                      structure.tipoTrem.value || "N/A"
-                                    }</div>
-                                </div>`
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                        
-                        <div class="bridge-section">
-                            <div class="bridge-section-title">🏛️ Administração</div>
-                            <div class="bridge-info">
-                                <div><strong>Administradora:</strong><br>${
-                                  structure.administradora?.razaoSocial || "N/A"
-                                }</div>
-                                ${
-                                  structure.administradora?.nomeFantasia &&
-                                  structure.administradora.nomeFantasia !==
-                                    structure.administradora.razaoSocial
-                                    ? `<div><strong>Nome Fantasia:</strong><br>${structure.administradora.nomeFantasia}</div>`
-                                    : ""
-                                }
-                                ${
-                                  structure.tipoAdministracao
-                                    ? `<div><strong>Tipo Administração:</strong><br>${
-                                        structure.tipoAdministracao.name ||
-                                        "N/A"
-                                      }</div>`
-                                    : ""
-                                }
-                                <div><strong>Superintendência:</strong><br>${
-                                  structure.superintendencia?.nome || "N/A"
-                                }</div>
-                                ${
-                                  structure.superintendencia?.sigla
-                                    ? `<div><strong>Sigla:</strong><br>${structure.superintendencia.sigla}</div>`
-                                    : ""
-                                }
-                                ${
-                                  structure.unidadeLocal
-                                    ? `<div><strong>Unidade Local:</strong><br>${
-                                        structure.unidadeLocal.nome || "N/A"
-                                      }</div>`
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                        
-                        <div class="bridge-section">
-                            <div class="bridge-section-title">👷 Projeto e Construção</div>
-                            <div class="bridge-info">
-                                <div class="bridge-grid">
-                                    <div><strong>Projetista:</strong><br>${
-                                      structure.projetista?.razaoSocial || "N/A"
-                                    }</div>
-                                    <div><strong>Construtora:</strong><br>${
-                                      structure.construtora?.razaoSocial ||
-                                      "N/A"
-                                    }</div>
-                                </div>
-                                ${
-                                  structure.localizacaoProjeto
-                                    ? `<div><strong>Localização Projeto:</strong><br>${structure.localizacaoProjeto}</div>`
-                                    : ""
-                                }
-                                ${
-                                  structure.localizacaoDocumentosConstrucao
-                                    ? `<div><strong>Docs. Construção:</strong><br>${structure.localizacaoDocumentosConstrucao}</div>`
-                                    : ""
-                                }
-                                ${
-                                  structure.localizacaoDocumentosDiversos
-                                    ? `<div><strong>Docs. Diversos:</strong><br>${structure.localizacaoDocumentosDiversos}</div>`
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                        
-                        <div class="bridge-section">
-                            <div class="bridge-section-title">🔍 Inspeção</div>
-                            <div class="bridge-info">
-                                ${
-                                  structure.periodoInspecao
-                                    ? `<div><strong>Período Inspeção:</strong><br>A cada ${structure.periodoInspecao} anos</div>`
-                                    : ""
-                                }
-                                ${
-                                  structure.melhorEpocaInicial ||
-                                  structure.melhorEpocaFinal
-                                    ? `<div><strong>Melhor Época:</strong><br>${
-                                        structure.melhorEpocaInicial || "N/A"
-                                      } a ${
-                                        structure.melhorEpocaFinal || "N/A"
-                                      }</div>`
-                                    : ""
-                                }
-                                ${
-                                  structure.equipamentosNecessarios &&
-                                  structure.equipamentosNecessarios.length > 0
-                                    ? `<div><strong>Equipamentos Necessários:</strong><br>${formatArray(
-                                        structure.equipamentosNecessarios,
-                                        "name"
-                                      )}</div>`
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
+            <div class="bridge-card ${this.editMode ? "edit-mode" : ""}">
+              <div class="bridge-header">
+                <div class="bridge-title">${
+                  structure.identificacao || "Estrutura sem nome"
+                }</div>
+                <div class="bridge-code">ID: ${structure.id || "N/A"}</div>
+                <div class="bridge-code">Código SGO: ${
+                  structure.codigoSgo || "N/A"
+                }</div>
+                ${
+                  structure.codigoSnv
+                    ? `<div class="bridge-code">Código SNV: ${
+                        structure.codigoSnv
+                      } (${structure.versaoSnv || "N/A"})</div>`
+                    : ""
+                }
+                
+                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                  ${
+                    !this.editMode
+                      ? `
+                    <button class="btn btn-info btn-small" onclick="window.structureManager.toggleEditMode()">
+                      Editar Dados
+                    </button>
+                    <button class="btn btn-info btn-small" onclick="window.structureManager.checkServerUpdates(window.structureManager.selectedStructure)">
+                      Verificar Atualizações
+                    </button>
+                  `
+                      : `
+                    <button class="btn btn-success btn-small" onclick="window.structureManager.saveEdits(window.structureManager.selectedStructure)">
+                      Salvar
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="window.structureManager.cancelEdits(window.structureManager.selectedStructure)">
+                      Cancelar
+                    </button>
+                  `
+                  }
+                </div>
+              </div>
+              
+              <div id="kmComparisonContainer"></div>
+              <div id="serverCheckContainer"></div>
+              
+              <div class="bridge-section">
+                <div class="bridge-section-title">Localização</div>
+                <div class="bridge-info">
+                  <div class="bridge-grid">
+                    ${createEditableField(
+                      "Município",
+                      "municipio.nome",
+                      structure.municipio?.nome
+                    )}
+                    ${createEditableField(
+                      "UF",
+                      "uf.sigla",
+                      structure.uf?.sigla
+                    )}
+                  </div>
+                  <div class="bridge-grid">
+                    ${createEditableField(
+                      "Região",
+                      "uf.regiao",
+                      structure.uf?.regiao
+                    )}
+                    ${createEditableField(
+                      "Rodovia",
+                      "br.nome",
+                      structure.br?.nome
+                    )}
+                  </div>
+                  <div class="bridge-grid">
+                    ${createEditableField("Km", "km", structure.km, "number")}
+                    ${createEditableField(
+                      "Altitude",
+                      "altitude",
+                      structure.altitude,
+                      "number"
+                    )}
+                  </div>
+                  <div class="bridge-grid">
+                    <div><strong>Latitude:</strong><br>${formatCoordinate(
+                      structure.latitude
+                    )}</div>
+                    <div><strong>Longitude:</strong><br>${formatCoordinate(
+                      structure.longitude
+                    )}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bridge-section">
+                <div class="bridge-section-title">Características Técnicas</div>
+                <div class="bridge-info">
+                  <div class="bridge-grid">
+                    ${createEditableField(
+                      "Natureza",
+                      "naturezaEstrutura.name",
+                      structure.naturezaEstrutura?.name
+                    )}
+                    ${createEditableField(
+                      "Ano Construção",
+                      "anoConstrucao",
+                      structure.anoConstrucao,
+                      "number"
+                    )}
+                  </div>
+                  <div class="bridge-grid">
+                    ${createEditableField(
+                      "Comprimento (m)",
+                      "comprimento",
+                      structure.comprimento,
+                      "number"
+                    )}
+                    ${createEditableField(
+                      "Largura (m)",
+                      "largura",
+                      structure.largura,
+                      "number"
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bridge-section">
+                <div class="bridge-section-title">Administração</div>
+                <div class="bridge-info">
+                  ${createEditableField(
+                    "Administradora",
+                    "administradora.razaoSocial",
+                    structure.administradora?.razaoSocial
+                  )}
+                  ${createEditableField(
+                    "Superintendência",
+                    "superintendencia.nome",
+                    structure.superintendencia?.nome
+                  )}
+                </div>
+              </div>
+            </div>
+          `;
         }
 
         clearFilters() {
@@ -1602,8 +2355,8 @@
         toggleClusters() {
           this.clustersEnabled = !this.clustersEnabled;
           this.clustersBtn.textContent = this.clustersEnabled
-            ? "📍 Clusters"
-            : "📍 Individuals";
+            ? "Clusters"
+            : "Individuals";
 
           if (this.clustersEnabled) {
             this.map.addLayer(this.markersLayer);
@@ -1617,6 +2370,7 @@
 
         showLoading(text) {
           this.loadingText.textContent = text;
+          this.progressInfo.textContent = "";
           this.loadingOverlay.classList.remove("hidden");
         }
 
@@ -1629,7 +2383,6 @@
         }
       }
 
-      // Inicializar aplicação
       window.structureManager = new StructureManager();
     </script>
   </body>
