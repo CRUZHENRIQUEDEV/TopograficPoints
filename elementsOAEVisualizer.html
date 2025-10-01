@@ -1,4 +1,4 @@
-<!-- Versão: 1.9 -->
+<!-- Versão: 2.0 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -180,6 +180,37 @@
             border-color: #28a745;
         }
 
+        .elemento-group.ordem-alterada {
+            background: #fff3cd;
+            border-color: #ffc107;
+            border-width: 3px;
+        }
+
+        .elemento-group.highlight {
+            animation: highlight 0.6s ease;
+        }
+
+        @keyframes highlight {
+            0%, 100% { background: #f8f9fa; }
+            50% { background: #d0e7ff; }
+        }
+
+        .controles-ordem {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .controles-ordem span {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
         .elemento-header {
             display: flex;
             justify-content: space-between;
@@ -267,9 +298,24 @@
             flex-wrap: wrap;
         }
 
+        .dimensao-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dimensao-label {
+            font-size: 9px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
         .dimensao {
             background: #e7f3ff;
-            padding: 4px 12px;
+            padding: 6px 12px;
             border-radius: 4px;
             font-family: monospace;
             font-weight: 500;
@@ -302,6 +348,32 @@
 
         .dimensao input:focus {
             outline: none;
+        }
+
+        .btn-seta {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-seta:hover:not(:disabled) {
+            background: #764ba2;
+            transform: scale(1.1);
+        }
+
+        .btn-seta:disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            cursor: not-allowed;
         }
 
         .collapse-icon {
@@ -342,7 +414,7 @@
         <div class="header">
             <h1>📊 Visualizador SGE - Elementos</h1>
             <p>Organize e gerencie dimensões de elementos estruturais</p>
-            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">💡 Clique nas dimensões para editá-las</p>
+            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">💡 Clique nas dimensões para editá-las | Use as setas para reordenar</p>
         </div>
 
         <div class="upload-section">
@@ -363,6 +435,9 @@
     <script>
         const estadoCopiado = {};
         let dadosGlobais = {};
+        let nomesColunas = [];
+        let ordemPorTipo = {};
+        let tiposComOrdemAlterada = new Set();
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -387,6 +462,7 @@
             let grupoAtual = null;
             const dados = {};
             const transicoesDetectadas = new Set();
+            nomesColunas = [];
 
             linhas.forEach((linha) => {
                 if (!linha || linha.trim() === '') return;
@@ -394,10 +470,14 @@
                 const partes = linha.split('\t');
                 const linhaUpper = linha.toUpperCase();
                 
+                // Captura nomes das colunas
+                if (linhaUpper.includes('MARK') && linhaUpper.includes('CODIGO') && linhaUpper.includes('NOME DO TIPO')) {
+                    nomesColunas = partes.map(p => p.trim()).filter(p => p !== '');
+                    return;
+                }
+                
                 // Pula cabeçalhos e linhas de total
                 if (linhaUpper.includes('ELEMENTOS SGE') || 
-                    (linhaUpper.includes('CODIGO') && linhaUpper.includes('NOME DO TIPO')) ||
-                    (linhaUpper.includes('MARK') && linhaUpper.includes('CODIGO')) ||
                     linhaUpper.includes('GRAND TOTAL')) {
                     return;
                 }
@@ -433,10 +513,6 @@
                     let nomeTipo = '';
                     let transicao = '';
                     let dimensoesInicio = 3;
-                    
-                    // Detecta formato: pode ter MARK ou não
-                    // Se primeira coluna vazia e segunda tem conteúdo não numérico = sem MARK
-                    // Se primeira coluna tem conteúdo e segunda tem conteúdo não numérico = com MARK
                     
                     const col0 = partes[0]?.trim() || '';
                     const col1 = partes[1]?.trim() || '';
@@ -481,19 +557,21 @@
                         for (let i = dimensoesInicio; i < partes.length; i++) {
                             const valor = partes[i]?.trim();
                             if (valor && valor !== '') {
-                                dimensoes.push(valor);
+                                const nomeColuna = nomesColunas[i] || `DIM_${i}`;
+                                dimensoes.push({
+                                    nome: nomeColuna,
+                                    valor: valor
+                                });
                             }
                         }
                         
-                        // Detecta transições para separação em subgrupos
+                        // Detecta transições
                         if (transicao && transicao.match(/TRANSIÇÃO/i)) {
                             transicoesDetectadas.add(transicao);
                         }
                         
-                        // Determina o grupo final
                         let grupoFinal = grupoAtual;
                         
-                        // Se é grupo de transição e tem transição, cria subgrupo
                         if (grupoAtual.includes('TRANSIÇÃO') && transicao && transicao.match(/TRANSIÇÃO/i)) {
                             grupoFinal = `${grupoAtual} - ${transicao}`;
                         }
@@ -610,6 +688,9 @@
                         if (estadoCopiado[chaveElemento]) {
                             elementoGroup.classList.add('copiado');
                         }
+                        if (tiposComOrdemAlterada.has(nomeTipo)) {
+                            elementoGroup.classList.add('ordem-alterada');
+                        }
 
                         const elementoHeader = document.createElement('div');
                         elementoHeader.className = 'elemento-header';
@@ -621,6 +702,51 @@
                             <span class="elemento-contador">Qtd: ${elementos.length}</span>
                         `;
                         
+                        // Controles de ordem (apenas um conjunto por elemento)
+                        const controlesOrdem = document.createElement('div');
+                        controlesOrdem.className = 'controles-ordem';
+                        
+                        const labelOrdem = document.createElement('span');
+                        labelOrdem.textContent = 'Ordem das Dimensões:';
+                        controlesOrdem.appendChild(labelOrdem);
+                        
+                        // Aplicar ordem personalizada se existir para pegar dimensões corretas
+                        let dimensoesReferencia = [...elementos[0].dimensoes];
+                        if (ordemPorTipo[nomeTipo]) {
+                            const novaOrdem = [];
+                            ordemPorTipo[nomeTipo].forEach(indice => {
+                                if (elementos[0].dimensoes[indice]) {
+                                    novaOrdem.push(elementos[0].dimensoes[indice]);
+                                }
+                            });
+                            dimensoesReferencia = novaOrdem;
+                        }
+                        
+                        dimensoesReferencia.forEach((dim, idx) => {
+                            const btnMoverEsq = document.createElement('button');
+                            btnMoverEsq.className = 'btn-seta';
+                            btnMoverEsq.innerHTML = '←';
+                            btnMoverEsq.disabled = idx === 0;
+                            btnMoverEsq.title = `Mover ${dim.nome} para esquerda`;
+                            btnMoverEsq.onclick = () => moverDimensao(tramo, grupo, nomeTipo, 0, idx, -1);
+                            
+                            const labelDim = document.createElement('span');
+                            labelDim.textContent = dim.nome;
+                            labelDim.style.fontSize = '10px';
+                            labelDim.style.color = '#495057';
+                            
+                            const btnMoverDir = document.createElement('button');
+                            btnMoverDir.className = 'btn-seta';
+                            btnMoverDir.innerHTML = '→';
+                            btnMoverDir.disabled = idx === dimensoesReferencia.length - 1;
+                            btnMoverDir.title = `Mover ${dim.nome} para direita`;
+                            btnMoverDir.onclick = () => moverDimensao(tramo, grupo, nomeTipo, 0, idx, 1);
+                            
+                            controlesOrdem.appendChild(btnMoverEsq);
+                            controlesOrdem.appendChild(labelDim);
+                            controlesOrdem.appendChild(btnMoverDir);
+                        });
+                        
                         const btnCopiar = document.createElement('button');
                         btnCopiar.className = 'btn-copiar';
                         if (estadoCopiado[chaveElemento]) {
@@ -630,6 +756,7 @@
                         btnCopiar.onclick = () => copiarDimensoes(elementos, chaveElemento, btnCopiar, elementoGroup);
                         
                         elementoHeader.appendChild(elementoNome);
+                        elementoHeader.appendChild(controlesOrdem);
                         elementoHeader.appendChild(btnCopiar);
                         
                         const elementoItems = document.createElement('div');
@@ -653,17 +780,41 @@
                             const dimensoesDiv = document.createElement('div');
                             dimensoesDiv.className = 'item-dimensoes';
                             
-                            item.dimensoes.forEach((dim, dimIndex) => {
+                            // Aplicar ordem personalizada se existir
+                            let dimensoesOrdenadas = [...item.dimensoes];
+                            if (ordemPorTipo[nomeTipo]) {
+                                const novaOrdem = [];
+                                ordemPorTipo[nomeTipo].forEach(indice => {
+                                    if (dimensoesOrdenadas[indice]) {
+                                        novaOrdem.push(dimensoesOrdenadas[indice]);
+                                    }
+                                });
+                                dimensoesOrdenadas = novaOrdem;
+                            }
+                            
+                            dimensoesOrdenadas.forEach((dim, dimIndex) => {
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'dimensao-wrapper';
+                                
+                                const label = document.createElement('div');
+                                label.className = 'dimensao-label';
+                                label.textContent = dim.nome;
+                                wrapper.appendChild(label);
+                                
+                                // Encontrar índice original da dimensão atual
+                                const indiceOriginal = item.dimensoes.findIndex(d => d.nome === dim.nome && d.valor === dim.valor);
+                                
+                                // Dimensão
                                 const dimensao = document.createElement('span');
                                 dimensao.className = 'dimensao';
-                                dimensao.textContent = dim;
+                                dimensao.textContent = dim.valor;
                                 dimensao.title = 'Clique para editar';
-                                
                                 dimensao.onclick = function() {
-                                    editarDimensao(dimensao, tramo, grupo, nomeTipo, itemIndex, dimIndex);
+                                    editarDimensao(dimensao, tramo, grupo, nomeTipo, itemIndex, indiceOriginal);
                                 };
                                 
-                                dimensoesDiv.appendChild(dimensao);
+                                wrapper.appendChild(dimensao);
+                                dimensoesDiv.appendChild(wrapper);
                             });
                             
                             elementoItem.appendChild(dimensoesDiv);
@@ -686,6 +837,70 @@
             mostrarToast('Dados processados com sucesso!');
         }
 
+        function moverDimensao(tramo, grupo, nomeTipo, itemIndex, dimIndex, direcao) {
+            const novoIndice = dimIndex + direcao;
+            
+            // Pegar um elemento de referência para saber o tamanho original
+            const itemReferencia = dadosGlobais[tramo][grupo][nomeTipo][itemIndex];
+            const totalDimensoes = itemReferencia.dimensoes.length;
+            
+            // Criar ou atualizar ordem global para este tipo
+            if (!ordemPorTipo[nomeTipo]) {
+                // Inicializar com ordem original [0, 1, 2, 3, ...]
+                ordemPorTipo[nomeTipo] = Array.from({length: totalDimensoes}, (_, i) => i);
+            }
+            
+            // Trocar posições na ordem global
+            const tempOrdem = ordemPorTipo[nomeTipo][dimIndex];
+            ordemPorTipo[nomeTipo][dimIndex] = ordemPorTipo[nomeTipo][novoIndice];
+            ordemPorTipo[nomeTipo][novoIndice] = tempOrdem;
+            
+            // Marcar este tipo como tendo ordem alterada
+            tiposComOrdemAlterada.add(nomeTipo);
+            
+            // Aplicar a nova ordem a TODOS os elementos do mesmo tipo em TODOS os tramos
+            let totalAfetados = 0;
+            let tramosAfetados = new Set();
+            
+            Object.keys(dadosGlobais).forEach(t => {
+                Object.keys(dadosGlobais[t]).forEach(g => {
+                    if (dadosGlobais[t][g][nomeTipo]) {
+                        dadosGlobais[t][g][nomeTipo].forEach(elemento => {
+                            // Guardar dimensões originais
+                            const dimensoesOriginais = [...elemento.dimensoes];
+                            
+                            // Reordenar baseado na ordem global
+                            const dimensoesReordenadas = [];
+                            ordemPorTipo[nomeTipo].forEach(indiceOriginal => {
+                                if (dimensoesOriginais[indiceOriginal]) {
+                                    dimensoesReordenadas.push(dimensoesOriginais[indiceOriginal]);
+                                }
+                            });
+                            
+                            elemento.dimensoes = dimensoesReordenadas;
+                            totalAfetados++;
+                        });
+                        tramosAfetados.add(t);
+                    }
+                });
+            });
+            
+            // Re-renderizar com highlight
+            renderizarDados(dadosGlobais);
+            
+            // Aplicar highlight nos elementos afetados
+            setTimeout(() => {
+                document.querySelectorAll('.elemento-group').forEach(el => {
+                    if (el.querySelector('.elemento-nome span')?.textContent === nomeTipo) {
+                        el.classList.add('highlight');
+                        setTimeout(() => el.classList.remove('highlight'), 600);
+                    }
+                });
+            }, 100);
+            
+            mostrarToast(`✓ Ordem aplicada a ${totalAfetados} elementos em ${tramosAfetados.size} tramo(s)`);
+        }
+
         function editarDimensao(elementoSpan, tramo, grupo, nomeTipo, itemIndex, dimIndex) {
             const valorAtual = elementoSpan.textContent;
             
@@ -704,7 +919,7 @@
             const salvar = () => {
                 const novoValor = input.value.trim();
                 if (novoValor) {
-                    dadosGlobais[tramo][grupo][nomeTipo][itemIndex].dimensoes[dimIndex] = novoValor;
+                    dadosGlobais[tramo][grupo][nomeTipo][itemIndex].dimensoes[dimIndex].valor = novoValor;
                     elementoSpan.textContent = novoValor;
                     elementoSpan.classList.remove('editing');
                     mostrarToast('Dimensão atualizada!');
@@ -727,7 +942,9 @@
         }
 
         function copiarDimensoes(elementos, chave, btnElement, groupElement) {
-            const linhas = elementos.map(item => item.dimensoes.join('\t'));
+            const linhas = elementos.map(item => {
+                return item.dimensoes.map(d => d.valor).join('\t');
+            });
             const todasDimensoes = linhas.join('\n');
             
             navigator.clipboard.writeText(todasDimensoes).then(() => {
