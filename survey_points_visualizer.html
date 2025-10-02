@@ -1443,7 +1443,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
             point.utmX = utm.easting;
             point.utmY = utm.northing;
             point.utmZone = utm.zone;
-            debugLog(`Convertido ${point.name}: LAT=${point.lat.toFixed(6)}, LONG=${point.long.toFixed(6)} -> UTM X=${utm.easting.toFixed(3)}, Y=${utm.northing.toFixed(3)}`);
+            debugLog(`Convertido ${point.name}: LAT=${point.lat.toFixed(8)}, LONG=${point.long.toFixed(8)} -> UTM X=${utm.easting.toFixed(3)}, Y=${utm.northing.toFixed(3)}`);
           } else {
             point.utmX = parseFloat(point.x);
             point.utmY = parseFloat(point.y);
@@ -2046,7 +2046,7 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
                   📍 Código EPSG: ${31984 + ldInicio1.sirgasZone - 17} (Zona ${ldInicio1.sirgasZone}S)
                 </div>
                 <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                  <strong>Estrutura 1:</strong> Tipo: ${ldInicio1.coordType} | ${ldInicio1.coordType === 'GEO' ? `LAT: ${ldInicio1.lat.toFixed(6)}, LONG: ${ldInicio1.long.toFixed(6)}` : `E: ${ldInicio1.easting?.toFixed(3)}m, N: ${ldInicio1.northing?.toFixed(3)}m`}
+                  <strong>Estrutura 1:</strong> Tipo: ${ldInicio1.coordType} | ${ldInicio1.coordType === 'GEO' ? `LAT: ${ldInicio1.lat.toFixed(8)}, LONG: ${ldInicio1.long.toFixed(8)}` : `E: ${ldInicio1.easting?.toFixed(3)}m, N: ${ldInicio1.northing?.toFixed(3)}m`}
                   ${struct2LdInicio && struct2LdInicio.sirgasZone ? `<br><strong>Estrutura 2:</strong> Zona ${struct2LdInicio.sirgasZone}S detectada` : ''}
                 </div>
                 ` : `
