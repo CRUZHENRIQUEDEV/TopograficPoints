@@ -1,4 +1,4 @@
-<!-- Version: 2.4 -->
+<!-- Version: 2.5 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -251,17 +251,6 @@
             border-width: 2px;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .order-controls {
             display: flex;
             gap: 8px;
@@ -340,7 +329,7 @@
             padding: 8px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
-            gap: 0px;
+            gap: 12px;
             border-left: 3px solid transparent;
             transition: all 0.2s;
         }
@@ -388,9 +377,9 @@
         }
 
         .item-name {
-            font-weight: 300;
+            font-weight: 600;
             color: #ecf0f1;
-            font-size: 8px;
+            font-size: 14px;
         }
 
         .item-dimensions {
@@ -592,15 +581,13 @@
         }
 
         function detectSeparator(lines) {
-            // Detects only TAB or semicolon as separator
-            // Comma is not accepted as it's used in numeric values (e.g., 10,5)
             for (let line of lines.slice(0, 10)) {
                 if (!line || line.trim() === '') continue;
                 
                 if (line.includes('\t')) return '\t';
                 if (line.includes(';')) return ';';
             }
-            return '\t'; // default: tab
+            return '\t';
         }
 
         function processData() {
@@ -1079,7 +1066,6 @@
             });
             
             renderData(globalData);
-            
             showToast(`Order applied to ${totalAffected} elements in ${affectedSpans.size} span(s)`);
         }
 
