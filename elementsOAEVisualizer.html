@@ -1,10 +1,10 @@
-<!-- Versão: 2.0 -->
+<!-- Version: 2.4 -->
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador SGE - Elementos</title>
+    <title>Element Dimensions Viewer</title>
     <style>
         * {
             margin: 0;
@@ -14,50 +14,71 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
             min-height: 100vh;
+            color: #ffffff;
             padding: 20px;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
             overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
             color: white;
             padding: 30px;
             text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header h1 {
-            font-size: 2em;
+            font-size: 2.5em;
+            font-weight: 700;
             margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffffff, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+            margin-top: 10px;
         }
 
         .upload-section {
             padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+            background: rgba(44, 62, 80, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 8px;
+            border: 3px dashed rgba(52, 152, 219, 0.5);
+            border-radius: 12px;
             padding: 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .upload-area:hover {
-            background: #f0f4ff;
-            border-color: #764ba2;
+            background: rgba(52, 152, 219, 0.1);
+            border-color: #3498db;
+        }
+
+        .upload-area h3 {
+            color: #3498db;
+            margin-bottom: 10px;
         }
 
         .upload-area input {
@@ -69,216 +90,295 @@
             min-height: 150px;
             margin-top: 15px;
             padding: 15px;
-            border: 2px solid #dee2e6;
-            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
             font-family: monospace;
             font-size: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
         }
 
         .btn-process {
             margin-top: 15px;
             padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(45deg, #3498db, #2ecc71);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
         .btn-process:hover {
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
 
         .content {
             padding: 30px;
+            background: rgba(44, 62, 80, 0.3);
         }
 
-        .tramo-card {
-            margin-bottom: 25px;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
+        .span-card {
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
             overflow: hidden;
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
-        .tramo-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .span-header {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
             color: white;
-            padding: 20px;
-            font-size: 1.4em;
+            padding: 12px 20px;
+            font-size: 1.2em;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.3s;
         }
 
-        .tramo-header:hover {
-            opacity: 0.9;
+        .span-header:hover {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
         }
 
-        .tramo-info {
+        .span-info {
             display: flex;
             align-items: center;
             gap: 15px;
             font-size: 0.7em;
         }
 
-        .contador-badge {
-            background: rgba(255,255,255,0.2);
+        .counter-badge {
+            background: rgba(52, 152, 219, 0.3);
             padding: 5px 12px;
             border-radius: 15px;
             font-weight: bold;
+            border: 1px solid rgba(52, 152, 219, 0.5);
         }
 
-        .tramo-content {
-            padding: 20px;
-        }
-
-        .grupo-section {
-            margin-bottom: 30px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
+        .span-content {
             padding: 15px;
-            background: #fafbfc;
         }
 
-        .grupo-title {
-            background: #e7f3ff;
-            padding: 12px 20px;
+        .group-section {
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .group-title {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 8px 15px;
             font-weight: bold;
-            color: #0056b3;
-            border-left: 4px solid #667eea;
-            margin-bottom: 15px;
+            color: #3498db;
+            border-left: 4px solid #3498db;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-radius: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .grupo-contador {
-            background: #667eea;
+        .group-title:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+
+        .group-title-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .group-counter {
+            background: #3498db;
             color: white;
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 0.9em;
         }
 
-        .elemento-group {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 2px solid #e9ecef;
+        .group-collapse-icon {
+            transition: transform 0.3s;
+            font-size: 0.9em;
+        }
+
+        .group-section.collapsed .group-collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .group-section.collapsed .element-group {
+            display: none;
+        }
+
+        .group-section.collapsed .group-title {
+            margin-bottom: 0;
+        }
+
+        .element-group {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s;
         }
 
-        .elemento-group.copiado {
-            background: #d4edda;
-            border-color: #28a745;
+        .element-group:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(52, 152, 219, 0.5);
         }
 
-        .elemento-group.ordem-alterada {
-            background: #fff3cd;
-            border-color: #ffc107;
-            border-width: 3px;
+        .element-group.copied {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #2ecc71;
         }
 
-        .elemento-group.highlight {
-            animation: highlight 0.6s ease;
+        .element-group.order-changed {
+            background: rgba(241, 196, 15, 0.2);
+            border-color: #f1c40f;
+            border-width: 2px;
         }
 
-        @keyframes highlight {
-            0%, 100% { background: #f8f9fa; }
-            50% { background: #d0e7ff; }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .controles-ordem {
+        .order-controls {
             display: flex;
             gap: 8px;
             align-items: center;
             margin-left: auto;
             padding: 8px;
-            background: #f8f9fa;
-            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
         }
 
-        .controles-ordem span {
+        .order-controls span {
             font-size: 12px;
-            color: #6c757d;
+            color: #bdc3c7;
             font-weight: 600;
         }
 
-        .elemento-header {
+        .element-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
-        .elemento-nome {
+        .element-name {
             font-weight: bold;
-            color: #495057;
+            color: #ecf0f1;
             flex: 1;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .elemento-contador {
-            background: #ffc107;
-            color: #000;
+        .element-counter {
+            background: #f39c12;
+            color: #fff;
             padding: 3px 10px;
             border-radius: 10px;
             font-size: 0.85em;
             font-weight: bold;
         }
 
-        .btn-copiar {
+        .btn-copy {
             padding: 8px 20px;
-            background: #667eea;
+            background: linear-gradient(45deg, #3498db, #2980b9);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
             transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
-        .btn-copiar:hover {
-            background: #764ba2;
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
 
-        .btn-copiar.copiado {
-            background: #28a745;
+        .btn-copy.copied {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
         }
 
-        .elemento-items {
+        .element-items {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .elemento-item {
+        .element-item {
             display: grid;
-            grid-template-columns: 1fr auto;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
-            padding: 10px;
-            background: white;
-            border-radius: 4px;
-            gap: 15px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            gap: 0px;
             border-left: 3px solid transparent;
             transition: all 0.2s;
         }
 
-        .elemento-item:hover {
-            border-left-color: #667eea;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        .element-item:hover {
+            border-left-color: #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .item-id-code {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            min-width: 120px;
+        }
+
+        .item-id {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            min-width: 40px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .item-code {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ecf0f1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            min-width: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .item-info {
@@ -287,93 +387,97 @@
             gap: 4px;
         }
 
-        .item-nome {
-            font-weight: 600;
-            color: #495057;
+        .item-name {
+            font-weight: 300;
+            color: #ecf0f1;
+            font-size: 8px;
         }
 
-        .item-dimensoes {
+        .item-dimensions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
-        .dimensao-wrapper {
+        .dimension-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
 
-        .dimensao-label {
+        .dimension-label {
             font-size: 9px;
-            color: #6c757d;
+            color: #95a5a6;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
 
-        .dimensao {
-            background: #e7f3ff;
+        .dimension {
+            background: rgba(52, 152, 219, 0.2);
             padding: 6px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-family: monospace;
             font-weight: 500;
-            color: #0056b3;
+            color: #3498db;
             cursor: pointer;
             transition: all 0.2s;
-            position: relative;
+            border: 1px solid rgba(52, 152, 219, 0.3);
         }
 
-        .dimensao:hover {
-            background: #d0e7ff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .dimension:hover {
+            background: rgba(52, 152, 219, 0.3);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+            transform: scale(1.05);
         }
 
-        .dimensao.editing {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
+        .dimension.editing {
+            background: rgba(241, 196, 15, 0.3);
+            border: 2px solid #f1c40f;
         }
 
-        .dimensao input {
+        .dimension input {
             background: transparent;
             border: none;
             font-family: monospace;
             font-weight: 500;
-            color: #0056b3;
+            color: #3498db;
             width: 80px;
             text-align: center;
             padding: 0;
         }
 
-        .dimensao input:focus {
+        .dimension input:focus {
             outline: none;
         }
 
-        .btn-seta {
-            background: #667eea;
+        .btn-arrow {
+            background: linear-gradient(45deg, #3498db, #2980b9);
             color: white;
             border: none;
             width: 24px;
             height: 24px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
         }
 
-        .btn-seta:hover:not(:disabled) {
-            background: #764ba2;
+        .btn-arrow:hover:not(:disabled) {
+            background: linear-gradient(45deg, #2980b9, #3498db);
             transform: scale(1.1);
         }
 
-        .btn-seta:disabled {
-            background: #e9ecef;
-            color: #adb5bd;
+        .btn-arrow:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: #7f8c8d;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         .collapse-icon {
@@ -384,7 +488,7 @@
             transform: rotate(-90deg);
         }
 
-        .collapsed .tramo-content {
+        .collapsed .span-content {
             display: none;
         }
 
@@ -392,39 +496,58 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: #28a745;
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
             color: white;
             padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.3s;
             z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .toast.show {
             opacity: 1;
             transform: translateY(0);
         }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .element-item {
+                grid-template-columns: 1fr;
+            }
+
+            .item-id-code {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Visualizador SGE - Elementos</h1>
-            <p>Organize e gerencie dimensões de elementos estruturais</p>
-            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">💡 Clique nas dimensões para editá-las | Use as setas para reordenar | Ctrl+Z = Desfazer | Ctrl+Y = Refazer</p>
+            <h1>Element Dimensions Viewer</h1>
+            <p>Organize and manage structural element dimensions</p>
+            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">Click dimensions to edit | Use arrows to reorder | Ctrl+Z = Undo | Ctrl+Y = Redo</p>
         </div>
 
         <div class="upload-section">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                <h3>📁 Carregar Arquivo CSV</h3>
-                <p>Clique aqui para selecionar um arquivo ou cole o conteúdo abaixo</p>
+                <h3>Load CSV File</h3>
+                <p>Click here to select a file or paste content below</p>
                 <input type="file" id="fileInput" accept=".csv,.txt">
             </div>
-            <textarea id="csvInput" placeholder="Ou cole o conteúdo do CSV aqui..."></textarea>
-            <button class="btn-process" onclick="processarDados()">🔍 Processar Dados</button>
+            <textarea id="csvInput" placeholder="Or paste CSV content here..."></textarea>
+            <button class="btn-process" onclick="processData()">Process Data</button>
         </div>
 
         <div class="content" id="output"></div>
@@ -433,13 +556,14 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const estadoCopiado = {};
-        let dadosGlobais = {};
-        let nomesColunas = [];
-        let ordemPorTipo = {};
-        let tiposComOrdemAlterada = new Set();
-        let historicoOrdem = [];
-        let indiceHistorico = -1;
+        const copiedState = {};
+        let globalData = {};
+        let columnNames = [];
+        let orderByType = {};
+        let typesWithChangedOrder = new Set();
+        let orderHistory = [];
+        let historyIndex = -1;
+        let hasIDColumn = false;
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -452,620 +576,647 @@
             }
         });
 
-        // Atalhos de teclado para Desfazer/Refazer
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'z') {
                 e.preventDefault();
-                desfazerOrdem();
+                undoOrder();
             } else if (e.ctrlKey && e.key === 'y') {
                 e.preventDefault();
-                refazerOrdem();
+                redoOrder();
             }
         });
 
-        function processarDados() {
+        function normalizeValue(value) {
+            if (!value || typeof value !== 'string') return value;
+            return value.trim();
+        }
+
+        function detectSeparator(lines) {
+            // Detects only TAB or semicolon as separator
+            // Comma is not accepted as it's used in numeric values (e.g., 10,5)
+            for (let line of lines.slice(0, 10)) {
+                if (!line || line.trim() === '') continue;
+                
+                if (line.includes('\t')) return '\t';
+                if (line.includes(';')) return ';';
+            }
+            return '\t'; // default: tab
+        }
+
+        function processData() {
             const csvText = document.getElementById('csvInput').value;
             if (!csvText || csvText.trim() === '') {
-                mostrarToast('Por favor, carregue ou cole os dados primeiro!', 'error');
+                showToast('Please load or paste data first!', 'error');
                 return;
             }
 
-            const linhas = csvText.split('\n');
-            let tramoAtual = null;
-            let grupoAtual = null;
-            const dados = {};
-            const transicoesDetectadas = new Set();
-            nomesColunas = [];
+            const lines = csvText.split('\n');
+            const separator = detectSeparator(lines);
+            
+            let currentSpan = null;
+            let currentGroup = null;
+            const data = {};
+            const detectedTransitions = new Set();
+            columnNames = [];
+            hasIDColumn = false;
 
-            linhas.forEach((linha) => {
-                if (!linha || linha.trim() === '') return;
+            lines.forEach((line) => {
+                if (!line || line.trim() === '') return;
                 
-                const partes = linha.split('\t');
-                const linhaUpper = linha.toUpperCase();
+                const parts = line.split(separator);
+                const lineUpper = line.toUpperCase();
                 
-                // Captura nomes das colunas
-                if (linhaUpper.includes('MARK') && linhaUpper.includes('CODIGO') && linhaUpper.includes('NOME DO TIPO')) {
-                    nomesColunas = partes.map(p => p.trim()).filter(p => p !== '');
+                if ((lineUpper.includes('MARK') || lineUpper.includes('ID')) && 
+                    lineUpper.includes('CODIGO') && 
+                    lineUpper.includes('NOME DO TIPO')) {
+                    columnNames = parts.map(p => p.trim()).filter(p => p !== '');
+                    hasIDColumn = columnNames.some(col => col.toUpperCase() === 'ID');
                     return;
                 }
                 
-                // Pula cabeçalhos e linhas de total
-                if (linhaUpper.includes('ELEMENTOS SGE') || 
-                    linhaUpper.includes('GRAND TOTAL')) {
+                if (lineUpper.includes('ELEMENTOS SGE') || 
+                    lineUpper.includes('GRAND TOTAL')) {
                     return;
                 }
                 
-                // Identifica TRAMO COMPLEMENTAR
-                const primeiraColuna = partes[0]?.trim().toUpperCase();
-                if (primeiraColuna === 'COMPLEMENTAR' && !linhaUpper.includes('ELEMENTOS')) {
-                    tramoAtual = 'COMPLEMENTAR';
-                    grupoAtual = null;
+                const firstColumn = parts[0]?.trim().toUpperCase();
+                if (firstColumn === 'COMPLEMENTAR' && !lineUpper.includes('ELEMENTOS')) {
+                    currentSpan = 'COMPLEMENTAR';
+                    currentGroup = null;
                     return;
                 }
                 
-                // Identifica TRAMO numerado
-                if (linhaUpper.match(/^TRAMO\s+\d+/) && !linhaUpper.includes('ELEMENTOS')) {
-                    tramoAtual = linhaUpper.match(/TRAMO\s+\d+/)[0];
-                    grupoAtual = null;
+                if (lineUpper.match(/^TRAMO\s+\d+/) && !lineUpper.includes('ELEMENTOS')) {
+                    currentSpan = lineUpper.match(/TRAMO\s+\d+/)[0];
+                    currentGroup = null;
                     return;
                 }
                 
-                // Identifica GRUPO
-                if (linhaUpper.includes('ELEMENTOS DE') || linhaUpper.includes('ELEMENTOS COMPLEMENTARES')) {
-                    const textoGrupo = partes.find(p => p.trim().toUpperCase().includes('ELEMENTOS'));
-                    if (textoGrupo) {
-                        grupoAtual = textoGrupo.trim().toUpperCase();
+                if (lineUpper.includes('ELEMENTOS DE') || lineUpper.includes('ELEMENTOS COMPLEMENTARES')) {
+                    const groupText = parts.find(p => p.trim().toUpperCase().includes('ELEMENTOS'));
+                    if (groupText) {
+                        currentGroup = groupText.trim().toUpperCase();
                     }
                     return;
                 }
                 
-                // Processa elemento
-                if (tramoAtual && grupoAtual) {
+                if (currentSpan && currentGroup) {
+                    let id = '';
                     let mark = '';
-                    let codigo = '';
-                    let nomeTipo = '';
-                    let transicao = '';
-                    let dimensoesInicio = 3;
+                    let code = '';
+                    let typeName = '';
+                    let transition = '';
+                    let dimensionsStart = 3;
                     
-                    const col0 = partes[0]?.trim() || '';
-                    const col1 = partes[1]?.trim() || '';
-                    const col2 = partes[2]?.trim() || '';
-                    const col3 = partes[3]?.trim() || '';
+                    const col0 = parts[0]?.trim() || '';
+                    const col1 = parts[1]?.trim() || '';
+                    const col2 = parts[2]?.trim() || '';
+                    const col3 = parts[3]?.trim() || '';
                     
-                    // Formato COM Mark: Mark | Codigo | Nome | Transição
-                    if (col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/) && !col2.match(/^TRANSIÇÃO/i)) {
-                        mark = col0;
-                        codigo = col1;
-                        nomeTipo = col2;
-                        transicao = col3;
-                        dimensoesInicio = 4;
-                    }
-                    // Formato SEM Mark: vazio | Codigo | Nome | Transição
-                    else if (!col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/)) {
-                        mark = '';
-                        codigo = col1;
-                        nomeTipo = col2;
-                        transicao = col3;
-                        dimensoesInicio = 4;
-                    }
-                    // Formato SEM Mark e SEM Codigo: vazio | Nome | Transição
-                    else if (!col0 && col1 && !col2.match(/^\d+(\.\d+)?$/)) {
-                        mark = '';
-                        codigo = '';
-                        nomeTipo = col1;
-                        transicao = col2;
-                        dimensoesInicio = 3;
-                    }
-                    // Formato COM Codigo: Codigo | Nome | Transição
-                    else if (col0 && col1 && !col1.match(/^\d+(\.\d+)?$/)) {
-                        mark = '';
-                        codigo = col0;
-                        nomeTipo = col1;
-                        transicao = col2;
-                        dimensoesInicio = 3;
+                    if (hasIDColumn) {
+                        id = col0;
+                        code = col1;
+                        typeName = col2;
+                        transition = col3;
+                        dimensionsStart = 4;
+                    } else {
+                        if (col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/) && !col2.match(/^TRANSIÇÃO/i)) {
+                            mark = col0;
+                            code = col1;
+                            typeName = col2;
+                            transition = col3;
+                            dimensionsStart = 4;
+                        }
+                        else if (!col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/)) {
+                            mark = '';
+                            code = col1;
+                            typeName = col2;
+                            transition = col3;
+                            dimensionsStart = 4;
+                        }
+                        else if (!col0 && col1 && !col2.match(/^\d+(\.\d+)?$/)) {
+                            mark = '';
+                            code = '';
+                            typeName = col1;
+                            transition = col2;
+                            dimensionsStart = 3;
+                        }
+                        else if (col0 && col1 && !col1.match(/^\d+(\.\d+)?$/)) {
+                            mark = '';
+                            code = col0;
+                            typeName = col1;
+                            transition = col2;
+                            dimensionsStart = 3;
+                        }
                     }
                     
-                    if (nomeTipo && nomeTipo !== '' && nomeTipo !== 'NOME DO TIPO') {
-                        const dimensoes = [];
-                        for (let i = dimensoesInicio; i < partes.length; i++) {
-                            const valor = partes[i]?.trim();
-                            if (valor && valor !== '') {
-                                const nomeColuna = nomesColunas[i] || `DIM_${i}`;
-                                dimensoes.push({
-                                    nome: nomeColuna,
-                                    valor: valor
+                    if (typeName && typeName !== '' && typeName !== 'NOME DO TIPO') {
+                        const dimensions = [];
+                        for (let i = dimensionsStart; i < parts.length; i++) {
+                            const rawValue = parts[i]?.trim();
+                            if (rawValue && rawValue !== '') {
+                                const value = normalizeValue(rawValue);
+                                const columnName = columnNames[i] || `DIM_${i}`;
+                                dimensions.push({
+                                    name: columnName,
+                                    value: value
                                 });
                             }
                         }
                         
-                        // Detecta transições
-                        if (transicao && transicao.match(/TRANSIÇÃO/i)) {
-                            transicoesDetectadas.add(transicao);
+                        if (transition && transition.match(/TRANSIÇÃO/i)) {
+                            detectedTransitions.add(transition);
                         }
                         
-                        let grupoFinal = grupoAtual;
+                        let finalGroup = currentGroup;
                         
-                        if (grupoAtual.includes('TRANSIÇÃO') && transicao && transicao.match(/TRANSIÇÃO/i)) {
-                            grupoFinal = `${grupoAtual} - ${transicao}`;
+                        if (currentGroup.includes('TRANSIÇÃO') && transition && transition.match(/TRANSIÇÃO/i)) {
+                            finalGroup = `${currentGroup} - ${transition}`;
                         }
                         
-                        if (!dados[tramoAtual]) dados[tramoAtual] = {};
-                        if (!dados[tramoAtual][grupoFinal]) dados[tramoAtual][grupoFinal] = {};
-                        if (!dados[tramoAtual][grupoFinal][nomeTipo]) dados[tramoAtual][grupoFinal][nomeTipo] = [];
+                        if (!data[currentSpan]) data[currentSpan] = {};
+                        if (!data[currentSpan][finalGroup]) data[currentSpan][finalGroup] = {};
+                        if (!data[currentSpan][finalGroup][typeName]) data[currentSpan][finalGroup][typeName] = [];
                         
-                        dados[tramoAtual][grupoFinal][nomeTipo].push({
+                        data[currentSpan][finalGroup][typeName].push({
+                            id,
                             mark,
-                            codigo,
-                            transicao,
-                            dimensoes
+                            code,
+                            transition,
+                            dimensions
                         });
                     }
                 }
             });
 
-            dadosGlobais = dados;
-            renderizarDados(dados);
+            globalData = data;
+            renderData(data);
         }
 
-        function renderizarDados(dados) {
+        function renderData(data) {
             const output = document.getElementById('output');
             output.innerHTML = '';
 
-            const ordemGrupos = {
+            const groupOrder = {
                 'ELEMENTOS DE TRANSIÇÃO': 1,
                 'ELEMENTOS DE SUPERESTRUTURA': 2,
                 'ELEMENTOS DE APOIO': 3,
                 'ELEMENTOS COMPLEMENTARES': 4
             };
 
-            Object.keys(dados).forEach(tramo => {
-                let totalElementosTramo = 0;
-                Object.keys(dados[tramo]).forEach(grupo => {
-                    Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
-                        totalElementosTramo += dados[tramo][grupo][nomeTipo].length;
+            Object.keys(data).forEach(span => {
+                let totalSpanElements = 0;
+                Object.keys(data[span]).forEach(group => {
+                    Object.keys(data[span][group]).forEach(typeName => {
+                        totalSpanElements += data[span][group][typeName].length;
                     });
                 });
                 
-                const tramoCard = document.createElement('div');
-                tramoCard.className = 'tramo-card';
+                const spanCard = document.createElement('div');
+                spanCard.className = 'span-card';
                 
-                const tramoHeader = document.createElement('div');
-                tramoHeader.className = 'tramo-header';
-                tramoHeader.innerHTML = `
-                    <span>${tramo}</span>
-                    <div class="tramo-info">
-                        <span class="contador-badge">Subtotal Tramo: ${totalElementosTramo}</span>
+                const spanHeader = document.createElement('div');
+                spanHeader.className = 'span-header';
+                spanHeader.innerHTML = `
+                    <span>${span}</span>
+                    <div class="span-info">
+                        <span class="counter-badge">Span Subtotal: ${totalSpanElements}</span>
                         <span class="collapse-icon">▼</span>
                     </div>
                 `;
-                tramoHeader.onclick = function() {
-                    tramoCard.classList.toggle('collapsed');
+                spanHeader.onclick = function() {
+                    spanCard.classList.toggle('collapsed');
                 };
                 
-                const tramoContent = document.createElement('div');
-                tramoContent.className = 'tramo-content';
+                const spanContent = document.createElement('div');
+                spanContent.className = 'span-content';
 
-                const gruposOrdenados = Object.keys(dados[tramo]).sort((a, b) => {
-                    const getOrdem = (grupo) => {
-                        if (grupo.includes('TRANSIÇÃO - TRANSIÇÃO')) {
-                            const match = grupo.match(/TRANSIÇÃO\s+(\d+)/);
-                            const numeroTransicao = match ? parseInt(match[1]) : 99;
-                            return [1, numeroTransicao];
+                const sortedGroups = Object.keys(data[span]).sort((a, b) => {
+                    const getOrder = (group) => {
+                        if (group.includes('TRANSIÇÃO - TRANSIÇÃO')) {
+                            const match = group.match(/TRANSIÇÃO\s+(\d+)/);
+                            const transitionNumber = match ? parseInt(match[1]) : 99;
+                            return [1, transitionNumber];
                         }
-                        const basePriority = ordemGrupos[grupo.split(' - ')[0]] || ordemGrupos[grupo] || 999;
+                        const basePriority = groupOrder[group.split(' - ')[0]] || groupOrder[group] || 999;
                         return [basePriority, 0];
                     };
                     
-                    const [prioA, subA] = getOrdem(a);
-                    const [prioB, subB] = getOrdem(b);
+                    const [prioA, subA] = getOrder(a);
+                    const [prioB, subB] = getOrder(b);
                     
                     if (prioA !== prioB) return prioA - prioB;
                     return subA - subB;
                 });
 
-                gruposOrdenados.forEach(grupo => {
-                    let totalElementosGrupo = 0;
-                    Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
-                        totalElementosGrupo += dados[tramo][grupo][nomeTipo].length;
+                sortedGroups.forEach(group => {
+                    let totalGroupElements = 0;
+                    Object.keys(data[span][group]).forEach(typeName => {
+                        totalGroupElements += data[span][group][typeName].length;
                     });
                     
-                    const grupoSection = document.createElement('div');
-                    grupoSection.className = 'grupo-section';
+                    const groupSection = document.createElement('div');
+                    groupSection.className = 'group-section';
                     
-                    const grupoTitle = document.createElement('div');
-                    grupoTitle.className = 'grupo-title';
-                    grupoTitle.innerHTML = `
-                        <span>${grupo}</span>
-                        <span class="grupo-contador">Subtotal Grupo: ${totalElementosGrupo}</span>
+                    const groupTitle = document.createElement('div');
+                    groupTitle.className = 'group-title';
+                    groupTitle.innerHTML = `
+                        <span>${group}</span>
+                        <div class="group-title-info">
+                            <span class="group-counter">Group Subtotal: ${totalGroupElements}</span>
+                            <span class="group-collapse-icon">▼</span>
+                        </div>
                     `;
-                    grupoSection.appendChild(grupoTitle);
+                    groupTitle.onclick = function() {
+                        groupSection.classList.toggle('collapsed');
+                    };
+                    groupSection.appendChild(groupTitle);
 
-                    Object.keys(dados[tramo][grupo]).forEach(nomeTipo => {
-                        const elementos = dados[tramo][grupo][nomeTipo];
+                    Object.keys(data[span][group]).forEach(typeName => {
+                        const elements = data[span][group][typeName];
                         
-                        elementos.sort((a, b) => {
-                            const codigoA = a.codigo || a.mark || '';
-                            const codigoB = b.codigo || b.mark || '';
-                            
-                            if (codigoA.match(/^\d+$/) && codigoB.match(/^\d+$/)) {
-                                return parseInt(codigoA) - parseInt(codigoB);
+                        elements.sort((a, b) => {
+                            if (a.id && b.id) {
+                                const idA = parseInt(a.id) || 0;
+                                const idB = parseInt(b.id) || 0;
+                                if (idA !== idB) return idA - idB;
                             }
                             
-                            return codigoA.localeCompare(codigoB);
+                            if (a.id && !b.id) return -1;
+                            if (!a.id && b.id) return 1;
+                            
+                            const codeA = a.code || a.mark || '';
+                            const codeB = b.code || b.mark || '';
+                            
+                            if (codeA.match(/^\d+$/) && codeB.match(/^\d+$/)) {
+                                return parseInt(codeA) - parseInt(codeB);
+                            }
+                            
+                            return codeA.localeCompare(codeB);
                         });
                         
-                        const chaveElemento = `${tramo}_${grupo}_${nomeTipo}`;
+                        const elementKey = `${span}_${group}_${typeName}`;
                         
-                        const elementoGroup = document.createElement('div');
-                        elementoGroup.className = 'elemento-group';
-                        if (estadoCopiado[chaveElemento]) {
-                            elementoGroup.classList.add('copiado');
+                        const elementGroup = document.createElement('div');
+                        elementGroup.className = 'element-group';
+                        if (copiedState[elementKey]) {
+                            elementGroup.classList.add('copied');
                         }
-                        if (tiposComOrdemAlterada.has(nomeTipo)) {
-                            elementoGroup.classList.add('ordem-alterada');
+                        if (typesWithChangedOrder.has(typeName)) {
+                            elementGroup.classList.add('order-changed');
                         }
 
-                        const elementoHeader = document.createElement('div');
-                        elementoHeader.className = 'elemento-header';
+                        const elementHeader = document.createElement('div');
+                        elementHeader.className = 'element-header';
                         
-                        const elementoNome = document.createElement('div');
-                        elementoNome.className = 'elemento-nome';
-                        elementoNome.innerHTML = `
-                            <span>${nomeTipo}</span>
-                            <span class="elemento-contador">Qtd: ${elementos.length}</span>
+                        const elementName = document.createElement('div');
+                        elementName.className = 'element-name';
+                        elementName.innerHTML = `
+                            <span>${typeName}</span>
+                            <span class="element-counter">Qty: ${elements.length}</span>
                         `;
                         
-                        // Controles de ordem (apenas um conjunto por elemento)
-                        const controlesOrdem = document.createElement('div');
-                        controlesOrdem.className = 'controles-ordem';
+                        const orderControls = document.createElement('div');
+                        orderControls.className = 'order-controls';
                         
-                        const labelOrdem = document.createElement('span');
-                        labelOrdem.textContent = 'Ordem das Dimensões:';
-                        controlesOrdem.appendChild(labelOrdem);
+                        const orderLabel = document.createElement('span');
+                        orderLabel.textContent = 'Dimension Order:';
+                        orderControls.appendChild(orderLabel);
                         
-                        // Aplicar ordem personalizada se existir para pegar dimensões corretas
-                        let dimensoesReferencia = [...elementos[0].dimensoes];
-                        if (ordemPorTipo[nomeTipo]) {
-                            const novaOrdem = [];
-                            ordemPorTipo[nomeTipo].forEach(indice => {
-                                if (elementos[0].dimensoes[indice]) {
-                                    novaOrdem.push(elementos[0].dimensoes[indice]);
+                        let referenceDimensions = [...elements[0].dimensions];
+                        if (orderByType[typeName]) {
+                            const newOrder = [];
+                            orderByType[typeName].forEach(index => {
+                                if (elements[0].dimensions[index]) {
+                                    newOrder.push(elements[0].dimensions[index]);
                                 }
                             });
-                            dimensoesReferencia = novaOrdem;
+                            referenceDimensions = newOrder;
                         }
                         
-                        dimensoesReferencia.forEach((dim, idx) => {
-                            const btnMoverEsq = document.createElement('button');
-                            btnMoverEsq.className = 'btn-seta';
-                            btnMoverEsq.innerHTML = '←';
-                            btnMoverEsq.disabled = idx === 0;
-                            btnMoverEsq.title = `Mover ${dim.nome} para esquerda`;
-                            btnMoverEsq.onclick = () => moverDimensao(tramo, grupo, nomeTipo, 0, idx, -1);
+                        referenceDimensions.forEach((dim, idx) => {
+                            const btnMoveLeft = document.createElement('button');
+                            btnMoveLeft.className = 'btn-arrow';
+                            btnMoveLeft.innerHTML = '←';
+                            btnMoveLeft.disabled = idx === 0;
+                            btnMoveLeft.title = `Move ${dim.name} left`;
+                            btnMoveLeft.onclick = () => moveDimension(span, group, typeName, 0, idx, -1);
                             
                             const labelDim = document.createElement('span');
-                            labelDim.textContent = dim.nome;
+                            labelDim.textContent = dim.name;
                             labelDim.style.fontSize = '10px';
-                            labelDim.style.color = '#495057';
+                            labelDim.style.color = '#ecf0f1';
                             
-                            const btnMoverDir = document.createElement('button');
-                            btnMoverDir.className = 'btn-seta';
-                            btnMoverDir.innerHTML = '→';
-                            btnMoverDir.disabled = idx === dimensoesReferencia.length - 1;
-                            btnMoverDir.title = `Mover ${dim.nome} para direita`;
-                            btnMoverDir.onclick = () => moverDimensao(tramo, grupo, nomeTipo, 0, idx, 1);
+                            const btnMoveRight = document.createElement('button');
+                            btnMoveRight.className = 'btn-arrow';
+                            btnMoveRight.innerHTML = '→';
+                            btnMoveRight.disabled = idx === referenceDimensions.length - 1;
+                            btnMoveRight.title = `Move ${dim.name} right`;
+                            btnMoveRight.onclick = () => moveDimension(span, group, typeName, 0, idx, 1);
                             
-                            controlesOrdem.appendChild(btnMoverEsq);
-                            controlesOrdem.appendChild(labelDim);
-                            controlesOrdem.appendChild(btnMoverDir);
+                            orderControls.appendChild(btnMoveLeft);
+                            orderControls.appendChild(labelDim);
+                            orderControls.appendChild(btnMoveRight);
                         });
                         
-                        const btnCopiar = document.createElement('button');
-                        btnCopiar.className = 'btn-copiar';
-                        if (estadoCopiado[chaveElemento]) {
-                            btnCopiar.classList.add('copiado');
+                        const btnCopy = document.createElement('button');
+                        btnCopy.className = 'btn-copy';
+                        if (copiedState[elementKey]) {
+                            btnCopy.classList.add('copied');
                         }
-                        btnCopiar.innerHTML = estadoCopiado[chaveElemento] ? '✓ Copiado' : '📋 Copiar Dimensões';
-                        btnCopiar.onclick = () => copiarDimensoes(elementos, chaveElemento, btnCopiar, elementoGroup);
+                        btnCopy.innerHTML = copiedState[elementKey] ? '✓ Copied' : 'Copy Dimensions';
+                        btnCopy.onclick = () => copyDimensions(elements, elementKey, btnCopy, elementGroup);
                         
-                        elementoHeader.appendChild(elementoNome);
-                        elementoHeader.appendChild(controlesOrdem);
-                        elementoHeader.appendChild(btnCopiar);
+                        elementHeader.appendChild(elementName);
+                        elementHeader.appendChild(orderControls);
+                        elementHeader.appendChild(btnCopy);
                         
-                        const elementoItems = document.createElement('div');
-                        elementoItems.className = 'elemento-items';
+                        const elementItems = document.createElement('div');
+                        elementItems.className = 'element-items';
                         
-                        elementos.forEach((item, itemIndex) => {
-                            const elementoItem = document.createElement('div');
-                            elementoItem.className = 'elemento-item';
+                        elements.forEach((item, itemIndex) => {
+                            const elementItem = document.createElement('div');
+                            elementItem.className = 'element-item';
+                            
+                            const idCodeDiv = document.createElement('div');
+                            idCodeDiv.className = 'item-id-code';
+                            
+                            if (item.id) {
+                                const idSpan = document.createElement('div');
+                                idSpan.className = 'item-id';
+                                idSpan.textContent = item.id;
+                                idCodeDiv.appendChild(idSpan);
+                            }
+                            
+                            const identifier = item.code || item.mark || '';
+                            if (identifier) {
+                                const codeSpan = document.createElement('div');
+                                codeSpan.className = 'item-code';
+                                codeSpan.textContent = identifier;
+                                idCodeDiv.appendChild(codeSpan);
+                            }
+                            
+                            elementItem.appendChild(idCodeDiv);
                             
                             const infoDiv = document.createElement('div');
                             infoDiv.className = 'item-info';
                             
-                            const nome = document.createElement('div');
-                            nome.className = 'item-nome';
-                            const identificador = item.codigo || item.mark || '';
-                            nome.textContent = identificador ? `${identificador} - ${nomeTipo}` : nomeTipo;
-                            infoDiv.appendChild(nome);
+                            const name = document.createElement('div');
+                            name.className = 'item-name';
+                            name.textContent = typeName;
+                            infoDiv.appendChild(name);
                             
-                            elementoItem.appendChild(infoDiv);
+                            elementItem.appendChild(infoDiv);
                             
-                            const dimensoesDiv = document.createElement('div');
-                            dimensoesDiv.className = 'item-dimensoes';
+                            const dimensionsDiv = document.createElement('div');
+                            dimensionsDiv.className = 'item-dimensions';
                             
-                            // Aplicar ordem personalizada se existir
-                            let dimensoesOrdenadas = [...item.dimensoes];
-                            if (ordemPorTipo[nomeTipo]) {
-                                const novaOrdem = [];
-                                ordemPorTipo[nomeTipo].forEach(indice => {
-                                    if (dimensoesOrdenadas[indice]) {
-                                        novaOrdem.push(dimensoesOrdenadas[indice]);
+                            let sortedDimensions = [...item.dimensions];
+                            if (orderByType[typeName]) {
+                                const newOrder = [];
+                                orderByType[typeName].forEach(index => {
+                                    if (sortedDimensions[index]) {
+                                        newOrder.push(sortedDimensions[index]);
                                     }
                                 });
-                                dimensoesOrdenadas = novaOrdem;
+                                sortedDimensions = newOrder;
                             }
                             
-                            dimensoesOrdenadas.forEach((dim, dimIndex) => {
+                            sortedDimensions.forEach((dim, dimIndex) => {
                                 const wrapper = document.createElement('div');
-                                wrapper.className = 'dimensao-wrapper';
+                                wrapper.className = 'dimension-wrapper';
                                 
                                 const label = document.createElement('div');
-                                label.className = 'dimensao-label';
-                                label.textContent = dim.nome;
+                                label.className = 'dimension-label';
+                                label.textContent = dim.name;
                                 wrapper.appendChild(label);
                                 
-                                // Encontrar índice original da dimensão atual
-                                const indiceOriginal = item.dimensoes.findIndex(d => d.nome === dim.nome && d.valor === dim.valor);
+                                const originalIndex = item.dimensions.findIndex(d => d.name === dim.name && d.value === dim.value);
                                 
-                                // Dimensão
-                                const dimensao = document.createElement('span');
-                                dimensao.className = 'dimensao';
-                                dimensao.textContent = dim.valor;
-                                dimensao.title = 'Clique para editar';
-                                dimensao.onclick = function() {
-                                    editarDimensao(dimensao, tramo, grupo, nomeTipo, itemIndex, indiceOriginal);
+                                const dimension = document.createElement('span');
+                                dimension.className = 'dimension';
+                                dimension.textContent = dim.value;
+                                dimension.title = 'Click to edit';
+                                dimension.onclick = function() {
+                                    editDimension(dimension, span, group, typeName, itemIndex, originalIndex);
                                 };
                                 
-                                wrapper.appendChild(dimensao);
-                                dimensoesDiv.appendChild(wrapper);
+                                wrapper.appendChild(dimension);
+                                dimensionsDiv.appendChild(wrapper);
                             });
                             
-                            elementoItem.appendChild(dimensoesDiv);
-                            elementoItems.appendChild(elementoItem);
+                            elementItem.appendChild(dimensionsDiv);
+                            elementItems.appendChild(elementItem);
                         });
                         
-                        elementoGroup.appendChild(elementoHeader);
-                        elementoGroup.appendChild(elementoItems);
-                        grupoSection.appendChild(elementoGroup);
+                        elementGroup.appendChild(elementHeader);
+                        elementGroup.appendChild(elementItems);
+                        groupSection.appendChild(elementGroup);
                     });
 
-                    tramoContent.appendChild(grupoSection);
+                    spanContent.appendChild(groupSection);
                 });
 
-                tramoCard.appendChild(tramoHeader);
-                tramoCard.appendChild(tramoContent);
-                output.appendChild(tramoCard);
+                spanCard.appendChild(spanHeader);
+                spanCard.appendChild(spanContent);
+                output.appendChild(spanCard);
             });
 
-            mostrarToast('Dados processados com sucesso!');
+            showToast('Data processed successfully!');
         }
 
-        function moverDimensao(tramo, grupo, nomeTipo, itemIndex, dimIndex, direcao) {
-            const novoIndice = dimIndex + direcao;
+        function moveDimension(span, group, typeName, itemIndex, dimIndex, direction) {
+            const newIndex = dimIndex + direction;
             
-            // Pegar um elemento de referência para saber o tamanho original
-            const itemReferencia = dadosGlobais[tramo][grupo][nomeTipo][itemIndex];
-            const totalDimensoes = itemReferencia.dimensoes.length;
+            const referenceItem = globalData[span][group][typeName][itemIndex];
+            const totalDimensions = referenceItem.dimensions.length;
             
-            // Criar ou atualizar ordem global para este tipo
-            if (!ordemPorTipo[nomeTipo]) {
-                // Inicializar com ordem original [0, 1, 2, 3, ...]
-                ordemPorTipo[nomeTipo] = Array.from({length: totalDimensoes}, (_, i) => i);
+            if (!orderByType[typeName]) {
+                orderByType[typeName] = Array.from({length: totalDimensions}, (_, i) => i);
             }
             
-            // Salvar estado atual no histórico antes de modificar
-            const estadoAnterior = {
-                nomeTipo: nomeTipo,
-                ordem: [...ordemPorTipo[nomeTipo]],
-                tiposAlterados: new Set(tiposComOrdemAlterada)
+            const previousState = {
+                typeName: typeName,
+                order: [...orderByType[typeName]],
+                changedTypes: new Set(typesWithChangedOrder)
             };
             
-            // Limpar histórico futuro se estiver no meio da pilha
-            if (indiceHistorico < historicoOrdem.length - 1) {
-                historicoOrdem = historicoOrdem.slice(0, indiceHistorico + 1);
+            if (historyIndex < orderHistory.length - 1) {
+                orderHistory = orderHistory.slice(0, historyIndex + 1);
             }
             
-            historicoOrdem.push(estadoAnterior);
-            indiceHistorico++;
+            orderHistory.push(previousState);
+            historyIndex++;
             
-            // Trocar posições na ordem global
-            const tempOrdem = ordemPorTipo[nomeTipo][dimIndex];
-            ordemPorTipo[nomeTipo][dimIndex] = ordemPorTipo[nomeTipo][novoIndice];
-            ordemPorTipo[nomeTipo][novoIndice] = tempOrdem;
+            const tempOrder = orderByType[typeName][dimIndex];
+            orderByType[typeName][dimIndex] = orderByType[typeName][newIndex];
+            orderByType[typeName][newIndex] = tempOrder;
             
-            // Marcar este tipo como tendo ordem alterada
-            tiposComOrdemAlterada.add(nomeTipo);
+            typesWithChangedOrder.add(typeName);
             
-            // Aplicar a nova ordem a TODOS os elementos do mesmo tipo em TODOS os tramos
-            let totalAfetados = 0;
-            let tramosAfetados = new Set();
+            let totalAffected = 0;
+            let affectedSpans = new Set();
             
-            Object.keys(dadosGlobais).forEach(t => {
-                Object.keys(dadosGlobais[t]).forEach(g => {
-                    if (dadosGlobais[t][g][nomeTipo]) {
-                        dadosGlobais[t][g][nomeTipo].forEach(elemento => {
-                            // Guardar dimensões originais
-                            const dimensoesOriginais = [...elemento.dimensoes];
+            Object.keys(globalData).forEach(t => {
+                Object.keys(globalData[t]).forEach(g => {
+                    if (globalData[t][g][typeName]) {
+                        globalData[t][g][typeName].forEach(element => {
+                            const originalDimensions = [...element.dimensions];
                             
-                            // Reordenar baseado na ordem global
-                            const dimensoesReordenadas = [];
-                            ordemPorTipo[nomeTipo].forEach(indiceOriginal => {
-                                if (dimensoesOriginais[indiceOriginal]) {
-                                    dimensoesReordenadas.push(dimensoesOriginais[indiceOriginal]);
+                            const reorderedDimensions = [];
+                            orderByType[typeName].forEach(originalIndex => {
+                                if (originalDimensions[originalIndex]) {
+                                    reorderedDimensions.push(originalDimensions[originalIndex]);
                                 }
                             });
                             
-                            elemento.dimensoes = dimensoesReordenadas;
-                            totalAfetados++;
+                            element.dimensions = reorderedDimensions;
+                            totalAffected++;
                         });
-                        tramosAfetados.add(t);
+                        affectedSpans.add(t);
                     }
                 });
             });
             
-            // Re-renderizar com highlight
-            renderizarDados(dadosGlobais);
+            renderData(globalData);
             
-            // Aplicar highlight nos elementos afetados
-            setTimeout(() => {
-                document.querySelectorAll('.elemento-group').forEach(el => {
-                    if (el.querySelector('.elemento-nome span')?.textContent === nomeTipo) {
-                        el.classList.add('highlight');
-                        setTimeout(() => el.classList.remove('highlight'), 600);
-                    }
-                });
-            }, 100);
-            
-            mostrarToast(`✓ Ordem aplicada a ${totalAfetados} elementos em ${tramosAfetados.size} tramo(s)`);
+            showToast(`Order applied to ${totalAffected} elements in ${affectedSpans.size} span(s)`);
         }
 
-        function desfazerOrdem() {
-            if (indiceHistorico < 0) {
-                mostrarToast('Nada para desfazer', 'error');
+        function undoOrder() {
+            if (historyIndex < 0) {
+                showToast('Nothing to undo', 'error');
                 return;
             }
             
-            const estadoAnterior = historicoOrdem[indiceHistorico];
-            ordemPorTipo[estadoAnterior.nomeTipo] = [...estadoAnterior.ordem];
-            tiposComOrdemAlterada = new Set(estadoAnterior.tiposAlterados);
+            const previousState = orderHistory[historyIndex];
+            orderByType[previousState.typeName] = [...previousState.order];
+            typesWithChangedOrder = new Set(previousState.changedTypes);
             
-            indiceHistorico--;
+            historyIndex--;
             
-            // Reaplicar ordem aos dados
-            aplicarOrdemGlobal(estadoAnterior.nomeTipo);
-            renderizarDados(dadosGlobais);
+            applyGlobalOrder(previousState.typeName);
+            renderData(globalData);
             
-            mostrarToast('↶ Desfeito');
+            showToast('Undone');
         }
 
-        function refazerOrdem() {
-            if (indiceHistorico >= historicoOrdem.length - 1) {
-                mostrarToast('Nada para refazer', 'error');
+        function redoOrder() {
+            if (historyIndex >= orderHistory.length - 1) {
+                showToast('Nothing to redo', 'error');
                 return;
             }
             
-            indiceHistorico++;
-            const estadoProximo = historicoOrdem[indiceHistorico + 1];
+            historyIndex++;
+            const nextState = orderHistory[historyIndex + 1];
             
-            if (estadoProximo) {
-                ordemPorTipo[estadoProximo.nomeTipo] = [...estadoProximo.ordem];
-                tiposComOrdemAlterada = new Set(estadoProximo.tiposAlterados);
+            if (nextState) {
+                orderByType[nextState.typeName] = [...nextState.order];
+                typesWithChangedOrder = new Set(nextState.changedTypes);
                 
-                // Reaplicar ordem aos dados
-                aplicarOrdemGlobal(estadoProximo.nomeTipo);
-                renderizarDados(dadosGlobais);
+                applyGlobalOrder(nextState.typeName);
+                renderData(globalData);
                 
-                mostrarToast('↷ Refeito');
+                showToast('Redone');
             }
         }
 
-        function aplicarOrdemGlobal(nomeTipo) {
-            Object.keys(dadosGlobais).forEach(t => {
-                Object.keys(dadosGlobais[t]).forEach(g => {
-                    if (dadosGlobais[t][g][nomeTipo]) {
-                        dadosGlobais[t][g][nomeTipo].forEach(elemento => {
-                            const dimensoesOriginais = [...elemento.dimensoes];
-                            const dimensoesReordenadas = [];
+        function applyGlobalOrder(typeName) {
+            Object.keys(globalData).forEach(t => {
+                Object.keys(globalData[t]).forEach(g => {
+                    if (globalData[t][g][typeName]) {
+                        globalData[t][g][typeName].forEach(element => {
+                            const originalDimensions = [...element.dimensions];
+                            const reorderedDimensions = [];
                             
-                            ordemPorTipo[nomeTipo].forEach(indiceOriginal => {
-                                if (dimensoesOriginais[indiceOriginal]) {
-                                    dimensoesReordenadas.push(dimensoesOriginais[indiceOriginal]);
+                            orderByType[typeName].forEach(originalIndex => {
+                                if (originalDimensions[originalIndex]) {
+                                    reorderedDimensions.push(originalDimensions[originalIndex]);
                                 }
                             });
                             
-                            elemento.dimensoes = dimensoesReordenadas;
+                            element.dimensions = reorderedDimensions;
                         });
                     }
                 });
             });
         }
 
-        function editarDimensao(elementoSpan, tramo, grupo, nomeTipo, itemIndex, dimIndex) {
-            const valorAtual = elementoSpan.textContent;
+        function editDimension(spanElement, span, group, typeName, itemIndex, dimIndex) {
+            const currentValue = spanElement.textContent;
             
             const input = document.createElement('input');
             input.type = 'text';
-            input.value = valorAtual;
+            input.value = currentValue;
             input.style.width = '80px';
             
-            elementoSpan.textContent = '';
-            elementoSpan.appendChild(input);
-            elementoSpan.classList.add('editing');
+            spanElement.textContent = '';
+            spanElement.appendChild(input);
+            spanElement.classList.add('editing');
             
             input.focus();
             input.select();
             
-            // Validação: apenas números, vírgula e ponto
             input.addEventListener('input', (e) => {
-                const valorDigitado = e.target.value;
-                const valorLimpo = valorDigitado.replace(/[^0-9.,]/g, '');
-                if (valorDigitado !== valorLimpo) {
-                    e.target.value = valorLimpo;
+                const typedValue = e.target.value;
+                const cleanValue = typedValue.replace(/[^0-9.,]/g, '');
+                if (typedValue !== cleanValue) {
+                    e.target.value = cleanValue;
                 }
             });
             
-            const salvar = () => {
-                const novoValor = input.value.trim();
-                // Validar se contém apenas números, vírgula ou ponto
-                if (novoValor && /^[0-9.,]+$/.test(novoValor)) {
-                    dadosGlobais[tramo][grupo][nomeTipo][itemIndex].dimensoes[dimIndex].valor = novoValor;
-                    elementoSpan.textContent = novoValor;
-                    elementoSpan.classList.remove('editing');
-                    mostrarToast('Dimensão atualizada!');
-                } else if (novoValor === '') {
-                    mostrarToast('Valor vazio não permitido', 'error');
-                    elementoSpan.textContent = valorAtual;
-                    elementoSpan.classList.remove('editing');
+            const save = () => {
+                const newValue = input.value.trim();
+                if (newValue && /^[0-9.,]+$/.test(newValue)) {
+                    const normalizedValue = normalizeValue(newValue);
+                    globalData[span][group][typeName][itemIndex].dimensions[dimIndex].value = normalizedValue;
+                    spanElement.textContent = normalizedValue;
+                    spanElement.classList.remove('editing');
+                    showToast('Dimension updated!');
+                } else if (newValue === '') {
+                    showToast('Empty value not allowed', 'error');
+                    spanElement.textContent = currentValue;
+                    spanElement.classList.remove('editing');
                 } else {
-                    mostrarToast('Apenas números são permitidos', 'error');
-                    elementoSpan.textContent = valorAtual;
-                    elementoSpan.classList.remove('editing');
+                    showToast('Only numbers, comma and period allowed', 'error');
+                    spanElement.textContent = currentValue;
+                    spanElement.classList.remove('editing');
                 }
             };
             
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    salvar();
+                    save();
                 } else if (e.key === 'Escape') {
-                    elementoSpan.textContent = valorAtual;
-                    elementoSpan.classList.remove('editing');
+                    spanElement.textContent = currentValue;
+                    spanElement.classList.remove('editing');
                 }
             });
             
-            input.addEventListener('blur', salvar);
+            input.addEventListener('blur', save);
         }
 
-        function copiarDimensoes(elementos, chave, btnElement, groupElement) {
-            const linhas = elementos.map(item => {
-                return item.dimensoes.map(d => d.valor).join('\t');
+        function copyDimensions(elements, key, btnElement, groupElement) {
+            const lines = elements.map(item => {
+                return item.dimensions.map(d => d.value).join('\t');
             });
-            const todasDimensoes = linhas.join('\n');
+            const allDimensions = lines.join('\n');
             
-            navigator.clipboard.writeText(todasDimensoes).then(() => {
-                estadoCopiado[chave] = true;
-                btnElement.classList.add('copiado');
-                btnElement.innerHTML = '✓ Copiado';
-                groupElement.classList.add('copiado');
-                mostrarToast('Dimensões copiadas (formato Excel)!');
+            navigator.clipboard.writeText(allDimensions).then(() => {
+                copiedState[key] = true;
+                btnElement.classList.add('copied');
+                btnElement.innerHTML = '✓ Copied';
+                groupElement.classList.add('copied');
+                showToast('Dimensions copied (Excel format)!');
             }).catch(err => {
-                mostrarToast('Erro ao copiar!', 'error');
+                showToast('Copy error!', 'error');
             });
         }
 
-        function mostrarToast(mensagem, tipo = 'success') {
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            toast.textContent = mensagem;
-            toast.style.background = tipo === 'error' ? '#dc3545' : '#28a745';
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? 'linear-gradient(45deg, #e74c3c, #c0392b)' : 'linear-gradient(45deg, #2ecc71, #27ae60)';
             toast.classList.add('show');
             
             setTimeout(() => {
