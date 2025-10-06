@@ -1,4 +1,4 @@
-<!-- Version: 2.5 -->
+<!-- Version: 3.0 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -554,6 +554,7 @@
         let historyIndex = -1;
         let hasIDColumn = false;
 
+        // Carrega arquivo
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -565,6 +566,7 @@
             }
         });
 
+        // Atalhos de teclado
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'z') {
                 e.preventDefault();
@@ -575,21 +577,23 @@
             }
         });
 
+        // Normaliza valores removendo espaços
         function normalizeValue(value) {
             if (!value || typeof value !== 'string') return value;
             return value.trim();
         }
 
+        // Detecta separador (tab ou ponto-vírgula)
         function detectSeparator(lines) {
             for (let line of lines.slice(0, 10)) {
                 if (!line || line.trim() === '') continue;
-                
                 if (line.includes('\t')) return '\t';
                 if (line.includes(';')) return ';';
             }
             return '\t';
         }
 
+        // Processa os dados do CSV
         function processData() {
             const csvText = document.getElementById('csvInput').value;
             if (!csvText || csvText.trim() === '') {
@@ -603,29 +607,31 @@
             let currentSpan = null;
             let currentGroup = null;
             const data = {};
-            const detectedTransitions = new Set();
             columnNames = [];
             hasIDColumn = false;
 
-            lines.forEach((line) => {
+            lines.forEach((line, lineIndex) => {
                 if (!line || line.trim() === '') return;
                 
                 const parts = line.split(separator);
                 const lineUpper = line.toUpperCase();
                 
-                if ((lineUpper.includes('MARK') || lineUpper.includes('ID')) && 
-                    lineUpper.includes('CODIGO') && 
-                    lineUpper.includes('NOME DO TIPO')) {
+                // Detecta cabeçalho - agora aceita qualquer linha com CODIGO e NOME DO TIPO
+                if (lineUpper.includes('CODIGO') && lineUpper.includes('NOME DO TIPO')) {
                     columnNames = parts.map(p => p.trim()).filter(p => p !== '');
                     hasIDColumn = columnNames.some(col => col.toUpperCase() === 'ID');
+                    console.log('Header detected:', columnNames);
                     return;
                 }
                 
+                // Ignora linhas de cabeçalho gerais
                 if (lineUpper.includes('ELEMENTOS SGE') || 
-                    lineUpper.includes('GRAND TOTAL')) {
+                    lineUpper.includes('GRAND TOTAL') ||
+                    lineUpper.includes('EXPORTAR')) {
                     return;
                 }
                 
+                // Detecta span COMPLEMENTAR
                 const firstColumn = parts[0]?.trim().toUpperCase();
                 if (firstColumn === 'COMPLEMENTAR' && !lineUpper.includes('ELEMENTOS')) {
                     currentSpan = 'COMPLEMENTAR';
@@ -633,12 +639,14 @@
                     return;
                 }
                 
+                // Detecta spans TRAMO
                 if (lineUpper.match(/^TRAMO\s+\d+/) && !lineUpper.includes('ELEMENTOS')) {
                     currentSpan = lineUpper.match(/TRAMO\s+\d+/)[0];
                     currentGroup = null;
                     return;
                 }
                 
+                // Detecta grupos de elementos
                 if (lineUpper.includes('ELEMENTOS DE') || lineUpper.includes('ELEMENTOS COMPLEMENTARES')) {
                     const groupText = parts.find(p => p.trim().toUpperCase().includes('ELEMENTOS'));
                     if (groupText) {
@@ -647,7 +655,8 @@
                     return;
                 }
                 
-                if (currentSpan && currentGroup) {
+                // Processa elementos
+                if (currentSpan && currentGroup && columnNames.length > 0) {
                     let id = '';
                     let mark = '';
                     let code = '';
@@ -660,6 +669,7 @@
                     const col2 = parts[2]?.trim() || '';
                     const col3 = parts[3]?.trim() || '';
                     
+                    // Determina estrutura baseado no cabeçalho
                     if (hasIDColumn) {
                         id = col0;
                         code = col1;
@@ -667,6 +677,7 @@
                         transition = col3;
                         dimensionsStart = 4;
                     } else {
+                        // Sem coluna ID - detecta estrutura dinamicamente
                         if (col0 && col1 && col2 && !col2.match(/^\d+(\.\d+)?$/) && !col2.match(/^TRANSIÇÃO/i)) {
                             mark = col0;
                             code = col1;
@@ -697,8 +708,11 @@
                         }
                     }
                     
+                    // Valida nome do tipo
                     if (typeName && typeName !== '' && typeName !== 'NOME DO TIPO') {
                         const dimensions = [];
+                        
+                        // Extrai dimensões usando os nomes das colunas
                         for (let i = dimensionsStart; i < parts.length; i++) {
                             const rawValue = parts[i]?.trim();
                             if (rawValue && rawValue !== '') {
@@ -711,16 +725,13 @@
                             }
                         }
                         
-                        if (transition && transition.match(/TRANSIÇÃO/i)) {
-                            detectedTransitions.add(transition);
-                        }
-                        
+                        // Agrupa por transição se aplicável
                         let finalGroup = currentGroup;
-                        
                         if (currentGroup.includes('TRANSIÇÃO') && transition && transition.match(/TRANSIÇÃO/i)) {
                             finalGroup = `${currentGroup} - ${transition}`;
                         }
                         
+                        // Adiciona aos dados
                         if (!data[currentSpan]) data[currentSpan] = {};
                         if (!data[currentSpan][finalGroup]) data[currentSpan][finalGroup] = {};
                         if (!data[currentSpan][finalGroup][typeName]) data[currentSpan][finalGroup][typeName] = [];
@@ -740,6 +751,7 @@
             renderData(data);
         }
 
+        // Renderiza os dados na tela
         function renderData(data) {
             const output = document.getElementById('output');
             output.innerHTML = '';
@@ -752,6 +764,7 @@
             };
 
             Object.keys(data).forEach(span => {
+                // Conta total de elementos no span
                 let totalSpanElements = 0;
                 Object.keys(data[span]).forEach(group => {
                     Object.keys(data[span][group]).forEach(typeName => {
@@ -759,6 +772,7 @@
                     });
                 });
                 
+                // Cria card do span
                 const spanCard = document.createElement('div');
                 spanCard.className = 'span-card';
                 
@@ -778,6 +792,7 @@
                 const spanContent = document.createElement('div');
                 spanContent.className = 'span-content';
 
+                // Ordena grupos
                 const sortedGroups = Object.keys(data[span]).sort((a, b) => {
                     const getOrder = (group) => {
                         if (group.includes('TRANSIÇÃO - TRANSIÇÃO')) {
@@ -797,11 +812,13 @@
                 });
 
                 sortedGroups.forEach(group => {
+                    // Conta elementos no grupo
                     let totalGroupElements = 0;
                     Object.keys(data[span][group]).forEach(typeName => {
                         totalGroupElements += data[span][group][typeName].length;
                     });
                     
+                    // Cria seção do grupo
                     const groupSection = document.createElement('div');
                     groupSection.className = 'group-section';
                     
@@ -819,16 +836,17 @@
                     };
                     groupSection.appendChild(groupTitle);
 
+                    // Processa cada tipo de elemento
                     Object.keys(data[span][group]).forEach(typeName => {
                         const elements = data[span][group][typeName];
                         
+                        // Ordena elementos
                         elements.sort((a, b) => {
                             if (a.id && b.id) {
                                 const idA = parseInt(a.id) || 0;
                                 const idB = parseInt(b.id) || 0;
                                 if (idA !== idB) return idA - idB;
                             }
-                            
                             if (a.id && !b.id) return -1;
                             if (!a.id && b.id) return 1;
                             
@@ -844,6 +862,7 @@
                         
                         const elementKey = `${span}_${group}_${typeName}`;
                         
+                        // Cria grupo de elementos
                         const elementGroup = document.createElement('div');
                         elementGroup.className = 'element-group';
                         if (copiedState[elementKey]) {
@@ -853,6 +872,7 @@
                             elementGroup.classList.add('order-changed');
                         }
 
+                        // Header do elemento
                         const elementHeader = document.createElement('div');
                         elementHeader.className = 'element-header';
                         
@@ -863,6 +883,7 @@
                             <span class="element-counter">Qty: ${elements.length}</span>
                         `;
                         
+                        // Controles de ordem
                         const orderControls = document.createElement('div');
                         orderControls.className = 'order-controls';
                         
@@ -906,6 +927,7 @@
                             orderControls.appendChild(btnMoveRight);
                         });
                         
+                        // Botão copy
                         const btnCopy = document.createElement('button');
                         btnCopy.className = 'btn-copy';
                         if (copiedState[elementKey]) {
@@ -918,6 +940,7 @@
                         elementHeader.appendChild(orderControls);
                         elementHeader.appendChild(btnCopy);
                         
+                        // Lista de itens
                         const elementItems = document.createElement('div');
                         elementItems.className = 'element-items';
                         
@@ -925,6 +948,7 @@
                             const elementItem = document.createElement('div');
                             elementItem.className = 'element-item';
                             
+                            // ID e Code
                             const idCodeDiv = document.createElement('div');
                             idCodeDiv.className = 'item-id-code';
                             
@@ -945,6 +969,7 @@
                             
                             elementItem.appendChild(idCodeDiv);
                             
+                            // Nome
                             const infoDiv = document.createElement('div');
                             infoDiv.className = 'item-info';
                             
@@ -955,6 +980,7 @@
                             
                             elementItem.appendChild(infoDiv);
                             
+                            // Dimensões
                             const dimensionsDiv = document.createElement('div');
                             dimensionsDiv.className = 'item-dimensions';
                             
@@ -969,7 +995,7 @@
                                 sortedDimensions = newOrder;
                             }
                             
-                            sortedDimensions.forEach((dim, dimIndex) => {
+                            sortedDimensions.forEach((dim) => {
                                 const wrapper = document.createElement('div');
                                 wrapper.className = 'dimension-wrapper';
                                 
@@ -1012,6 +1038,7 @@
             showToast('Data processed successfully!');
         }
 
+        // Move dimensão
         function moveDimension(span, group, typeName, itemIndex, dimIndex, direction) {
             const newIndex = dimIndex + direction;
             
@@ -1049,14 +1076,12 @@
                     if (globalData[t][g][typeName]) {
                         globalData[t][g][typeName].forEach(element => {
                             const originalDimensions = [...element.dimensions];
-                            
                             const reorderedDimensions = [];
                             orderByType[typeName].forEach(originalIndex => {
                                 if (originalDimensions[originalIndex]) {
                                     reorderedDimensions.push(originalDimensions[originalIndex]);
                                 }
                             });
-                            
                             element.dimensions = reorderedDimensions;
                             totalAffected++;
                         });
@@ -1069,6 +1094,7 @@
             showToast(`Order applied to ${totalAffected} elements in ${affectedSpans.size} span(s)`);
         }
 
+        // Desfazer ordem
         function undoOrder() {
             if (historyIndex < 0) {
                 showToast('Nothing to undo', 'error');
@@ -1087,6 +1113,7 @@
             showToast('Undone');
         }
 
+        // Refazer ordem
         function redoOrder() {
             if (historyIndex >= orderHistory.length - 1) {
                 showToast('Nothing to redo', 'error');
@@ -1107,6 +1134,7 @@
             }
         }
 
+        // Aplica ordem global
         function applyGlobalOrder(typeName) {
             Object.keys(globalData).forEach(t => {
                 Object.keys(globalData[t]).forEach(g => {
@@ -1128,6 +1156,7 @@
             });
         }
 
+        // Edita dimensão
         function editDimension(spanElement, span, group, typeName, itemIndex, dimIndex) {
             const currentValue = spanElement.textContent;
             
@@ -1182,6 +1211,7 @@
             input.addEventListener('blur', save);
         }
 
+        // Copia dimensões
         function copyDimensions(elements, key, btnElement, groupElement) {
             const lines = elements.map(item => {
                 return item.dimensions.map(d => d.value).join('\t');
@@ -1199,6 +1229,7 @@
             });
         }
 
+        // Mostra toast
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
