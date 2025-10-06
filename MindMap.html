@@ -1,0 +1,775 @@
+<!-- Versão: 1.2 -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mind Map Viewer - ZenithSolutions</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8f9fa;
+        overflow: hidden;
+      }
+
+      #controls {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-width: 380px;
+      }
+
+      h3 {
+        margin-bottom: 15px;
+        color: #2c3e50;
+        font-size: 18px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      #fileInput {
+        margin-bottom: 15px;
+        width: 100%;
+      }
+
+      #csvTextarea {
+        width: 100%;
+        height: 100px;
+        margin: 10px 0;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        resize: vertical;
+      }
+
+      #csvTextarea:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+
+      .button-group {
+        margin: 10px 0;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        flex: 1;
+        min-width: 110px;
+        transition: all 0.2s;
+      }
+
+      button:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+      }
+
+      button.secondary {
+        background: #95a5a6;
+      }
+
+      button.secondary:hover {
+        background: #7f8c8d;
+      }
+
+      .separator {
+        margin: 15px 0;
+        border-top: 1px solid #ecf0f1;
+      }
+
+      .setting-group {
+        margin: 10px 0;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-top: 5px;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+
+      #container {
+        width: 100vw;
+        height: 100vh;
+        cursor: grab;
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+      }
+
+      #container:active {
+        cursor: grabbing;
+      }
+
+      #container.dragging-node {
+        cursor: move !important;
+      }
+
+      .node-text {
+        font-family: "Segoe UI", sans-serif;
+        user-select: none;
+        dominant-baseline: middle;
+        text-anchor: middle;
+        pointer-events: none;
+      }
+
+      .connection {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .node-group {
+        cursor: move;
+        transition: filter 0.2s;
+      }
+
+      .node-group:hover {
+        filter: brightness(1.05);
+      }
+
+      .node-group.collapsed .children {
+        display: none;
+      }
+
+      .collapse-btn {
+        cursor: pointer;
+        fill: white;
+        stroke: #2c3e50;
+        stroke-width: 2;
+      }
+
+      .collapse-btn:hover {
+        fill: #ecf0f1;
+      }
+
+      .collapse-icon {
+        pointer-events: none;
+        font-size: 12px;
+        font-weight: bold;
+        fill: #2c3e50;
+      }
+
+      #stats {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #555;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <h3>Mind Map Viewer</h3>
+
+      <label>Upload CSV:</label>
+      <input type="file" id="fileInput" accept=".csv" />
+
+      <div class="separator"></div>
+
+      <label>Ou cole seu CSV aqui:</label>
+      <textarea id="csvTextarea" placeholder="Cole seu CSV aqui..."></textarea>
+
+      <div class="button-group">
+        <button onclick="processPastedCSV()">Processar CSV</button>
+        <button class="secondary" onclick="loadSampleData()">Exemplo</button>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="setting-group">
+        <label>Tipo de Linha:</label>
+        <select id="lineType" onchange="updateLineType()">
+          <option value="bezier">Curva Bezier</option>
+          <option value="orthogonal" selected>Ortogonal (90°)</option>
+          <option value="straight">Reta Direta</option>
+        </select>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="button-group">
+        <button class="secondary" onclick="expandAll()">Expandir Tudo</button>
+        <button class="secondary" onclick="collapseAll()">Colapsar Tudo</button>
+      </div>
+
+      <div class="button-group">
+        <button class="secondary" onclick="autoFit()">Auto Ajustar</button>
+        <button class="secondary" onclick="resetView()">Resetar</button>
+      </div>
+    </div>
+
+    <div id="stats">
+      <div id="statsContent">Carregue um CSV para começar</div>
+    </div>
+
+    <svg id="container"></svg>
+
+    <script>
+      let currentTransform = { x: 0, y: 0, scale: 1 };
+      let isDragging = false;
+      let isDraggingNode = false;
+      let dragStart = { x: 0, y: 0 };
+      let draggedNode = null;
+      let nodes = [];
+      let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+      let collapsedNodes = new Set();
+      let lineType = "orthogonal";
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", handleFileUpload);
+      setupPanZoom();
+
+      function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        Papa.parse(file, {
+          header: true,
+          complete: (results) => processAndRender(results.data),
+          error: (error) => console.error("Erro ao ler CSV:", error),
+        });
+      }
+
+      function processPastedCSV() {
+        const csvText = document.getElementById("csvTextarea").value.trim();
+        if (!csvText) {
+          alert("Por favor, cole um CSV válido.");
+          return;
+        }
+
+        Papa.parse(csvText, {
+          header: true,
+          complete: (results) => processAndRender(results.data),
+          error: (error) => {
+            console.error("Erro ao processar CSV:", error);
+            alert("Erro ao processar CSV.");
+          },
+        });
+      }
+
+      function loadSampleData() {
+        const sampleCSV = `ID,ParentID,Text,X,Y,Z,Width,Height,Color,Opacity,Shape,Icon,Angle,Roughness
+1,,Projeto Software,500,300,0,250,100,#2C3E50,1.0,Rounded,,0,1
+2,1,Frontend,900,100,0,200,80,#3498DB,0.9,Rounded,,0,1
+3,1,Backend,900,300,0,200,80,#E74C3C,0.9,Rounded,,0,1
+4,1,Database,900,500,0,200,80,#27AE60,0.9,Rounded,,0,1
+5,2,React,1300,50,0,180,70,#3498DB,0.7,Rectangle,,0,1.5
+6,2,State Mgmt,1300,150,0,180,70,#3498DB,0.7,Rectangle,,0,1.5
+7,3,API REST,1300,280,0,180,70,#E74C3C,0.7,Rectangle,,0,1.5
+8,3,Auth,1300,360,0,180,70,#E74C3C,0.7,Rectangle,,0,1.5
+9,4,PostgreSQL,1300,450,0,180,70,#27AE60,0.7,Rectangle,,0,1.5
+10,4,MongoDB,1300,530,0,180,70,#27AE60,0.7,Rectangle,,0,1.5`;
+
+        Papa.parse(sampleCSV, {
+          header: true,
+          complete: (results) => processAndRender(results.data),
+          error: (error) => console.error("Erro:", error),
+        });
+      }
+
+      function processAndRender(data) {
+        nodes = data
+          .map((row) => ({
+            id: row.ID,
+            parentId: row.ParentID || null,
+            text: row.Text,
+            x: parseFloat(row.X),
+            y: parseFloat(row.Y),
+            z: parseFloat(row.Z || 0),
+            width: parseFloat(row.Width || 200),
+            height: parseFloat(row.Height || 80),
+            color: row.Color || "#1e1e1e",
+            opacity: parseFloat(row.Opacity || 1.0),
+            shape: row.Shape || "Rounded",
+            icon: row.Icon || "",
+            angle: parseFloat(row.Angle || 0),
+            roughness: parseFloat(row.Roughness || 1),
+          }))
+          .filter((n) => !isNaN(n.x) && !isNaN(n.y));
+
+        calculateBounds();
+        renderMindMap();
+        updateStats();
+        autoFit();
+      }
+
+      function calculateBounds() {
+        if (nodes.length === 0) return;
+
+        bounds.minX = Math.min(...nodes.map((n) => n.x - n.width / 2));
+        bounds.maxX = Math.max(...nodes.map((n) => n.x + n.width / 2));
+        bounds.minY = Math.min(...nodes.map((n) => n.y - n.height / 2));
+        bounds.maxY = Math.max(...nodes.map((n) => n.y + n.height / 2));
+      }
+
+      function renderMindMap() {
+        const svg = document.getElementById("container");
+        svg.innerHTML = "";
+
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.id = "mainGroup";
+        svg.appendChild(g);
+
+        // Renderizar conexões primeiro
+        nodes.forEach((node) => {
+          if (node.parentId && !isNodeOrAncestorCollapsed(node)) {
+            const parent = nodes.find((n) => n.id === node.parentId);
+            if (parent) {
+              drawConnection(g, parent, node);
+            }
+          }
+        });
+
+        // Renderizar nós
+        nodes.forEach((node) => {
+          if (!isNodeOrAncestorCollapsed(node)) {
+            renderNode(node, g);
+          }
+        });
+
+        updateTransform();
+      }
+
+      function isNodeOrAncestorCollapsed(node) {
+        let current = node;
+        while (current.parentId) {
+          const parent = nodes.find((n) => n.id === current.parentId);
+          if (!parent) break;
+          if (collapsedNodes.has(parent.id)) return true;
+          current = parent;
+        }
+        return false;
+      }
+
+      function getShapeBoundaryPoint(node, targetX, targetY) {
+        const dx = targetX - node.x;
+        const dy = targetY - node.y;
+        const angle = Math.atan2(dy, dx);
+
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        if (node.shape.toLowerCase() === "ellipse") {
+          const rx = node.width / 2;
+          const ry = node.height / 2;
+          const scale = Math.sqrt(
+            (rx * ry) / (ry * ry * cos * cos + rx * rx * sin * sin)
+          );
+
+          return {
+            x: node.x + scale * rx * cos,
+            y: node.y + scale * ry * sin,
+          };
+        } else {
+          // Rectangle and Rounded
+          const halfW = node.width / 2;
+          const halfH = node.height / 2;
+
+          const tX = Math.abs(dx) < 0.001 ? 0.001 : dx;
+          const tY = Math.abs(dy) < 0.001 ? 0.001 : dy;
+
+          if (Math.abs(tY / tX) < halfH / halfW) {
+            // Intersects vertical edge
+            const x = node.x + (tX > 0 ? halfW : -halfW);
+            const y = node.y + (halfW / Math.abs(tX)) * tY;
+            return { x, y };
+          } else {
+            // Intersects horizontal edge
+            const x = node.x + (halfH / Math.abs(tY)) * tX;
+            const y = node.y + (tY > 0 ? halfH : -halfH);
+            return { x, y };
+          }
+        }
+      }
+
+      function drawConnection(container, parent, child) {
+        const startPoint = getShapeBoundaryPoint(parent, child.x, child.y);
+        const endPoint = getShapeBoundaryPoint(child, parent.x, parent.y);
+
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path"
+        );
+        let d;
+
+        if (lineType === "bezier") {
+          const dx = endPoint.x - startPoint.x;
+          const dy = endPoint.y - startPoint.y;
+          const cp1x = startPoint.x + dx * 0.5;
+          const cp1y = startPoint.y;
+          const cp2x = startPoint.x + dx * 0.5;
+          const cp2y = endPoint.y;
+          d = `M ${startPoint.x} ${startPoint.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endPoint.x} ${endPoint.y}`;
+        } else if (lineType === "orthogonal") {
+          const midX = (startPoint.x + endPoint.x) / 2;
+          d = `M ${startPoint.x} ${startPoint.y} L ${midX} ${startPoint.y} L ${midX} ${endPoint.y} L ${endPoint.x} ${endPoint.y}`;
+        } else {
+          d = `M ${startPoint.x} ${startPoint.y} L ${endPoint.x} ${endPoint.y}`;
+        }
+
+        path.setAttribute("d", d);
+        path.setAttribute("class", "connection");
+        path.setAttribute("stroke", child.color);
+        path.setAttribute("stroke-width", 2.5 * child.roughness);
+        path.setAttribute("opacity", child.opacity * 0.7);
+
+        container.appendChild(path);
+      }
+
+      function renderNode(node, container) {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "node-group");
+        g.setAttribute("data-id", node.id);
+        g.setAttribute(
+          "transform",
+          `translate(${node.x}, ${node.y}) rotate(${node.angle})`
+        );
+
+        const shape = createShape(node);
+        g.appendChild(shape);
+
+        const text = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text"
+        );
+        text.setAttribute("class", "node-text");
+        text.setAttribute("fill", "#2C3E50");
+        text.setAttribute("font-size", Math.min(node.height * 0.35, 16));
+        text.setAttribute("font-weight", node.parentId ? "500" : "700");
+
+        const displayText = node.icon ? `${node.icon} ${node.text}` : node.text;
+        text.textContent = displayText;
+
+        g.appendChild(text);
+
+        // Adicionar botão de colapso se tiver filhos
+        const hasChildren = nodes.some((n) => n.parentId === node.id);
+        if (hasChildren) {
+          const collapseBtn = createCollapseButton(node);
+          g.appendChild(collapseBtn);
+        }
+
+        // Event handlers para drag
+        g.addEventListener("mousedown", (e) => startNodeDrag(e, node));
+
+        container.appendChild(g);
+      }
+
+      function createCollapseButton(node) {
+        const btnGroup = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "g"
+        );
+        btnGroup.setAttribute("class", "collapse-button");
+
+        const btnSize = 20;
+        const btnX = node.width / 2 - btnSize - 5;
+        const btnY = -node.height / 2 + 5;
+
+        const circle = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+        circle.setAttribute("class", "collapse-btn");
+        circle.setAttribute("cx", btnX + btnSize / 2);
+        circle.setAttribute("cy", btnY + btnSize / 2);
+        circle.setAttribute("r", btnSize / 2);
+
+        const icon = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text"
+        );
+        icon.setAttribute("class", "collapse-icon");
+        icon.setAttribute("x", btnX + btnSize / 2);
+        icon.setAttribute("y", btnY + btnSize / 2);
+        icon.setAttribute("text-anchor", "middle");
+        icon.setAttribute("dominant-baseline", "middle");
+        icon.textContent = collapsedNodes.has(node.id) ? "+" : "−";
+
+        btnGroup.appendChild(circle);
+        btnGroup.appendChild(icon);
+
+        btnGroup.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleCollapse(node.id);
+        });
+
+        return btnGroup;
+      }
+
+      function toggleCollapse(nodeId) {
+        if (collapsedNodes.has(nodeId)) {
+          collapsedNodes.delete(nodeId);
+        } else {
+          collapsedNodes.add(nodeId);
+        }
+        renderMindMap();
+      }
+
+      function expandAll() {
+        collapsedNodes.clear();
+        renderMindMap();
+      }
+
+      function collapseAll() {
+        nodes.forEach((node) => {
+          const hasChildren = nodes.some((n) => n.parentId === node.id);
+          if (hasChildren && !node.parentId) {
+            collapsedNodes.add(node.id);
+          }
+        });
+        renderMindMap();
+      }
+
+      function createShape(node) {
+        const shape = node.shape.toLowerCase();
+        let element;
+
+        if (shape === "ellipse") {
+          element = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "ellipse"
+          );
+          element.setAttribute("rx", node.width / 2);
+          element.setAttribute("ry", node.height / 2);
+        } else {
+          element = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+          );
+          element.setAttribute("x", -node.width / 2);
+          element.setAttribute("y", -node.height / 2);
+          element.setAttribute("width", node.width);
+          element.setAttribute("height", node.height);
+
+          if (shape === "rounded") {
+            element.setAttribute(
+              "rx",
+              Math.min(node.width, node.height) * 0.15
+            );
+          }
+        }
+
+        element.setAttribute("fill", "white");
+        element.setAttribute("stroke", node.color);
+        element.setAttribute("stroke-width", 2.5 * node.roughness);
+        element.setAttribute("opacity", node.opacity);
+
+        return element;
+      }
+
+      function startNodeDrag(e, node) {
+        if (
+          e.target.classList.contains("collapse-btn") ||
+          e.target.classList.contains("collapse-icon")
+        ) {
+          return;
+        }
+
+        e.stopPropagation();
+        isDraggingNode = true;
+        draggedNode = node;
+
+        const svg = document.getElementById("container");
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        dragStart = {
+          x:
+            svgP.x / currentTransform.scale -
+            currentTransform.x / currentTransform.scale,
+          y:
+            svgP.y / currentTransform.scale -
+            currentTransform.y / currentTransform.scale,
+        };
+
+        document.getElementById("container").classList.add("dragging-node");
+      }
+
+      function setupPanZoom() {
+        const svg = document.getElementById("container");
+
+        svg.addEventListener("mousedown", (e) => {
+          if (!isDraggingNode) {
+            isDragging = true;
+            dragStart = {
+              x: e.clientX - currentTransform.x,
+              y: e.clientY - currentTransform.y,
+            };
+          }
+        });
+
+        svg.addEventListener("mousemove", (e) => {
+          if (isDraggingNode && draggedNode) {
+            const pt = svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+            draggedNode.x =
+              svgP.x / currentTransform.scale -
+              currentTransform.x / currentTransform.scale;
+            draggedNode.y =
+              svgP.y / currentTransform.scale -
+              currentTransform.y / currentTransform.scale;
+
+            renderMindMap();
+          } else if (isDragging) {
+            currentTransform.x = e.clientX - dragStart.x;
+            currentTransform.y = e.clientY - dragStart.y;
+            updateTransform();
+          }
+        });
+
+        svg.addEventListener("mouseup", () => {
+          isDragging = false;
+          isDraggingNode = false;
+          draggedNode = null;
+          document
+            .getElementById("container")
+            .classList.remove("dragging-node");
+        });
+
+        svg.addEventListener("mouseleave", () => {
+          isDragging = false;
+          isDraggingNode = false;
+          draggedNode = null;
+          document
+            .getElementById("container")
+            .classList.remove("dragging-node");
+        });
+
+        svg.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? 0.9 : 1.1;
+          currentTransform.scale *= delta;
+          currentTransform.scale = Math.max(
+            0.1,
+            Math.min(3, currentTransform.scale)
+          );
+          updateTransform();
+        });
+      }
+
+      function updateTransform() {
+        const g = document.getElementById("mainGroup");
+        if (g) {
+          g.setAttribute(
+            "transform",
+            `translate(${currentTransform.x}, ${currentTransform.y}) scale(${currentTransform.scale})`
+          );
+        }
+      }
+
+      function resetView() {
+        currentTransform = { x: 0, y: 0, scale: 1 };
+        updateTransform();
+      }
+
+      function autoFit() {
+        if (nodes.length === 0) return;
+
+        calculateBounds();
+
+        const padding = 100;
+        const viewWidth = window.innerWidth;
+        const viewHeight = window.innerHeight;
+
+        const contentWidth = bounds.maxX - bounds.minX;
+        const contentHeight = bounds.maxY - bounds.minY;
+
+        const scaleX = (viewWidth - padding * 2) / contentWidth;
+        const scaleY = (viewHeight - padding * 2) / contentHeight;
+        const scale = Math.min(scaleX, scaleY, 1);
+
+        const centerX = (bounds.minX + bounds.maxX) / 2;
+        const centerY = (bounds.minY + bounds.maxY) / 2;
+
+        currentTransform.scale = scale;
+        currentTransform.x = viewWidth / 2 - centerX * scale;
+        currentTransform.y = viewHeight / 2 - centerY * scale;
+
+        updateTransform();
+      }
+
+      function updateLineType() {
+        lineType = document.getElementById("lineType").value;
+        renderMindMap();
+      }
+
+      function updateStats() {
+        const rootNodes = nodes.filter((n) => !n.parentId).length;
+        const totalNodes = nodes.length;
+        const maxDepth = calculateMaxDepth();
+        const visibleNodes = nodes.filter(
+          (n) => !isNodeOrAncestorCollapsed(n)
+        ).length;
+
+        document.getElementById("statsContent").innerHTML = `
+                <strong>Estatísticas:</strong><br>
+                Total: ${totalNodes} | Visíveis: ${visibleNodes} | Raízes: ${rootNodes} | Profundidade: ${maxDepth}
+            `;
+      }
+
+      function calculateMaxDepth() {
+        let maxDepth = 0;
+        nodes.forEach((node) => {
+          let depth = 0;
+          let current = node;
+          while (current.parentId) {
+            depth++;
+            current = nodes.find((n) => n.id === current.parentId);
+            if (!current) break;
+          }
+          maxDepth = Math.max(maxDepth, depth);
+        });
+        return maxDepth;
+      }
+
+      window.addEventListener("load", () => loadSampleData());
+    </script>
+  </body>
+</html>
