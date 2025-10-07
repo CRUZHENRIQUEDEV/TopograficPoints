@@ -1,4 +1,4 @@
-<!-- Version: 3.0 -->
+<!-- Version: 3.3 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,6 +74,13 @@
         .upload-area:hover {
             background: rgba(52, 152, 219, 0.1);
             border-color: #3498db;
+        }
+
+        .upload-area.drag-over {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #2ecc71;
+            border-width: 4px;
+            transform: scale(1.02);
         }
 
         .upload-area h3 {
@@ -532,7 +539,7 @@
         <div class="upload-section">
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                 <h3>Load CSV File</h3>
-                <p>Click here to select a file or paste content below</p>
+                <p>Click here to select a file or drag and drop a CSV file</p>
                 <input type="file" id="fileInput" accept=".csv,.txt">
             </div>
             <textarea id="csvInput" placeholder="Or paste CSV content here..."></textarea>
@@ -554,7 +561,7 @@
         let historyIndex = -1;
         let hasIDColumn = false;
 
-        // Carrega arquivo
+        // Carrega arquivo via input
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -563,6 +570,42 @@
                     document.getElementById('csvInput').value = event.target.result;
                 };
                 reader.readAsText(file);
+            }
+        });
+
+        // Drag and Drop
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.csv') || file.name.endsWith('.txt') || file.type === 'text/plain' || file.type === 'text/csv') {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById('csvInput').value = event.target.result;
+                        showToast('File loaded successfully!');
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showToast('Please drop a CSV or TXT file', 'error');
+                }
             }
         });
 
@@ -616,7 +659,7 @@
                 const parts = line.split(separator);
                 const lineUpper = line.toUpperCase();
                 
-                // Detecta cabeçalho - agora aceita qualquer linha com CODIGO e NOME DO TIPO
+                // Detecta cabeçalho
                 if (lineUpper.includes('CODIGO') && lineUpper.includes('NOME DO TIPO')) {
                     columnNames = parts.map(p => p.trim()).filter(p => p !== '');
                     hasIDColumn = columnNames.some(col => col.toUpperCase() === 'ID');
@@ -836,28 +879,50 @@
                     };
                     groupSection.appendChild(groupTitle);
 
+                    // Ordena tipos por ID (4 dígitos)
+                    const sortedTypes = Object.keys(data[span][group]).sort((typeA, typeB) => {
+                        const elementsA = data[span][group][typeA];
+                        const elementsB = data[span][group][typeB];
+                        
+                        const idA = elementsA[0]?.id || '';
+                        const idB = elementsB[0]?.id || '';
+                        
+                        // Se ambos têm ID numérico, ordena numericamente
+                        if (idA.match(/^\d+$/) && idB.match(/^\d+$/)) {
+                            return parseInt(idA) - parseInt(idB);
+                        }
+                        
+                        // IDs numéricos vêm primeiro
+                        if (idA.match(/^\d+$/)) return -1;
+                        if (idB.match(/^\d+$/)) return 1;
+                        
+                        // Senão, ordena alfabeticamente
+                        return idA.localeCompare(idB);
+                    });
+
                     // Processa cada tipo de elemento
-                    Object.keys(data[span][group]).forEach(typeName => {
+                    sortedTypes.forEach(typeName => {
                         const elements = data[span][group][typeName];
                         
-                        // Ordena elementos
+                        // Ordena elementos por CÓDIGO (2 dígitos) em ordem crescente
                         elements.sort((a, b) => {
-                            if (a.id && b.id) {
-                                const idA = parseInt(a.id) || 0;
-                                const idB = parseInt(b.id) || 0;
-                                if (idA !== idB) return idA - idB;
-                            }
-                            if (a.id && !b.id) return -1;
-                            if (!a.id && b.id) return 1;
-                            
                             const codeA = a.code || a.mark || '';
                             const codeB = b.code || b.mark || '';
                             
-                            if (codeA.match(/^\d+$/) && codeB.match(/^\d+$/)) {
-                                return parseInt(codeA) - parseInt(codeB);
+                            // Prioridade 1: Elementos com código vêm primeiro
+                            if (codeA && !codeB) return -1;
+                            if (!codeA && codeB) return 1;
+                            
+                            // Prioridade 2: Se ambos têm código, ordena numericamente
+                            if (codeA && codeB) {
+                                if (codeA.match(/^\d+$/) && codeB.match(/^\d+$/)) {
+                                    return parseInt(codeA) - parseInt(codeB);
+                                }
+                                return codeA.localeCompare(codeB);
                             }
                             
-                            return codeA.localeCompare(codeB);
+                            // Prioridade 3: Se nenhum tem código, mantém ordem original
+                            return 0;
                         });
                         
                         const elementKey = `${span}_${group}_${typeName}`;
