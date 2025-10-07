@@ -1037,58 +1037,110 @@
         }
       }
 
-      // Função para gerar arquivo KML
-      function generateKML(forKMZ = false) {
-        const allPoints = [...imagePoints, ...importedPoints];
-        
-        if (allPoints.length === 0) return null;
-        
-        let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+     // 3. MÉTODO: generateKML (atualizado com informações de rodovias)
+function generateKML(forKMZ = false) {
+  const allPoints = [...imagePoints, ...importedPoints];
+  
+  if (allPoints.length === 0) return null;
+  
+  let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>Pontos Georreferenciados</name>
     <description>Arquivo KML gerado pelo Conversor de Imagens Georreferenciadas - ZenithSolutions OAE Support</description>
 `;
 
-        allPoints.forEach((point, index) => {
-          const currentName = renamedFiles.get(point.filename) || point.filename;
-          const isRenamed = renamedFiles.has(point.filename);
-          const isImported = point.imported || false;
-          
-          // Construir descrição detalhada
-          let description = `<![CDATA[
+  allPoints.forEach((point, index) => {
+    const currentName = renamedFiles.get(point.filename) || point.filename;
+    const isRenamed = renamedFiles.has(point.filename);
+    const isImported = point.imported || false;
+    
+    // Construir descrição detalhada
+    let description = `<![CDATA[
 <h3>${currentName}</h3>
 <p><strong>Coordenadas:</strong><br/>
 Latitude: ${point.latitude.toFixed(8)}<br/>
 Longitude: ${point.longitude.toFixed(8)}</p>
 `;
 
-          if (point.datetime) {
-            description += `<p><strong>Data/Hora:</strong> ${point.datetime}</p>`;
-          }
-          
-          // Para KMZ, incluir referência à imagem se disponível
-          if (forKMZ && !isImported && imageDataMap.has(point.filename)) {
-            const imageFilename = (renamedFiles.get(point.filename) || point.filename).replace(/\.[^/.]+$/, ".jpg");
-            description += `
+    // Data/Hora
+    if (point.datetime) {
+      description += `<p><strong>Data/Hora:</strong> ${point.datetime}</p>`;
+    }
+    
+    // Imagem para KMZ
+    if (forKMZ && !isImported && imageDataMap.has(point.filename)) {
+      const imageFilename = (renamedFiles.get(point.filename) || point.filename).replace(/\.[^/.]+$/, ".jpg");
+      description += `
 <p><strong>Imagem:</strong></p>
 <img src="images/${imageFilename}" width="300" alt="${currentName}"/>`;
-          }
-          
-          if (isRenamed && !isImported) {
-            description += `<p><strong>Nome Original:</strong> ${point.filename}</p>`;
-            description += `<p><strong>Status:</strong> Arquivo renomeado</p>`;
-          }
-          
-          if (isImported) {
-            description += `<p><strong>Tipo:</strong> Ponto importado de KML</p>`;
-          } else {
-            description += `<p><strong>Tipo:</strong> Extraído de imagem georreferenciada</p>`;
-          }
-          
-          description += `]]>`;
-          
-          kmlContent += `
+    }
+    
+    // Tipo de ponto
+    if (isImported) {
+      description += `<p><strong>Tipo:</strong> Ponto importado de KML</p>`;
+    } else {
+      description += `<p><strong>Tipo:</strong> Extraído de imagem georreferenciada</p>`;
+    }
+    
+    // SEÇÃO DE RODOVIAS
+    if (point.rodovias && point.rodovias.rodovias && point.rodovias.rodovias.length > 0) {
+      description += `
+<div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 5px;">
+  <p><strong>🛣️ Rodovias Próximas:</strong></p>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+    <thead>
+      <tr style="background: #e9ecef;">
+        <th style="padding: 6px; border: 1px solid #dee2e6; text-align: left;">BR</th>
+        <th style="padding: 6px; border: 1px solid #dee2e6; text-align: left;">KM</th>
+        <th style="padding: 6px; border: 1px solid #dee2e6; text-align: left;">UF</th>
+        <th style="padding: 6px; border: 1px solid #dee2e6; text-align: left;">Trecho</th>
+      </tr>
+    </thead>
+    <tbody>`;
+      
+      // Adicionar cada rodovia
+      point.rodovias.rodovias.forEach(rodovia => {
+        const isKmZero = parseFloat(rodovia.km) === 0;
+        const kmDisplay = isKmZero ? `${rodovia.km} ⚠️` : rodovia.km;
+        const rowStyle = isKmZero ? 'background: #fff3cd;' : '';
+        
+        description += `
+      <tr style="${rowStyle}">
+        <td style="padding: 6px; border: 1px solid #dee2e6;">BR-${rodovia.br}</td>
+        <td style="padding: 6px; border: 1px solid #dee2e6;">${kmDisplay}</td>
+        <td style="padding: 6px; border: 1px solid #dee2e6;">${rodovia.uf}</td>
+        <td style="padding: 6px; border: 1px solid #dee2e6;">${rodovia.tipoTrecho}</td>
+      </tr>`;
+      });
+      
+      description += `
+    </tbody>
+  </table>`;
+      
+      // Nota sobre KM zero se houver
+      const temKmZero = point.rodovias.rodovias.some(r => parseFloat(r.km) === 0);
+      if (temKmZero) {
+        description += `
+  <p style="margin-top: 8px; font-size: 12px; color: #856404;">
+    <strong>⚠️ Atenção:</strong> KM 0 pode indicar imprecisão na localização ou ponto fora da rodovia mapeada.
+  </p>`;
+      }
+      
+      description += `
+</div>`;
+    } else if (point.rodovias) {
+      // Caso tenha sido consultado mas não encontrou rodovias
+      description += `
+<div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-left: 4px solid #95a5a6; border-radius: 5px;">
+  <p><strong>🛣️ Rodovias:</strong> Nenhuma rodovia encontrada nas proximidades</p>
+</div>`;
+    }
+    
+    description += `]]>`;
+    
+    // Criar placemark
+    kmlContent += `
     <Placemark>
       <name>${escapeXml(currentName)}</name>
       <description>${description}</description>
@@ -1096,15 +1148,14 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         <coordinates>${point.longitude},${point.latitude},0</coordinates>
       </Point>
     </Placemark>`;
-        });
-        
-        kmlContent += `
+  });
+  
+  kmlContent += `
   </Document>
 </kml>`;
-        
-        return kmlContent;
-      }
-
+  
+  return kmlContent;
+}
       // Nova função para gerar arquivo KMZ
       async function generateKMZ() {
         if (imagePoints.length === 0) {
@@ -1459,22 +1510,26 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         });
       }
 
-      // Processar dados das rodovias
-      function processarDadosRodovias(dadosDNIT) {
-        if (!dadosDNIT || !Array.isArray(dadosDNIT)) {
-          return { rodovias: [] };
-        }
-        
-        const rodovias = dadosDNIT.map(item => ({
-          br: item.br || 'N/A',
-          km: item.km || '0',
-          uf: item.uf || 'N/A',
-          tipoTrecho: item.tipoTrecho || 'N/A',
-          versao: item.versao || 'N/A'
-        }));
-        
-        return { rodovias };
-      }
+     // 1. MÉTODO: processarDadosRodovias (atualizado com validações robustas)
+function processarDadosRodovias(dadosDNIT) {
+  // Validação de entrada
+  if (!dadosDNIT || !Array.isArray(dadosDNIT) || dadosDNIT.length === 0) {
+    return { rodovias: [] };
+  }
+  
+  // Mapear e validar cada rodovia
+  const rodovias = dadosDNIT
+    .filter(item => item && typeof item === 'object')
+    .map(item => ({
+      br: item.br || 'N/A',
+      km: item.km !== undefined && item.km !== null ? String(item.km) : '0',
+      uf: item.uf || 'N/A',
+      tipoTrecho: item.tipoTrecho || 'N/A',
+      versao: item.versao || 'N/A'
+    }));
+  
+  return { rodovias };
+}
 
       // Gerar HTML das informações de rodovias (COMPACTO)
       function gerarHtmlRodovias(dadosProcessados, coordenadas) {
@@ -2248,33 +2303,88 @@ Longitude: ${point.longitude.toFixed(8)}</p>
         img.src = dataUrl;
       }
 
-      // Atualiza o progresso
-      function updateProgress() {
-        processedImages++;
-        const percentage = Math.round((processedImages / totalImages) * 100);
-        progress.style.width = percentage + "%";
-        progress.textContent = percentage + "%";
+      // 2. MÉTODO: updateProgress (atualizado com consulta de rodovias)
+async function updateProgress() {
+  processedImages++;
+  const percentage = Math.round((processedImages / totalImages) * 100);
+  progress.style.width = percentage + "%";
+  progress.textContent = percentage + "%";
 
-        debugLog(`Progresso: ${processedImages}/${totalImages} (${percentage}%)`);
+  debugLog(`Progresso: ${processedImages}/${totalImages} (${percentage}%)`);
 
-        if (processedImages === totalImages) {
-          const totalPoints = imagePoints.length + importedPoints.length;
-          if (totalPoints > 0) {
-            downloadKmlBtn.disabled = false;
-            downloadCsvBtn.disabled = false;
+  // Quando todas as imagens forem processadas
+  if (processedImages === totalImages) {
+    
+    // Se há imagens com geolocalização, consultar rodovias
+    if (imagePoints.length > 0) {
+      debugLog(`Iniciando consulta de rodovias para ${imagePoints.length} pontos`);
+      
+      // Atualizar UI para mostrar consulta de rodovias
+      progress.textContent = "Consultando rodovias...";
+      progress.style.background = "linear-gradient(45deg, #9b59b6, #8e44ad)";
+      
+      let consultasRealizadas = 0;
+      const totalConsultas = imagePoints.length;
+      
+      // Percorrer cada ponto e consultar rodovias
+      for (let i = 0; i < imagePoints.length; i++) {
+        const point = imagePoints[i];
+        const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
+        
+        // Verificar se já existe no cache
+        if (rodoviaCache.has(coordKey)) {
+          point.rodovias = rodoviaCache.get(coordKey);
+          debugLog(`Rodovia do cache para: ${point.filename}`);
+        } else {
+          try {
+            // Consultar API DNIT
+            const dadosDNIT = await consultarRodoviasDNIT(point.latitude, point.longitude);
+            const dadosProcessados = processarDadosRodovias(dadosDNIT);
             
-            // Habilitar KMZ apenas se há imagens com geolocalização
-            if (imagePoints.length > 0) {
-              downloadKmzBtn.disabled = false;
-            }
+            // Armazenar no cache e no ponto
+            rodoviaCache.set(coordKey, dadosProcessados);
+            point.rodovias = dadosProcessados;
             
-            plotPointsOnMap();
+            debugLog(`Rodovia consultada para: ${point.filename}`);
+            
+            // Pausa para não sobrecarregar API (200ms)
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+          } catch (error) {
+            console.warn(`Erro ao consultar rodovias para ${point.filename}:`, error);
+            point.rodovias = { rodovias: [] };
           }
-          
-          debugLog(`Processamento concluído: ${imagePoints.length} imagens com GPS de ${totalImages} total`);
         }
+        
+        // Atualizar progresso visual
+        consultasRealizadas++;
+        const percentualRodovias = Math.round((consultasRealizadas / totalConsultas) * 100);
+        progress.textContent = `Rodovias: ${percentualRodovias}%`;
       }
-
+      
+      // Restaurar aparência da barra de progresso
+      progress.style.background = "linear-gradient(45deg, #3498db, #2ecc71)";
+      progress.textContent = "100% - Concluído!";
+      
+      debugLog(`Consulta de rodovias concluída para ${imagePoints.length} pontos`);
+    }
+    
+    // Habilitar botões
+    const totalPoints = imagePoints.length + importedPoints.length;
+    if (totalPoints > 0) {
+      downloadKmlBtn.disabled = false;
+      downloadCsvBtn.disabled = false;
+      
+      if (imagePoints.length > 0) {
+        downloadKmzBtn.disabled = false;
+      }
+      
+      plotPointsOnMap();
+    }
+    
+    debugLog(`Processamento concluído: ${imagePoints.length} imagens com GPS de ${totalImages} total`);
+  }
+}
       // Converter coordenadas DMS para Decimal Degrees
       function convertDMSToDD(dms, ref) {
         if (!dms || dms.length !== 3) return null;
