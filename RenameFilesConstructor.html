@@ -1200,42 +1200,42 @@
       }
 
       // Gerar nome (com suporte a numeração personalizada e nome original)
-      function generateName(index) {
-        // Se deve manter nome original
-        if (keepOriginalName.checked) {
-          return files[index].name;
-        }
-        
-        // Se há padrão personalizado detectado, usar ele
-        if (customNumberingPattern) {
-          const currentNumber = customNumberingPattern.startNumber + index;
-          const name = customNumberingPattern.prefix + 
-                      customNumberingPattern.separator + 
-                      String(currentNumber).padStart(String(customNumberingPattern.startNumber).length, "0");
-          
-          // Adicionar extensão original
-          const originalFile = files[index];
-          const extension = originalFile.name.substring(originalFile.name.lastIndexOf("."));
-          return name + extension;
-        }
-        
-        // Lógica original se não há padrão personalizado
-        const prefix = prefixInput.value.trim();
-        const suffix = suffixInput.value.trim();
-        const shouldAddNumber = addNumbering.checked;
+     // Gerar nome (com suporte a numeração personalizada, nome original e CONTINUIDADE)
+function generateName(index) {
+  // Se deve manter nome original
+  if (keepOriginalName.checked) {
+    return files[index].name;
+  }
+  
+  // Se há padrão personalizado detectado, usar ele
+  if (customNumberingPattern) {
+    const currentNumber = customNumberingPattern.startNumber + index;
+    const name = customNumberingPattern.prefix + 
+                customNumberingPattern.separator + 
+                String(currentNumber).padStart(String(customNumberingPattern.startNumber).length, "0");
+    
+    // Adicionar extensão original
+    const originalFile = files[index];
+    const extension = originalFile.name.substring(originalFile.name.lastIndexOf("."));
+    return name + extension;
+  }
+  
+  // Lógica original se não há padrão personalizado
+  const prefix = prefixInput.value.trim();
+  const suffix = suffixInput.value.trim();
+  const shouldAddNumber = addNumbering.checked;
 
-        let name = "";
-        if (prefix) name += prefix;
-        if (shouldAddNumber) name += String(index + 1).padStart(2, "0");
-        if (suffix) name += suffix;
-        if (!name) name = "arquivo" + String(index + 1).padStart(2, "0");
+  let name = "";
+  if (prefix) name += prefix;
+  if (shouldAddNumber) name += String(index + 1).padStart(2, "0");
+  if (suffix) name += suffix;
+  if (!name) name = "arquivo" + String(index + 1).padStart(2, "0");
 
-        // Adicionar extensão original (não editável)
-        const originalFile = files[index];
-        const extension = originalFile.name.substring(originalFile.name.lastIndexOf("."));
-        return name + extension;
-      }
-
+  // Adicionar extensão original (não editável)
+  const originalFile = files[index];
+  const extension = originalFile.name.substring(originalFile.name.lastIndexOf("."));
+  return name + extension;
+}
       // Gerar descrição
       function generateDescription() {
         const separator = separatorSelect.value;
@@ -1250,27 +1250,86 @@
       }
 
       // Manipular seleção de arquivos
-      function handleFileSelect(e) {
-        files = Array.from(e.target.files);
-        fileData = files.map((file, index) => ({
-          originalName: file.name,
-          newName: "",
-          description: "",
-          file: file,
-          keepOriginal: false
-        }));
+    // Manipular seleção de arquivos (VERSÃO COM ADIÇÃO INCREMENTAL)
+function handleFileSelect(e) {
+  const newFiles = Array.from(e.target.files);
+  
+  // Se não há arquivos existentes, comportamento normal
+  if (files.length === 0) {
+    files = newFiles;
+    fileData = files.map((file, index) => ({
+      originalName: file.name,
+      newName: "",
+      description: "",
+      file: file,
+      keepOriginal: false
+    }));
 
-        fileCounter.textContent = `${files.length} arquivo(s)`;
-        
-        if (files.length > 0) {
-          currentFileIndex = 0;
-          currentFileSection.style.display = "block";
-          selectCurrentFile();
-        }
+    fileCounter.textContent = `${files.length} arquivo(s)`;
+    
+    if (files.length > 0) {
+      currentFileIndex = 0;
+      currentFileSection.style.display = "block";
+      selectCurrentFile();
+    }
 
-        updateTable();
-        updateButtonStates();
-      }
+    updateTable();
+    updateButtonStates();
+    return;
+  }
+
+  // JÁ EXISTEM ARQUIVOS - ADICIONAR INCREMENTALMENTE
+  const existingNames = new Set(files.map(f => f.name));
+  const uniqueFiles = [];
+  const duplicates = [];
+  
+  // Verificar duplicatas
+  newFiles.forEach(file => {
+    if (existingNames.has(file.name)) {
+      duplicates.push(file.name);
+    } else {
+      uniqueFiles.push(file);
+    }
+  });
+  
+  // Se todos são duplicados, mostrar aviso e sair
+  if (uniqueFiles.length === 0) {
+    showMessage(`Todos os ${newFiles.length} arquivo(s) já existem na lista!`, "error");
+    fileInput.value = ""; // Resetar input
+    return;
+  }
+  
+  // Adicionar arquivos únicos aos arrays existentes
+  const startIndex = files.length; // Guardar índice inicial para os novos
+  
+  uniqueFiles.forEach((file, idx) => {
+    files.push(file);
+    fileData.push({
+      originalName: file.name,
+      newName: "",
+      description: "",
+      file: file,
+      keepOriginal: false
+    });
+  });
+  
+  // Atualizar contador
+  fileCounter.textContent = `${files.length} arquivo(s)`;
+  
+  // Atualizar interface
+  updateTable();
+  updateButtonStates();
+  
+  // Mostrar mensagem de sucesso
+  let message = `${uniqueFiles.length} arquivo(s) adicionado(s)!`;
+  if (duplicates.length > 0) {
+    message += ` (${duplicates.length} duplicado(s) ignorado(s))`;
+  }
+  showMessage(message, "success");
+  
+  // Resetar input para permitir selecionar os mesmos arquivos novamente depois
+  fileInput.value = "";
+}
 
       // Selecionar arquivo atual
       function selectCurrentFile() {
