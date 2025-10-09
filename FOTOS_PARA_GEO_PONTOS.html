@@ -831,46 +831,57 @@
     </div>
 
     <script>
-      // Versão: 4.4
+      // Versão: 5.0
+// Variáveis globais - MODO INCREMENTAL
+
+// Arrays principais (NÃO devem ser resetados em handleFiles)
+let imagePoints = [];
+let importedPoints = [];
+let originalFiles = new Map();
+let imageDataMap = new Map();
+let renamedFiles = new Map();
+
+// Variáveis de controle do LOTE ATUAL (resetadas a cada novo lote)
+let processedImages = 0;      // Imagens processadas do lote atual
+let imagesWithGeo = 0;        // Imagens com GPS do lote atual
+let totalImages = 0;          // Total de imagens do lote atual
+
+// Variáveis de estatísticas ACUMULADAS (NÃO resetar)
+let importedCount = 0;        // Total de pontos importados (acumulado)
+
+// Variáveis do mapa e componentes
+let map;
+let markersLayer;
+let droneZonesLayer;
+let currentTileLayer;
+let previewTimeout;
+let isPreviewOpen = false;
+
+// Caches (mantidos entre lotes)
+let rodoviaCache = new Map();
+let droneDataCache = new Map();
+let airportCache = new Map();
+
+// Variáveis de controle de estado
+let droneZonesActive = false;
+
+// Elementos DOM (definidos uma vez)
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const resultsBody = document.getElementById("resultsBody");
+const downloadKmlBtn = document.getElementById("downloadKmlBtn");
+const downloadKmzBtn = document.getElementById("downloadKmzBtn");
+const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+const downloadZipBtn = document.getElementById("downloadZipBtn");
+const progressBar = document.getElementById("progressBar");
+const progress = document.getElementById("progress");
+const layerSelector = document.getElementById("layerSelector");
+const maxZoomBtn = document.getElementById("maxZoomBtn");
+const droneToggle = document.getElementById("droneToggle");
+const droneLegend = document.getElementById("droneLegend");
+const droneLoading = document.getElementById("droneLoading");
+const imagePreview = document.getElementById("imagePreview");
       
-      // Variáveis globais
-      let imagePoints = [];
-      let importedPoints = [];
-      let originalFiles = new Map();
-      let imageDataMap = new Map();
-      let renamedFiles = new Map();
-      let processedImages = 0;
-      let imagesWithGeo = 0;
-      let totalImages = 0;
-      let importedCount = 0;
-      let map;
-      let markersLayer;
-      let droneZonesLayer;
-      let currentTileLayer;
-      let previewTimeout;
-      let isPreviewOpen = false;
-      let rodoviaCache = new Map();
-      let droneZonesActive = false;
-      let droneDataCache = new Map();
-      let airportCache = new Map();
-
-      // Elementos DOM
-      const dropZone = document.getElementById("dropZone");
-      const fileInput = document.getElementById("fileInput");
-      const resultsBody = document.getElementById("resultsBody");
-      const downloadKmlBtn = document.getElementById("downloadKmlBtn");
-      const downloadKmzBtn = document.getElementById("downloadKmzBtn");
-      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const progressBar = document.getElementById("progressBar");
-      const progress = document.getElementById("progress");
-      const layerSelector = document.getElementById("layerSelector");
-      const maxZoomBtn = document.getElementById("maxZoomBtn");
-      const droneToggle = document.getElementById("droneToggle");
-      const droneLegend = document.getElementById("droneLegend");
-      const droneLoading = document.getElementById("droneLoading");
-      const imagePreview = document.getElementById("imagePreview");
-
       // Função de debug - apenas console
       function debugLog(message) {
         console.log(message);
@@ -1156,78 +1167,109 @@ Longitude: ${point.longitude.toFixed(8)}</p>
   
   return kmlContent;
 }
-      // Nova função para gerar arquivo KMZ
-      async function generateKMZ() {
-        if (imagePoints.length === 0) {
-          alert('Nenhuma imagem georreferenciada disponível para KMZ.');
-          return;
-        }
+     // Versão: 5.2
+// Nova função para gerar arquivo KMZ COM DEBUG
+async function generateKMZ() {
+  if (imagePoints.length === 0) {
+    alert('Nenhuma imagem georreferenciada disponível para KMZ.');
+    return;
+  }
 
-        try {
-          debugLog('Iniciando geração do KMZ');
-          
-          // Carregar JSZip se necessário
-          await new Promise((resolve, reject) => {
-            if (window.JSZip) {
-              resolve();
-              return;
-            }
-
-            const script = document.createElement("script");
-            script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-            script.onload = resolve;
-            script.onerror = () => reject(new Error("Erro ao carregar JSZip"));
-            document.head.appendChild(script);
-          });
-
-          const zip = new JSZip();
-          
-          // Gerar KML específico para KMZ
-          const kmlContent = generateKML(true);
-          zip.file("doc.kml", kmlContent);
-          
-          // Criar pasta de imagens
-          const imagesFolder = zip.folder("images");
-          
-          // Adicionar cada imagem ao ZIP
-          const imagePromises = imagePoints.map(async (point) => {
-            if (imageDataMap.has(point.filename)) {
-              const imageData = imageDataMap.get(point.filename);
-              const currentName = renamedFiles.get(point.filename) || point.filename;
-              
-              // Converter nome para .jpg
-              const imageFilename = currentName.replace(/\.[^/.]+$/, ".jpg");
-              
-              // Converter data URL para blob
-              const response = await fetch(imageData);
-              const blob = await response.blob();
-              const arrayBuffer = await blob.arrayBuffer();
-              
-              imagesFolder.file(imageFilename, arrayBuffer);
-              debugLog(`Adicionada imagem: ${imageFilename}`);
-            }
-          });
-          
-          await Promise.all(imagePromises);
-          
-          // Gerar o arquivo KMZ
-          const kmzBlob = await zip.generateAsync({ type: "blob" });
-          
-          // Download
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(kmzBlob);
-          link.download = "pontos_georreferenciados.kmz";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          debugLog('KMZ gerado com sucesso');
-          
-        } catch (error) {
-          debugLog(`Erro ao gerar KMZ: ${error.message}`);
-          alert('Erro ao gerar arquivo KMZ: ' + error.message);
-        }
+  try {
+    debugLog('=== INICIANDO GERAÇÃO KMZ ===');
+    debugLog(`Total de imagePoints: ${imagePoints.length}`);
+    debugLog(`Total de entradas em imageDataMap: ${imageDataMap.size}`);
+    
+    // Listar todos os arquivos no imageDataMap
+    debugLog('Arquivos em imageDataMap:');
+    for (let [key, value] of imageDataMap.entries()) {
+      debugLog(`  - ${key} (tamanho: ${value.length} chars)`);
+    }
+    
+    // Carregar JSZip se necessário
+    await new Promise((resolve, reject) => {
+      if (window.JSZip) {
+        resolve();
+        return;
       }
+
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("Erro ao carregar JSZip"));
+      document.head.appendChild(script);
+    });
+
+    const zip = new JSZip();
+    
+    // Gerar KML específico para KMZ
+    debugLog('Gerando KML com forKMZ=true');
+    const kmlContent = generateKML(true);
+    zip.file("doc.kml", kmlContent);
+    
+    // Criar pasta de imagens
+    const imagesFolder = zip.folder("images");
+    
+    debugLog('Iniciando adição de imagens ao KMZ...');
+    let imagensAdicionadas = 0;
+    
+    // Adicionar cada imagem ao ZIP
+    const imagePromises = imagePoints.map(async (point) => {
+      debugLog(`Processando ponto: ${point.filename}`);
+      
+      if (imageDataMap.has(point.filename)) {
+        const imageData = imageDataMap.get(point.filename);
+        const currentName = renamedFiles.get(point.filename) || point.filename;
+        
+        // Converter nome para .jpg
+        const imageFilename = currentName.replace(/\.[^/.]+$/, ".jpg");
+        
+        debugLog(`  ✓ Imagem encontrada! Nome final: ${imageFilename}`);
+        debugLog(`  Tamanho do dataURL: ${imageData.length} chars`);
+        
+        // Converter data URL para blob
+        const response = await fetch(imageData);
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        
+        debugLog(`  Tamanho do blob: ${blob.size} bytes`);
+        debugLog(`  Tamanho do arrayBuffer: ${arrayBuffer.byteLength} bytes`);
+        
+        imagesFolder.file(imageFilename, arrayBuffer);
+        imagensAdicionadas++;
+        debugLog(`  ✓✓ Adicionada ao ZIP: ${imageFilename}`);
+      } else {
+        debugLog(`  ✗ IMAGEM NÃO ENCONTRADA no imageDataMap: ${point.filename}`);
+      }
+    });
+    
+    await Promise.all(imagePromises);
+    
+    debugLog(`Total de imagens adicionadas ao KMZ: ${imagensAdicionadas}`);
+    
+    // Gerar o arquivo KMZ
+    debugLog('Gerando arquivo KMZ final...');
+    const kmzBlob = await zip.generateAsync({ type: "blob" });
+    debugLog(`Tamanho do KMZ gerado: ${kmzBlob.size} bytes`);
+    
+    // Download
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(kmzBlob);
+    link.download = "pontos_georreferenciados.kmz";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    debugLog('=== KMZ GERADO COM SUCESSO ===');
+    debugLog(`Arquivo: pontos_georreferenciados.kmz (${kmzBlob.size} bytes)`);
+    
+  } catch (error) {
+    debugLog(`ERRO ao gerar KMZ: ${error.message}`);
+    console.error('Stack trace:', error);
+    alert('Erro ao gerar arquivo KMZ: ' + error.message);
+  }
+}
+
 
       // Função para escapar caracteres especiais XML
       function escapeXml(text) {
@@ -2090,34 +2132,43 @@ function processarDadosRodovias(dadosDNIT) {
         `;
       }
 
-      // Atualizar tabela de resultados (incluindo pontos importados)
-      function updateResultsTable() {
-        resultsBody.innerHTML = "";
-        
-        const allPoints = combineAllPoints();
-        
-        allPoints.forEach((point) => {
-          const currentName = renamedFiles.get(point.filename) || point.filename;
-          const isRenamed = renamedFiles.has(point.filename);
-          const isImported = point.imported || false;
-          
-          const row = resultsBody.insertRow();
-          
-          const nameCell = row.insertCell(0);
-          if (isImported) {
-            nameCell.innerHTML = `<span style="color: #9b59b6;">${currentName}</span><br><small style="color: #9b59b6; font-style: italic; font-size: 10px;">(Importado)</small>`;
-          } else if (isRenamed) {
-            nameCell.innerHTML = `<span class="renamed-indicator">${currentName}</span><br><small class="original-name" style="font-size: 10px;">${point.filename}</small>`;
-          } else {
-            nameCell.textContent = currentName;
-          }
-          
-          row.insertCell(1).textContent = point.latitude.toFixed(8);
-          row.insertCell(2).textContent = point.longitude.toFixed(8);
-          row.insertCell(3).textContent = point.datetime || "N/A";
-        });
-      }
-
+      // Versão: 5.0
+// Atualiza a tabela de resultados com TODOS os pontos (acumulado)
+function updateResultsTable() {
+  // Limpar tabela para reconstruir com todos os pontos
+  resultsBody.innerHTML = "";
+  
+  // Combinar TODOS os pontos (imagens + importados)
+  const allPoints = combineAllPoints();
+  
+  debugLog(`Atualizando tabela com ${allPoints.length} pontos totais`);
+  
+  // Adicionar cada ponto à tabela
+  allPoints.forEach((point) => {
+    const currentName = renamedFiles.get(point.filename) || point.filename;
+    const isRenamed = renamedFiles.has(point.filename);
+    const isImported = point.imported || false;
+    
+    const row = resultsBody.insertRow();
+    
+    // Célula do nome
+    const nameCell = row.insertCell(0);
+    if (isImported) {
+      nameCell.innerHTML = `<span style="color: #9b59b6;">${currentName}</span><br><small style="color: #9b59b6; font-style: italic; font-size: 10px;">(Importado)</small>`;
+    } else if (isRenamed) {
+      nameCell.innerHTML = `<span class="renamed-indicator">${currentName}</span><br><small class="original-name" style="font-size: 10px;">${point.filename}</small>`;
+    } else {
+      nameCell.textContent = currentName;
+    }
+    
+    // Células de dados
+    row.insertCell(1).textContent = point.latitude.toFixed(8);
+    row.insertCell(2).textContent = point.longitude.toFixed(8);
+    row.insertCell(3).textContent = point.datetime || "N/A";
+  });
+  
+  debugLog(`Tabela atualizada com sucesso`);
+}
       // Setup de eventos
       dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -2139,171 +2190,182 @@ function processarDadosRodovias(dadosDNIT) {
         handleFiles(e.target.files);
       });
 
-      // Função principal para processar os arquivos
-      function handleFiles(files) {
-        if (!files || files.length === 0) {
-          debugLog('Nenhum arquivo selecionado');
-          return;
-        }
+     // Versão: 5.0
+// Função principal para processar os arquivos de forma INCREMENTAL
+function handleFiles(files) {
+  if (!files || files.length === 0) {
+    debugLog('Nenhum arquivo selecionado');
+    return;
+  }
 
-        debugLog(`Processando ${files.length} arquivos`);
+  debugLog(`Processando ${files.length} arquivos de forma incremental`);
 
-        // Reset
-        imagePoints = [];
-        originalFiles.clear();
-        imageDataMap.clear();
-        renamedFiles.clear();
-        processedImages = 0;
-        imagesWithGeo = 0;
-        totalImages = files.length;
-        resultsBody.innerHTML = "";
+  // IMPORTANTE: NÃO resetar mais estas variáveis (modo incremental)
+  // imagePoints = [];
+  // originalFiles.clear();
+  // imageDataMap.clear();
+  // renamedFiles.clear();
 
-        document.getElementById("totalImages").textContent = totalImages;
-        document.getElementById("geoImages").textContent = "0";
-        document.getElementById("renamedImages").textContent = "0";
+  // Reset apenas das variáveis de controle do LOTE ATUAL
+  processedImages = 0;
+  imagesWithGeo = 0;
+  const currentBatchSize = files.length;
+  totalImages = currentBatchSize; // agora representa apenas o lote atual
 
-        progressBar.style.display = "block";
-        progress.style.width = "0%";
-        progress.textContent = "0%";
+  // Atualizar estatística total (incremental)
+  const totalImagesCount = imagePoints.length + importedPoints.length + currentBatchSize;
+  document.getElementById("totalImages").textContent = totalImagesCount;
 
-        downloadKmlBtn.disabled = true;
-        downloadKmzBtn.disabled = true;
-        downloadCsvBtn.disabled = true;
-        downloadZipBtn.disabled = true;
+  // NÃO limpar a tabela - ela será atualizada incrementalmente
+  // resultsBody.innerHTML = "";
 
-        if (markersLayer) {
-          markersLayer.clearLayers();
-        }
+  // Mostrar barra de progresso
+  progressBar.style.display = "block";
+  progress.style.width = "0%";
+  progress.textContent = "0%";
 
-        // Verificar se EXIF está disponível
-        if (typeof EXIF === 'undefined') {
-          debugLog('ERRO: Biblioteca EXIF não carregada');
-          alert('Erro: Biblioteca EXIF não foi carregada. Recarregue a página.');
-          return;
-        }
+  // NÃO desabilitar botões se já tiverem pontos
+  if (imagePoints.length === 0 && importedPoints.length === 0) {
+    downloadKmlBtn.disabled = true;
+    downloadKmzBtn.disabled = true;
+    downloadCsvBtn.disabled = true;
+    downloadZipBtn.disabled = true;
+  }
 
-        Array.from(files).forEach((file, index) => {
-          if (!file.type.startsWith("image/")) {
-            debugLog(`Arquivo ${file.name} não é uma imagem`);
-            updateProgress();
-            return;
+  // NÃO limpar os marcadores - serão atualizados ao final
+  // if (markersLayer) {
+  //   markersLayer.clearLayers();
+  // }
+
+  // Verificar se EXIF está disponível
+  if (typeof EXIF === 'undefined') {
+    debugLog('ERRO: Biblioteca EXIF não carregada');
+    alert('Erro: Biblioteca EXIF não foi carregada. Recarregue a página.');
+    return;
+  }
+
+  Array.from(files).forEach((file, index) => {
+    if (!file.type.startsWith("image/")) {
+      debugLog(`Arquivo ${file.name} não é uma imagem`);
+      updateProgress();
+      return;
+    }
+
+    debugLog(`Processando imagem: ${file.name}`);
+    originalFiles.set(file.name, file);
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      processImage(file, e.target.result);
+    };
+    reader.onerror = function() {
+      debugLog(`Erro ao ler arquivo: ${file.name}`);
+      updateProgress();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+     
+
+// Versão: 5.1
+// Processa uma imagem individual
+function processImage(file, dataUrl) {
+  debugLog(`Processando imagem: ${file.name}`);
+  
+  const img = new Image();
+  img.onload = function () {
+    debugLog(`Imagem carregada: ${file.name}`);
+    
+    try {
+      EXIF.getData(img, function () {
+        let lat = null;
+        let lng = null;
+        let datetime = null;
+
+        const gpsLat = EXIF.getTag(this, "GPSLatitude");
+        const gpsLng = EXIF.getTag(this, "GPSLongitude");
+        
+        debugLog(`GPS Latitude: ${gpsLat}, GPS Longitude: ${gpsLng}`);
+
+        if (gpsLat && gpsLng) {
+          lat = convertDMSToDD(
+            gpsLat,
+            EXIF.getTag(this, "GPSLatitudeRef")
+          );
+
+          lng = convertDMSToDD(
+            gpsLng,
+            EXIF.getTag(this, "GPSLongitudeRef")
+          );
+
+          const dateTimeOriginal = EXIF.getTag(this, "DateTimeOriginal");
+          if (dateTimeOriginal) {
+            datetime = dateTimeOriginal;
           }
 
-          debugLog(`Processando imagem: ${file.name}`);
-          originalFiles.set(file.name, file);
+          debugLog(`Coordenadas convertidas: Lat=${lat}, Lng=${lng}`);
 
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            processImage(file, e.target.result);
-          };
-          reader.onerror = function() {
-            debugLog(`Erro ao ler arquivo: ${file.name}`);
-            updateProgress();
-          };
-          reader.readAsDataURL(file);
-        });
-      }
+          if (isValidCoordinate(lat, lng)) {
+            imagesWithGeo++;
 
-      // Processa uma imagem individual
-      function processImage(file, dataUrl) {
-        debugLog(`Processando imagem: ${file.name}`);
-        
-        const img = new Image();
-        img.onload = function () {
-          debugLog(`Imagem carregada: ${file.name}`);
-          
-          try {
-            EXIF.getData(img, function () {
-              let lat = null;
-              let lng = null;
-              let datetime = null;
+            // Criar versão redimensionada da imagem para economizar memória
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const maxSize = 800;
+            let { width, height } = img;
+            
+            if (width > height && width > maxSize) {
+              height = (height * maxSize) / width;
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = (width * maxSize) / height;
+              height = maxSize;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            imageDataMap.set(file.name, canvas.toDataURL('image/jpeg', 0.85));
 
-              const gpsLat = EXIF.getTag(this, "GPSLatitude");
-              const gpsLng = EXIF.getTag(this, "GPSLongitude");
-              
-              debugLog(`GPS Latitude: ${gpsLat}, GPS Longitude: ${gpsLng}`);
-
-              if (gpsLat && gpsLng) {
-                lat = convertDMSToDD(
-                  gpsLat,
-                  EXIF.getTag(this, "GPSLatitudeRef")
-                );
-
-                lng = convertDMSToDD(
-                  gpsLng,
-                  EXIF.getTag(this, "GPSLongitudeRef")
-                );
-
-                const dateTimeOriginal = EXIF.getTag(this, "DateTimeOriginal");
-                if (dateTimeOriginal) {
-                  datetime = dateTimeOriginal;
-                }
-
-                debugLog(`Coordenadas convertidas: Lat=${lat}, Lng=${lng}`);
-
-                if (isValidCoordinate(lat, lng)) {
-                  imagesWithGeo++;
-                  document.getElementById("geoImages").textContent = imagesWithGeo;
-
-                  // Criar versão redimensionada da imagem para economizar memória
-                  const canvas = document.createElement('canvas');
-                  const ctx = canvas.getContext('2d');
-                  
-                  const maxSize = 800;
-                  let { width, height } = img;
-                  
-                  if (width > height && width > maxSize) {
-                    height = (height * maxSize) / width;
-                    width = maxSize;
-                  } else if (height > maxSize) {
-                    width = (width * maxSize) / height;
-                    height = maxSize;
-                  }
-                  
-                  canvas.width = width;
-                  canvas.height = height;
-                  ctx.drawImage(img, 0, 0, width, height);
-                  
-                  imageDataMap.set(file.name, canvas.toDataURL('image/jpeg', 0.85));
-
-                  imagePoints.push({
-                    filename: file.name,
-                    latitude: lat,
-                    longitude: lng,
-                    datetime: datetime,
-                  });
-
-                  const row = resultsBody.insertRow();
-                  row.insertCell(0).textContent = file.name;
-                  row.insertCell(1).textContent = lat.toFixed(8);
-                  row.insertCell(2).textContent = lng.toFixed(8);
-                  row.insertCell(3).textContent = datetime || "N/A";
-                  
-                  debugLog(`Ponto adicionado: ${file.name}`);
-                } else {
-                  debugLog(`Coordenadas inválidas para: ${file.name}`);
-                }
-              } else {
-                debugLog(`Sem coordenadas GPS em: ${file.name}`);
-              }
-
-              updateProgress();
+            imagePoints.push({
+              filename: file.name,
+              latitude: lat,
+              longitude: lng,
+              datetime: datetime,
             });
-          } catch (error) {
-            debugLog(`Erro ao processar EXIF de ${file.name}: ${error.message}`);
-            updateProgress();
-          }
-        };
-        
-        img.onerror = function() {
-          debugLog(`Erro ao carregar imagem: ${file.name}`);
-          updateProgress();
-        };
-        
-        img.src = dataUrl;
-      }
 
-      // 2. MÉTODO: updateProgress (atualizado com consulta de rodovias)
+            // *** REMOVIDO: Não adicionar linha aqui ***
+            // A tabela será atualizada pelo updateResultsTable() no final
+            
+            debugLog(`Ponto adicionado: ${file.name}`);
+          } else {
+            debugLog(`Coordenadas inválidas para: ${file.name}`);
+          }
+        } else {
+          debugLog(`Sem coordenadas GPS em: ${file.name}`);
+        }
+
+        updateProgress();
+      });
+    } catch (error) {
+      debugLog(`Erro ao processar EXIF de ${file.name}: ${error.message}`);
+      updateProgress();
+    }
+  };
+  
+  img.onerror = function() {
+    debugLog(`Erro ao carregar imagem: ${file.name}`);
+    updateProgress();
+  };
+  
+  img.src = dataUrl;
+}
+
+
+// Versão: 5.0
+// Atualiza o progresso do processamento do LOTE ATUAL
 async function updateProgress() {
   processedImages++;
   const percentage = Math.round((processedImages / totalImages) * 100);
@@ -2312,23 +2374,31 @@ async function updateProgress() {
 
   debugLog(`Progresso: ${processedImages}/${totalImages} (${percentage}%)`);
 
-  // Quando todas as imagens forem processadas
+  // Quando todas as imagens DO LOTE ATUAL forem processadas
   if (processedImages === totalImages) {
     
-    // Se há imagens com geolocalização, consultar rodovias
-    if (imagePoints.length > 0) {
-      debugLog(`Iniciando consulta de rodovias para ${imagePoints.length} pontos`);
+    // Atualizar estatística de imagens com geo (TOTAL acumulado)
+    const totalGeoImages = imagePoints.length;
+    document.getElementById("geoImages").textContent = totalGeoImages;
+    
+    // Contar quantas imagens NOVAS têm geolocalização
+    const novasImagensComGeo = imagesWithGeo;
+    
+    // Se há NOVAS imagens com geolocalização, consultar rodovias
+    if (novasImagensComGeo > 0) {
+      debugLog(`Iniciando consulta de rodovias para ${novasImagensComGeo} novos pontos`);
       
       // Atualizar UI para mostrar consulta de rodovias
       progress.textContent = "Consultando rodovias...";
       progress.style.background = "linear-gradient(45deg, #9b59b6, #8e44ad)";
       
       let consultasRealizadas = 0;
-      const totalConsultas = imagePoints.length;
       
-      // Percorrer cada ponto e consultar rodovias
-      for (let i = 0; i < imagePoints.length; i++) {
-        const point = imagePoints[i];
+      // Percorrer apenas os NOVOS pontos (últimos adicionados)
+      const pontosNovos = imagePoints.slice(-novasImagensComGeo);
+      
+      for (let i = 0; i < pontosNovos.length; i++) {
+        const point = pontosNovos[i];
         const coordKey = `${point.latitude.toFixed(6)}_${point.longitude.toFixed(6)}`;
         
         // Verificar se já existe no cache
@@ -2358,7 +2428,7 @@ async function updateProgress() {
         
         // Atualizar progresso visual
         consultasRealizadas++;
-        const percentualRodovias = Math.round((consultasRealizadas / totalConsultas) * 100);
+        const percentualRodovias = Math.round((consultasRealizadas / pontosNovos.length) * 100);
         progress.textContent = `Rodovias: ${percentualRodovias}%`;
       }
       
@@ -2366,10 +2436,13 @@ async function updateProgress() {
       progress.style.background = "linear-gradient(45deg, #3498db, #2ecc71)";
       progress.textContent = "100% - Concluído!";
       
-      debugLog(`Consulta de rodovias concluída para ${imagePoints.length} pontos`);
+      debugLog(`Consulta de rodovias concluída para ${pontosNovos.length} novos pontos`);
     }
     
-    // Habilitar botões
+    // Atualizar tabela com TODOS os pontos (incluindo os novos)
+    updateResultsTable();
+    
+    // Habilitar botões (se ainda não estiverem)
     const totalPoints = imagePoints.length + importedPoints.length;
     if (totalPoints > 0) {
       downloadKmlBtn.disabled = false;
@@ -2379,12 +2452,15 @@ async function updateProgress() {
         downloadKmzBtn.disabled = false;
       }
       
+      // Atualizar mapa com TODOS os pontos
       plotPointsOnMap();
     }
     
-    debugLog(`Processamento concluído: ${imagePoints.length} imagens com GPS de ${totalImages} total`);
+    debugLog(`Processamento do lote concluído: ${novasImagensComGeo} novas imagens com GPS de ${totalImages} processadas`);
+    debugLog(`Total acumulado: ${imagePoints.length} imagens com GPS`);
   }
 }
+      
       // Converter coordenadas DMS para Decimal Degrees
       function convertDMSToDD(dms, ref) {
         if (!dms || dms.length !== 3) return null;
