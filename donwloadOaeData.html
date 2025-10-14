@@ -1,0 +1,454 @@
+<!-- Versão: 5.0 - Console Script com CSV Completo -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNIT OAE Manager - Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .code-box {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 20px 0;
+            max-height: 500px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left: 5px solid #17a2b8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ DNIT OAE Manager</h1>
+            <p>Extrator Completo via Console</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>📋 Instruções</h2>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Acesse o DNIT e faça login:</strong><br>
+                    <code>https://servicos.dnit.gov.br/sgplan/prd/sge/</code>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Abra o Console:</strong><br>
+                    Pressione <code>F12</code> ou <code>Ctrl+Shift+J</code>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Copie e cole o código abaixo</strong> no console
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Aguarde a coleta automática</strong> de todos os dados
+                </div>
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Exporte os dados:</strong><br>
+                    Digite <code>downloadCSV()</code> ou <code>downloadJSON()</code>
+                </div>
+            </div>
+
+            <div class="section">
+                <button class="btn" onclick="copiarCodigo()">
+                    📋 Copiar Código Completo
+                </button>
+
+                <div class="code-box" id="codigoScript">// Versão: 5.0 - DNIT OAE Extractor - CSV Simplificado (12 campos essenciais)
+(async function() {
+    console.log('🚀 DNIT OAE Extractor v5.0 - CSV Simplificado');
+    console.log('═══════════════════════════════════════\n');
+
+    const API_BASE_URL = 'https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/CadastroOae/obterListaManterOaes';
+    const RESPONSAVEIS = [
+        '36228eff-525f-4629-b406-f308ebe605da',
+        '21484127-2d2f-4a72-9382-83e21bd03dc6',
+        '5c2a0c7d-6308-4b79-82ec-9e7a2cbd1af5',
+        'c2536023-a24c-4d2d-8dd1-541fc559d3b9',
+        '3d0448dd-c9d1-4da1-92c3-f05fd9b2351a',
+        '2ece7b1c-4550-488c-a9fc-aa49fd0e0f3f',
+        '598d003e-cd89-46e3-ba26-e0a880ce743f',
+        '570a3aef-92fc-4ef2-b660-eccd8fcc2ec7',
+        'b6988556-b011-4f6e-a119-70d29727bb08',
+        '2c42ab19-c634-412e-92a6-382979ad3ca2'
+    ];
+
+    let todosOsDados = [];
+    let bearerToken = null;
+
+    function obterBearerToken() {
+        console.log('🔑 Buscando Bearer Token...');
+        
+        try {
+            const oidcKey = Object.keys(sessionStorage).find(key => 
+                key.includes('oidc-user') && key.includes('dnit.gov.br')
+            );
+            
+            if (oidcKey) {
+                const oidcData = JSON.parse(sessionStorage.getItem(oidcKey));
+                if (oidcData && oidcData.access_token) {
+                    console.log('✅ Token encontrado no sessionStorage');
+                    return oidcData.access_token;
+                }
+            }
+        } catch (e) {
+            console.log('⚠️ Erro ao buscar token:', e.message);
+        }
+
+        console.log('⚠️ Token não encontrado');
+        return null;
+    }
+
+    function construirURL(pageIndex = 0) {
+        const params = [];
+        params.push('pageSize=15');
+        params.push('status=5');
+        
+        RESPONSAVEIS.forEach(id => {
+            params.push(`responsaveis=${id}`);
+        });
+        
+        if (pageIndex > 0) {
+            params.push(`pageIndex=${pageIndex}`);
+        }
+        
+        return `${API_BASE_URL}?${params.join('&')}`;
+    }
+
+    async function fazerRequisicao(url, token) {
+        const headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Authorization': `Bearer ${token}`
+        };
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+        });
+
+        return response;
+    }
+
+    async function extrairDados(token) {
+        console.log('\n📊 Iniciando extração...\n');
+        
+        try {
+            let pageIndex = 0;
+            let hasNextPage = true;
+            let totalCount = 0;
+
+            while (hasNextPage) {
+                console.log(`📄 Buscando página ${pageIndex + 1}...`);
+                
+                const url = construirURL(pageIndex);
+                const response = await fazerRequisicao(url, token);
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                todosOsDados.push(...data.items);
+                totalCount = data.totalCount;
+                hasNextPage = data.hasNextPage;
+                pageIndex++;
+
+                console.log(`   ✅ ${data.items.length} itens coletados`);
+                console.log(`   📊 Progresso: ${todosOsDados.length}/${totalCount}`);
+            }
+
+            console.log('\n🎉 EXTRAÇÃO CONCLUÍDA!\n');
+            exibirEstatisticas();
+            configurarExportacao();
+
+        } catch (error) {
+            console.error('\n❌ ERRO:', error.message);
+        }
+    }
+
+    function exibirEstatisticas() {
+        console.log('═══════════════════════════════════════');
+        console.log('📊 ESTATÍSTICAS:');
+        console.log('═══════════════════════════════════════');
+        console.log(`   Total de OAEs: ${todosOsDados.length}`);
+        console.log(`   BRs únicas: ${[...new Set(todosOsDados.map(item => item.br))].length}`);
+        console.log(`   Estados: ${[...new Set(todosOsDados.map(item => item.uf))].length}`);
+        
+        const porStatus = todosOsDados.reduce((acc, item) => {
+            acc[item.status] = (acc[item.status] || 0) + 1;
+            return acc;
+        }, {});
+        
+        console.log('\n   Status:');
+        Object.entries(porStatus).forEach(([status, count]) => {
+            console.log(`     - ${status}: ${count}`);
+        });
+        
+        console.log('═══════════════════════════════════════\n');
+    }
+
+    function configurarExportacao() {
+        window.todosOsDados = todosOsDados;
+        
+        window.downloadJSON = function() {
+            const dataStr = JSON.stringify(todosOsDados, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `oaes_dnit_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Arquivo JSON baixado!');
+        };
+
+        window.downloadCSV = function() {
+            // CSV com campos essenciais
+            const headers = [
+                'ID OAE',
+                'Identificação',
+                'Natureza Estrutura',
+                'ID Natureza Estrutura',
+                'Código SGO',
+                'BR',
+                'UF',
+                'Status',
+                'KM',
+                'Nome Inspetor',
+                'Nome Avaliador',
+                'Localizado'
+            ];
+            
+            const rows = todosOsDados.map(item => [
+                item.idOae || '',
+                item.identificacao || '',
+                item.naturezaEstrutura || '',
+                item.idNaturezaEstrutura || '',
+                item.codigoSgo || '',
+                item.br || '',
+                item.uf || '',
+                item.status || '',
+                item.km || '',
+                item.nomeInspetor || '',
+                item.nomeAvaliador || '',
+                item.localizado || ''
+            ]);
+            
+            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `oaes_dnit_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Arquivo CSV baixado!');
+        };
+
+        console.log('💾 COMANDOS DE EXPORTAÇÃO:');
+        console.log('   • downloadJSON() - Baixar JSON completo');
+        console.log('   • downloadCSV()  - Baixar CSV com 12 campos essenciais');
+        console.log('   • todosOsDados   - Ver dados no console\n');
+    }
+
+    window.extrairComToken = async function(token) {
+        todosOsDados = [];
+        bearerToken = token.replace('Bearer ', '');
+        await extrairDados(bearerToken);
+    };
+
+    bearerToken = obterBearerToken();
+    
+    if (bearerToken) {
+        console.log('🎯 Token encontrado! Iniciando...\n');
+        await extrairDados(bearerToken);
+    } else {
+        console.log('⚠️ Token não encontrado automaticamente\n');
+        console.log('📋 Execute: extrairComToken("SEU_TOKEN")');
+    }
+
+})();</div>
+            </div>
+
+            <div class="section">
+                <h2>✨ Campos do CSV (12 colunas essenciais)</h2>
+                <div class="success">
+                    <strong>CSV simplificado com os campos mais importantes:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li><strong>ID OAE</strong> - Identificador único (GUID)</li>
+                        <li><strong>Identificação</strong> - Nome da obra</li>
+                        <li><strong>Natureza Estrutura</strong> - Tipo da estrutura</li>
+                        <li><strong>ID Natureza Estrutura</strong> - ID do tipo</li>
+                        <li><strong>Código SGO</strong> - Código no sistema SGO</li>
+                        <li><strong>BR</strong> - Rodovia</li>
+                        <li><strong>UF</strong> - Estado</li>
+                        <li><strong>Status</strong> - Status da inspeção</li>
+                        <li><strong>KM</strong> - Quilometragem</li>
+                        <li><strong>Nome Inspetor</strong> - Responsável pela inspeção</li>
+                        <li><strong>Nome Avaliador</strong> - Responsável pela avaliação</li>
+                        <li><strong>Localizado</strong> - Localização completa (BR/UF km)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🎯 Funcionalidades</h2>
+                <div class="info">
+                    <ul>
+                        <li>✅ Detecta token automaticamente</li>
+                        <li>✅ Coleta TODAS as páginas automaticamente</li>
+                        <li>✅ CSV simplificado com 12 campos essenciais</li>
+                        <li>✅ JSON completo com todos os dados</li>
+                        <li>✅ UTF-8 com BOM para Excel</li>
+                        <li>✅ Estatísticas detalhadas</li>
+                        <li>✅ Sem problemas de CORS</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copiarCodigo() {
+            const code = document.getElementById('codigoScript').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Código copiado!\n\nAgora:\n1. Acesse o DNIT logado\n2. Abra o Console (F12)\n3. Cole o código e pressione Enter\n4. Aguarde a coleta\n5. Digite: downloadCSV()');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Código copiado!');
+            });
+        }
+    </script>
+</body>
+</html>
