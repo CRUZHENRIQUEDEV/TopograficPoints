@@ -1,0 +1,1327 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAE Support</title>
+    <!-- Chart.js é a única dependência externa -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        /* Versão: 5.0 - Estilo simplificado e robusto */
+        :root {
+            --bg-color: #1e3d59;
+            --text-color: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --highlight: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background-color: var(--highlight);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        button#exportBtn {
+            background-color: var(--success);
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 2px;
+        }
+        
+        .tab.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        /* Status colors */
+        .status-avaliacao { background-color: rgba(243, 156, 18, 0.2); }
+        .status-aprovada { background-color: rgba(39, 174, 96, 0.2); }
+        .status-reprovada { background-color: rgba(231, 76, 60, 0.2); }
+        .status-reavaliacao { background-color: rgba(52, 152, 219, 0.2); }
+        
+        .filter-container {
+            margin-bottom: 15px;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        select, input[type="text"], input[type="date"] {
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 30px;
+        }
+        
+        select option {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-box {
+            flex: 1 0 300px;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            height: 300px; /* Altura fixa para evitar esticamento */
+            position: relative; /* Importante para posicionamento do canvas */
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        canvas {
+            width: 100% !important;
+            height: 220px !important; /* Altura fixa para o canvas */
+            max-height: 220px !important; /* Garantir altura máxima */
+        }
+        
+        .message-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--highlight);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .message-content {
+            white-space: pre-wrap;
+            margin-left: 15px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .missing-fields {
+            background-color: rgba(231, 76, 60, 0.2);
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            .chart-box {
+                flex: 1 0 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OAE Support</h1>
+            <p>Ferramentas Profissionais para Topografia e Levantamentos</p>
+        </header>
+        
+        <div class="card">
+            <h2>Processador de Mensagens</h2>
+            <textarea id="whatsappText" placeholder="Cole aqui as mensagens exportadas do WhatsApp..."></textarea>
+            <div class="button-group">
+                <button id="processBtn">Processar Mensagens</button>
+                <button id="exportBtn" disabled>Exportar para CSV</button>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="dados">Dados</div>
+            <div class="tab" data-tab="estatisticas">Estatísticas</div>
+            <div class="tab" data-tab="despadronizadas">Despadronizadas</div>
+        </div>
+        
+        <!-- Tab: Dados -->
+        <div id="dados-tab" class="tab-content active">
+            <div class="card">
+                <div class="filter-container">
+                    <div class="filter-row">
+                        <select id="filterLote">
+                            <option value="">Todos os Lotes</option>
+                        </select>
+                        <select id="filterStatus">
+                            <option value="">Todos os Status</option>
+                        </select>
+                        <select id="filterTipo">
+                            <option value="">Todos os Tipos</option>
+                        </select>
+                        <input type="text" id="filterCodigo" placeholder="Filtrar por Código">
+                    </div>
+                    <div class="filter-row">
+                        <label for="startDate">Data inicial:</label>
+                        <input type="date" id="startDate" placeholder="DD/MM/AAAA">
+                        <label for="endDate">Data final:</label>
+                        <input type="date" id="endDate" placeholder="DD/MM/AAAA">
+                        <button id="applyFiltersBtn">Aplicar Filtros</button>
+                        <button id="clearFiltersBtn">Limpar Filtros</button>
+                    </div>
+                </div>
+                
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Remetente</th>
+                            <th>Lote</th>
+                            <th>Código OAE</th>
+                            <th>Tipo de Inspeção</th>
+                            <th>Data de Entrega/Envio</th>
+                            <th>Data de Recebimento</th>
+                            <th>Data de Devolução/Retorno</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="9" style="text-align: center;">Nenhum dado processado. Cole as mensagens e clique em "Processar".</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Tab: Estatísticas -->
+        <div id="estatisticas-tab" class="tab-content">
+            <div class="charts-container">
+                <div class="chart-box">
+                    <div class="chart-title">Quantidade por Status</div>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">Reprovações por Código OAE</div>
+                    <canvas id="reprovacaoChart"></canvas>
+                </div>
+            </div>
+            <div class="charts-container">
+                <div class="chart-box">
+                    <div class="chart-title">Quem mais Aprova</div>
+                    <canvas id="aprovadorChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">Quem mais Reprova</div>
+                    <canvas id="reprovadorChart"></canvas>
+                </div>
+            </div>
+            <div class="charts-container">
+                <div class="chart-box">
+                    <div class="chart-title">Tempo Médio de Avaliação (Dias)</div>
+                    <canvas id="tempoChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">Tipo de Inspeção</div>
+                    <canvas id="tipoChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Despadronizadas -->
+        <div id="despadronizadas-tab" class="tab-content">
+            <div class="card">
+                <h2>Mensagens com Formato Irregular</h2>
+                <p>Abaixo estão listadas mensagens que não seguem completamente o padrão esperado:</p>
+                <div id="irregularMessages">
+                    <p>Nenhuma mensagem irregular encontrada.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Versão: 5.0 - JavaScript simplificado
+        document.addEventListener('DOMContentLoaded', function() {
+
+
+               // Função de formatação de data para o formato brasileiro
+    function formatDateBR(dateStr) {
+        if (!dateStr) return '';
+        
+        // Se já estiver no formato DD/MM/YYYY, retornar como está
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+            return dateStr;
+        }
+        
+        // Se estiver no formato YYYY-MM-DD (do input date), converter para DD/MM/YYYY
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            const parts = dateStr.split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        
+        // Tentar converter de outras formas
+        try {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+        } catch (e) {
+            // Se falhar, retornar o original
+        }
+        
+        return dateStr;
+    }
+    
+    // Elementos DOM
+    const whatsappText = document.getElementById('whatsappText');
+    const processBtn = document.getElementById('processBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const resultTable = document.getElementById('resultTable');
+
+
+         
+            const filterLote = document.getElementById('filterLote');
+            const filterStatus = document.getElementById('filterStatus');
+            const filterTipo = document.getElementById('filterTipo');
+            const filterCodigo = document.getElementById('filterCodigo');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const irregularMessages = document.getElementById('irregularMessages');
+            
+            // Dados
+            let processedData = [];
+            let irregularData = [];
+            
+            // Event Listeners
+            processBtn.addEventListener('click', processMessages);
+            exportBtn.addEventListener('click', exportToCSV);
+            applyFiltersBtn.addEventListener('click', applyFilters);
+            clearFiltersBtn.addEventListener('click', clearFilters);
+            
+            // Tabs
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Desativar todas as abas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(t => t.classList.remove('active'));
+                    
+                    // Ativar a aba clicada
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+                    
+                    // Se for a aba de estatísticas e houver dados, atualizar gráficos
+                    if (tab.dataset.tab === 'estatisticas' && processedData.length > 0) {
+                        updateCharts();
+                    }
+                });
+            });
+            
+            // Funções Principais
+            function processMessages() {
+                const text = whatsappText.value.trim();
+                if (!text) {
+                    alert('Por favor, cole o texto das conversas do WhatsApp.');
+                    return;
+                }
+                
+                // Limpar dados anteriores
+                processedData = [];
+                irregularData = [];
+                
+                // Feedback visual
+                resultTable.querySelector('tbody').innerHTML = '<tr><td colspan="9" style="text-align: center;">Processando...</td></tr>';
+                
+                // Separar as linhas
+                const lines = text.split('\n');
+                console.log(`Processando ${lines.length} linhas`);
+                
+                // Variáveis para processamento
+                let currentMessage = null;
+                let currentText = '';
+                let isProcessingMessage = false;
+                
+                // Processar cada linha
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    // Pular linhas vazias ou do sistema
+                    if (!line || isSystemMessage(line)) {
+                        continue;
+                    }
+                    
+                    // Verificar se é uma nova mensagem
+                    const dateMessageMatch = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}) - (.+?): (.*)$/);
+                    
+                    if (dateMessageMatch) {
+                        // Salvar mensagem anterior se existir
+                        if (isProcessingMessage && currentMessage) {
+                            checkAndSaveMessage(currentMessage, currentText);
+                        }
+                        
+                        // Iniciar nova mensagem
+                        const date = dateMessageMatch[1];
+                        const sender = dateMessageMatch[2];
+                        const content = dateMessageMatch[3];
+                        
+                        currentMessage = {
+                            data: date,
+                            remetente: sender,
+                            lote: '',
+                            codigoOAE: '',
+                            tipoInspecao: '',
+                            dataEntrega: '',
+                            dataRecebimento: '',
+                            dataDevolucao: '',
+                            status: ''
+                        };
+                        
+                        currentText = content;
+                        isProcessingMessage = true;
+                        
+                        // Processar conteúdo inicial
+                        extractData(content, currentMessage);
+                    } 
+                    else if (isProcessingMessage && currentMessage) {
+                        // Linha de continuação
+                        currentText += '\n' + line;
+                        extractData(line, currentMessage);
+                    }
+                }
+                
+                // Processar a última mensagem
+                if (isProcessingMessage && currentMessage) {
+                    checkAndSaveMessage(currentMessage, currentText);
+                }
+                
+                console.log(`Mensagens processadas: ${processedData.length}, Irregulares: ${irregularData.length}`);
+                
+                // Atualizar interface
+                updateTable();
+                updateFilterOptions();
+                updateIrregularMessages();
+                initializeDateFilters();
+                
+                // Habilitar exportação
+                exportBtn.disabled = processedData.length === 0;
+                
+                // Marcar aba de estatísticas para atualização
+                document.querySelector('.tab[data-tab="estatisticas"]').setAttribute('data-needs-update', 'true');
+            }
+            
+            function isSystemMessage(line) {
+                return (
+                    line.includes('As mensagens e ligações são protegidas') || 
+                    line.includes('criou o grupo') || 
+                    line.includes('adicionou você')
+                );
+            }
+            
+            function extractData(text, message) {
+                // Extrair Lote
+                extractLote(text, message);
+                
+                // Extrair Código OAE
+                extractCodigoOAE(text, message);
+                
+                // Extrair Tipo de Inspeção
+                extractTipoInspecao(text, message);
+                
+                // Extrair Datas
+                extractDatas(text, message);
+                
+                // Extrair Status
+                extractStatus(text, message);
+            }
+            
+            function extractLote(text, message) {
+                const loteMatch = text.match(/Lote:?\s*(\d+)/i) || text.match(/Lote\s*(\d+)/i);
+                if (loteMatch) {
+                    message.lote = loteMatch[1];
+                }
+            }
+            
+            function extractCodigoOAE(text, message) {
+                const codigoMatch = text.match(/Código OAE:?\s*([0-9\/]+)/i) || 
+                                    text.match(/Código\s*(?:da)?\s*OAE:?\s*([0-9\/]+)/i) || 
+                                    text.match(/OAE:?\s*([0-9\/]+)/i);
+                if (codigoMatch) {
+                    message.codigoOAE = codigoMatch[1].trim();
+                }
+            }
+            
+            function extractTipoInspecao(text, message) {
+                const tipoMatch = text.match(/Tipo de Inspeção:?\s*([A-Za-zÀ-ú]+)/i) || 
+                                  text.match(/Tipo\s*(?:de)?\s*Inspeção:?\s*([A-Za-zÀ-ú]+)/i);
+                
+                if (tipoMatch) {
+                    message.tipoInspecao = normalizeTipoInspecao(tipoMatch[1].trim());
+                } 
+                else if (text.includes("Cadastral") || text.includes("CADASTRAL")) {
+                    message.tipoInspecao = "Cadastral";
+                } 
+                else if (text.includes("Rotineira") || text.includes("ROTINEIRA") || 
+                         text.includes("ROTINEIRRA") || text.includes("ROTINIEIRA")) {
+                    message.tipoInspecao = "Rotineira";
+                }
+                
+                // Também verificar campos específicos
+                const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
+                if (fieldMatch) {
+                    const field = normalizeText(fieldMatch[1].trim());
+                    const value = fieldMatch[2].trim();
+                    
+                    if (field.includes('tipo') || field.includes('inspecao')) {
+                        message.tipoInspecao = normalizeTipoInspecao(value);
+                    }
+                }
+            }
+            
+            function extractDatas(text, message) {
+                // Data de Entrega/Envio
+                const dataEntregaMatch = text.match(/Data de [Ee]ntrega:?\s*(\d{2}\/\d{2}\/\d{4})/) || 
+                                         text.match(/Data de [Ee]nvio:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
+                                         text.match(/Data(?:\s*de)?\s*(?:[Ee]ntrega|[Ee]nvio):?\s*(\d{2}\/\d{2}\/\d{4})/);
+                if (dataEntregaMatch) {
+                    message.dataEntrega = dataEntregaMatch[1];
+                }
+                
+                // Data de Recebimento
+                const dataRecebimentoMatch = text.match(/Data de [Rr]ecebimento:?\s*(\d{2}\/\d{2}\/\d{4})/) || 
+                                             text.match(/Data(?:\s*de)?\s*[Rr]ecebimento:?\s*(\d{2}\/\d{2}\/\d{4})/);
+                if (dataRecebimentoMatch) {
+                    message.dataRecebimento = dataRecebimentoMatch[1];
+                }
+                
+                // Data de Devolução/Retorno
+                const dataDevolucaoMatch = text.match(/Data de [Dd]evolução:?\s*(\d{2}\/\d{2}\/\d{4})/) || 
+                                           text.match(/Data de [Rr]etorno:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
+                                           text.match(/Data(?:\s*de)?\s*(?:[Dd]evolução|[Rr]etorno):?\s*(\d{2}\/\d{2}\/\d{4})/);
+                if (dataDevolucaoMatch) {
+                    message.dataDevolucao = dataDevolucaoMatch[1];
+                }
+                
+                // Também verificar campos específicos
+                const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
+                if (fieldMatch) {
+                    const field = normalizeText(fieldMatch[1].trim());
+                    const value = fieldMatch[2].trim();
+                    
+                    if (field.includes('data') && (field.includes('entrega') || field.includes('envio'))) {
+                        message.dataEntrega = value;
+                    } else if (field.includes('data') && field.includes('recebimento')) {
+                        message.dataRecebimento = value;
+                    } else if (field.includes('data') && (field.includes('devolucao') || field.includes('retorno'))) {
+                        message.dataDevolucao = value;
+                    }
+                }
+            }
+            
+            function extractStatus(text, message) {
+                const statusMatch = text.match(/Status:?\s*([A-Za-zÀ-ú\s0-9ª<>]+)(?:<|$)/i);
+                
+                if (statusMatch) {
+                    message.status = normalizeStatus(statusMatch[1].trim());
+                } 
+                else if (text.toUpperCase().includes("APROVADA") || text.includes("aprovada")) {
+                    message.status = "APROVADA";
+                } 
+                else if (text.toUpperCase().includes("REPROVADA") || text.includes("reprovada")) {
+                    message.status = "REPROVADA";
+                } 
+                else if (text.toUpperCase().includes("AVALIAÇÃO") || text.includes("Avaliação") || text.includes("avaliação")) {
+                    message.status = "AVALIAÇÃO";
+                } 
+                else if (text.toUpperCase().includes("REAVALIAÇÃO") || text.includes("Reavaliação") || text.includes("reavaliação")) {
+                    message.status = "REAVALIAÇÃO";
+                } 
+                else if (text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
+                    const match = text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i);
+                    message.status = `${match[1]}ª REAVALIAÇÃO`;
+                } 
+                else if (text.includes("RETIFICAÇÃO DE CADASTRO") || normalizeText(text).includes("retificacao")) {
+                    message.status = "RETIFICAÇÃO DE CADASTRO";
+                }
+                
+                // Também verificar campos específicos
+                const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
+                if (fieldMatch) {
+                    const field = normalizeText(fieldMatch[1].trim());
+                    const value = fieldMatch[2].trim();
+                    
+                    if (field.includes('status')) {
+                        message.status = normalizeStatus(value);
+                    }
+                }
+            }
+            
+            function checkAndSaveMessage(message, text) {
+                // Verificar campos obrigatórios
+                const missingFields = [];
+                let fieldsCount = 0;
+                
+                if (message.lote) fieldsCount++;
+                else missingFields.push('Lote');
+                
+                if (message.codigoOAE) fieldsCount++;
+                else missingFields.push('Código OAE');
+                
+                if (message.tipoInspecao) fieldsCount++;
+                else missingFields.push('Tipo de Inspeção');
+                
+                if (message.status) fieldsCount++;
+                else missingFields.push('Status');
+                
+                // Salvar mensagem
+                processedData.push(message);
+                
+                // Se faltam muitos campos, marcar como irregular
+                if (fieldsCount < 3) {
+                    irregularData.push({
+                        data: message.data,
+                        remetente: message.remetente,
+                        texto: text,
+                        camposFaltantes: missingFields.join(', ')
+                    });
+                }
+            }
+            
+            function updateTable(dataToShow = processedData) {
+                const tbody = resultTable.querySelector('tbody');
+                tbody.innerHTML = '';
+                
+                if (dataToShow.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Nenhum dado processado. Cole as mensagens e clique em "Processar".</td></tr>';
+                    return;
+                }
+                
+                // Ordenar por data (mais recente primeiro)
+                dataToShow.sort((a, b) => {
+                    const dateA = a.data.split(' ')[0].split('/').reverse().join('');
+                    const dateB = b.data.split(' ')[0].split('/').reverse().join('');
+                    return dateB.localeCompare(dateA);
+                });
+                
+                dataToShow.forEach(message => {
+                    const row = document.createElement('tr');
+                    
+                    // Definir classe baseada no status
+                    const statusLower = (message.status || '').toLowerCase();
+                    if (statusLower.includes('avaliação') || statusLower.includes('avaliacao')) {
+                        row.classList.add('status-avaliacao');
+                    } else if (statusLower.includes('aprovada') || statusLower.includes('aprovado')) {
+                        row.classList.add('status-aprovada');
+                    } else if (statusLower.includes('reprovada') || statusLower.includes('reprovado')) {
+                        row.classList.add('status-reprovada');
+                    } else if (statusLower.includes('reavaliação') || statusLower.includes('reavaliacao')) {
+                        row.classList.add('status-reavaliacao');
+                    }
+                    
+                    // Formatar todas as datas para o formato brasileiro
+                    const dataEntrega = formatDateBR(message.dataEntrega);
+                    const dataRecebimento = formatDateBR(message.dataRecebimento);
+                    const dataDevolucao = formatDateBR(message.dataDevolucao);
+                    
+                    // Normalizar o tipo de inspeção
+                    const tipoInspecao = normalizeTipoInspecao(message.tipoInspecao || '');
+                    
+                    row.innerHTML = `
+                        <td>${message.data || ''}</td>
+                        <td>${message.remetente || ''}</td>
+                        <td>${message.lote || ''}</td>
+                        <td>${message.codigoOAE || ''}</td>
+                        <td>${tipoInspecao || ''}</td>
+                        <td>${dataEntrega || ''}</td>
+                        <td>${dataRecebimento || ''}</td>
+                        <td>${dataDevolucao || ''}</td>
+                        <td>${message.status || ''}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            function updateIrregularMessages() {
+                irregularMessages.innerHTML = '';
+                
+                if (irregularData.length === 0) {
+                    irregularMessages.innerHTML = '<p>Nenhuma mensagem irregular encontrada.</p>';
+                    return;
+                }
+                
+                irregularData.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message-card';
+                    
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span>${message.data} - ${message.remetente}</span>
+                            <span class="missing-fields">Campos faltantes: ${message.camposFaltantes}</span>
+                        </div>
+                        <div class="message-content">${message.texto}</div>
+                    `;
+                    
+                    irregularMessages.appendChild(messageElement);
+                });
+            }
+            
+            function updateFilterOptions() {
+                // Limpar opções atuais
+                filterLote.innerHTML = '<option value="">Todos os Lotes</option>';
+                filterStatus.innerHTML = '<option value="">Todos os Status</option>';
+                filterTipo.innerHTML = '<option value="">Todos os Tipos</option>';
+                
+                // Conjuntos para valores únicos
+                const lotes = new Set();
+                const status = new Set();
+                const tipos = new Set();
+                
+                // Coletar valores únicos
+                processedData.forEach(message => {
+                    if (message.lote) lotes.add(message.lote);
+                    if (message.status) status.add(message.status);
+                    if (message.tipoInspecao) tipos.add(message.tipoInspecao);
+                });
+                
+                // Adicionar opções
+                lotes.forEach(lote => {
+                    const option = document.createElement('option');
+                    option.value = lote;
+                    option.textContent = `Lote ${lote}`;
+                    filterLote.appendChild(option);
+                });
+                
+                status.forEach(st => {
+                    const option = document.createElement('option');
+                    option.value = st;
+                    option.textContent = st;
+                    filterStatus.appendChild(option);
+                });
+                
+                tipos.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo;
+                    option.textContent = tipo;
+                    filterTipo.appendChild(option);
+                });
+            }
+            
+            function initializeDateFilters() {
+                if (processedData.length === 0) return;
+                
+                // Encontrar datas extremas
+                let earliestDate = new Date();
+                let latestDate = new Date(0); // 1970-01-01
+                
+                processedData.forEach(message => {
+                    if (message.data) {
+                        // Formato DD/MM/AAAA
+                        const messageDate = parseDate(message.data.split(' ')[0]);
+                        
+                        if (messageDate) {
+                            if (messageDate < earliestDate) earliestDate = messageDate;
+                            if (messageDate > latestDate) latestDate = messageDate;
+                        }
+                    }
+                });
+                
+                // Formatar para input type="date"
+                startDate.value = formatDateForInput(earliestDate);
+                endDate.value = formatDateForInput(latestDate);
+            }
+            
+            // Funções para formatação de datas
+            function formatDateForInput(date) {
+                if (!date || isNaN(date.getTime())) return '';
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            }
+            
+            function applyFilters() {
+                const loteFilter = filterLote.value;
+                const statusFilter = filterStatus.value;
+                const tipoFilter = filterTipo.value;
+                const codigoFilter = filterCodigo.value.toLowerCase();
+                
+                // Processar datas para garantir formato correto
+                const startDateValue = startDate.value ? parseDate(startDate.value) : null;
+                const endDateValue = endDate.value ? parseDate(endDate.value) : null;
+                
+                // Ajuste para incluir o dia inteiro
+                if (endDateValue) {
+                    endDateValue.setHours(23, 59, 59, 999);
+                }
+                
+                const filteredData = processedData.filter(message => {
+                    // Filtros de texto
+                    const matchesText = (
+                        (loteFilter === '' || message.lote === loteFilter) &&
+                        (statusFilter === '' || message.status === statusFilter) &&
+                        (tipoFilter === '' || normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
+                        (codigoFilter === '' || (message.codigoOAE && message.codigoOAE.toLowerCase().includes(codigoFilter)))
+                    );
+                    
+                    // Filtros de data
+                    let matchesDate = true;
+                    
+                    if (startDateValue || endDateValue) {
+                        const messageDate = parseDate(message.data.split(' ')[0]);
+                        
+                        if (messageDate) {
+                            if (startDateValue && messageDate < startDateValue) matchesDate = false;
+                            if (endDateValue && messageDate > endDateValue) matchesDate = false;
+                        }
+                    }
+                    
+                    return matchesText && matchesDate;
+                });
+                
+                updateTable(filteredData);
+            }
+            
+            function clearFilters() {
+                filterLote.value = '';
+                filterStatus.value = '';
+                filterTipo.value = '';
+                filterCodigo.value = '';
+                initializeDateFilters();
+                updateTable();
+            }
+            
+            function exportToCSV() {
+                if (processedData.length === 0) {
+                    alert('Não há dados para exportar.');
+                    return;
+                }
+                
+                // Cabeçalhos
+                const headers = [
+                    'Data', 'Remetente', 'Lote', 'Código OAE', 'Tipo de Inspeção',
+                    'Data de Entrega/Envio', 'Data de Recebimento', 'Data de Devolução/Retorno', 'Status'
+                ];
+                
+                // Linhas de dados
+                const rows = processedData.map(message => [
+                    message.data || '',
+                    message.remetente || '',
+                    message.lote || '',
+                    message.codigoOAE || '',
+                    message.tipoInspecao || '',
+                    message.dataEntrega || '',
+                    message.dataRecebimento || '',
+                    message.dataDevolucao || '',
+                    message.status || ''
+                ]);
+                
+                // Montar CSV
+                const csvContent = [
+                    headers.join(','),
+                    ...rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
+                ].join('\n');
+                
+                // Download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `dados-oae-${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.csv`);
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Funções Auxiliares
+            function normalizeText(text) {
+                if (!text) return '';
+                return text.toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .trim();
+            }
+            
+            function normalizeStatus(status) {
+                if (!status) return '';
+                
+                const normalized = normalizeText(status);
+                
+                // Categorizar status
+                if (normalized.includes('aprovada') || normalized.includes('aprovado')) {
+                    return 'APROVADA';
+                } else if (normalized.includes('reprovada') || normalized.includes('reprovado')) {
+                    return 'REPROVADA';
+                } else if (normalized.match(/\d+[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
+                    const match = normalized.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i);
+                    return `${match[1]}ª REAVALIAÇÃO`;
+                } else if (normalized.includes('reavalia') || normalized.includes('reavaliao')) {
+                    return 'REAVALIAÇÃO';
+                } else if (normalized.includes('avalia') || normalized.includes('avaliao')) {
+                    return 'AVALIAÇÃO';
+                } else if (normalized.includes('retifica') || normalized.includes('cadastro aprovado')) {
+                    return 'RETIFICAÇÃO DE CADASTRO';
+                }
+                
+                return status;
+            }
+            
+            function normalizeTipoInspecao(tipo) {
+                if (!tipo) return '';
+                
+                const normalized = normalizeText(tipo);
+                
+                // Cadastral ou Cadastrais (tratar ambos como Cadastral)
+                if (normalized.includes('cadastral') || normalized.includes('cadstral') || normalized.includes('cadastrais')) {
+                    return 'Cadastral';
+                }
+                
+                // Rotineira
+                if (normalized.includes('rotineira') || normalized.includes('rotinera') || 
+                    normalized.includes('rotineirra')) {
+                    return 'Rotineira';
+                }
+                
+                return tipo;
+            }
+            
+            // Funções de Gráficos
+            function updateCharts() {
+                if (processedData.length === 0) return;
+                
+                // Mostrar gráficos apenas se a aba estatísticas estiver ativa
+                if (!document.getElementById('estatisticas-tab').classList.contains('active')) {
+                    return;
+                }
+                
+                // 1. Status counts
+                const statusCounts = {};
+                processedData.forEach(item => {
+                    if (item.status) {
+                        const status = normalizeStatus(item.status);
+                        statusCounts[status] = (statusCounts[status] || 0) + 1;
+                    }
+                });
+                
+                // 2. Reprovações por código
+                const reprovacoesPorCodigo = {};
+                processedData.forEach(item => {
+                    if (normalizeStatus(item.status) === 'REPROVADA' && item.codigoOAE) {
+                        reprovacoesPorCodigo[item.codigoOAE] = (reprovacoesPorCodigo[item.codigoOAE] || 0) + 1;
+                    }
+                });
+                
+                // Ordenar e limitar a 10
+                const topReprovados = Object.fromEntries(
+                    Object.entries(reprovacoesPorCodigo)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 10)
+                );
+                
+                // 3. Quem mais aprova
+                const aprovadoresPorRemetente = {};
+                processedData.forEach(item => {
+                    if (normalizeStatus(item.status) === 'APROVADA' && item.remetente) {
+                        aprovadoresPorRemetente[item.remetente] = (aprovadoresPorRemetente[item.remetente] || 0) + 1;
+                    }
+                });
+                
+                // Ordenar e limitar a 10
+                const topAprovadores = Object.fromEntries(
+                    Object.entries(aprovadoresPorRemetente)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 10)
+                );
+                
+                // 4. Quem mais reprova
+                const reprovadoresPorRemetente = {};
+                processedData.forEach(item => {
+                    if (normalizeStatus(item.status) === 'REPROVADA' && item.remetente) {
+                        reprovadoresPorRemetente[item.remetente] = (reprovadoresPorRemetente[item.remetente] || 0) + 1;
+                    }
+                });
+                
+                // Ordenar e limitar a 10
+                const topReprovadores = Object.fromEntries(
+                    Object.entries(reprovadoresPorRemetente)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 10)
+                );
+                
+                // 5. Tempo médio por tipo
+                const diasPorTipo = { 'Cadastral': [], 'Rotineira': [] };
+                
+                processedData.forEach(item => {
+                    if (item.tipoInspecao && item.dataEntrega && (item.dataDevolucao || item.dataRecebimento)) {
+                        const tipo = normalizeTipoInspecao(item.tipoInspecao);
+                        const dataInicio = parseDate(item.dataEntrega);
+                        const dataFim = parseDate(item.dataDevolucao || item.dataRecebimento);
+                        
+                        if (dataInicio && dataFim && diasPorTipo[tipo]) {
+                            const dias = Math.round((dataFim - dataInicio) / (1000 * 60 * 60 * 24));
+                            if (dias >= 0) {
+                                diasPorTipo[tipo].push(dias);
+                            }
+                        }
+                    }
+                });
+                
+                // Calcular médias
+                const mediaDiasPorTipo = {};
+                Object.entries(diasPorTipo).forEach(([tipo, dias]) => {
+                    if (dias.length > 0) {
+                        mediaDiasPorTipo[tipo] = dias.reduce((sum, val) => sum + val, 0) / dias.length;
+                    } else {
+                        mediaDiasPorTipo[tipo] = 0;
+                    }
+                });
+                
+                // 6. Contagem por tipo
+                const tipoInspecaoCounts = {};
+                processedData.forEach(item => {
+                    if (item.tipoInspecao) {
+                        const tipo = normalizeTipoInspecao(item.tipoInspecao);
+                        tipoInspecaoCounts[tipo] = (tipoInspecaoCounts[tipo] || 0) + 1;
+                    }
+                });
+                
+                // Criar gráficos
+                createStatusChart(statusCounts);
+                createReprovacaoChart(topReprovados);
+                createAprovadorChart(topAprovadores);
+                createReprovadorChart(topReprovadores);
+                createTempoChart(mediaDiasPorTipo);
+                createTipoChart(tipoInspecaoCounts);
+            }
+            
+            function parseDate(dateStr) {
+                if (!dateStr) return null;
+                
+                // Formato DD/MM/YYYY para objeto Date
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+                
+                // Formato YYYY-MM-DD
+                if (dateStr.includes('-')) {
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        return new Date(parts[0], parts[1] - 1, parts[2]);
+                    }
+                }
+                
+                return null;
+            }
+            
+            // Funções de Criação de Gráficos
+            function createStatusChart(data) {
+                createChart('statusChart', data, 'bar', {
+                    indexAxis: 'x',
+                    backgroundColor: (ctx) => {
+                        const label = ctx.chart.data.labels[ctx.dataIndex].toLowerCase();
+                        if (label.includes('aprovada')) return 'rgba(39, 174, 96, 0.7)';
+                        if (label.includes('reprovada')) return 'rgba(231, 76, 60, 0.7)';
+                        if (label.includes('avaliação')) return 'rgba(243, 156, 18, 0.7)';
+                        if (label.includes('reavaliação')) return 'rgba(52, 152, 219, 0.7)';
+                        return 'rgba(149, 165, 166, 0.7)';
+                    }
+                });
+            }
+            
+            function createReprovacaoChart(data) {
+                createChart('reprovacaoChart', data, 'bar', {
+                    indexAxis: 'y',
+                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                    borderColor: 'rgba(231, 76, 60, 1)'
+                });
+            }
+            
+            function createAprovadorChart(data) {
+                createChart('aprovadorChart', data, 'bar', {
+                    indexAxis: 'y',
+                    backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                    borderColor: 'rgba(39, 174, 96, 1)'
+                });
+            }
+            
+            function createReprovadorChart(data) {
+                createChart('reprovadorChart', data, 'bar', {
+                    indexAxis: 'y',
+                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                    borderColor: 'rgba(231, 76, 60, 1)'
+                });
+            }
+            
+            function createTempoChart(data) {
+                createChart('tempoChart', data, 'bar', {
+                    indexAxis: 'x',
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    formatter: (value) => `${value.toFixed(1)} dias`
+                });
+            }
+            
+            function createTipoChart(data) {
+                const colors = [
+                    'rgba(52, 152, 219, 0.7)', // Azul
+                    'rgba(46, 204, 113, 0.7)', // Verde
+                    'rgba(155, 89, 182, 0.7)', // Roxo
+                    'rgba(241, 196, 15, 0.7)', // Amarelo
+                    'rgba(230, 126, 34, 0.7)'  // Laranja
+                ];
+                
+                createChart('tipoChart', data, 'doughnut', {
+                    backgroundColor: Object.keys(data).map((_, i) => colors[i % colors.length]),
+                    borderColor: Object.keys(data).map((_, i) => colors[i % colors.length].replace('0.7', '1')),
+                    formatter: (value, ctx) => {
+                        const dataset = ctx.chart.data.datasets[0];
+                        const total = dataset.data.reduce((acc, val) => acc + val, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${ctx.chart.data.labels[ctx.dataIndex]}: ${value} (${percentage}%)`;
+                    }
+                });
+            }
+            
+            function createChart(canvasId, data, type, options = {}) {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return; // Segurança extra
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Destruir gráfico anterior se existir
+                const existingChart = Chart.getChart(canvas);
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+                
+                // Preparar dados
+                const labels = Object.keys(data);
+                const values = Object.values(data);
+                
+                let datasets = [{
+                    label: options.label || 'Quantidade',
+                    data: values,
+                    backgroundColor: options.backgroundColor || 'rgba(52, 152, 219, 0.7)',
+                    borderColor: options.borderColor || 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1
+                }];
+                
+                // Configurações para tipos específicos
+                const chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false, // Importante para controlar altura
+                    plugins: {
+                        legend: {
+                            display: type === 'doughnut',
+                            position: 'bottom',
+                            labels: {
+                                color: '#ffffff',
+                                boxWidth: 12,
+                                padding: 10
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {}
+                        }
+                    },
+                    scales: {}
+                };
+                
+                // Adicionar formatter se fornecido
+                if (options.formatter) {
+                    chartOptions.plugins.tooltip.callbacks.label = function(context) {
+                        return options.formatter(context.raw, context);
+                    };
+                }
+                
+                // Configurações específicas para gráficos de barras
+                if (type === 'bar') {
+                    chartOptions.indexAxis = options.indexAxis || 'x';
+                    
+                    chartOptions.scales = {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    };
+                }
+                
+                // Limitar o número de ticks no eixo Y para barras horizontais
+                if (type === 'bar' && options.indexAxis === 'y') {
+                    chartOptions.scales.y.ticks.autoSkip = true;
+                    chartOptions.scales.y.ticks.maxTicksLimit = 8;
+                }
+                
+                // Criar gráfico
+                try {
+                    new Chart(ctx, {
+                        type: type,
+                        data: {
+                            labels: labels,
+                            datasets: datasets
+                        },
+                        options: chartOptions
+                    });
+                } catch (error) {
+                    console.error(`Erro ao criar gráfico ${canvasId}:`, error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

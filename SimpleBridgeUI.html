@@ -713,6 +713,10 @@
                         <label for="altura-bloco-sapata">Altura Bloco ou Sapata (m):</label>
                         <input type="number" id="altura-bloco-sapata" name="ALTURA BLOCO OU SAPATA" step="0.01" min="0">
                     </div>
+                    <div class="form-group">
+                        <label for="largura-bloco-sapata">Largura Bloco ou Sapata (m):</label>
+                        <input type="number" id="largura-bloco-sapata" name="LARGURA BLOCO OU SAPATA" step="0.01" min="0">
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -1133,7 +1137,7 @@
                 const form = document.getElementById('oae-form');
                 const formData = new FormData(form);
                 
-                // Coletar todos os campos do CSV
+                // Definir a ordem exata das colunas conforme solicitado
                 const csvColumns = [
                     "MODELADO", "CODIGO", "NOME", "UF", "RODOVIA", "KM", "DATA", "ENGENHEIRO", "TECNICO",
                     "COMPRIMENTO", "LARGURA", "ALTURA", "QTD TRAMOS", "COMPRIMENTO TRAMOS", "CORTINA ALTURA",
@@ -1144,11 +1148,12 @@
                     "ESPESSURA TRANSVERSINA", "ESPESSURA LAJE", "QTD PILARES", "PILAR DESCENTRALIZADO",
                     "LARGURA PILAR", "COMPRIMENTO PILARES", "ALTURA DO APOIO", "TIPO DE APARELHO DE APOIO",
                     "TIPO DE TRAVESSA", "ALTURA TRAVESSA", "TIPO DE ENCAMISAMENTO", "TIPO DE BLOCO OU SAPATA",
-                    "ALTURA BLOCO OU SAPATA", "VIGA DE CONTRAVENTAMENTO DE PILAR", "VIGA DE LIGAÇÃO DE FUNDAÇÕES",
-                    "BARREIRA ESQUERDA", "LARGURA BARREIRA ESQUERDA", "BARREIRA DIREITA", "LARGURA BARREIRA DIREITA",
-                    "CALÇADA ESQUERDA", "LARGURA CALÇADA ESQUERDA", "CALÇADA DIREITA", "LARGURA CALÇADA DIREITA",
-                    "GUARDA RODAS ESQUERDA", "LARGURA GUARDA RODAS ESQUERDA", "GUARDA RODAS DIREITA",
-                    "LARGURA GUARDA RODAS DIREITA", "PAVIMENTO", "QTD BUZINOTES"
+                    "ALTURA BLOCO OU SAPATA", "LARGURA BLOCO OU SAPATA", "VIGA DE CONTRAVENTAMENTO DE PILAR", 
+                    "VIGA DE LIGAÇÃO DE FUNDAÇÕES", "BARREIRA ESQUERDA", "LARGURA BARREIRA ESQUERDA", 
+                    "BARREIRA DIREITA", "LARGURA BARREIRA DIREITA", "CALÇADA ESQUERDA", "LARGURA CALÇADA ESQUERDA", 
+                    "CALÇADA DIREITA", "LARGURA CALÇADA DIREITA", "GUARDA RODAS ESQUERDA", 
+                    "LARGURA GUARDA RODAS ESQUERDA", "GUARDA RODAS DIREITA", "LARGURA GUARDA RODAS DIREITA", 
+                    "PAVIMENTO", "QTD BUZINOTES"
                 ];
                 
                 // Coletar campos personalizados
@@ -1233,8 +1238,40 @@
                 const form = document.getElementById('oae-form');
                 const formData = new FormData(form);
                 
+                // Definir a ordem exata das colunas conforme solicitado
+                const csvColumns = [
+                    "MODELADO", "CODIGO", "NOME", "UF", "RODOVIA", "KM", "DATA", "ENGENHEIRO", "TECNICO",
+                    "COMPRIMENTO", "LARGURA", "ALTURA", "QTD TRAMOS", "COMPRIMENTO TRAMOS", "CORTINA ALTURA",
+                    "ALA PARALELA", "ALA PERPENDICULAR", "COMPRIMENTO ALA", "ESPESSURA ALA", "ENCONTRO",
+                    "DESLOCAMENTO ESQUERDO ENCONTRO LAJE", "DESLOCAMENTO DIREITO ENCONTRO LAJE", 
+                    "COMPRIMENTO ENCONTRO LAJE", "LAJE DE TRANSIÇÃO", "ALTURA LONGARINA", "DESLOCAMENTO ESQUERDO",
+                    "DESLOCAMENTO DIREITO", "QTD LONGARINAS", "QTD TRANSVERSINAS", "ESPESSURA LONGARINA",
+                    "ESPESSURA TRANSVERSINA", "ESPESSURA LAJE", "QTD PILARES", "PILAR DESCENTRALIZADO",
+                    "LARGURA PILAR", "COMPRIMENTO PILARES", "ALTURA DO APOIO", "TIPO DE APARELHO DE APOIO",
+                    "TIPO DE TRAVESSA", "ALTURA TRAVESSA", "TIPO DE ENCAMISAMENTO", "TIPO DE BLOCO OU SAPATA",
+                    "ALTURA BLOCO OU SAPATA", "LARGURA BLOCO OU SAPATA", "VIGA DE CONTRAVENTAMENTO DE PILAR", 
+                    "VIGA DE LIGAÇÃO DE FUNDAÇÕES", "BARREIRA ESQUERDA", "LARGURA BARREIRA ESQUERDA", 
+                    "BARREIRA DIREITA", "LARGURA BARREIRA DIREITA", "CALÇADA ESQUERDA", "LARGURA CALÇADA ESQUERDA", 
+                    "CALÇADA DIREITA", "LARGURA CALÇADA DIREITA", "GUARDA RODAS ESQUERDA", 
+                    "LARGURA GUARDA RODAS ESQUERDA", "GUARDA RODAS DIREITA", "LARGURA GUARDA RODAS DIREITA", 
+                    "PAVIMENTO", "QTD BUZINOTES"
+                ];
+                
+                // Coletar campos personalizados
+                document.querySelectorAll('.custom-field').forEach(field => {
+                    const name = field.getAttribute('name');
+                    if (!csvColumns.includes(name)) {
+                        csvColumns.push(name);
+                    }
+                });
+                
                 // Coletar todos os campos padrão
                 const data = {};
+                // Inicializar com valores vazios
+                csvColumns.forEach(column => {
+                    data[column] = '';
+                });
+                
                 for (let [key, value] of formData.entries()) {
                     // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
                     if (!key.startsWith('tramo-') && !key.startsWith('apoio-')) {
@@ -1266,12 +1303,11 @@
                 data['ALTURA DO APOIO'] = apoiosValues.join(';');
                 
                 // Construir cabeçalhos e linha de dados
-                const headers = Object.keys(data);
                 const csvContent = 
-                    headers.join(',') + '\n' + 
-                    headers.map(header => {
+                    csvColumns.join(',') + '\n' + 
+                    csvColumns.map(column => {
                         // Valores com vírgula devem ser envolvidos em aspas duplas
-                        const value = data[header];
+                        const value = data[column] || '';
                         return (value && value.includes(',')) ? `"${value}"` : value;
                     }).join(',');
                 
@@ -1826,20 +1862,40 @@
                         return;
                     }
                     
-                    // Determinar todos os campos possíveis nas obras
-                    const allFields = new Set();
+                    // Definir a ordem exata das colunas conforme solicitado
+                    const csvColumns = [
+                        "MODELADO", "CODIGO", "NOME", "UF", "RODOVIA", "KM", "DATA", "ENGENHEIRO", "TECNICO",
+                        "COMPRIMENTO", "LARGURA", "ALTURA", "QTD TRAMOS", "COMPRIMENTO TRAMOS", "CORTINA ALTURA",
+                        "ALA PARALELA", "ALA PERPENDICULAR", "COMPRIMENTO ALA", "ESPESSURA ALA", "ENCONTRO",
+                        "DESLOCAMENTO ESQUERDO ENCONTRO LAJE", "DESLOCAMENTO DIREITO ENCONTRO LAJE", 
+                        "COMPRIMENTO ENCONTRO LAJE", "LAJE DE TRANSIÇÃO", "ALTURA LONGARINA", "DESLOCAMENTO ESQUERDO",
+                        "DESLOCAMENTO DIREITO", "QTD LONGARINAS", "QTD TRANSVERSINAS", "ESPESSURA LONGARINA",
+                        "ESPESSURA TRANSVERSINA", "ESPESSURA LAJE", "QTD PILARES", "PILAR DESCENTRALIZADO",
+                        "LARGURA PILAR", "COMPRIMENTO PILARES", "ALTURA DO APOIO", "TIPO DE APARELHO DE APOIO",
+                        "TIPO DE TRAVESSA", "ALTURA TRAVESSA", "TIPO DE ENCAMISAMENTO", "TIPO DE BLOCO OU SAPATA",
+                        "ALTURA BLOCO OU SAPATA", "LARGURA BLOCO OU SAPATA", "VIGA DE CONTRAVENTAMENTO DE PILAR", 
+                        "VIGA DE LIGAÇÃO DE FUNDAÇÕES", "BARREIRA ESQUERDA", "LARGURA BARREIRA ESQUERDA", 
+                        "BARREIRA DIREITA", "LARGURA BARREIRA DIREITA", "CALÇADA ESQUERDA", "LARGURA CALÇADA ESQUERDA", 
+                        "CALÇADA DIREITA", "LARGURA CALÇADA DIREITA", "GUARDA RODAS ESQUERDA", 
+                        "LARGURA GUARDA RODAS ESQUERDA", "GUARDA RODAS DIREITA", "LARGURA GUARDA RODAS DIREITA", 
+                        "PAVIMENTO", "QTD BUZINOTES"
+                    ];
+                    
+                    // Verificar campos personalizados em todas as obras
                     works.forEach(work => {
-                        Object.keys(work).forEach(field => allFields.add(field));
+                        Object.keys(work).forEach(field => {
+                            if (!csvColumns.includes(field)) {
+                                csvColumns.push(field);
+                            }
+                        });
                     });
                     
-                    const headers = Array.from(allFields);
-                    
                     // Construir o conteúdo do CSV
-                    let csvContent = headers.join(',') + '\n';
+                    let csvContent = csvColumns.join(',') + '\n';
                     
                     works.forEach(work => {
-                        const row = headers.map(header => {
-                            const value = work[header] || '';
+                        const row = csvColumns.map(column => {
+                            const value = work[column] || '';
                             // Valores com vírgula devem ser envolvidos em aspas duplas
                             return (value && value.includes(',')) ? `"${value}"` : value;
                         });
