@@ -399,40 +399,6 @@
         </div>
       </div>
 
-      <!-- Tab: Estatísticas -->
-      <div id="estatisticas-tab" class="tab-content">
-        <div class="charts-container">
-          <div class="chart-box">
-            <div class="chart-title">Quantidade por Status</div>
-            <canvas id="statusChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <div class="chart-title">Reprovações por Código OAE</div>
-            <canvas id="reprovacaoChart"></canvas>
-          </div>
-        </div>
-        <div class="charts-container">
-          <div class="chart-box">
-            <div class="chart-title">Quem mais Aprova</div>
-            <canvas id="aprovadorChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <div class="chart-title">Quem mais Reprova</div>
-            <canvas id="reprovadorChart"></canvas>
-          </div>
-        </div>
-        <div class="charts-container">
-          <div class="chart-box">
-            <div class="chart-title">Tempo Médio de Avaliação (Dias)</div>
-            <canvas id="tempoChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <div class="chart-title">Tipo de Inspeção</div>
-            <canvas id="tipoChart"></canvas>
-          </div>
-        </div>
-      </div>
-
       <!-- Tab: Despadronizadas -->
       <div id="despadronizadas-tab" class="tab-content">
         <div class="card">
@@ -448,8 +414,59 @@
       </div>
     </div>
 
+    <!-- Tab: Estatísticas -->
+    <div id="estatisticas-tab" class="tab-content">
+      <div class="filter-container stats-filter">
+        <div class="filter-row">
+          <select id="statsTipoFilter">
+            <option value="">Todos os Tipos de Inspeção</option>
+            <option value="CADASTRAL">CADASTRAL</option>
+            <option value="ROTINEIRA">ROTINEIRA</option>
+            <option value="CORREÇÃO DE CADASTRO">CORREÇÃO DE CADASTRO</option>
+          </select>
+          <select id="statsLoteFilter">
+            <option value="">Todos os Lotes</option>
+          </select>
+          <button id="applyStatsFiltersBtn">Aplicar Filtros</button>
+          <button id="clearStatsFiltersBtn">Limpar Filtros</button>
+        </div>
+      </div>
+      <div id="statsFilterInfo"><h3>Estatísticas</h3></div>
+      <div class="charts-container">
+        <div class="chart-box">
+          <div class="chart-title">Quantidade por Status</div>
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Reprovações por Código OAE</div>
+          <canvas id="reprovacaoChart"></canvas>
+        </div>
+      </div>
+      <div class="charts-container">
+        <div class="chart-box">
+          <div class="chart-title">Quem mais Aprova</div>
+          <canvas id="aprovadorChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Quem mais Reprova</div>
+          <canvas id="reprovadorChart"></canvas>
+        </div>
+      </div>
+      <div class="charts-container">
+        <div class="chart-box">
+          <div class="chart-title">Tempo Médio de Avaliação (Dias)</div>
+          <canvas id="tempoChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Tipo de Inspeção</div>
+          <canvas id="tipoChart"></canvas>
+        </div>
+      </div>
+    </div>
+
     <script>
-      // Versão: 5.0 - JavaScript simplificado
+      // Versão: 6.0 - Correções para processamento de mensagens OAE
+
       document.addEventListener("DOMContentLoaded", function () {
         // Função de formatação de data para o formato brasileiro
         function formatDateBR(dateStr) {
@@ -500,9 +517,18 @@
         const tabContents = document.querySelectorAll(".tab-content");
         const irregularMessages = document.getElementById("irregularMessages");
 
+        // Adicionar no bloco DOMContentLoaded
+        document
+          .getElementById("applyStatsFiltersBtn")
+          .addEventListener("click", applyStatsFilters);
+        document
+          .getElementById("clearStatsFiltersBtn")
+          .addEventListener("click", clearStatsFilters);
+
         // Dados
         let processedData = [];
         let irregularData = [];
+        let detectedDateFormat = "DD/MM/YYYY"; // Formato padrão (BR)
 
         // Event Listeners
         processBtn.addEventListener("click", processMessages);
@@ -533,101 +559,221 @@
           });
         });
 
-        function calculateSummary(dataToShow) {
-          const summary = {
-            total: 0,
-            totalValido: 0,
-            porStatus: {},
-            porTipo: {},
-            porLote: {},
-            aprovacaoInvalida: 0,
-          };
+        // MELHORIAS #1: Função robusta para normalizar lotes (remove zeros à esquerda)
+        function normalizeLote(lote) {
+          if (!lote) return "";
 
-          dataToShow.forEach((message) => {
-            // Verificar se é uma aprovação inválida (Lote 1)
-            const isAprovacaoInvalida =
-              message.lote === "1" &&
-              normalizeStatus(message.status || "").includes("APROVADA");
+          // Remover espaços extras
+          const trimmedLote = lote.trim();
 
-            // Incrementar contador total (incluindo inválidos)
-            summary.total++;
+          // Verificar se é um número
+          if (/^\d+$/.test(trimmedLote)) {
+            // Converter para número e depois para string para remover zeros à esquerda
+            return parseInt(trimmedLote, 10).toString();
+          }
 
-            if (isAprovacaoInvalida) {
-              // Contador de aprovações inválidas
-              summary.aprovacaoInvalida++;
-            } else {
-              // Contador de registros válidos
-              summary.totalValido++;
+          return trimmedLote;
+        }
 
-              // Contar por Status (apenas registros válidos)
-              if (message.status) {
-                const status = normalizeStatus(message.status);
-                summary.porStatus[status] =
-                  (summary.porStatus[status] || 0) + 1;
-              }
+        // MELHORIAS #1: Modificar a função extractLote para normalizar o lote após extração
+        function extractLote(text, message) {
+          // Melhorar regex para capturar lotes com qualquer número de dígitos
+          const loteMatch =
+            text.match(/Lote:?\s*(\d+)/i) || text.match(/Lote\s*(\d+)/i);
 
-              // Contar por Tipo de Inspeção (apenas registros válidos)
-              if (message.tipoInspecao) {
-                const tipo = normalizeTipoInspecao(message.tipoInspecao);
-                summary.porTipo[tipo] = (summary.porTipo[tipo] || 0) + 1;
-              }
+          if (loteMatch) {
+            // Normalizar o lote ao extrair
+            message.lote = normalizeLote(loteMatch[1]);
+          }
+        }
 
-              // Contar por Lote (apenas registros válidos)
-              if (message.lote) {
-                summary.porLote[message.lote] =
-                  (summary.porLote[message.lote] || 0) + 1;
+        // MELHORIAS #2: Função melhorada para normalização de tipos de inspeção
+        function normalizeTipoInspecao(tipo) {
+          if (!tipo) return "";
+
+          const normalized = normalizeText(tipo);
+
+          // Verificações mais robustas para CADASTRAL
+          if (
+            normalized.includes("cadastral") ||
+            normalized.includes("cadstral") ||
+            normalized.includes("cdastral") ||
+            normalized.includes("cdstral") ||
+            normalized.includes("cadastrais") ||
+            normalized.includes("cadatral")
+          ) {
+            return "CADASTRAL";
+          }
+
+          // Verificações mais robustas para ROTINEIRA
+          if (
+            normalized.includes("rotineira") ||
+            normalized.includes("rotinera") ||
+            normalized.includes("rotineirra") ||
+            normalized.includes("rotinieira")
+          ) {
+            return "ROTINEIRA";
+          }
+
+          // Verificações mais robustas para CORREÇÃO DE CADASTRO
+          if (
+            normalized.includes("correcao") ||
+            normalized.includes("correção") ||
+            normalized.includes("retificacao") ||
+            normalized.includes("retificação") ||
+            normalized.includes("cadastro corrigido")
+          ) {
+            return "CORREÇÃO DE CADASTRO";
+          }
+
+          // Se não encontrar nenhum padrão conhecido, retornar o original em maiúsculas
+          return tipo.toUpperCase();
+        }
+
+        // MELHORIAS #3: Detectar automaticamente o formato de data com base nas mensagens
+        function detectDateFormat(messages) {
+          for (const message of messages) {
+            if (message.data) {
+              const datePart = message.data.split(" ")[0];
+              if (datePart.includes("/")) {
+                const parts = datePart.split("/");
+                // Se tivermos 3 partes e a primeira for maior que 12, é provavelmente DD/MM/YYYY
+                if (parts.length === 3 && parseInt(parts[0], 10) > 12) {
+                  return "DD/MM/YYYY";
+                }
+                // Se tivermos 3 partes e a segunda for maior que 12, é provavelmente MM/DD/YYYY
+                if (parts.length === 3 && parseInt(parts[1], 10) > 12) {
+                  return "MM/DD/YYYY";
+                }
               }
             }
+          }
+          // Se não conseguir detectar, assumir formato brasileiro (DD/MM/YYYY)
+          return "DD/MM/YYYY";
+        }
+
+        // Função para formatar qualquer data no formato brasileiro
+        function formatDateBrazilian(dateObj) {
+          if (
+            !dateObj ||
+            !(dateObj instanceof Date) ||
+            isNaN(dateObj.getTime())
+          ) {
+            return "";
+          }
+
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const year = dateObj.getFullYear();
+
+          return `${day}/${month}/${year}`;
+        }
+
+        // MELHORIAS #3: Função robusta para interpretar múltiplos formatos de data
+        function parseComplexDate(dateStr) {
+          if (!dateStr) return null;
+
+          // Remover espaços extras
+          dateStr = dateStr.trim();
+
+          // Tratar formato DD/MM/YYYY
+          const dmyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+          if (dmyMatch) {
+            const day = parseInt(dmyMatch[1], 10);
+            const month = parseInt(dmyMatch[2], 10) - 1; // Meses em JS são 0-indexed
+            const year = parseInt(dmyMatch[3], 10);
+
+            // Verificar se o formato detectado é MM/DD/YYYY
+            if (detectedDateFormat === "MM/DD/YYYY") {
+              // Inverter dia e mês
+              return new Date(year, day - 1, month + 1);
+            } else {
+              return new Date(year, month, day);
+            }
+          }
+
+          // Tratar formato DD/MM/YY (ano com 2 dígitos)
+          const dmyShortMatch = dateStr.match(
+            /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/
+          );
+          if (dmyShortMatch) {
+            const day = parseInt(dmyShortMatch[1], 10);
+            const month = parseInt(dmyShortMatch[2], 10) - 1;
+            let year = parseInt(dmyShortMatch[3], 10);
+            // Converter ano de 2 dígitos para 4 dígitos
+            year = year < 50 ? 2000 + year : 1900 + year;
+
+            // Verificar se o formato detectado é MM/DD/YYYY
+            if (detectedDateFormat === "MM/DD/YYYY") {
+              // Inverter dia e mês
+              return new Date(year, day - 1, month + 1);
+            } else {
+              return new Date(year, month, day);
+            }
+          }
+
+          // Tratar formato YYYY-MM-DD (usado pelo input HTML)
+          const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+          if (isoMatch) {
+            const year = parseInt(isoMatch[1], 10);
+            const month = parseInt(isoMatch[2], 10) - 1;
+            const day = parseInt(isoMatch[3], 10);
+
+            return new Date(year, month, day);
+          }
+
+          // Se não conseguir reconhecer o formato, retornar null
+          return null;
+        }
+
+        // MELHORIAS #3: Extrair data de mensagem em qualquer formato
+        function extractDateFromMessage(dateString) {
+          if (!dateString) return null;
+
+          // Extrair a parte da data (sem horário)
+          let datePart = null;
+
+          // Formato com colchetes [DD/MM/YY, HH:MM:SS]
+          const bracketMatch = dateString.match(
+            /\[(\d{1,2}\/\d{1,2}\/\d{2,4}),/
+          );
+          if (bracketMatch) {
+            datePart = bracketMatch[1];
+          }
+          // Formato padrão DD/MM/YYYY HH:MM
+          else if (dateString.includes("/")) {
+            datePart = dateString.split(" ")[0];
+          }
+
+          if (datePart) {
+            return parseComplexDate(datePart);
+          }
+
+          return null;
+        }
+
+        // Função auxiliar para validar datas
+        function isValidDate(date) {
+          return date instanceof Date && !isNaN(date.getTime());
+        }
+
+        // MELHORIAS #4: Função para ordenação de mensagens por data (mais recentes primeiro)
+        function sortMessagesByDate(messages) {
+          return messages.sort((a, b) => {
+            const dateA = extractDateFromMessage(a.data);
+            const dateB = extractDateFromMessage(b.data);
+
+            if (dateA && dateB) {
+              // Ordem decrescente (mais recente primeiro)
+              return dateB - dateA;
+            }
+
+            // Fallback para comparação de strings se não conseguir extrair as datas
+            return (b.data || "").localeCompare(a.data || "");
           });
-
-          return summary;
         }
 
-        function updateSummaryDisplay(summary) {
-          const summaryContainer = document.getElementById("dataSummary");
-
-          let html = `<p><strong>Total de Registros Válidos:</strong> ${summary.totalValido}</p>`;
-
-          // Mostrar aprovações inválidas se houver
-          if (summary.aprovacaoInvalida > 0) {
-            html += `<p class="invalid-approval-warning"><strong>Atenção:</strong> ${summary.aprovacaoInvalida} aprovações inválidas do Lote 1 foram encontradas e NÃO estão contabilizadas nas estatísticas</p>`;
-          }
-
-          // Por Status (apenas válidos)
-          if (Object.keys(summary.porStatus).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Status:</strong><ul>';
-            Object.entries(summary.porStatus).forEach(([status, count]) => {
-              html += `<li>${status}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          // Por Tipo (apenas válidos)
-          if (Object.keys(summary.porTipo).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Tipo de Inspeção:</strong><ul>';
-            Object.entries(summary.porTipo).forEach(([tipo, count]) => {
-              html += `<li>${tipo}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          // Por Lote (apenas válidos)
-          if (Object.keys(summary.porLote).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Lote:</strong><ul>';
-            Object.entries(summary.porLote).forEach(([lote, count]) => {
-              html += `<li>Lote ${lote}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          summaryContainer.innerHTML = html;
-        }
-
-        // Funções Principais
-        // Modificação da função processMessages
+        // Função melhorada para processamento de mensagens
         function processMessages() {
           const text = whatsappText.value.trim();
           if (!text) {
@@ -656,32 +802,37 @@
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
-            // Pular linhas vazias ou do sistema
-            if (!line || isSystemMessage(line)) {
+            // Pular linhas vazias
+            if (!line) continue;
+
+            // Verificar se é mensagem do sistema
+            if (isSystemMessage(line)) {
               continue;
             }
 
-            // Verificar se é uma nova mensagem com formato [DD/MM/YY, HH:MM:SS]
-            const dateMessageMatchBrackets = line.match(
-              /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}:\d{2})\]\s*(.+?):\s*(.*)$/
+            // Verificar diferentes formatos de início de mensagem
+
+            // Formato [DD/MM/YY, HH:MM:SS] Remetente: Conteúdo
+            const bracketDateMatch = line.match(
+              /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.+?):\s*(.*)$/
             );
 
-            // Verificar se é uma nova mensagem com formato DD/MM/YYYY HH:MM
-            const dateMessageMatchOriginal = line.match(
-              /^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}) - (.+?): (.*)$/
+            // Formato DD/MM/YYYY HH:MM - Remetente: Conteúdo
+            const standardDateMatch = line.match(
+              /^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*(.+?):\s*(.*)$/
             );
 
-            if (dateMessageMatchBrackets) {
+            if (bracketDateMatch) {
               // Salvar mensagem anterior se existir
               if (isProcessingMessage && currentMessage) {
                 checkAndSaveMessage(currentMessage, currentText);
               }
 
               // Iniciar nova mensagem com formato [DD/MM/YY, HH:MM:SS]
-              const date = dateMessageMatchBrackets[1];
-              const time = dateMessageMatchBrackets[2];
-              const sender = dateMessageMatchBrackets[3];
-              const content = dateMessageMatchBrackets[4];
+              const date = bracketDateMatch[1];
+              const time = bracketDateMatch[2];
+              const sender = bracketDateMatch[3];
+              const content = bracketDateMatch[4];
 
               currentMessage = {
                 data: `${date} ${time}`,
@@ -700,19 +851,20 @@
 
               // Processar conteúdo inicial
               extractData(content, currentMessage);
-            } else if (dateMessageMatchOriginal) {
+            } else if (standardDateMatch) {
               // Salvar mensagem anterior se existir
               if (isProcessingMessage && currentMessage) {
                 checkAndSaveMessage(currentMessage, currentText);
               }
 
-              // Iniciar nova mensagem com formato original
-              const date = dateMessageMatchOriginal[1];
-              const sender = dateMessageMatchOriginal[2];
-              const content = dateMessageMatchOriginal[3];
+              // Iniciar nova mensagem com formato DD/MM/YYYY HH:MM
+              const date = standardDateMatch[1];
+              const time = standardDateMatch[2];
+              const sender = standardDateMatch[3];
+              const content = standardDateMatch[4];
 
               currentMessage = {
-                data: date,
+                data: `${date} ${time}`,
                 remetente: sender,
                 lote: "",
                 codigoOAE: "",
@@ -740,6 +892,13 @@
             checkAndSaveMessage(currentMessage, currentText);
           }
 
+          // MELHORIAS #3: Detectar formato de data com base nas mensagens processadas
+          detectedDateFormat = detectDateFormat(processedData);
+          console.log(`Formato de data detectado: ${detectedDateFormat}`);
+
+          // MELHORIAS #4: Ordenar mensagens por data (mais recentes primeiro)
+          processedData = sortMessagesByDate(processedData);
+
           console.log(
             `Mensagens processadas: ${processedData.length}, Irregulares: ${irregularData.length}`
           );
@@ -749,17 +908,12 @@
           updateFilterOptions();
           updateIrregularMessages();
           initializeDateFilters();
+          initializeStatsFilters();
 
           // Habilitar exportação
           exportBtn.disabled = processedData.length === 0;
-
-          // Marcar aba de estatísticas para atualização
-          document
-            .querySelector('.tab[data-tab="estatisticas"]')
-            .setAttribute("data-needs-update", "true");
         }
 
-        // Modificação da função isSystemMessage
         function isSystemMessage(line) {
           return (
             line.includes("As mensagens e ligações são protegidas") ||
@@ -774,257 +928,6 @@
             line.match(/^‎.*mudou/) !== null ||
             line.match(/^‎.*criou/) !== null ||
             line.match(/‎/) !== null // Caractere invisível usado pelo WhatsApp em mensagens de sistema
-          );
-        }
-
-        // Modificação da função calculateSummary para lidar com Lote 1
-        function calculateSummary(dataToShow) {
-          const summary = {
-            total: dataToShow.length,
-            porStatus: {},
-            porTipo: {},
-            porLote: {},
-            aprovacaoInvalida: 0,
-          };
-
-          dataToShow.forEach((message) => {
-            // Verificar se é uma aprovação inválida (Lote 1)
-            const isAprovacaoInvalida =
-              message.lote === "1" &&
-              normalizeStatus(message.status || "").includes("APROVADA");
-
-            if (isAprovacaoInvalida) {
-              summary.aprovacaoInvalida = (summary.aprovacaoInvalida || 0) + 1;
-            }
-
-            // Contar por Status (destacando APROVADA para Lote 1 como INVÁLIDA)
-            if (message.status) {
-              if (isAprovacaoInvalida) {
-                // Adicionar a uma categoria especial
-                const invalidStatus = "APROVAÇÃO INVÁLIDA (LOTE 1)";
-                summary.porStatus[invalidStatus] =
-                  (summary.porStatus[invalidStatus] || 0) + 1;
-              } else {
-                const status = normalizeStatus(message.status);
-                summary.porStatus[status] =
-                  (summary.porStatus[status] || 0) + 1;
-              }
-            }
-
-            // Contar por Tipo de Inspeção
-            if (message.tipoInspecao) {
-              const tipo = normalizeTipoInspecao(message.tipoInspecao);
-              summary.porTipo[tipo] = (summary.porTipo[tipo] || 0) + 1;
-            }
-
-            // Contar por Lote
-            if (message.lote) {
-              summary.porLote[message.lote] =
-                (summary.porLote[message.lote] || 0) + 1;
-            }
-          });
-
-          return summary;
-        }
-
-        // Função updateSummaryDisplay para mostrar o sumário com aprovações inválidas
-        function updateSummaryDisplay(summary) {
-          const summaryContainer = document.getElementById("dataSummary");
-
-          let html = `<p><strong>Total de Registros:</strong> ${summary.total}</p>`;
-
-          // Mostrar aprovações inválidas se houver
-          if (summary.aprovacaoInvalida > 0) {
-            html += `<p class="invalid-approval-warning"><strong>Atenção:</strong> ${summary.aprovacaoInvalida} aprovações inválidas do Lote 1 foram encontradas</p>`;
-          }
-
-          // Por Status
-          if (Object.keys(summary.porStatus).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Status:</strong><ul>';
-            Object.entries(summary.porStatus).forEach(([status, count]) => {
-              if (status === "APROVAÇÃO INVÁLIDA (LOTE 1)") {
-                html += `<li class="invalid-approval">${status}: ${count}</li>`;
-              } else {
-                html += `<li>${status}: ${count}</li>`;
-              }
-            });
-            html += "</ul></div>";
-          }
-
-          // Por Tipo
-          if (Object.keys(summary.porTipo).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Tipo de Inspeção:</strong><ul>';
-            Object.entries(summary.porTipo).forEach(([tipo, count]) => {
-              html += `<li>${tipo}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          // Por Lote
-          if (Object.keys(summary.porLote).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Lote:</strong><ul>';
-            Object.entries(summary.porLote).forEach(([lote, count]) => {
-              html += `<li>Lote ${lote}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          summaryContainer.innerHTML = html;
-        }
-
-        // Modificação na função updateTable para destacar aprovações inválidas
-        function updateTable(dataToShow = processedData) {
-          const tbody = resultTable.querySelector("tbody");
-          tbody.innerHTML = "";
-
-          if (dataToShow.length === 0) {
-            tbody.innerHTML =
-              '<tr><td colspan="9" style="text-align: center;">Nenhum dado processado. Cole as mensagens e clique em "Processar".</td></tr>';
-            document.getElementById("dataSummary").innerHTML = "";
-            return;
-          }
-
-          // Calcular e exibir sumário
-          const summary = calculateSummary(dataToShow);
-          updateSummaryDisplay(summary);
-
-          // Ordenar por data (mais recente primeiro)
-          dataToShow.sort((a, b) => {
-            const dateA = a.data.split(" ")[0].split("/").reverse().join("");
-            const dateB = b.data.split(" ")[0].split("/").reverse().join("");
-            return dateB.localeCompare(dateA);
-          });
-
-          dataToShow.forEach((message) => {
-            const row = document.createElement("tr");
-
-            // Verificar se é uma aprovação inválida (Lote 1)
-            const isAprovacaoInvalida =
-              message.lote === "1" &&
-              normalizeStatus(message.status || "").includes("APROVADA");
-
-            // Definir classe baseada no status
-            const statusLower = (message.status || "").toLowerCase();
-            if (isAprovacaoInvalida) {
-              row.classList.add("status-invalida");
-            } else if (
-              statusLower.includes("avaliação") ||
-              statusLower.includes("avaliacao")
-            ) {
-              row.classList.add("status-avaliacao");
-            } else if (
-              statusLower.includes("aprovada") ||
-              statusLower.includes("aprovado")
-            ) {
-              row.classList.add("status-aprovada");
-            } else if (
-              statusLower.includes("reprovada") ||
-              statusLower.includes("reprovado")
-            ) {
-              row.classList.add("status-reprovada");
-            } else if (
-              statusLower.includes("reavaliação") ||
-              statusLower.includes("reavaliacao")
-            ) {
-              row.classList.add("status-reavaliacao");
-            }
-
-            // Formatar todas as datas para o formato brasileiro
-            const dataEntrega = formatDateBR(message.dataEntrega);
-            const dataRecebimento = formatDateBR(message.dataRecebimento);
-            const dataDevolucao = formatDateBR(message.dataDevolucao);
-
-            // Normalizar o tipo de inspeção
-            const tipoInspecao = normalizeTipoInspecao(
-              message.tipoInspecao || ""
-            );
-
-            // Ajustar o status para indicar invalidez se necessário
-            let statusDisplay = message.status || "";
-            if (isAprovacaoInvalida) {
-              statusDisplay += ' <span class="invalid-badge">INVÁLIDA</span>';
-            }
-
-            row.innerHTML = `
-            <td>${message.data || ""}</td>
-            <td>${message.remetente || ""}</td>
-            <td>${message.lote || ""}</td>
-            <td>${message.codigoOAE || ""}</td>
-            <td>${tipoInspecao || ""}</td>
-            <td>${dataEntrega || ""}</td>
-            <td>${dataRecebimento || ""}</td>
-            <td>${dataDevolucao || ""}</td>
-            <td>${statusDisplay}</td>
-        `;
-
-            tbody.appendChild(row);
-          });
-        }
-
-        // CSS adicional a ser adicionado
-        const newStyles = `
-.status-invalida {
-    background-color: rgba(158, 20, 20, 0.3);
-    position: relative;
-}
-
-.invalid-badge {
-    background-color: #c0392b;
-    color: white;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 0.8em;
-    font-weight: bold;
-}
-
-.invalid-approval-warning {
-    background-color: rgba(231, 76, 60, 0.2);
-    padding: 10px;
-    border-left: 4px solid #e74c3c;
-    margin-bottom: 15px;
-}
-
-.invalid-approval {
-    color: #e74c3c;
-    font-weight: bold;
-}
-
-.summary-container {
-    margin-bottom: 20px;
-}
-
-.summary-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.summary-section {
-    flex: 1 0 200px;
-}
-
-.summary-section ul {
-    list-style-type: none;
-    padding-left: 10px;
-}
-`;
-
-        // HTML a ser adicionado antes da tabela (dentro do div "dados-tab")
-        const summaryHTML = `
-<div class="summary-container">
-    <h3>Sumário dos Dados</h3>
-    <div id="dataSummary" class="summary-content"></div>
-</div>
-`;
-
-        function isSystemMessage(line) {
-          return (
-            line.includes("As mensagens e ligações são protegidas") ||
-            line.includes("criou o grupo") ||
-            line.includes("adicionou você")
           );
         }
 
@@ -1043,14 +946,6 @@
 
           // Extrair Status
           extractStatus(text, message);
-        }
-
-        function extractLote(text, message) {
-          const loteMatch =
-            text.match(/Lote:?\s*(\d+)/i) || text.match(/Lote\s*(\d+)/i);
-          if (loteMatch) {
-            message.lote = loteMatch[1];
-          }
         }
 
         function extractCodigoOAE(text, message) {
@@ -1154,6 +1049,93 @@
           }
         }
 
+        // MELHORIAS #2: Função robusta para normalização de status
+        function normalizeStatus(status) {
+          if (!status) return "";
+
+          // Tratar casos de strings truncadas
+          if (
+            status.endsWith("AVALIAC") ||
+            status.endsWith("AVALIACÃ") ||
+            status.endsWith("AVALIACA")
+          ) {
+            return "AVALIAÇÃO";
+          }
+
+          // Remover caracteres especiais e normalizar espaços
+          let normalized = normalizeText(status)
+            .replace(/\s+/g, " ") // Substituir múltiplos espaços por um único
+            .trim();
+
+          // Verificar prefixos numéricos para reavaliação
+          const reavaliacaoMatch = normalized.match(
+            /^(\d+)[ªa°]?\s*r?e?a?v?a?l?i?a?c?a?o?$/i
+          );
+          if (reavaliacaoMatch || /^[123456789]$/.test(normalized)) {
+            const numero = reavaliacaoMatch ? reavaliacaoMatch[1] : normalized;
+            return `${numero}ª REAVALIAÇÃO`;
+          }
+
+          // Padrões específicos com palavras que podem estar juntas
+          if (/obraaguardando|aguardandodrone|obradrone/.test(normalized)) {
+            return "OBRA AGUARDANDO DRONE";
+          }
+
+          if (/correcaocadastral|cadastralcorrecao/.test(normalized)) {
+            return "CORREÇÃO CADASTRAL";
+          }
+
+          // Padrões para cada tipo de status
+          const statusPatterns = {
+            APROVADA: [
+              "aprovad",
+              "aprovacao",
+              "aprovação",
+              "liberada",
+              "aceita",
+            ],
+            REPROVADA: [
+              "reprovad",
+              "reprovacao",
+              "rejeitad",
+              "desaprovad",
+              "nao aprovad",
+              "não aprovad",
+            ],
+            AVALIAÇÃO: [
+              "avaliaca",
+              "avaliac",
+              "aAvaliaca",
+              "avaliaca",
+              "avaliaca",
+              "avaliaCã",
+              "avaliação",
+              "analise",
+              "análise",
+            ],
+            REAVALIAÇÃO: ["reavaliaca", "reavaliaçã", "reavaliação"],
+            "OBRA AGUARDANDO DRONE": ["aguardando", "drone", "fotos"],
+            "CORREÇÃO CADASTRAL": [
+              "correcao",
+              "correção",
+              "cadastr",
+              "retifica",
+            ],
+          };
+
+          // Verificar cada padrão
+          for (const [padrao, variantes] of Object.entries(statusPatterns)) {
+            for (const variante of variantes) {
+              if (normalized.includes(variante)) {
+                return padrao;
+              }
+            }
+          }
+
+          // Se não encontrou nenhum padrão conhecido, retornar o original em maiúsculas
+          return status.toUpperCase();
+        }
+
         function extractStatus(text, message) {
           const statusMatch = text.match(
             /Status:?\s*([A-Za-zÀ-ú\s0-9ª<>]+)(?:<|$)/i
@@ -1174,6 +1156,7 @@
           } else if (
             text.toUpperCase().includes("AVALIAÇÃO") ||
             text.includes("Avaliação") ||
+            text.includes("Avaliaçã") ||
             text.includes("avaliação")
           ) {
             message.status = "AVALIAÇÃO";
@@ -1238,6 +1221,536 @@
           }
         }
 
+        // MELHORIAS #1: Aplicar normalização de lotes nos filtros
+        function applyFilters() {
+          const loteFilter = normalizeLote(filterLote.value);
+          const statusFilter = filterStatus.value;
+          const tipoFilter = filterTipo.value;
+          const codigoFilter = filterCodigo.value.toLowerCase();
+
+          // Processar datas para filtro
+          let startDateValue = startDate.value
+            ? parseComplexDate(startDate.value)
+            : null;
+          let endDateValue = endDate.value
+            ? parseComplexDate(endDate.value)
+            : null;
+
+          // Ajustar horário da data final para incluir o dia inteiro
+          if (endDateValue) {
+            endDateValue.setHours(23, 59, 59, 999);
+          }
+
+          const filteredData = processedData.filter((message) => {
+            // Filtros de texto com normalização de lote
+            const matchesText =
+              (loteFilter === "" ||
+                normalizeLote(message.lote) === loteFilter) &&
+              (statusFilter === "" ||
+                normalizeStatus(message.status) === statusFilter) &&
+              (tipoFilter === "" ||
+                normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
+              (codigoFilter === "" ||
+                (message.codigoOAE &&
+                  message.codigoOAE.toLowerCase().includes(codigoFilter)));
+
+            // Filtros de data
+            let matchesDate = true;
+
+            if (startDateValue || endDateValue) {
+              const messageDate = extractDateFromMessage(message.data);
+
+              if (messageDate) {
+                if (startDateValue && messageDate < startDateValue) {
+                  matchesDate = false;
+                }
+
+                if (endDateValue && messageDate > endDateValue) {
+                  matchesDate = false;
+                }
+              } else {
+                matchesDate = false;
+              }
+            }
+
+            return matchesText && matchesDate;
+          });
+
+          console.log(
+            `Filtrados ${filteredData.length} de ${processedData.length} registros`
+          );
+          updateTable(filteredData);
+        }
+
+        // MELHORIAS #1: Modificar a função updateFilterOptions para agrupar lotes normalizados
+        function updateFilterOptions() {
+          // Limpar opções atuais
+          filterLote.innerHTML = '<option value="">Todos os Lotes</option>';
+          filterStatus.innerHTML = '<option value="">Todos os Status</option>';
+          filterTipo.innerHTML = '<option value="">Todos os Tipos</option>';
+
+          // Mapa para lotes normalizados e originais
+          const lotesMap = new Map();
+          const status = new Set();
+          const tipos = new Set();
+
+          // Coletar valores únicos
+          processedData.forEach((message) => {
+            if (message.lote) {
+              const normalizedLote = normalizeLote(message.lote);
+              // Guardar o lote original junto com o normalizado
+              if (
+                !lotesMap.has(normalizedLote) ||
+                message.lote.length < lotesMap.get(normalizedLote).length
+              ) {
+                lotesMap.set(normalizedLote, message.lote);
+              }
+            }
+
+            if (message.status) status.add(normalizeStatus(message.status));
+            if (message.tipoInspecao)
+              tipos.add(normalizeTipoInspecao(message.tipoInspecao));
+          });
+
+          // Adicionar opções de lote ordenadas numericamente
+          Array.from(lotesMap.keys())
+            .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+            .forEach((lote) => {
+              const option = document.createElement("option");
+              option.value = lote;
+              option.textContent = `Lote ${lote}`;
+              filterLote.appendChild(option);
+            });
+
+          // Status - ordenados conforme definido
+          const statusOrdem = [
+            "APROVADA",
+            "REPROVADA",
+            "AVALIAÇÃO",
+            "1ª REAVALIAÇÃO",
+            "2ª REAVALIAÇÃO",
+            "3ª REAVALIAÇÃO",
+            "4ª REAVALIAÇÃO",
+            "5ª REAVALIAÇÃO",
+            "OBRA AGUARDANDO DRONE",
+            "CORREÇÃO CADASTRAL",
+          ];
+
+          statusOrdem.forEach((st) => {
+            if (status.has(st)) {
+              const option = document.createElement("option");
+              option.value = st;
+              option.textContent = st;
+              filterStatus.appendChild(option);
+              status.delete(st);
+            }
+          });
+
+          // Adicionar outros status não previstos
+          status.forEach((st) => {
+            const option = document.createElement("option");
+            option.value = st;
+            option.textContent = st;
+            filterStatus.appendChild(option);
+          });
+
+          // Tipos de Inspeção
+          const tiposOrdem = ["CADASTRAL", "ROTINEIRA", "CORREÇÃO DE CADASTRO"];
+
+          tiposOrdem.forEach((tipo) => {
+            if (tipos.has(tipo)) {
+              const option = document.createElement("option");
+              option.value = tipo;
+              option.textContent = tipo;
+              filterTipo.appendChild(option);
+              tipos.delete(tipo);
+            }
+          });
+
+          // Adicionar outros tipos não previstos
+          tipos.forEach((tipo) => {
+            const option = document.createElement("option");
+            option.value = tipo;
+            option.textContent = tipo;
+            filterTipo.appendChild(option);
+          });
+        }
+
+        // MELHORIAS #2: Atualizar a função applyStatsFilters para usar normalização de lote
+        function applyStatsFilters() {
+          const tipoFilter = document.getElementById("statsTipoFilter").value;
+          const loteFilter = normalizeLote(
+            document.getElementById("statsLoteFilter").value
+          );
+
+          // Filtrar dados
+          const filteredData = processedData.filter((message) => {
+            return (
+              (tipoFilter === "" ||
+                normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
+              (loteFilter === "" || normalizeLote(message.lote) === loteFilter)
+            );
+          });
+
+          // Atualizar gráficos com dados filtrados
+          updateCharts(filteredData);
+        }
+
+        // MELHORIAS #1: Modificar a função initializeStatsFilters para usar normalização de lote
+        function initializeStatsFilters() {
+          // Adicionar opções de lote ao filtro de estatísticas
+          const statsLoteFilter = document.getElementById("statsLoteFilter");
+          if (statsLoteFilter) {
+            statsLoteFilter.innerHTML =
+              '<option value="">Todos os Lotes</option>';
+
+            // Obter lotes únicos normalizados
+            const lotesMap = new Map();
+            processedData.forEach((message) => {
+              if (message.lote) {
+                const normalizedLote = normalizeLote(message.lote);
+                if (
+                  !lotesMap.has(normalizedLote) ||
+                  message.lote.length < lotesMap.get(normalizedLote).length
+                ) {
+                  lotesMap.set(normalizedLote, message.lote);
+                }
+              }
+            });
+
+            // Adicionar opções ordenadas numericamente
+            Array.from(lotesMap.keys())
+              .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+              .forEach((lote) => {
+                const option = document.createElement("option");
+                option.value = lote;
+                option.textContent = `Lote ${lote}`;
+                statsLoteFilter.appendChild(option);
+              });
+          }
+
+          // Adicionar opções para filtrar por tipo de inspeção
+          const statsTipoFilter = document.getElementById("statsTipoFilter");
+          if (statsTipoFilter) {
+            // Limpar as opções existentes e manter a opção "Todos"
+            statsTipoFilter.innerHTML =
+              '<option value="">Todos os Tipos de Inspeção</option>';
+
+            // Obter tipos únicos
+            const tipos = new Set();
+            processedData.forEach((message) => {
+              if (message.tipoInspecao) {
+                tipos.add(normalizeTipoInspecao(message.tipoInspecao));
+              }
+            });
+
+            // Ordem predefinida para tipos
+            const tiposOrdem = [
+              "CADASTRAL",
+              "ROTINEIRA",
+              "CORREÇÃO DE CADASTRO",
+            ];
+
+            // Adicionar na ordem predefinida
+            tiposOrdem.forEach((tipo) => {
+              if (tipos.has(tipo)) {
+                const option = document.createElement("option");
+                option.value = tipo;
+                option.textContent = tipo;
+                statsTipoFilter.appendChild(option);
+                tipos.delete(tipo);
+              }
+            });
+
+            // Adicionar outros tipos não previstos
+            tipos.forEach((tipo) => {
+              const option = document.createElement("option");
+              option.value = tipo;
+              option.textContent = tipo;
+              statsTipoFilter.appendChild(option);
+            });
+          }
+        }
+
+        // Função para limpar filtros de estatísticas
+        function clearStatsFilters() {
+          document.getElementById("statsTipoFilter").value = "";
+          document.getElementById("statsLoteFilter").value = "";
+          updateCharts(processedData); // Atualizar com todos os dados
+        }
+
+        // MELHORIAS #2: Modificar a função updateCharts para aceitar dados filtrados
+        function updateCharts(dataToShow = processedData) {
+          if (dataToShow.length === 0) return;
+
+          // Mostrar gráficos apenas se a aba estatísticas estiver ativa
+          if (
+            !document
+              .getElementById("estatisticas-tab")
+              .classList.contains("active")
+          ) {
+            return;
+          }
+
+          // 1. Status counts
+          const statusCounts = {};
+          dataToShow.forEach((item) => {
+            if (item.status) {
+              const status = normalizeStatus(item.status);
+              statusCounts[status] = (statusCounts[status] || 0) + 1;
+            }
+          });
+
+          // 2. Reprovações por código
+          const reprovacoesPorCodigo = {};
+          dataToShow.forEach((item) => {
+            if (
+              normalizeStatus(item.status) === "REPROVADA" &&
+              item.codigoOAE
+            ) {
+              reprovacoesPorCodigo[item.codigoOAE] =
+                (reprovacoesPorCodigo[item.codigoOAE] || 0) + 1;
+            }
+          });
+
+          // Ordenar e limitar a 10
+          const topReprovados = Object.fromEntries(
+            Object.entries(reprovacoesPorCodigo)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 10)
+          );
+
+          // 3. Quem mais aprova
+          const aprovadoresPorRemetente = {};
+          dataToShow.forEach((item) => {
+            if (normalizeStatus(item.status) === "APROVADA" && item.remetente) {
+              aprovadoresPorRemetente[item.remetente] =
+                (aprovadoresPorRemetente[item.remetente] || 0) + 1;
+            }
+          });
+
+          // Ordenar e limitar a 10
+          const topAprovadores = Object.fromEntries(
+            Object.entries(aprovadoresPorRemetente)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 10)
+          );
+
+          // 4. Quem mais reprova
+          const reprovadoresPorRemetente = {};
+          dataToShow.forEach((item) => {
+            if (
+              normalizeStatus(item.status) === "REPROVADA" &&
+              item.remetente
+            ) {
+              reprovadoresPorRemetente[item.remetente] =
+                (reprovadoresPorRemetente[item.remetente] || 0) + 1;
+            }
+          });
+
+          // Ordenar e limitar a 10
+          const topReprovadores = Object.fromEntries(
+            Object.entries(reprovadoresPorRemetente)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 10)
+          );
+
+          // 5. Tempo médio por tipo
+          const diasPorTipo = {
+            CADASTRAL: [],
+            ROTINEIRA: [],
+            "CORREÇÃO DE CADASTRO": [],
+          };
+
+          dataToShow.forEach((item) => {
+            if (
+              item.tipoInspecao &&
+              item.dataEntrega &&
+              (item.dataDevolucao || item.dataRecebimento)
+            ) {
+              const tipo = normalizeTipoInspecao(item.tipoInspecao);
+              const dataInicio = parseComplexDate(item.dataEntrega);
+              const dataFim = parseComplexDate(
+                item.dataDevolucao || item.dataRecebimento
+              );
+
+              if (dataInicio && dataFim && diasPorTipo[tipo]) {
+                const dias = Math.round(
+                  (dataFim - dataInicio) / (1000 * 60 * 60 * 24)
+                );
+                if (dias >= 0) {
+                  diasPorTipo[tipo].push(dias);
+                }
+              }
+            }
+          });
+
+          // Calcular médias
+          const mediaDiasPorTipo = {};
+          Object.entries(diasPorTipo).forEach(([tipo, dias]) => {
+            if (dias.length > 0) {
+              mediaDiasPorTipo[tipo] =
+                dias.reduce((sum, val) => sum + val, 0) / dias.length;
+            } else {
+              mediaDiasPorTipo[tipo] = 0;
+            }
+          });
+
+          // 6. Contagem por tipo
+          const tipoInspecaoCounts = {};
+          dataToShow.forEach((item) => {
+            if (item.tipoInspecao) {
+              const tipo = normalizeTipoInspecao(item.tipoInspecao);
+              tipoInspecaoCounts[tipo] = (tipoInspecaoCounts[tipo] || 0) + 1;
+            }
+          });
+
+          // Criar gráficos
+          createStatusChart(statusCounts);
+          createReprovacaoChart(topReprovados);
+          createAprovadorChart(topAprovadores);
+          createReprovadorChart(topReprovadores);
+          createTempoChart(mediaDiasPorTipo);
+          createTipoChart(tipoInspecaoCounts);
+
+          // Adicionar título com informações do filtro
+          updateStatsFilterInfo(dataToShow.length);
+        }
+
+        // Função para mostrar informações do filtro aplicado nas estatísticas
+        function updateStatsFilterInfo(filteredCount) {
+          const tipoFilter = document.getElementById("statsTipoFilter").value;
+          const loteFilter = document.getElementById("statsLoteFilter").value;
+
+          let filterInfo = `<h3>Estatísticas`;
+
+          if (tipoFilter || loteFilter) {
+            filterInfo += ` - Filtro: `;
+            if (tipoFilter) {
+              filterInfo += `Tipo ${tipoFilter}`;
+            }
+            if (tipoFilter && loteFilter) {
+              filterInfo += ` / `;
+            }
+            if (loteFilter) {
+              filterInfo += `Lote ${loteFilter}`;
+            }
+          }
+
+          filterInfo += ` (${filteredCount} registros)</h3>`;
+
+          const filterInfoContainer =
+            document.getElementById("statsFilterInfo");
+          if (filterInfoContainer) {
+            filterInfoContainer.innerHTML = filterInfo;
+          }
+        }
+
+        // MELHORIAS #1 e #3: Cálculo e exibição de sumário atualizado
+        function calculateSummary(dataToShow) {
+          const summary = {
+            total: dataToShow.length,
+            porStatus: {},
+            porTipo: {},
+            porLote: {},
+            aprovacaoInvalida: 0,
+          };
+
+          dataToShow.forEach((message) => {
+            // Verificar se é uma aprovação inválida (Lote 1)
+            const isAprovacaoInvalida =
+              normalizeLote(message.lote) === "1" &&
+              normalizeStatus(message.status || "").includes("APROVADA");
+
+            if (isAprovacaoInvalida) {
+              summary.aprovacaoInvalida = (summary.aprovacaoInvalida || 0) + 1;
+            }
+
+            // Contar por Status (destacando APROVADA para Lote 1 como INVÁLIDA)
+            if (message.status) {
+              if (isAprovacaoInvalida) {
+                // Adicionar a uma categoria especial
+                const invalidStatus = "APROVAÇÃO INVÁLIDA (LOTE 1)";
+                summary.porStatus[invalidStatus] =
+                  (summary.porStatus[invalidStatus] || 0) + 1;
+              } else {
+                const status = normalizeStatus(message.status);
+                summary.porStatus[status] =
+                  (summary.porStatus[status] || 0) + 1;
+              }
+            }
+
+            // Contar por Tipo de Inspeção (normalizado)
+            if (message.tipoInspecao) {
+              const tipo = normalizeTipoInspecao(message.tipoInspecao);
+              summary.porTipo[tipo] = (summary.porTipo[tipo] || 0) + 1;
+            }
+
+            // Contar por Lote (normalizado)
+            if (message.lote) {
+              const normalizedLote = normalizeLote(message.lote);
+              summary.porLote[normalizedLote] =
+                (summary.porLote[normalizedLote] || 0) + 1;
+            }
+          });
+
+          return summary;
+        }
+
+        function updateSummaryDisplay(summary) {
+          const summaryContainer = document.getElementById("dataSummary");
+
+          let html = `<p><strong>Total de Registros:</strong> ${summary.total}</p>`;
+
+          // Mostrar aprovações inválidas se houver
+          if (summary.aprovacaoInvalida > 0) {
+            html += `<p class="invalid-approval-warning"><strong>Atenção:</strong> ${summary.aprovacaoInvalida} aprovações inválidas do Lote 1 foram encontradas</p>`;
+          }
+
+          // Por Status
+          if (Object.keys(summary.porStatus).length > 0) {
+            html +=
+              '<div class="summary-section"><strong>Por Status:</strong><ul>';
+            Object.entries(summary.porStatus).forEach(([status, count]) => {
+              if (status === "APROVAÇÃO INVÁLIDA (LOTE 1)") {
+                html += `<li class="invalid-approval">${status}: ${count}</li>`;
+              } else {
+                html += `<li>${status}: ${count}</li>`;
+              }
+            });
+            html += "</ul></div>";
+          }
+
+          // Por Tipo
+          if (Object.keys(summary.porTipo).length > 0) {
+            html +=
+              '<div class="summary-section"><strong>Por Tipo de Inspeção:</strong><ul>';
+            Object.entries(summary.porTipo).forEach(([tipo, count]) => {
+              html += `<li>${tipo}: ${count}</li>`;
+            });
+            html += "</ul></div>";
+          }
+
+          // Por Lote
+          if (Object.keys(summary.porLote).length > 0) {
+            html +=
+              '<div class="summary-section"><strong>Por Lote:</strong><ul>';
+
+            // Ordenar lotes numericamente
+            const lotesOrdenados = Object.entries(summary.porLote).sort(
+              ([a], [b]) => parseInt(a, 10) - parseInt(b, 10)
+            );
+
+            lotesOrdenados.forEach(([lote, count]) => {
+              html += `<li>Lote ${lote}: ${count}</li>`;
+            });
+            html += "</ul></div>";
+          }
+
+          summaryContainer.innerHTML = html;
+        }
+
+        // MELHORIAS #4: Atualização de tabela com ordenação por data
         function updateTable(dataToShow = processedData) {
           const tbody = resultTable.querySelector("tbody");
           tbody.innerHTML = "";
@@ -1254,19 +1767,15 @@
           updateSummaryDisplay(summary);
 
           // Ordenar por data (mais recente primeiro)
-          dataToShow.sort((a, b) => {
-            const dateA = a.data.split(" ")[0].split("/").reverse().join("");
-            const dateB = b.data.split(" ")[0].split("/").reverse().join("");
-            return dateB.localeCompare(dateA);
-          });
+          const sortedData = sortMessagesByDate([...dataToShow]);
 
-          dataToShow.forEach((message) => {
+          sortedData.forEach((message) => {
             const row = document.createElement("tr");
 
             // Verificar se é uma aprovação inválida (Lote 1)
             const isAprovacaoInvalida =
-              message.lote === "1" &&
-              (message.status || "").toLowerCase().includes("aprovada");
+              normalizeLote(message.lote) === "1" &&
+              normalizeStatus(message.status || "").includes("APROVADA");
 
             // Definir classe baseada no status
             const statusLower = (message.status || "").toLowerCase();
@@ -1274,6 +1783,7 @@
               row.classList.add("status-invalida");
             } else if (
               statusLower.includes("avaliação") ||
+              statusLower.includes("avaliaçã") ||
               statusLower.includes("avaliacao")
             ) {
               row.classList.add("status-avaliacao");
@@ -1295,6 +1805,10 @@
             }
 
             // Formatar todas as datas para o formato brasileiro
+            // Converter a data da mensagem para formato brasileiro (DD/MM/AAAA)
+            const formattedMessageDate = formatMessageDateBrazilian(
+              message.data
+            );
             const dataEntrega = formatDateBR(message.dataEntrega);
             const dataRecebimento = formatDateBR(message.dataRecebimento);
             const dataDevolucao = formatDateBR(message.dataDevolucao);
@@ -1311,19 +1825,74 @@
             }
 
             row.innerHTML = `
-            <td>${message.data || ""}</td>
-            <td>${message.remetente || ""}</td>
-            <td>${message.lote || ""}</td>
-            <td>${message.codigoOAE || ""}</td>
-            <td>${tipoInspecao || ""}</td>
-            <td>${dataEntrega || ""}</td>
-            <td>${dataRecebimento || ""}</td>
-            <td>${dataDevolucao || ""}</td>
-            <td>${statusDisplay}</td>
-        `;
+        <td>${formattedMessageDate || ""}</td>
+        <td>${message.remetente || ""}</td>
+        <td>${message.lote || ""}</td>
+        <td>${message.codigoOAE || ""}</td>
+        <td>${tipoInspecao || ""}</td>
+        <td>${dataEntrega || ""}</td>
+        <td>${dataRecebimento || ""}</td>
+        <td>${dataDevolucao || ""}</td>
+        <td>${statusDisplay}</td>
+      `;
 
             tbody.appendChild(row);
           });
+        }
+
+        // Função para formatar a data da mensagem para o formato brasileiro
+        function formatMessageDateBrazilian(dateString) {
+          if (!dateString) return "";
+
+          // Se a data já tem o formato DD/MM/YYYY HH:MM ou [DD/MM/YYYY, HH:MM]
+          // Extrair apenas a parte da data e converter para o formato brasileiro
+          let datePart = "";
+          let timePart = "";
+
+          // Formato com colchetes [MM/DD/YY, HH:MM:SS]
+          const bracketMatch = dateString.match(
+            /\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]/
+          );
+          if (bracketMatch) {
+            datePart = bracketMatch[1];
+            timePart = bracketMatch[2];
+          }
+          // Formato padrão MM/DD/YYYY HH:MM
+          else if (dateString.includes("/")) {
+            const parts = dateString.split(" ");
+            datePart = parts[0];
+            timePart = parts.length > 1 ? parts[1] : "";
+          }
+
+          // Se encontramos uma parte de data, formatar para DD/MM/YYYY
+          if (datePart) {
+            const parts = datePart.split("/");
+            if (parts.length === 3) {
+              // Verificar se está no formato MM/DD/YYYY (formato americano)
+              if (detectedDateFormat === "MM/DD/YYYY") {
+                // Inverter mês e dia
+                const month = parts[0];
+                const day = parts[1];
+                const year =
+                  parts[2].length === 2
+                    ? parseInt(parts[2]) < 50
+                      ? "20" + parts[2]
+                      : "19" + parts[2]
+                    : parts[2];
+
+                // Retornar no formato brasileiro com a hora original
+                return `${day}/${month}/${year}${
+                  timePart ? " " + timePart : ""
+                }`;
+              } else {
+                // Já está no formato brasileiro, retornar como está
+                return dateString;
+              }
+            }
+          }
+
+          // Se não conseguir formatar, retornar a string original
+          return dateString;
         }
 
         function updateIrregularMessages() {
@@ -1340,55 +1909,14 @@
             messageElement.className = "message-card";
 
             messageElement.innerHTML = `
-                        <div class="message-header">
-                            <span>${message.data} - ${message.remetente}</span>
-                            <span class="missing-fields">Campos faltantes: ${message.camposFaltantes}</span>
-                        </div>
-                        <div class="message-content">${message.texto}</div>
-                    `;
+        <div class="message-header">
+          <span>${message.data} - ${message.remetente}</span>
+          <span class="missing-fields">Campos faltantes: ${message.camposFaltantes}</span>
+        </div>
+        <div class="message-content">${message.texto}</div>
+      `;
 
             irregularMessages.appendChild(messageElement);
-          });
-        }
-
-        function updateFilterOptions() {
-          // Limpar opções atuais
-          filterLote.innerHTML = '<option value="">Todos os Lotes</option>';
-          filterStatus.innerHTML = '<option value="">Todos os Status</option>';
-          filterTipo.innerHTML = '<option value="">Todos os Tipos</option>';
-
-          // Conjuntos para valores únicos
-          const lotes = new Set();
-          const status = new Set();
-          const tipos = new Set();
-
-          // Coletar valores únicos
-          processedData.forEach((message) => {
-            if (message.lote) lotes.add(message.lote);
-            if (message.status) status.add(message.status);
-            if (message.tipoInspecao) tipos.add(message.tipoInspecao);
-          });
-
-          // Adicionar opções
-          lotes.forEach((lote) => {
-            const option = document.createElement("option");
-            option.value = lote;
-            option.textContent = `Lote ${lote}`;
-            filterLote.appendChild(option);
-          });
-
-          status.forEach((st) => {
-            const option = document.createElement("option");
-            option.value = st;
-            option.textContent = st;
-            filterStatus.appendChild(option);
-          });
-
-          tipos.forEach((tipo) => {
-            const option = document.createElement("option");
-            option.value = tipo;
-            option.textContent = tipo;
-            filterTipo.appendChild(option);
           });
         }
 
@@ -1401,8 +1929,8 @@
 
           processedData.forEach((message) => {
             if (message.data) {
-              // Formato DD/MM/AAAA
-              const messageDate = parseDate(message.data.split(" ")[0]);
+              // Extrair a data da mensagem
+              const messageDate = extractDateFromMessage(message.data);
 
               if (messageDate) {
                 if (messageDate < earliestDate) earliestDate = messageDate;
@@ -1411,66 +1939,19 @@
             }
           });
 
-          // Formatar para input type="date"
-          startDate.value = formatDateForInput(earliestDate);
-          endDate.value = formatDateForInput(latestDate);
+          // Formatar para input de data no formato brasileiro (DD/MM/YYYY)
+          startDate.value = formatDateBrazilian(earliestDate);
+          endDate.value = formatDateBrazilian(latestDate);
         }
 
-        // Funções para formatação de datas
+        // Funções para formatação de datas no formato brasileiro (DD/MM/YYYY)
         function formatDateForInput(date) {
           if (!date || isNaN(date.getTime())) return "";
+          // Sempre retornar no formato DD/MM/YYYY para inputs brasileiros
           return `${String(date.getDate()).padStart(
             2,
             "0"
           )}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
-        }
-
-        function applyFilters() {
-          const loteFilter = filterLote.value;
-          const statusFilter = filterStatus.value;
-          const tipoFilter = filterTipo.value;
-          const codigoFilter = filterCodigo.value.toLowerCase();
-
-          // Processar datas para garantir formato correto
-          const startDateValue = startDate.value
-            ? parseDate(startDate.value)
-            : null;
-          const endDateValue = endDate.value ? parseDate(endDate.value) : null;
-
-          // Ajuste para incluir o dia inteiro
-          if (endDateValue) {
-            endDateValue.setHours(23, 59, 59, 999);
-          }
-
-          const filteredData = processedData.filter((message) => {
-            // Filtros de texto
-            const matchesText =
-              (loteFilter === "" || message.lote === loteFilter) &&
-              (statusFilter === "" || message.status === statusFilter) &&
-              (tipoFilter === "" ||
-                normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
-              (codigoFilter === "" ||
-                (message.codigoOAE &&
-                  message.codigoOAE.toLowerCase().includes(codigoFilter)));
-
-            // Filtros de data
-            let matchesDate = true;
-
-            if (startDateValue || endDateValue) {
-              const messageDate = parseDate(message.data.split(" ")[0]);
-
-              if (messageDate) {
-                if (startDateValue && messageDate < startDateValue)
-                  matchesDate = false;
-                if (endDateValue && messageDate > endDateValue)
-                  matchesDate = false;
-              }
-            }
-
-            return matchesText && matchesDate;
-          });
-
-          updateTable(filteredData);
         }
 
         function clearFilters() {
@@ -1478,8 +1959,13 @@
           filterStatus.value = "";
           filterTipo.value = "";
           filterCodigo.value = "";
-          initializeDateFilters();
-          updateTable();
+
+          // Limpar os campos de data
+          startDate.value = "";
+          endDate.value = "";
+
+          // Atualizar a tabela com todos os dados
+          updateTable(processedData);
         }
 
         function exportToCSV() {
@@ -1557,239 +2043,11 @@
             .trim();
         }
 
-        function normalizeStatus(status) {
-          if (!status) return "";
-
-          const normalized = normalizeText(status);
-
-          // Categorizar status
-          if (
-            normalized.includes("aprovada") ||
-            normalized.includes("aprovado")
-          ) {
-            return "APROVADA";
-          } else if (
-            normalized.includes("reprovada") ||
-            normalized.includes("reprovado")
-          ) {
-            return "REPROVADA";
-          } else if (normalized.match(/\d+[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
-            const match = normalized.match(
-              /(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i
-            );
-            return `${match[1]}ª REAVALIAÇÃO`;
-          } else if (
-            normalized.includes("reavalia") ||
-            normalized.includes("reavaliao")
-          ) {
-            return "REAVALIAÇÃO";
-          } else if (
-            normalized.includes("avalia") ||
-            normalized.includes("avaliao")
-          ) {
-            return "AVALIAÇÃO";
-          } else if (
-            normalized.includes("retifica") ||
-            normalized.includes("cadastro aprovado")
-          ) {
-            return "RETIFICAÇÃO DE CADASTRO";
-          }
-
-          return status;
-        }
-
-        function normalizeTipoInspecao(tipo) {
-          if (!tipo) return "";
-
-          const normalized = normalizeText(tipo);
-
-          // Normalizar para CADASTRAL
-          if (
-            normalized.includes("cadastral") ||
-            normalized.includes("cadstral") ||
-            normalized.includes("cadastrais") ||
-            normalized.includes("Cdastral") ||
-            normalized.includes("cadatral")
-          ) {
-            return "CADASTRAL";
-          }
-
-          // Normalizar para ROTINEIRA
-          if (
-            normalized.includes("rotineira") ||
-            normalized.includes("rotinera") ||
-            normalized.includes("rotineirra") ||
-            normalized.includes("rotinieira")
-          ) {
-            return "ROTINEIRA";
-          }
-
-          // Normalizar para CORREÇÃO DE CADASTRO
-          if (
-            normalized.includes("correcao") ||
-            normalized.includes("correção") ||
-            normalized.includes("retificacao") ||
-            normalized.includes("retificação") ||
-            normalized.includes("cadastro corrigido")
-          ) {
-            return "CORREÇÃO DE CADASTRO";
-          }
-
-          return "OUTRO";
+        function parseDate(dateStr) {
+          return parseComplexDate(dateStr);
         }
 
         // Funções de Gráficos
-        function updateCharts() {
-          if (processedData.length === 0) return;
-
-          // Mostrar gráficos apenas se a aba estatísticas estiver ativa
-          if (
-            !document
-              .getElementById("estatisticas-tab")
-              .classList.contains("active")
-          ) {
-            return;
-          }
-
-          // 1. Status counts
-          const statusCounts = {};
-          processedData.forEach((item) => {
-            if (item.status) {
-              const status = normalizeStatus(item.status);
-              statusCounts[status] = (statusCounts[status] || 0) + 1;
-            }
-          });
-
-          // 2. Reprovações por código
-          const reprovacoesPorCodigo = {};
-          processedData.forEach((item) => {
-            if (
-              normalizeStatus(item.status) === "REPROVADA" &&
-              item.codigoOAE
-            ) {
-              reprovacoesPorCodigo[item.codigoOAE] =
-                (reprovacoesPorCodigo[item.codigoOAE] || 0) + 1;
-            }
-          });
-
-          // Ordenar e limitar a 10
-          const topReprovados = Object.fromEntries(
-            Object.entries(reprovacoesPorCodigo)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-          );
-
-          // 3. Quem mais aprova
-          const aprovadoresPorRemetente = {};
-          processedData.forEach((item) => {
-            if (normalizeStatus(item.status) === "APROVADA" && item.remetente) {
-              aprovadoresPorRemetente[item.remetente] =
-                (aprovadoresPorRemetente[item.remetente] || 0) + 1;
-            }
-          });
-
-          // Ordenar e limitar a 10
-          const topAprovadores = Object.fromEntries(
-            Object.entries(aprovadoresPorRemetente)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-          );
-
-          // 4. Quem mais reprova
-          const reprovadoresPorRemetente = {};
-          processedData.forEach((item) => {
-            if (
-              normalizeStatus(item.status) === "REPROVADA" &&
-              item.remetente
-            ) {
-              reprovadoresPorRemetente[item.remetente] =
-                (reprovadoresPorRemetente[item.remetente] || 0) + 1;
-            }
-          });
-
-          // Ordenar e limitar a 10
-          const topReprovadores = Object.fromEntries(
-            Object.entries(reprovadoresPorRemetente)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-          );
-
-          // 5. Tempo médio por tipo
-          const diasPorTipo = { Cadastral: [], Rotineira: [] };
-
-          processedData.forEach((item) => {
-            if (
-              item.tipoInspecao &&
-              item.dataEntrega &&
-              (item.dataDevolucao || item.dataRecebimento)
-            ) {
-              const tipo = normalizeTipoInspecao(item.tipoInspecao);
-              const dataInicio = parseDate(item.dataEntrega);
-              const dataFim = parseDate(
-                item.dataDevolucao || item.dataRecebimento
-              );
-
-              if (dataInicio && dataFim && diasPorTipo[tipo]) {
-                const dias = Math.round(
-                  (dataFim - dataInicio) / (1000 * 60 * 60 * 24)
-                );
-                if (dias >= 0) {
-                  diasPorTipo[tipo].push(dias);
-                }
-              }
-            }
-          });
-
-          // Calcular médias
-          const mediaDiasPorTipo = {};
-          Object.entries(diasPorTipo).forEach(([tipo, dias]) => {
-            if (dias.length > 0) {
-              mediaDiasPorTipo[tipo] =
-                dias.reduce((sum, val) => sum + val, 0) / dias.length;
-            } else {
-              mediaDiasPorTipo[tipo] = 0;
-            }
-          });
-
-          // 6. Contagem por tipo
-          const tipoInspecaoCounts = {};
-          processedData.forEach((item) => {
-            if (item.tipoInspecao) {
-              const tipo = normalizeTipoInspecao(item.tipoInspecao);
-              tipoInspecaoCounts[tipo] = (tipoInspecaoCounts[tipo] || 0) + 1;
-            }
-          });
-
-          // Criar gráficos
-          createStatusChart(statusCounts);
-          createReprovacaoChart(topReprovados);
-          createAprovadorChart(topAprovadores);
-          createReprovadorChart(topReprovadores);
-          createTempoChart(mediaDiasPorTipo);
-          createTipoChart(tipoInspecaoCounts);
-        }
-
-        function parseDate(dateStr) {
-          if (!dateStr) return null;
-
-          // Formato DD/MM/YYYY para objeto Date
-          const parts = dateStr.split("/");
-          if (parts.length === 3) {
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-          }
-
-          // Formato YYYY-MM-DD
-          if (dateStr.includes("-")) {
-            const parts = dateStr.split("-");
-            if (parts.length === 3) {
-              return new Date(parts[0], parts[1] - 1, parts[2]);
-            }
-          }
-
-          return null;
-        }
-
-        // Funções de Criação de Gráficos
         function createStatusChart(data) {
           createChart("statusChart", data, "bar", {
             indexAxis: "x",
