@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OAE - Interface de Preenchimento</title>
+    <style>
+      :root {
+        --dark-bg: #2c3e50;
+        --light-text: #ecf0f1;
+        --accent: #3498db;
+        --light-bg: #f5f5f5;
+        --border-color: #bdc3c7;
+        --section-bg: #34495e;
+        --header-bg: #e67e22;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-bg);
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        width: 90%;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      header {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--dark-bg);
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      h2 {
+        font-size: 20px;
+        margin: 20px 0 10px;
+        background: var(--dark-bg);
+        color: var(--light-text);
+        padding: 10px;
+        border-radius: 4px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin: 15px 0 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #f1f1f1;
+        margin-right: 2px;
+        margin-bottom: 5px;
+        border-radius: 4px 4px 0 0;
+      }
+
+      .tab.active {
+        background-color: var(--dark-bg);
+        color: var(--light-text);
+      }
+
+      .tab-content {
+        display: none;
+        padding: 20px;
+        background-color: white;
+        border: 1px solid var(--border-color);
+        border-top: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .form-group {
+        margin-right: 15px;
+        margin-bottom: 15px;
+        flex: 1 0 calc(33.333% - 15px);
+        min-width: 200px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: white;
+      }
+
+      select {
+        cursor: pointer;
+      }
+
+      input[type="checkbox"] {
+        margin-right: 5px;
+      }
+
+      button {
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background-color: #2980b9;
+      }
+
+      .add-btn {
+        background-color: #27ae60;
+      }
+
+      .add-btn:hover {
+        background-color: #219653;
+      }
+
+      .copy-btn {
+        background-color: #8e44ad;
+      }
+
+      .copy-btn:hover {
+        background-color: #7d3c98;
+      }
+
+      .dynamic-container {
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 4px;
+        background: var(--light-bg);
+      }
+
+      .dynamic-fields {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .actions {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .section-header {
+        background: var(--header-bg);
+        color: white;
+        padding: 8px 12px;
+        margin: 15px 0 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .new-field-form {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px dashed var(--border-color);
+        border-radius: 4px;
+        background: #f9f9f9;
+      }
+
+      .field-type-selector {
+        display: flex;
+        margin-bottom: 15px;
+        gap: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .form-group {
+          flex: 1 0 100%;
+        }
+
+        .actions {
+          justify-content: center;
+        }
+      }
+
+      #dynamic-tramos,
+      #dynamic-apoios {
+        background-color: rgba(52, 152, 219, 0.05);
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      .dynamic-field {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+
+      .dynamic-field label {
+        width: 100px;
+        margin-right: 10px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+      }
+
+      .dynamic-field input {
+        flex-grow: 1;
+      }
+
+      pre.csv-output {
+        background: #f1f1f1;
+        padding: 15px;
+        border-radius: 4px;
+        overflow-x: auto;
+        margin: 20px 0;
+        display: none;
+      }
+
+      #csv-line {
+        margin: 10px 0;
+        padding: 15px;
+        background: #f1f1f1;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        font-family: monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        display: none;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-content {
+        background-color: white;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        max-height: 80%;
+        overflow-y: auto;
+      }
+
+      .close-modal {
+        float: right;
+        cursor: pointer;
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .close-modal:hover {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Interface de Preenchimento de Obras de Arte Especiais (OAE)</h1>
+      </header>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="info">Informações Gerais</div>
+        <div class="tab" data-tab="configuracao">Configurações Gerais</div>
+        <div class="tab" data-tab="transicao">Transição</div>
+        <div class="tab" data-tab="superestrutura">Superestrutura</div>
+        <div class="tab" data-tab="apoio">Apoio</div>
+        <div class="tab" data-tab="complementares">
+          Elementos Complementares
+        </div>
+      </div>
+
+      <form id="oae-form">
+        <!-- Informações Gerais -->
+        <div class="tab-content active" id="info-content">
+          <h2>Informações Gerais da Obra</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="modelado">Modelado:</label>
+              <input type="checkbox" id="modelado" name="MODELADO" />
+            </div>
+            <div class="form-group">
+              <label for="codigo">Código:</label>
+              <input type="text" id="codigo" name="CODIGO" />
+            </div>
+            <div class="form-group">
+              <label for="nome">Nome:</label>
+              <input type="text" id="nome" name="NOME" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="uf">UF:</label>
+              <input type="text" id="uf" name="UF" />
+            </div>
+            <div class="form-group">
+              <label for="rodovia">Rodovia:</label>
+              <input type="text" id="rodovia" name="RODOVIA" />
+            </div>
+            <div class="form-group">
+              <label for="km">KM:</label>
+              <input type="number" id="km" name="KM" step="0.01" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="data">Data:</label>
+              <input type="date" id="data" name="DATA" />
+            </div>
+            <div class="form-group">
+              <label for="engenheiro">Engenheiro:</label>
+              <input type="text" id="engenheiro" name="ENGENHEIRO" />
+            </div>
+            <div class="form-group">
+              <label for="tecnico">Técnico:</label>
+              <input type="text" id="tecnico" name="TECNICO" />
+            </div>
+          </div>
+          <div id="info-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('info-custom-fields')"
+          >
+            + Adicionar Campo
+          </button>
+        </div>
+
+        <!-- Configurações Gerais -->
+        <div class="tab-content" id="configuracao-content">
+          <h2>Configurações Gerais</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento">Comprimento (m):</label>
+              <input
+                type="number"
+                id="comprimento"
+                name="COMPRIMENTO"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="largura">Largura (m):</label>
+              <input type="number" id="largura" name="LARGURA" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label for="altura">Altura (m):</label>
+              <input type="number" id="altura" name="ALTURA" step="0.01" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qtd-tramos">Quantidade de Tramos:</label>
+              <input
+                type="number"
+                id="qtd-tramos"
+                name="QTD TRAMOS"
+                min="1"
+                value="1"
+                onchange="generateTramosFields()"
+              />
+            </div>
+          </div>
+
+          <div id="dynamic-tramos" class="dynamic-container">
+            <h3>Comprimento dos Tramos</h3>
+            <div id="tramos-fields" class="dynamic-fields">
+              <!-- Campos gerados dinamicamente para tramos -->
+            </div>
+          </div>
+
+          <div id="config-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('config-custom-fields')"
+          >
+            + Adicionar Campo
+          </button>
+        </div>
+
+        <!-- Transição -->
+        <div class="tab-content" id="transicao-content">
+          <h2>Transição</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cortina-altura">Cortina Altura (m):</label>
+              <input
+                type="number"
+                id="cortina-altura"
+                name="CORTINA ALTURA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="ala-paralela">Ala Paralela:</label>
+              <input
+                type="number"
+                id="ala-paralela"
+                name="ALA PARALELA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="ala-perpendicular">Ala Perpendicular:</label>
+              <input
+                type="number"
+                id="ala-perpendicular"
+                name="ALA PERPENDICULAR"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento-ala">Comprimento Ala (m):</label>
+              <input
+                type="number"
+                id="comprimento-ala"
+                name="COMPRIMENTO ALA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="espessura-ala">Espessura Ala (m):</label>
+              <input
+                type="number"
+                id="espessura-ala"
+                name="ESPESSURA ALA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="encontro">Encontro:</label>
+              <select id="encontro" name="ENCONTRO">
+                <option value="">Selecione</option>
+                <option value="Nenhum">Nenhum</option>
+                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">
+                  ENCONTRO - PAREDE FRONTAL PORTANTE
+                </option>
+                <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="deslocamento-esquerdo-encontro-laje"
+                >Deslocamento Esquerdo Encontro Laje (m):</label
+              >
+              <input
+                type="number"
+                id="deslocamento-esquerdo-encontro-laje"
+                name="DESLOCAMENTO ESQUERDO ENCONTRO LAJE"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="deslocamento-direito-encontro-laje"
+                >Deslocamento Direito Encontro Laje (m):</label
+              >
+              <input
+                type="number"
+                id="deslocamento-direito-encontro-laje"
+                name="DESLOCAMENTO DIREITO ENCONTRO LAJE"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento-encontro-laje"
+                >Comprimento Encontro Laje (m):</label
+              >
+              <input
+                type="number"
+                id="comprimento-encontro-laje"
+                name="COMPRIMENTO ENCONTRO LAJE"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="laje-transicao">Laje de Transição:</label>
+              <select id="laje-transicao" name="LAJE DE TRANSIÇÃO">
+                <option value="">Selecione</option>
+                <option value="Nenhum">Nenhum</option>
+                <option value="LAJE DE TRANSIÇÃO">LAJE DE TRANSIÇÃO</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="transicao-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('transicao-custom-fields')"
+          >
+            + Adicionar Campo
+          </button>
+        </div>
+
+        <!-- Superestrutura -->
+        <div class="tab-content" id="superestrutura-content">
+          <h2>Superestrutura</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="altura-longarina">Altura Longarina (m):</label>
+              <input
+                type="number"
+                id="altura-longarina"
+                name="ALTURA LONGARINA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="deslocamento-esquerdo"
+                >Deslocamento Esquerdo (m):</label
+              >
+              <input
+                type="number"
+                id="deslocamento-esquerdo"
+                name="DESLOCAMENTO ESQUERDO"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="deslocamento-direito"
+                >Deslocamento Direito (m):</label
+              >
+              <input
+                type="number"
+                id="deslocamento-direito"
+                name="DESLOCAMENTO DIREITO"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qtd-longarinas">Quantidade de Longarinas:</label>
+              <input
+                type="number"
+                id="qtd-longarinas"
+                name="QTD LONGARINAS"
+                min="1"
+              />
+            </div>
+            <div class="form-group">
+              <label for="qtd-transversinas"
+                >Quantidade de Transversinas:</label
+              >
+              <input
+                type="number"
+                id="qtd-transversinas"
+                name="QTD TRANSVERSINAS"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="espessura-longarina">Espessura Longarina (m):</label>
+              <input
+                type="number"
+                id="espessura-longarina"
+                name="ESPESSURA LONGARINA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="espessura-transversina"
+                >Espessura Transversina (m):</label
+              >
+              <input
+                type="number"
+                id="espessura-transversina"
+                name="ESPESSURA TRANSVERSINA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="espessura-laje">Espessura Laje (m):</label>
+              <input
+                type="number"
+                id="espessura-laje"
+                name="ESPESSURA LAJE"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div id="superestrutura-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('superestrutura-custom-fields')"
+          >
+            + Adicionar Campo
+          </button>
+        </div>
+
+        <!-- Apoio -->
+        <div class="tab-content" id="apoio-content">
+          <h2>Apoio</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qtd-pilares">Quantidade de Pilares:</label>
+              <input
+                type="number"
+                id="qtd-pilares"
+                name="QTD PILARES"
+                min="0"
+              />
+            </div>
+            <div class="form-group">
+              <label for="pilar-descentralizado">Pilar Descentralizado:</label>
+              <select id="pilar-descentralizado" name="PILAR DESCENTRALIZADO">
+                <option value="">Selecione</option>
+                <option value="Sim">Sim</option>
+                <option value="Não">Não</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-pilar">Largura do Pilar (m):</label>
+              <input
+                type="number"
+                id="largura-pilar"
+                name="LARGURA PILAR"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento-pilares">Comprimento Pilares (m):</label>
+              <input
+                type="number"
+                id="comprimento-pilares"
+                name="COMPRIMENTO PILARES"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="tipo-aparelho-apoio"
+                >Tipo de Aparelho de Apoio:</label
+              >
+              <select id="tipo-aparelho-apoio" name="TIPO DE APARELHO DE APOIO">
+                <option value="">Selecione</option>
+                <option value="APARELHO DE APOIO DE NEOPRENE FRETADO">
+                  APARELHO DE APOIO DE NEOPRENE FRETADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="dynamic-apoios" class="dynamic-container">
+            <h3>Altura dos Apoios</h3>
+            <div id="apoios-fields" class="dynamic-fields">
+              <!-- Campos gerados dinamicamente para apoios -->
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-travessa">Tipo de Travessa:</label>
+              <select id="tipo-travessa" name="TIPO DE TRAVESSA">
+                <option value="">Selecione</option>
+                <option value="TRAVESSA DE APOIO DE CONCRETO ARMADO">
+                  TRAVESSA DE APOIO DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="altura-travessa">Altura Travessa (m):</label>
+              <input
+                type="number"
+                id="altura-travessa"
+                name="ALTURA TRAVESSA"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="tipo-encamisamento">Tipo de Encamisamento:</label>
+              <select id="tipo-encamisamento" name="TIPO DE ENCAMISAMENTO">
+                <option value="">Selecione</option>
+                <option value="ENCAMISAMENTO DE PILAR">
+                  ENCAMISAMENTO DE PILAR
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-bloco-sapata">Tipo de Bloco ou Sapata:</label>
+              <select id="tipo-bloco-sapata" name="TIPO DE BLOCO OU SAPATA">
+                <option value="">Selecione</option>
+                <option value="BLOCO OU SAPATA DE CONCRETO ARMADO">
+                  BLOCO OU SAPATA DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="altura-bloco-sapata"
+                >Altura Bloco ou Sapata (m):</label
+              >
+              <input
+                type="number"
+                id="altura-bloco-sapata"
+                name="ALTURA BLOCO OU SAPATA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="viga-contraventamento-pilar"
+                >Viga de Contraventamento de Pilar:</label
+              >
+              <select
+                id="viga-contraventamento-pilar"
+                name="VIGA DE CONTRAVENTAMENTO DE PILAR"
+              >
+                <option value="">Selecione</option>
+                <option value="VIGA DE CONTRAVENTAMENTO DE PILAR">
+                  VIGA DE CONTRAVENTAMENTO DE PILAR
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="viga-ligacao-fundacoes"
+                >Viga de Ligação de Fundações:</label
+              >
+              <select
+                id="viga-ligacao-fundacoes"
+                name="VIGA DE LIGAÇÃO DE FUNDAÇÕES"
+              >
+                <option value="">Selecione</option>
+                <option value="VIGA DE LIGAÇÃO DE FUNDAÇÕES">
+                  VIGA DE LIGAÇÃO DE FUNDAÇÕES
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="apoio-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('apoio-custom-fields')"
+          >
+            + Adicionar Campo
+          </button>
+        </div>
+
+        <!-- Elementos Complementares -->
+        <div class="tab-content" id="complementares-content">
+          <h2>Elementos Complementares</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="barreira-esquerda">Barreira Esquerda:</label>
+              <select id="barreira-esquerda" name="BARREIRA ESQUERDA">
+                <option value="">Selecione</option>
+                <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-barreira-esquerda"
+                >Largura Barreira Esquerda (m):</label
+              >
+              <input
+                type="number"
+                id="largura-barreira-esquerda"
+                name="LARGURA BARREIRA ESQUERDA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="barreira-direita">Barreira Direita:</label>
+              <select id="barreira-direita" name="BARREIRA DIREITA">
+                <option value="">Selecione</option>
+                <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-barreira-direita"
+                >Largura Barreira Direita (m):</label
+              >
+              <input
+                type="number"
+                id="largura-barreira-direita"
+                name="LARGURA BARREIRA DIREITA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="calcada-esquerda">Calçada Esquerda:</label>
+              <select id="calcada-esquerda" name="CALÇADA ESQUERDA">
+                <option value="">Selecione</option>
+                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
+                  CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-calcada-esquerda"
+                >Largura Calçada Esquerda (m):</label
+              >
+              <input
+                type="number"
+                id="largura-calcada-esquerda"
+                name="LARGURA CALÇADA ESQUERDA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="calcada-direita">Calçada Direita:</label>
+              <select id="calcada-direita" name="CALÇADA DIREITA">
+                <option value="">Selecione</option>
+                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
+                  CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-calcada-direita"
+                >Largura Calçada Direita (m):</label
+              >
+              <input
+                type="number"
+                id="largura-calcada-direita"
+                name="LARGURA CALÇADA DIREITA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="guarda-rodas-esquerda">Guarda Rodas Esquerda:</label>
+              <select id="guarda-rodas-esquerda" name="GUARDA RODAS ESQUERDA">
+                <option value="">Selecione</option>
+                <option value="GUARDA-RODAS ANTIGO DO DNER">
+                  GUARDA-RODAS ANTIGO DO DNER
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-guarda-rodas-esquerda"
+                >Largura Guarda Rodas Esquerda (m):</label
+              >
+              <input
+                type="number"
+                id="largura-guarda-rodas-esquerda"
+                name="LARGURA GUARDA RODAS ESQUERDA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="guarda-rodas-direita">Guarda Rodas Direita:</label>
+              <select id="guarda-rodas-direita" name="GUARDA RODAS DIREITA">
+                <option value="">Selecione</option>
+                <option value="GUARDA-RODAS ANTIGO DO DNER">
+                  GUARDA-RODAS ANTIGO DO DNER
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-guarda-rodas-direita"
+                >Largura Guarda Rodas Direita (m):</label
+              >
+              <input
+                type="number"
+                id="largura-guarda-rodas-direita"
+                name="LARGURA GUARDA RODAS DIREITA"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pavimento">Pavimento:</label>
+              <select id="pavimento" name="PAVIMENTO">
+                <option value="">Selecione</option>
+                <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qtd-buzinotes">Quantidade de Buzinotes:</label>
+              <input
+                type="number"
+                id="qtd-buzinotes"
+                name="QTD BUZINOTES"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div id="complementares-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('complementares-custom-fields')"
+          >
+            + Adicionar Campo
+          </button>
+        </div>
+      </form>
+
+      <div id="csv-line"></div>
+
+      <!-- Botões de Ação -->
+      <div class="actions">
+        <button type="button" id="import-btn">Importar CSV</button>
+        <button type="button" id="export-btn" onclick="exportToCSV()">
+          Exportar para CSV
+        </button>
+        <button
+          type="button"
+          class="copy-btn"
+          onclick="generateAndShowCSVLine()"
+        >
+          Copiar Linha para Excel
+        </button>
+        <button type="button" id="clear-btn" onclick="clearForm()">
+          Limpar Formulário
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal para adicionar campo -->
+    <div id="add-field-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Adicionar Novo Campo</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="new-field-name">Nome do Campo:</label>
+            <input
+              type="text"
+              id="new-field-name"
+              placeholder="Ex: Peso Estrutura"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de Campo:</label>
+            <div class="field-type-selector">
+              <label>
+                <input
+                  type="radio"
+                  name="field-type"
+                  value="number-int"
+                  checked
+                />
+                Número Inteiro
+              </label>
+              <label>
+                <input type="radio" name="field-type" value="number-double" />
+                Número Decimal
+              </label>
+              <label>
+                <input type="radio" name="field-type" value="select" /> Seleção
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="select-options" style="display: none">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="select-options-input">Opções (uma por linha):</label>
+              <textarea
+                id="select-options-input"
+                rows="5"
+                placeholder="Nenhum&#10;Opção 1&#10;Opção 2"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="target-container" />
+        <div class="actions">
+          <button type="button" onclick="addCustomField()">
+            Adicionar Campo
+          </button>
+          <button type="button" onclick="closeModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Versão: 2.0
+
+      // Ativação das abas
+      document.addEventListener("DOMContentLoaded", function () {
+        // Configurar tabs
+        const tabs = document.querySelectorAll(".tab");
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            // Remover classe 'active' de todas as tabs e conteúdos
+            document
+              .querySelectorAll(".tab")
+              .forEach((t) => t.classList.remove("active"));
+            document
+              .querySelectorAll(".tab-content")
+              .forEach((c) => c.classList.remove("active"));
+
+            // Adicionar classe 'active' para a tab clicada e seu conteúdo
+            tab.classList.add("active");
+            const tabId = tab.getAttribute("data-tab");
+            document.getElementById(`${tabId}-content`).classList.add("active");
+          });
+        });
+
+        // Inicializar campos dinâmicos
+        generateTramosFields();
+
+        // Configurar evento para mostrar/esconder opções de select
+        document
+          .querySelectorAll('input[name="field-type"]')
+          .forEach((radio) => {
+            radio.addEventListener("change", function () {
+              if (this.value === "select") {
+                document.getElementById("select-options").style.display =
+                  "block";
+              } else {
+                document.getElementById("select-options").style.display =
+                  "none";
+              }
+            });
+          });
+      });
+
+      // Gerar campos dinâmicos para tramos (em pilha)
+      function generateTramosFields() {
+        const qtdTramos =
+          parseInt(document.getElementById("qtd-tramos").value) || 0;
+        const tramosContainer = document.getElementById("tramos-fields");
+        tramosContainer.innerHTML = "";
+
+        // Gerar campos para tramos em pilha
+        for (let i = 1; i <= qtdTramos; i++) {
+          const div = document.createElement("div");
+          div.className = "dynamic-field";
+          div.innerHTML = `
+                    <label for="tramo-${i}">Tramo ${i}:</label>
+                    <input type="number" id="tramo-${i}" name="tramo-${i}" step="0.01" class="tramo-field">
+                `;
+          tramosContainer.appendChild(div);
+        }
+
+        // Atualizar também os campos de apoios
+        generateApoiosFields(qtdTramos);
+      }
+
+      // Gerar campos dinâmicos para apoios (qtdTramos - 1)
+      function generateApoiosFields(qtdTramos) {
+        const qtdApoios = qtdTramos > 1 ? qtdTramos - 1 : 0;
+        const apoiosContainer = document.getElementById("apoios-fields");
+        apoiosContainer.innerHTML = "";
+
+        for (let i = 1; i <= qtdApoios; i++) {
+          const div = document.createElement("div");
+          div.className = "dynamic-field";
+          div.innerHTML = `
+                    <label for="apoio-${i}">Apoio ${i}:</label>
+                    <input type="number" id="apoio-${i}" name="apoio-${i}" step="0.01" class="apoio-field">
+                `;
+          apoiosContainer.appendChild(div);
+        }
+      }
+
+      // Mostrar modal para adicionar campo
+      function showAddField(targetContainer) {
+        document.getElementById("target-container").value = targetContainer;
+        document.getElementById("new-field-name").value = "";
+        document.getElementById("select-options-input").value = "Nenhum";
+        document.getElementById("add-field-modal").style.display = "block";
+        document.querySelectorAll('input[name="field-type"]')[0].checked = true;
+        document.getElementById("select-options").style.display = "none";
+      }
+
+      // Fechar modal
+      function closeModal() {
+        document.getElementById("add-field-modal").style.display = "none";
+      }
+
+      // Adicionar campo personalizado
+      function addCustomField() {
+        const fieldName = document
+          .getElementById("new-field-name")
+          .value.trim();
+        if (!fieldName) {
+          alert("Por favor, digite um nome para o campo.");
+          return;
+        }
+
+        const targetContainer =
+          document.getElementById("target-container").value;
+        const container = document.getElementById(targetContainer);
+        const fieldType = document.querySelector(
+          'input[name="field-type"]:checked'
+        ).value;
+
+        // Criar div para o campo personalizado
+        const customFieldDiv = document.createElement("div");
+        customFieldDiv.className = "form-row";
+
+        // Criar o campo baseado no tipo selecionado
+        let fieldHtml = "";
+        const fieldId =
+          "custom-" + fieldName.replace(/\s+/g, "-").toLowerCase();
+        const fieldNameAttr = fieldName.toUpperCase();
+
+        if (fieldType === "select") {
+          const optionsText = document.getElementById(
+            "select-options-input"
+          ).value;
+          const options = optionsText
+            .split("\n")
+            .map((opt) => opt.trim())
+            .filter((opt) => opt);
+
+          const optionsHtml = options
+            .map((opt) => `<option value="${opt}">${opt}</option>`)
+            .join("");
+
+          fieldHtml = `
+                    <div class="form-group">
+                        <label for="${fieldId}">${fieldName}:</label>
+                        <select id="${fieldId}" name="${fieldNameAttr}" class="custom-field">
+                            <option value="">Selecione</option>
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                `;
+        } else if (fieldType === "number-int") {
+          fieldHtml = `
+                    <div class="form-group">
+                        <label for="${fieldId}">${fieldName}:</label>
+                        <input type="number" id="${fieldId}" name="${fieldNameAttr}" class="custom-field">
+                    </div>
+                `;
+        } else if (fieldType === "number-double") {
+          fieldHtml = `
+                    <div class="form-group">
+                        <label for="${fieldId}">${fieldName}:</label>
+                        <input type="number" id="${fieldId}" name="${fieldNameAttr}" step="0.01" class="custom-field">
+                    </div>
+                `;
+        }
+
+        customFieldDiv.innerHTML = fieldHtml;
+        container.appendChild(customFieldDiv);
+
+        closeModal();
+      }
+
+      // Gerar e mostrar linha CSV para copiar para Excel
+      function generateAndShowCSVLine() {
+        const form = document.getElementById("oae-form");
+        const formData = new FormData(form);
+
+        // Coletar todos os campos do CSV
+        const csvColumns = [
+          "MODELADO",
+          "CODIGO",
+          "NOME",
+          "UF",
+          "RODOVIA",
+          "KM",
+          "DATA",
+          "ENGENHEIRO",
+          "TECNICO",
+          "COMPRIMENTO",
+          "LARGURA",
+          "ALTURA",
+          "QTD TRAMOS",
+          "COMPRIMENTO TRAMOS",
+          "CORTINA ALTURA",
+          "ALA PARALELA",
+          "ALA PERPENDICULAR",
+          "COMPRIMENTO ALA",
+          "ESPESSURA ALA",
+          "ENCONTRO",
+          "DESLOCAMENTO ESQUERDO ENCONTRO LAJE",
+          "DESLOCAMENTO DIREITO ENCONTRO LAJE",
+          "COMPRIMENTO ENCONTRO LAJE",
+          "LAJE DE TRANSIÇÃO",
+          "ALTURA LONGARINA",
+          "DESLOCAMENTO ESQUERDO",
+          "DESLOCAMENTO DIREITO",
+          "QTD LONGARINAS",
+          "QTD TRANSVERSINAS",
+          "ESPESSURA LONGARINA",
+          "ESPESSURA TRANSVERSINA",
+          "ESPESSURA LAJE",
+          "QTD PILARES",
+          "PILAR DESCENTRALIZADO",
+          "LARGURA PILAR",
+          "COMPRIMENTO PILARES",
+          "ALTURA DO APOIO",
+          "TIPO DE APARELHO DE APOIO",
+          "TIPO DE TRAVESSA",
+          "ALTURA TRAVESSA",
+          "TIPO DE ENCAMISAMENTO",
+          "TIPO DE BLOCO OU SAPATA",
+          "ALTURA BLOCO OU SAPATA",
+          "VIGA DE CONTRAVENTAMENTO DE PILAR",
+          "VIGA DE LIGAÇÃO DE FUNDAÇÕES",
+          "BARREIRA ESQUERDA",
+          "LARGURA BARREIRA ESQUERDA",
+          "BARREIRA DIREITA",
+          "LARGURA BARREIRA DIREITA",
+          "CALÇADA ESQUERDA",
+          "LARGURA CALÇADA ESQUERDA",
+          "CALÇADA DIREITA",
+          "LARGURA CALÇADA DIREITA",
+          "GUARDA RODAS ESQUERDA",
+          "LARGURA GUARDA RODAS ESQUERDA",
+          "GUARDA RODAS DIREITA",
+          "LARGURA GUARDA RODAS DIREITA",
+          "PAVIMENTO",
+          "QTD BUZINOTES",
+        ];
+
+        // Coletar campos personalizados
+        document.querySelectorAll(".custom-field").forEach((field) => {
+          const name = field.getAttribute("name");
+          if (!csvColumns.includes(name)) {
+            csvColumns.push(name);
+          }
+        });
+
+        // Dados para a linha CSV
+        const data = {};
+
+        // Preencher com valores vazios para garantir que todos os campos existam
+        csvColumns.forEach((column) => {
+          data[column] = "";
+        });
+
+        // Preencher com os valores do formulário
+        for (let [key, value] of formData.entries()) {
+          // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+          if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
+            data[key] = value;
+          }
+        }
+
+        // Checkbox - verificar se está marcado
+        if (document.getElementById("modelado").checked) {
+          data["MODELADO"] = "TRUE";
+        } else {
+          data["MODELADO"] = "FALSE";
+        }
+
+        // Coletar valores dos tramos
+        const tramosValues = [];
+        const tramosFields = document.querySelectorAll(".tramo-field");
+        tramosFields.forEach((field) => {
+          tramosValues.push(field.value || "0.00");
+        });
+        data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
+
+        // Coletar valores dos apoios
+        const apoiosValues = [];
+        const apoiosFields = document.querySelectorAll(".apoio-field");
+        apoiosFields.forEach((field) => {
+          apoiosValues.push(field.value || "0.00");
+        });
+        data["ALTURA DO APOIO"] = apoiosValues.join(";");
+
+        // Gerar a linha CSV
+        const csvLine = csvColumns
+          .map((column) => data[column] || "")
+          .join("\t");
+
+        // Mostrar a linha para copiar
+        const csvLineElement = document.getElementById("csv-line");
+        csvLineElement.style.display = "block";
+        csvLineElement.textContent = csvLine;
+
+        // Selecionar o texto para facilitar a cópia
+        const range = document.createRange();
+        range.selectNode(csvLineElement);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        try {
+          // Copiar para o clipboard
+          document.execCommand("copy");
+          window.getSelection().removeAllRanges();
+          alert("Linha copiada para a área de transferência!");
+        } catch (err) {
+          console.error("Não foi possível copiar automaticamente:", err);
+          alert("Selecione o texto e use Ctrl+C para copiar.");
+        }
+      }
+
+      // Exportar para CSV
+      function exportToCSV() {
+        const form = document.getElementById("oae-form");
+        const formData = new FormData(form);
+
+        // Coletar todos os campos padrão
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+          // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+          if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
+            data[key] = value;
+          }
+        }
+
+        // Checkbox - verificar se está marcado
+        if (document.getElementById("modelado").checked) {
+          data["MODELADO"] = "TRUE";
+        } else {
+          data["MODELADO"] = "FALSE";
+        }
+
+        // Coletar valores dos tramos
+        const tramosValues = [];
+        const tramosFields = document.querySelectorAll(".tramo-field");
+        tramosFields.forEach((field) => {
+          tramosValues.push(field.value || "0.00");
+        });
+        data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
+
+        // Coletar valores dos apoios
+        const apoiosValues = [];
+        const apoiosFields = document.querySelectorAll(".apoio-field");
+        apoiosFields.forEach((field) => {
+          apoiosValues.push(field.value || "0.00");
+        });
+        data["ALTURA DO APOIO"] = apoiosValues.join(";");
+
+        // Construir cabeçalhos e linha de dados
+        const headers = Object.keys(data);
+        const csvContent =
+          headers.join(",") +
+          "\n" +
+          headers
+            .map((header) => {
+              // Valores com vírgula devem ser envolvidos em aspas duplas
+              const value = data[header];
+              return value && value.includes(",") ? `"${value}"` : value;
+            })
+            .join(",");
+
+        // Criar e baixar o arquivo CSV
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `OAE_${data["CODIGO"] || "nova"}_${
+            new Date().toISOString().split("T")[0]
+          }.csv`
+        );
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Importar CSV
+      document
+        .getElementById("import-btn")
+        .addEventListener("click", function () {
+          alert(
+            "Funcionalidade de importação será implementada em versão futura."
+          );
+          // A implementação real requer um input file e processamento do CSV
+        });
+
+      // Limpar formulário
+      function clearForm() {
+        document.getElementById("oae-form").reset();
+        document.getElementById("csv-line").style.display = "none";
+        generateTramosFields(); // Regenerar os campos dinâmicos
+      }
+    </script>
+  </body>
+</html>
