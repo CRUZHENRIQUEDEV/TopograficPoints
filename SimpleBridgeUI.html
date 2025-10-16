@@ -1,1208 +1,1102 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OAE - Interface de Preenchimento</title>
     <style>
-      :root {
-        --dark-bg: #2c3e50;
-        --light-text: #ecf0f1;
-        --accent: #3498db;
-        --light-bg: #f5f5f5;
-        --border-color: #bdc3c7;
-        --section-bg: #34495e;
-        --header-bg: #e67e22;
-      }
+        :root {
+            --dark-bg: #2c3e50;
+            --light-text: #ecf0f1;
+            --accent: #3498db;
+            --light-bg: #f5f5f5;
+            --border-color: #bdc3c7;
+            --section-bg: #34495e;
+            --header-bg: #e67e22;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-      body {
-        background-color: var(--light-bg);
-        color: #333;
-        line-height: 1.6;
-      }
+        body {
+            background-color: var(--light-bg);
+            color: #333;
+            line-height: 1.6;
+        }
 
-      .container {
-        width: 90%;
-        max-width: 1200px;
-        margin: 20px auto;
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
 
-      header {
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border-color);
-      }
+        header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-      h1,
-      h2,
-      h3 {
-        color: var(--dark-bg);
-      }
+        h1, h2, h3 {
+            color: var(--dark-bg);
+        }
 
-      h1 {
-        font-size: 24px;
-        margin-bottom: 10px;
-      }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
 
-      h2 {
-        font-size: 20px;
-        margin: 20px 0 10px;
-        background: var(--dark-bg);
-        color: var(--light-text);
-        padding: 10px;
-        border-radius: 4px;
-      }
+        h2 {
+            font-size: 20px;
+            margin: 20px 0 10px;
+            background: var(--dark-bg);
+            color: var(--light-text);
+            padding: 10px;
+            border-radius: 4px;
+        }
 
-      h3 {
-        font-size: 18px;
-        margin: 15px 0 10px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid var(--border-color);
-      }
+        h3 {
+            font-size: 18px;
+            margin: 15px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-      .tabs {
-        display: flex;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-        border-bottom: 1px solid var(--border-color);
-      }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-      .tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        background-color: #f1f1f1;
-        margin-right: 2px;
-        margin-bottom: 5px;
-        border-radius: 4px 4px 0 0;
-      }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            margin-right: 2px;
+            margin-bottom: 5px;
+            border-radius: 4px 4px 0 0;
+        }
 
-      .tab.active {
-        background-color: var(--dark-bg);
-        color: var(--light-text);
-      }
+        .tab.active {
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+        }
 
-      .tab-content {
-        display: none;
-        padding: 20px;
-        background-color: white;
-        border: 1px solid var(--border-color);
-        border-top: none;
-      }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
 
-      .tab-content.active {
-        display: block;
-      }
+        .tab-content.active {
+            display: block;
+        }
 
-      .form-row {
-        display: flex;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-      }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
 
-      .form-group {
-        margin-right: 15px;
-        margin-bottom: 15px;
-        flex: 1 0 calc(33.333% - 15px);
-        min-width: 200px;
-      }
-
-      label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-
-      input[type="text"],
-      input[type="number"],
-      input[type="date"],
-      select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        font-size: 14px;
-        background-color: white;
-      }
-
-      select {
-        cursor: pointer;
-      }
-
-      input[type="checkbox"] {
-        margin-right: 5px;
-      }
-
-      button {
-        background-color: var(--accent);
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        margin: 5px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-
-      button:hover {
-        background-color: #2980b9;
-      }
-
-      .add-btn {
-        background-color: #27ae60;
-      }
-
-      .add-btn:hover {
-        background-color: #219653;
-      }
-
-      .copy-btn {
-        background-color: #8e44ad;
-      }
-
-      .copy-btn:hover {
-        background-color: #7d3c98;
-      }
-
-      .dynamic-container {
-        border: 1px solid var(--border-color);
-        padding: 15px;
-        margin: 10px 0;
-        border-radius: 4px;
-        background: var(--light-bg);
-      }
-
-      .dynamic-fields {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .actions {
-        margin-top: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      .section-header {
-        background: var(--header-bg);
-        color: white;
-        padding: 8px 12px;
-        margin: 15px 0 10px;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 16px;
-      }
-
-      .new-field-form {
-        margin-top: 20px;
-        padding: 15px;
-        border: 1px dashed var(--border-color);
-        border-radius: 4px;
-        background: #f9f9f9;
-      }
-
-      .field-type-selector {
-        display: flex;
-        margin-bottom: 15px;
-        gap: 10px;
-      }
-
-      @media (max-width: 768px) {
         .form-group {
-          flex: 1 0 100%;
+            margin-right: 15px;
+            margin-bottom: 15px;
+            flex: 1 0 calc(33.333% - 15px);
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .add-btn {
+            background-color: #27ae60;
+        }
+        
+        .add-btn:hover {
+            background-color: #219653;
+        }
+
+        .copy-btn {
+            background-color: #8e44ad;
+        }
+        
+        .copy-btn:hover {
+            background-color: #7d3c98;
+        }
+        
+        .delete-btn {
+            background-color: var(--danger);
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .dynamic-container {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: var(--light-bg);
+        }
+
+        .dynamic-fields {
+            display: flex;
+            flex-direction: column;
         }
 
         .actions {
-          justify-content: center;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
-      }
 
-      #dynamic-tramos,
-      #dynamic-apoios {
-        background-color: rgba(52, 152, 219, 0.05);
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-      }
+        .section-header {
+            background: var(--header-bg);
+            color: white;
+            padding: 8px 12px;
+            margin: 15px 0 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+        }
 
-      .dynamic-field {
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        width: 100%;
-      }
+        .new-field-form {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
 
-      .dynamic-field label {
-        width: 100px;
-        margin-right: 10px;
-        margin-bottom: 0;
-        flex-shrink: 0;
-      }
+        .field-type-selector {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
 
-      .dynamic-field input {
-        flex-grow: 1;
-      }
+        @media (max-width: 768px) {
+            .form-group {
+                flex: 1 0 100%;
+            }
+            
+            .actions {
+                justify-content: center;
+            }
+        }
 
-      pre.csv-output {
-        background: #f1f1f1;
-        padding: 15px;
-        border-radius: 4px;
-        overflow-x: auto;
-        margin: 20px 0;
-        display: none;
-      }
+        #dynamic-tramos, #dynamic-apoios {
+            background-color: rgba(52, 152, 219, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
 
-      #csv-line {
-        margin: 10px 0;
-        padding: 15px;
-        background: #f1f1f1;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        font-family: monospace;
-        white-space: pre-wrap;
-        word-break: break-all;
-        display: none;
-      }
+        .dynamic-field {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
 
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-      }
+        .dynamic-field label {
+            width: 100px;
+            margin-right: 10px;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+        
+        .dynamic-field input {
+            flex-grow: 1;
+        }
 
-      .modal-content {
-        background-color: white;
-        margin: 10% auto;
-        padding: 20px;
-        border-radius: 8px;
-        width: 80%;
-        max-width: 800px;
-        max-height: 80%;
-        overflow-y: auto;
-      }
-
-      .close-modal {
-        float: right;
-        cursor: pointer;
-        font-size: 24px;
-        font-weight: bold;
-      }
-
-      .close-modal:hover {
-        color: var(--accent);
-      }
+        pre.csv-output {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        #csv-line {
+            margin: 10px 0;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            display: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        
+        .close-modal {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .close-modal:hover {
+            color: var(--accent);
+        }
+        
+        .works-panel {
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+        }
+        
+        .works-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .work-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .work-item:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .work-item.selected {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+        
+        .filter-container {
+            display: flex;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        .filter-container input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--dark-bg);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .toggle-panel {
+            cursor: pointer;
+            background-color: var(--accent);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: none;
+            margin-left: 10px;
+        }
     </style>
-  </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>Interface de Preenchimento de Obras de Arte Especiais (OAE)</h1>
-      </header>
-
-      <div class="tabs">
-        <div class="tab active" data-tab="info">Informações Gerais</div>
-        <div class="tab" data-tab="configuracao">Configurações Gerais</div>
-        <div class="tab" data-tab="transicao">Transição</div>
-        <div class="tab" data-tab="superestrutura">Superestrutura</div>
-        <div class="tab" data-tab="apoio">Apoio</div>
-        <div class="tab" data-tab="complementares">
-          Elementos Complementares
-        </div>
-      </div>
-
-      <form id="oae-form">
-        <!-- Informações Gerais -->
-        <div class="tab-content active" id="info-content">
-          <h2>Informações Gerais da Obra</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="modelado">Modelado:</label>
-              <input type="checkbox" id="modelado" name="MODELADO" />
-            </div>
-            <div class="form-group">
-              <label for="codigo">Código:</label>
-              <input type="text" id="codigo" name="CODIGO" />
-            </div>
-            <div class="form-group">
-              <label for="nome">Nome:</label>
-              <input type="text" id="nome" name="NOME" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="uf">UF:</label>
-              <input type="text" id="uf" name="UF" />
-            </div>
-            <div class="form-group">
-              <label for="rodovia">Rodovia:</label>
-              <input type="text" id="rodovia" name="RODOVIA" />
-            </div>
-            <div class="form-group">
-              <label for="km">KM:</label>
-              <input type="number" id="km" name="KM" step="0.01" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="data">Data:</label>
-              <input type="date" id="data" name="DATA" />
-            </div>
-            <div class="form-group">
-              <label for="engenheiro">Engenheiro:</label>
-              <input type="text" id="engenheiro" name="ENGENHEIRO" />
-            </div>
-            <div class="form-group">
-              <label for="tecnico">Técnico:</label>
-              <input type="text" id="tecnico" name="TECNICO" />
-            </div>
-          </div>
-          <div id="info-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('info-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
-
-        <!-- Configurações Gerais -->
-        <div class="tab-content" id="configuracao-content">
-          <h2>Configurações Gerais</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="comprimento">Comprimento (m):</label>
-              <input
-                type="number"
-                id="comprimento"
-                name="COMPRIMENTO"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="largura">Largura (m):</label>
-              <input type="number" id="largura" name="LARGURA" step="0.01" />
-            </div>
-            <div class="form-group">
-              <label for="altura">Altura (m):</label>
-              <input type="number" id="altura" name="ALTURA" step="0.01" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="qtd-tramos">Quantidade de Tramos:</label>
-              <input
-                type="number"
-                id="qtd-tramos"
-                name="QTD TRAMOS"
-                min="1"
-                value="1"
-                onchange="generateTramosFields()"
-              />
-            </div>
-          </div>
-
-          <div id="dynamic-tramos" class="dynamic-container">
-            <h3>Comprimento dos Tramos</h3>
-            <div id="tramos-fields" class="dynamic-fields">
-              <!-- Campos gerados dinamicamente para tramos -->
-            </div>
-          </div>
-
-          <div id="config-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('config-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
-
-        <!-- Transição -->
-        <div class="tab-content" id="transicao-content">
-          <h2>Transição</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="cortina-altura">Cortina Altura (m):</label>
-              <input
-                type="number"
-                id="cortina-altura"
-                name="CORTINA ALTURA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="ala-paralela">Ala Paralela:</label>
-              <input
-                type="number"
-                id="ala-paralela"
-                name="ALA PARALELA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="ala-perpendicular">Ala Perpendicular:</label>
-              <input
-                type="number"
-                id="ala-perpendicular"
-                name="ALA PERPENDICULAR"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="comprimento-ala">Comprimento Ala (m):</label>
-              <input
-                type="number"
-                id="comprimento-ala"
-                name="COMPRIMENTO ALA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="espessura-ala">Espessura Ala (m):</label>
-              <input
-                type="number"
-                id="espessura-ala"
-                name="ESPESSURA ALA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="encontro">Encontro:</label>
-              <select id="encontro" name="ENCONTRO">
-                <option value="">Selecione</option>
-                <option value="Nenhum">Nenhum</option>
-                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">
-                  ENCONTRO - PAREDE FRONTAL PORTANTE
-                </option>
-                <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="deslocamento-esquerdo-encontro-laje"
-                >Deslocamento Esquerdo Encontro Laje (m):</label
-              >
-              <input
-                type="number"
-                id="deslocamento-esquerdo-encontro-laje"
-                name="DESLOCAMENTO ESQUERDO ENCONTRO LAJE"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="deslocamento-direito-encontro-laje"
-                >Deslocamento Direito Encontro Laje (m):</label
-              >
-              <input
-                type="number"
-                id="deslocamento-direito-encontro-laje"
-                name="DESLOCAMENTO DIREITO ENCONTRO LAJE"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="comprimento-encontro-laje"
-                >Comprimento Encontro Laje (m):</label
-              >
-              <input
-                type="number"
-                id="comprimento-encontro-laje"
-                name="COMPRIMENTO ENCONTRO LAJE"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="laje-transicao">Laje de Transição:</label>
-              <select id="laje-transicao" name="LAJE DE TRANSIÇÃO">
-                <option value="">Selecione</option>
-                <option value="Nenhum">Nenhum</option>
-                <option value="LAJE DE TRANSIÇÃO">LAJE DE TRANSIÇÃO</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="transicao-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('transicao-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
-
-        <!-- Superestrutura -->
-        <div class="tab-content" id="superestrutura-content">
-          <h2>Superestrutura</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="altura-longarina">Altura Longarina (m):</label>
-              <input
-                type="number"
-                id="altura-longarina"
-                name="ALTURA LONGARINA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="deslocamento-esquerdo"
-                >Deslocamento Esquerdo (m):</label
-              >
-              <input
-                type="number"
-                id="deslocamento-esquerdo"
-                name="DESLOCAMENTO ESQUERDO"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="deslocamento-direito"
-                >Deslocamento Direito (m):</label
-              >
-              <input
-                type="number"
-                id="deslocamento-direito"
-                name="DESLOCAMENTO DIREITO"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="qtd-longarinas">Quantidade de Longarinas:</label>
-              <input
-                type="number"
-                id="qtd-longarinas"
-                name="QTD LONGARINAS"
-                min="1"
-              />
-            </div>
-            <div class="form-group">
-              <label for="qtd-transversinas"
-                >Quantidade de Transversinas:</label
-              >
-              <input
-                type="number"
-                id="qtd-transversinas"
-                name="QTD TRANSVERSINAS"
-                min="0"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="espessura-longarina">Espessura Longarina (m):</label>
-              <input
-                type="number"
-                id="espessura-longarina"
-                name="ESPESSURA LONGARINA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="espessura-transversina"
-                >Espessura Transversina (m):</label
-              >
-              <input
-                type="number"
-                id="espessura-transversina"
-                name="ESPESSURA TRANSVERSINA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="espessura-laje">Espessura Laje (m):</label>
-              <input
-                type="number"
-                id="espessura-laje"
-                name="ESPESSURA LAJE"
-                step="0.01"
-              />
-            </div>
-          </div>
-
-          <div id="superestrutura-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('superestrutura-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
-
-        <!-- Apoio -->
-        <div class="tab-content" id="apoio-content">
-          <h2>Apoio</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="qtd-pilares">Quantidade de Pilares:</label>
-              <input
-                type="number"
-                id="qtd-pilares"
-                name="QTD PILARES"
-                min="0"
-              />
-            </div>
-            <div class="form-group">
-              <label for="pilar-descentralizado">Pilar Descentralizado:</label>
-              <select id="pilar-descentralizado" name="PILAR DESCENTRALIZADO">
-                <option value="">Selecione</option>
-                <option value="Sim">Sim</option>
-                <option value="Não">Não</option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-pilar">Largura do Pilar (m):</label>
-              <input
-                type="number"
-                id="largura-pilar"
-                name="LARGURA PILAR"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="comprimento-pilares">Comprimento Pilares (m):</label>
-              <input
-                type="number"
-                id="comprimento-pilares"
-                name="COMPRIMENTO PILARES"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="tipo-aparelho-apoio"
-                >Tipo de Aparelho de Apoio:</label
-              >
-              <select id="tipo-aparelho-apoio" name="TIPO DE APARELHO DE APOIO">
-                <option value="">Selecione</option>
-                <option value="APARELHO DE APOIO DE NEOPRENE FRETADO">
-                  APARELHO DE APOIO DE NEOPRENE FRETADO
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="dynamic-apoios" class="dynamic-container">
-            <h3>Altura dos Apoios</h3>
-            <div id="apoios-fields" class="dynamic-fields">
-              <!-- Campos gerados dinamicamente para apoios -->
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="tipo-travessa">Tipo de Travessa:</label>
-              <select id="tipo-travessa" name="TIPO DE TRAVESSA">
-                <option value="">Selecione</option>
-                <option value="TRAVESSA DE APOIO DE CONCRETO ARMADO">
-                  TRAVESSA DE APOIO DE CONCRETO ARMADO
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="altura-travessa">Altura Travessa (m):</label>
-              <input
-                type="number"
-                id="altura-travessa"
-                name="ALTURA TRAVESSA"
-                step="0.01"
-              />
-            </div>
-            <div class="form-group">
-              <label for="tipo-encamisamento">Tipo de Encamisamento:</label>
-              <select id="tipo-encamisamento" name="TIPO DE ENCAMISAMENTO">
-                <option value="">Selecione</option>
-                <option value="ENCAMISAMENTO DE PILAR">
-                  ENCAMISAMENTO DE PILAR
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="tipo-bloco-sapata">Tipo de Bloco ou Sapata:</label>
-              <select id="tipo-bloco-sapata" name="TIPO DE BLOCO OU SAPATA">
-                <option value="">Selecione</option>
-                <option value="BLOCO OU SAPATA DE CONCRETO ARMADO">
-                  BLOCO OU SAPATA DE CONCRETO ARMADO
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="altura-bloco-sapata"
-                >Altura Bloco ou Sapata (m):</label
-              >
-              <input
-                type="number"
-                id="altura-bloco-sapata"
-                name="ALTURA BLOCO OU SAPATA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="viga-contraventamento-pilar"
-                >Viga de Contraventamento de Pilar:</label
-              >
-              <select
-                id="viga-contraventamento-pilar"
-                name="VIGA DE CONTRAVENTAMENTO DE PILAR"
-              >
-                <option value="">Selecione</option>
-                <option value="VIGA DE CONTRAVENTAMENTO DE PILAR">
-                  VIGA DE CONTRAVENTAMENTO DE PILAR
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="viga-ligacao-fundacoes"
-                >Viga de Ligação de Fundações:</label
-              >
-              <select
-                id="viga-ligacao-fundacoes"
-                name="VIGA DE LIGAÇÃO DE FUNDAÇÕES"
-              >
-                <option value="">Selecione</option>
-                <option value="VIGA DE LIGAÇÃO DE FUNDAÇÕES">
-                  VIGA DE LIGAÇÃO DE FUNDAÇÕES
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="apoio-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('apoio-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
-
-        <!-- Elementos Complementares -->
-        <div class="tab-content" id="complementares-content">
-          <h2>Elementos Complementares</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="barreira-esquerda">Barreira Esquerda:</label>
-              <select id="barreira-esquerda" name="BARREIRA ESQUERDA">
-                <option value="">Selecione</option>
-                <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-barreira-esquerda"
-                >Largura Barreira Esquerda (m):</label
-              >
-              <input
-                type="number"
-                id="largura-barreira-esquerda"
-                name="LARGURA BARREIRA ESQUERDA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="barreira-direita">Barreira Direita:</label>
-              <select id="barreira-direita" name="BARREIRA DIREITA">
-                <option value="">Selecione</option>
-                <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-barreira-direita"
-                >Largura Barreira Direita (m):</label
-              >
-              <input
-                type="number"
-                id="largura-barreira-direita"
-                name="LARGURA BARREIRA DIREITA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="calcada-esquerda">Calçada Esquerda:</label>
-              <select id="calcada-esquerda" name="CALÇADA ESQUERDA">
-                <option value="">Selecione</option>
-                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
-                  CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-calcada-esquerda"
-                >Largura Calçada Esquerda (m):</label
-              >
-              <input
-                type="number"
-                id="largura-calcada-esquerda"
-                name="LARGURA CALÇADA ESQUERDA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="calcada-direita">Calçada Direita:</label>
-              <select id="calcada-direita" name="CALÇADA DIREITA">
-                <option value="">Selecione</option>
-                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
-                  CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-calcada-direita"
-                >Largura Calçada Direita (m):</label
-              >
-              <input
-                type="number"
-                id="largura-calcada-direita"
-                name="LARGURA CALÇADA DIREITA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="guarda-rodas-esquerda">Guarda Rodas Esquerda:</label>
-              <select id="guarda-rodas-esquerda" name="GUARDA RODAS ESQUERDA">
-                <option value="">Selecione</option>
-                <option value="GUARDA-RODAS ANTIGO DO DNER">
-                  GUARDA-RODAS ANTIGO DO DNER
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-guarda-rodas-esquerda"
-                >Largura Guarda Rodas Esquerda (m):</label
-              >
-              <input
-                type="number"
-                id="largura-guarda-rodas-esquerda"
-                name="LARGURA GUARDA RODAS ESQUERDA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="guarda-rodas-direita">Guarda Rodas Direita:</label>
-              <select id="guarda-rodas-direita" name="GUARDA RODAS DIREITA">
-                <option value="">Selecione</option>
-                <option value="GUARDA-RODAS ANTIGO DO DNER">
-                  GUARDA-RODAS ANTIGO DO DNER
-                </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="largura-guarda-rodas-direita"
-                >Largura Guarda Rodas Direita (m):</label
-              >
-              <input
-                type="number"
-                id="largura-guarda-rodas-direita"
-                name="LARGURA GUARDA RODAS DIREITA"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="pavimento">Pavimento:</label>
-              <select id="pavimento" name="PAVIMENTO">
-                <option value="">Selecione</option>
-                <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="qtd-buzinotes">Quantidade de Buzinotes:</label>
-              <input
-                type="number"
-                id="qtd-buzinotes"
-                name="QTD BUZINOTES"
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div id="complementares-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('complementares-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
-      </form>
-
-      <div id="csv-line"></div>
-
-      <!-- Botões de Ação -->
-      <div class="actions">
-        <button type="button" id="import-btn">Importar CSV</button>
-        <button type="button" id="export-btn" onclick="exportToCSV()">
-          Exportar para CSV
-        </button>
-        <button
-          type="button"
-          class="copy-btn"
-          onclick="generateAndShowCSVLine()"
-        >
-          Copiar Linha para Excel
-        </button>
-        <button type="button" id="clear-btn" onclick="clearForm()">
-          Limpar Formulário
-        </button>
-      </div>
+</head>
+<body>
+    <div class="notification" id="save-reminder">
+        Lembrete: Salve seus dados para não perder o trabalho!
+        <button onclick="exportToCSV()">Salvar agora</button>
     </div>
+    
+    <div class="container">
+        <header>
+            <h1>Interface de Preenchimento de Obras de Arte Especiais (OAE)</h1>
+            <button id="toggle-works-panel" class="toggle-panel">Mostrar Obras</button>
+        </header>
+        
+        <div class="works-panel" id="works-panel" style="display: none;">
+            <h2>Gerenciamento de Obras</h2>
+            <div class="filter-container">
+                <input type="text" id="filter-works" placeholder="Filtrar por código...">
+                <button onclick="filterWorks()">Filtrar</button>
+            </div>
+            <div class="works-list" id="works-list">
+                <!-- Lista de obras aqui -->
+                <div class="work-item">Nenhuma obra cadastrada</div>
+            </div>
+            <div class="actions">
+                <button type="button" onclick="createNewWork()">Nova Obra</button>
+                <button type="button" onclick="importMultipleWorks()">Importar Múltiplas Obras</button>
+                <button type="button" onclick="exportAllWorks()">Exportar Todas Obras</button>
+                <button type="button" class="delete-btn" onclick="clearDatabase()">Limpar Banco de Dados</button>
+            </div>
+        </div>
 
+        <div class="tabs">
+            <div class="tab active" data-tab="info">Informações Gerais</div>
+            <div class="tab" data-tab="configuracao">Configurações Gerais</div>
+            <div class="tab" data-tab="transicao">Transição</div>
+            <div class="tab" data-tab="superestrutura">Superestrutura</div>
+            <div class="tab" data-tab="apoio">Apoio</div>
+            <div class="tab" data-tab="complementares">Elementos Complementares</div>
+        </div>
+
+        <form id="oae-form">
+            <!-- Informações Gerais -->
+            <div class="tab-content active" id="info-content">
+                <h2>Informações Gerais da Obra</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modelado">Modelado:</label>
+                        <input type="checkbox" id="modelado" name="MODELADO">
+                    </div>
+                    <div class="form-group">
+                        <label for="codigo">Código:</label>
+                        <input type="text" id="codigo" name="CODIGO" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="nome" name="NOME">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="uf">UF:</label>
+                        <input type="text" id="uf" name="UF">
+                    </div>
+                    <div class="form-group">
+                        <label for="rodovia">Rodovia:</label>
+                        <input type="text" id="rodovia" name="RODOVIA">
+                    </div>
+                    <div class="form-group">
+                        <label for="km">KM:</label>
+                        <input type="number" id="km" name="KM" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data">Data:</label>
+                        <input type="date" id="data" name="DATA">
+                    </div>
+                    <div class="form-group">
+                        <label for="engenheiro">Engenheiro:</label>
+                        <input type="text" id="engenheiro" name="ENGENHEIRO">
+                    </div>
+                    <div class="form-group">
+                        <label for="tecnico">Técnico:</label>
+                        <input type="text" id="tecnico" name="TECNICO">
+                    </div>
+                </div>
+                <div id="info-custom-fields"></div>
+                <button type="button" class="add-btn" onclick="showAddField('info-custom-fields')">+ Adicionar Campo</button>
+            </div>
+
+            <!-- Configurações Gerais -->
+            <div class="tab-content" id="configuracao-content">
+                <h2>Configurações Gerais</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="comprimento">Comprimento (m):</label>
+                        <input type="number" id="comprimento" name="COMPRIMENTO" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="largura">Largura (m):</label>
+                        <input type="number" id="largura" name="LARGURA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="altura">Altura (m):</label>
+                        <input type="number" id="altura" name="ALTURA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="qtd-tramos">Quantidade de Tramos:</label>
+                        <input type="number" id="qtd-tramos" name="QTD TRAMOS" min="1" value="1" onchange="generateTramosFields()">
+                    </div>
+                </div>
+
+                <div id="dynamic-tramos" class="dynamic-container">
+                    <h3>Comprimento dos Tramos</h3>
+                    <div id="tramos-fields" class="dynamic-fields">
+                        <!-- Campos gerados dinamicamente para tramos -->
+                    </div>
+                </div>
+                
+                <div id="config-custom-fields"></div>
+                <button type="button" class="add-btn" onclick="showAddField('config-custom-fields')">+ Adicionar Campo</button>
+            </div>
+
+            <!-- Transição -->
+            <div class="tab-content" id="transicao-content">
+                <h2>Transição</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cortina-altura">Cortina Altura (m):</label>
+                        <input type="number" id="cortina-altura" name="CORTINA ALTURA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="ala-paralela">Ala Paralela:</label>
+                        <select id="ala-paralela" name="ALA PARALELA">
+                            <option value="">Selecione</option>
+                            <option value="ALA DE CONCRETO ARMADO">ALA DE CONCRETO ARMADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ala-perpendicular">Ala Perpendicular:</label>
+                        <select id="ala-perpendicular" name="ALA PERPENDICULAR">
+                            <option value="">Selecione</option>
+                            <option value="ALA DE CONCRETO ARMADO">ALA DE CONCRETO ARMADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="comprimento-ala">Comprimento Ala (m):</label>
+                        <input type="number" id="comprimento-ala" name="COMPRIMENTO ALA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="espessura-ala">Espessura Ala (m):</label>
+                        <input type="number" id="espessura-ala" name="ESPESSURA ALA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="encontro">Encontro:</label>
+                        <select id="encontro" name="ENCONTRO">
+                            <option value="">Selecione</option>
+                            <option value="Nenhum">Nenhum</option>
+                            <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">ENCONTRO - PAREDE FRONTAL PORTANTE</option>
+                            <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="deslocamento-esquerdo-encontro-laje">Deslocamento Esquerdo Encontro Laje (m):</label>
+                        <input type="number" id="deslocamento-esquerdo-encontro-laje" name="DESLOCAMENTO ESQUERDO ENCONTRO LAJE" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="deslocamento-direito-encontro-laje">Deslocamento Direito Encontro Laje (m):</label>
+                        <input type="number" id="deslocamento-direito-encontro-laje" name="DESLOCAMENTO DIREITO ENCONTRO LAJE" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="comprimento-encontro-laje">Comprimento Encontro Laje (m):</label>
+                        <input type="number" id="comprimento-encontro-laje" name="COMPRIMENTO ENCONTRO LAJE" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="laje-transicao">Laje de Transição:</label>
+                        <select id="laje-transicao" name="LAJE DE TRANSIÇÃO">
+                            <option value="">Selecione</option>
+                            <option value="Nenhum">Nenhum</option>
+                            <option value="LAJE DE TRANSIÇÃO">LAJE DE TRANSIÇÃO</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="transicao-custom-fields"></div>
+                <button type="button" class="add-btn" onclick="showAddField('transicao-custom-fields')">+ Adicionar Campo</button>
+            </div>
+
+            <!-- Superestrutura -->
+            <div class="tab-content" id="superestrutura-content">
+                <h2>Superestrutura</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="altura-longarina">Altura Longarina (m):</label>
+                        <input type="number" id="altura-longarina" name="ALTURA LONGARINA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="deslocamento-esquerdo">Deslocamento Esquerdo (m):</label>
+                        <input type="number" id="deslocamento-esquerdo" name="DESLOCAMENTO ESQUERDO" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="deslocamento-direito">Deslocamento Direito (m):</label>
+                        <input type="number" id="deslocamento-direito" name="DESLOCAMENTO DIREITO" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="qtd-longarinas">Quantidade de Longarinas:</label>
+                        <input type="number" id="qtd-longarinas" name="QTD LONGARINAS" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="qtd-transversinas">Quantidade de Transversinas:</label>
+                        <input type="number" id="qtd-transversinas" name="QTD TRANSVERSINAS" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="espessura-longarina">Espessura Longarina (m):</label>
+                        <input type="number" id="espessura-longarina" name="ESPESSURA LONGARINA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="espessura-transversina">Espessura Transversina (m):</label>
+                        <input type="number" id="espessura-transversina" name="ESPESSURA TRANSVERSINA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="espessura-laje">Espessura Laje (m):</label>
+                        <input type="number" id="espessura-laje" name="ESPESSURA LAJE" step="0.01" min="0">
+                    </div>
+                </div>
+                
+                <div id="superestrutura-custom-fields"></div>
+                <button type="button" class="add-btn" onclick="showAddField('superestrutura-custom-fields')">+ Adicionar Campo</button>
+            </div>
+
+            <!-- Apoio -->
+            <div class="tab-content" id="apoio-content">
+                <h2>Apoio</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="qtd-pilares">Quantidade de Pilares:</label>
+                        <input type="number" id="qtd-pilares" name="QTD PILARES" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="pilar-descentralizado">Pilar Descentralizado:</label>
+                        <select id="pilar-descentralizado" name="PILAR DESCENTRALIZADO">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-pilar">Largura do Pilar (m):</label>
+                        <input type="number" id="largura-pilar" name="LARGURA PILAR" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="comprimento-pilares">Comprimento Pilares (m):</label>
+                        <input type="number" id="comprimento-pilares" name="COMPRIMENTO PILARES" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo-aparelho-apoio">Tipo de Aparelho de Apoio:</label>
+                        <select id="tipo-aparelho-apoio" name="TIPO DE APARELHO DE APOIO">
+                            <option value="">Selecione</option>
+                            <option value="APARELHO DE APOIO DE NEOPRENE FRETADO">APARELHO DE APOIO DE NEOPRENE FRETADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="dynamic-apoios" class="dynamic-container">
+                    <h3>Altura dos Apoios</h3>
+                    <div id="apoios-fields" class="dynamic-fields">
+                        <!-- Campos gerados dinamicamente para apoios -->
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo-travessa">Tipo de Travessa:</label>
+                        <select id="tipo-travessa" name="TIPO DE TRAVESSA">
+                            <option value="">Selecione</option>
+                            <option value="TRAVESSA DE APOIO DE CONCRETO ARMADO">TRAVESSA DE APOIO DE CONCRETO ARMADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="altura-travessa">Altura Travessa (m):</label>
+                        <input type="number" id="altura-travessa" name="ALTURA TRAVESSA" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo-encamisamento">Tipo de Encamisamento:</label>
+                        <select id="tipo-encamisamento" name="TIPO DE ENCAMISAMENTO">
+                            <option value="">Selecione</option>
+                            <option value="ENCAMISAMENTO DE PILAR">ENCAMISAMENTO DE PILAR</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo-bloco-sapata">Tipo de Bloco ou Sapata:</label>
+                        <select id="tipo-bloco-sapata" name="TIPO DE BLOCO OU SAPATA">
+                            <option value="">Selecione</option>
+                            <option value="BLOCO OU SAPATA DE CONCRETO ARMADO">BLOCO OU SAPATA DE CONCRETO ARMADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="altura-bloco-sapata">Altura Bloco ou Sapata (m):</label>
+                        <input type="number" id="altura-bloco-sapata" name="ALTURA BLOCO OU SAPATA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="viga-contraventamento-pilar">Viga de Contraventamento de Pilar:</label>
+                        <select id="viga-contraventamento-pilar" name="VIGA DE CONTRAVENTAMENTO DE PILAR">
+                            <option value="">Selecione</option>
+                            <option value="VIGA DE CONTRAVENTAMENTO DE PILAR">VIGA DE CONTRAVENTAMENTO DE PILAR</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="viga-ligacao-fundacoes">Viga de Ligação de Fundações:</label>
+                        <select id="viga-ligacao-fundacoes" name="VIGA DE LIGAÇÃO DE FUNDAÇÕES">
+                            <option value="">Selecione</option>
+                            <option value="VIGA DE LIGAÇÃO DE FUNDAÇÕES">VIGA DE LIGAÇÃO DE FUNDAÇÕES</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="apoio-custom-fields"></div>
+                <button type="button" class="add-btn" onclick="showAddField('apoio-custom-fields')">+ Adicionar Campo</button>
+            </div>
+
+            <!-- Elementos Complementares -->
+            <div class="tab-content" id="complementares-content">
+                <h2>Elementos Complementares</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="barreira-esquerda">Barreira Esquerda:</label>
+                        <select id="barreira-esquerda" name="BARREIRA ESQUERDA">
+                            <option value="">Selecione</option>
+                            <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-barreira-esquerda">Largura Barreira Esquerda (m):</label>
+                        <input type="number" id="largura-barreira-esquerda" name="LARGURA BARREIRA ESQUERDA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="barreira-direita">Barreira Direita:</label>
+                        <select id="barreira-direita" name="BARREIRA DIREITA">
+                            <option value="">Selecione</option>
+                            <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-barreira-direita">Largura Barreira Direita (m):</label>
+                        <input type="number" id="largura-barreira-direita" name="LARGURA BARREIRA DIREITA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="calcada-esquerda">Calçada Esquerda:</label>
+                        <select id="calcada-esquerda" name="CALÇADA ESQUERDA">
+                            <option value="">Selecione</option>
+                            <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">CALÇADA PARA PEDESTRES DE CONCRETO ARMADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-calcada-esquerda">Largura Calçada Esquerda (m):</label>
+                        <input type="number" id="largura-calcada-esquerda" name="LARGURA CALÇADA ESQUERDA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="calcada-direita">Calçada Direita:</label>
+                        <select id="calcada-direita" name="CALÇADA DIREITA">
+                            <option value="">Selecione</option>
+                            <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">CALÇADA PARA PEDESTRES DE CONCRETO ARMADO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-calcada-direita">Largura Calçada Direita (m):</label>
+                        <input type="number" id="largura-calcada-direita" name="LARGURA CALÇADA DIREITA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="guarda-rodas-esquerda">Guarda Rodas Esquerda:</label>
+                        <select id="guarda-rodas-esquerda" name="GUARDA RODAS ESQUERDA">
+                            <option value="">Selecione</option>
+                            <option value="GUARDA-RODAS ANTIGO DO DNER">GUARDA-RODAS ANTIGO DO DNER</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-guarda-rodas-esquerda">Largura Guarda Rodas Esquerda (m):</label>
+                        <input type="number" id="largura-guarda-rodas-esquerda" name="LARGURA GUARDA RODAS ESQUERDA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="guarda-rodas-direita">Guarda Rodas Direita:</label>
+                        <select id="guarda-rodas-direita" name="GUARDA RODAS DIREITA">
+                            <option value="">Selecione</option>
+                            <option value="GUARDA-RODAS ANTIGO DO DNER">GUARDA-RODAS ANTIGO DO DNER</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="largura-guarda-rodas-direita">Largura Guarda Rodas Direita (m):</label>
+                        <input type="number" id="largura-guarda-rodas-direita" name="LARGURA GUARDA RODAS DIREITA" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pavimento">Pavimento:</label>
+                        <select id="pavimento" name="PAVIMENTO">
+                            <option value="">Selecione</option>
+                            <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
+                            <option value="Nenhum">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="qtd-buzinotes">Quantidade de Buzinotes:</label>
+                        <input type="number" id="qtd-buzinotes" name="QTD BUZINOTES" min="0">
+                    </div>
+                </div>
+                
+                <div id="complementares-custom-fields"></div>
+                <button type="button" class="add-btn" onclick="showAddField('complementares-custom-fields')">+ Adicionar Campo</button>
+            </div>
+        </form>
+
+        <div id="csv-line"></div>
+        
+        <!-- Botões de Ação -->
+        <div class="actions">
+            <button type="button" id="import-btn" onclick="showImportModal()">Importar CSV</button>
+            <button type="button" id="export-btn" onclick="exportToCSV()">Exportar para CSV</button>
+            <button type="button" class="copy-btn" onclick="generateAndShowCSVLine()">Copiar Linha para Excel</button>
+            <button type="button" id="save-btn" onclick="saveCurrentWork()">Salvar Obra</button>
+            <button type="button" id="clear-btn" onclick="clearForm()">Limpar Formulário</button>
+        </div>
+        
+        <!-- Input para importação de arquivos oculto -->
+        <input type="file" id="import-file" style="display: none;" accept=".csv">
+    </div>
+    
     <!-- Modal para adicionar campo -->
     <div id="add-field-modal" class="modal">
-      <div class="modal-content">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-        <h3>Adicionar Novo Campo</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="new-field-name">Nome do Campo:</label>
-            <input
-              type="text"
-              id="new-field-name"
-              placeholder="Ex: Peso Estrutura"
-            />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Tipo de Campo:</label>
-            <div class="field-type-selector">
-              <label>
-                <input
-                  type="radio"
-                  name="field-type"
-                  value="number-int"
-                  checked
-                />
-                Número Inteiro
-              </label>
-              <label>
-                <input type="radio" name="field-type" value="number-double" />
-                Número Decimal
-              </label>
-              <label>
-                <input type="radio" name="field-type" value="select" /> Seleção
-              </label>
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3>Adicionar Novo Campo</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-field-name">Nome do Campo:</label>
+                    <input type="text" id="new-field-name" placeholder="Ex: Peso Estrutura">
+                </div>
             </div>
-          </div>
-        </div>
-
-        <div id="select-options" style="display: none">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="select-options-input">Opções (uma por linha):</label>
-              <textarea
-                id="select-options-input"
-                rows="5"
-                placeholder="Nenhum&#10;Opção 1&#10;Opção 2"
-              ></textarea>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo de Campo:</label>
+                    <div class="field-type-selector">
+                        <label>
+                            <input type="radio" name="field-type" value="number-int" checked> Número Inteiro
+                        </label>
+                        <label>
+                            <input type="radio" name="field-type" value="number-double"> Número Decimal
+                        </label>
+                        <label>
+                            <input type="radio" name="field-type" value="select"> Seleção
+                        </label>
+                    </div>
+                </div>
             </div>
-          </div>
+            
+            <div id="select-options" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="select-options-input">Opções (uma por linha):</label>
+                        <textarea id="select-options-input" rows="5" placeholder="Nenhum&#10;Opção 1&#10;Opção 2"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" id="target-container">
+            <div class="actions">
+                <button type="button" onclick="addCustomField()">Adicionar Campo</button>
+                <button type="button" onclick="closeModal()">Cancelar</button>
+            </div>
         </div>
-
-        <input type="hidden" id="target-container" />
-        <div class="actions">
-          <button type="button" onclick="addCustomField()">
-            Adicionar Campo
-          </button>
-          <button type="button" onclick="closeModal()">Cancelar</button>
+    </div>
+    
+    <!-- Modal para importação -->
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeImportModal()">&times;</span>
+            <h3>Importar Arquivo CSV</h3>
+            <p>Selecione um arquivo CSV para importar:</p>
+            <input type="file" id="csv-file-input" accept=".csv">
+            <div class="actions">
+                <button type="button" onclick="processImportFile()">Importar</button>
+                <button type="button" onclick="closeImportModal()">Cancelar</button>
+            </div>
         </div>
-      </div>
     </div>
 
     <script>
-      // Versão: 2.0
-
-      // Ativação das abas
-      document.addEventListener("DOMContentLoaded", function () {
-        // Configurar tabs
-        const tabs = document.querySelectorAll(".tab");
-        tabs.forEach((tab) => {
-          tab.addEventListener("click", () => {
-            // Remover classe 'active' de todas as tabs e conteúdos
-            document
-              .querySelectorAll(".tab")
-              .forEach((t) => t.classList.remove("active"));
-            document
-              .querySelectorAll(".tab-content")
-              .forEach((c) => c.classList.remove("active"));
-
-            // Adicionar classe 'active' para a tab clicada e seu conteúdo
-            tab.classList.add("active");
-            const tabId = tab.getAttribute("data-tab");
-            document.getElementById(`${tabId}-content`).classList.add("active");
-          });
+        // Versão: 3.0
+        
+        // Declarando variáveis globais uma única vez
+        var db;
+        var saveReminderInterval;
+        var currentWorkCode = null;
+        
+        // Inicialização do IndexedDB
+        function initDB() {
+            try {
+                const request = window.indexedDB.open("OAEDatabase", 1);
+                
+                request.onerror = function(event) {
+                    console.error("Erro ao abrir o banco de dados:", event.target.errorCode);
+                    alert("Erro ao inicializar o banco de dados. Algumas funcionalidades podem não estar disponíveis.");
+                };
+                
+                request.onupgradeneeded = function(event) {
+                    const database = event.target.result;
+                    // Criar object store para as obras
+                    if (!database.objectStoreNames.contains("obras")) {
+                        const objectStore = database.createObjectStore("obras", { keyPath: "CODIGO" });
+                        objectStore.createIndex("CODIGO", "CODIGO", { unique: true });
+                    }
+                };
+                
+                request.onsuccess = function(event) {
+                    db = event.target.result;
+                    console.log("Banco de dados inicializado com sucesso");
+                    loadWorksList(); // Carregar lista de obras
+                    
+                    // Iniciar lembretes de salvamento
+                    startSaveReminders();
+                };
+            } catch (error) {
+                console.error("Erro na inicialização do banco de dados:", error);
+                alert("Erro ao inicializar o banco de dados: " + error.message);
+            }
+        }
+        
+        // Ativação das abas
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar banco de dados
+            initDB();
+            
+            // Configurar tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remover classe 'active' de todas as tabs e conteúdos
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Adicionar classe 'active' para a tab clicada e seu conteúdo
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-content`).classList.add('active');
+                });
+            });
+            
+            // Inicializar campos dinâmicos
+            generateTramosFields();
+            
+            // Configurar evento para mostrar/esconder opções de select
+            document.querySelectorAll('input[name="field-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'select') {
+                        document.getElementById('select-options').style.display = 'block';
+                    } else {
+                        document.getElementById('select-options').style.display = 'none';
+                    }
+                });
+            });
+            
+            // Configurar mostrar/ocultar painel de obras
+            document.getElementById('toggle-works-panel').addEventListener('click', function() {
+                const panel = document.getElementById('works-panel');
+                if (panel.style.display === 'none') {
+                    panel.style.display = 'block';
+                    this.textContent = 'Ocultar Obras';
+                } else {
+                    panel.style.display = 'none';
+                    this.textContent = 'Mostrar Obras';
+                }
+                loadWorksList(); // Recarregar lista de obras ao abrir o painel
+            });
+            
+            // Adicionar evento ao campo de filtro para permitir filtrar com Enter
+            document.getElementById('filter-works').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    filterWorks();
+                }
+            });
         });
 
-        // Inicializar campos dinâmicos
-        generateTramosFields();
-
-        // Configurar evento para mostrar/esconder opções de select
-        document
-          .querySelectorAll('input[name="field-type"]')
-          .forEach((radio) => {
-            radio.addEventListener("change", function () {
-              if (this.value === "select") {
-                document.getElementById("select-options").style.display =
-                  "block";
-              } else {
-                document.getElementById("select-options").style.display =
-                  "none";
-              }
-            });
-          });
-      });
-
-      // Gerar campos dinâmicos para tramos (em pilha)
-      function generateTramosFields() {
-        const qtdTramos =
-          parseInt(document.getElementById("qtd-tramos").value) || 0;
-        const tramosContainer = document.getElementById("tramos-fields");
-        tramosContainer.innerHTML = "";
-
-        // Gerar campos para tramos em pilha
-        for (let i = 1; i <= qtdTramos; i++) {
-          const div = document.createElement("div");
-          div.className = "dynamic-field";
-          div.innerHTML = `
+        // Gerar campos dinâmicos para tramos (em pilha)
+        function generateTramosFields() {
+            const qtdTramos = parseInt(document.getElementById('qtd-tramos').value) || 0;
+            const tramosContainer = document.getElementById('tramos-fields');
+            tramosContainer.innerHTML = '';
+            
+            // Gerar campos para tramos em pilha
+            for (let i = 1; i <= qtdTramos; i++) {
+                const div = document.createElement('div');
+                div.className = 'dynamic-field';
+                div.innerHTML = `
                     <label for="tramo-${i}">Tramo ${i}:</label>
-                    <input type="number" id="tramo-${i}" name="tramo-${i}" step="0.01" class="tramo-field">
+                    <input type="number" id="tramo-${i}" name="tramo-${i}" step="0.01" min="0" class="tramo-field">
                 `;
-          tramosContainer.appendChild(div);
+                tramosContainer.appendChild(div);
+            }
+            
+            // Atualizar também os campos de apoios
+            generateApoiosFields(qtdTramos);
         }
 
-        // Atualizar também os campos de apoios
-        generateApoiosFields(qtdTramos);
-      }
-
-      // Gerar campos dinâmicos para apoios (qtdTramos - 1)
-      function generateApoiosFields(qtdTramos) {
-        const qtdApoios = qtdTramos > 1 ? qtdTramos - 1 : 0;
-        const apoiosContainer = document.getElementById("apoios-fields");
-        apoiosContainer.innerHTML = "";
-
-        for (let i = 1; i <= qtdApoios; i++) {
-          const div = document.createElement("div");
-          div.className = "dynamic-field";
-          div.innerHTML = `
+        // Gerar campos dinâmicos para apoios (qtdTramos - 1)
+        function generateApoiosFields(qtdTramos) {
+            const qtdApoios = qtdTramos > 1 ? qtdTramos - 1 : 0;
+            const apoiosContainer = document.getElementById('apoios-fields');
+            apoiosContainer.innerHTML = '';
+            
+            for (let i = 1; i <= qtdApoios; i++) {
+                const div = document.createElement('div');
+                div.className = 'dynamic-field';
+                div.innerHTML = `
                     <label for="apoio-${i}">Apoio ${i}:</label>
-                    <input type="number" id="apoio-${i}" name="apoio-${i}" step="0.01" class="apoio-field">
+                    <input type="number" id="apoio-${i}" name="apoio-${i}" step="0.01" min="0" class="apoio-field">
                 `;
-          apoiosContainer.appendChild(div);
+                apoiosContainer.appendChild(div);
+            }
         }
-      }
-
-      // Mostrar modal para adicionar campo
-      function showAddField(targetContainer) {
-        document.getElementById("target-container").value = targetContainer;
-        document.getElementById("new-field-name").value = "";
-        document.getElementById("select-options-input").value = "Nenhum";
-        document.getElementById("add-field-modal").style.display = "block";
-        document.querySelectorAll('input[name="field-type"]')[0].checked = true;
-        document.getElementById("select-options").style.display = "none";
-      }
-
-      // Fechar modal
-      function closeModal() {
-        document.getElementById("add-field-modal").style.display = "none";
-      }
-
-      // Adicionar campo personalizado
-      function addCustomField() {
-        const fieldName = document
-          .getElementById("new-field-name")
-          .value.trim();
-        if (!fieldName) {
-          alert("Por favor, digite um nome para o campo.");
-          return;
+        
+        // Mostrar modal para adicionar campo
+        function showAddField(targetContainer) {
+            document.getElementById('target-container').value = targetContainer;
+            document.getElementById('new-field-name').value = '';
+            document.getElementById('select-options-input').value = 'Nenhum';
+            document.getElementById('add-field-modal').style.display = 'block';
+            document.querySelectorAll('input[name="field-type"]')[0].checked = true;
+            document.getElementById('select-options').style.display = 'none';
         }
-
-        const targetContainer =
-          document.getElementById("target-container").value;
-        const container = document.getElementById(targetContainer);
-        const fieldType = document.querySelector(
-          'input[name="field-type"]:checked'
-        ).value;
-
-        // Criar div para o campo personalizado
-        const customFieldDiv = document.createElement("div");
-        customFieldDiv.className = "form-row";
-
-        // Criar o campo baseado no tipo selecionado
-        let fieldHtml = "";
-        const fieldId =
-          "custom-" + fieldName.replace(/\s+/g, "-").toLowerCase();
-        const fieldNameAttr = fieldName.toUpperCase();
-
-        if (fieldType === "select") {
-          const optionsText = document.getElementById(
-            "select-options-input"
-          ).value;
-          const options = optionsText
-            .split("\n")
-            .map((opt) => opt.trim())
-            .filter((opt) => opt);
-
-          const optionsHtml = options
-            .map((opt) => `<option value="${opt}">${opt}</option>`)
-            .join("");
-
-          fieldHtml = `
+        
+        // Fechar modal
+        function closeModal() {
+            document.getElementById('add-field-modal').style.display = 'none';
+        }
+        
+        // Adicionar campo personalizado
+        function addCustomField() {
+            const fieldName = document.getElementById('new-field-name').value.trim();
+            if (!fieldName) {
+                alert('Por favor, digite um nome para o campo.');
+                return;
+            }
+            
+            const targetContainer = document.getElementById('target-container').value;
+            const container = document.getElementById(targetContainer);
+            const fieldType = document.querySelector('input[name="field-type"]:checked').value;
+            
+            // Criar div para o campo personalizado
+            const customFieldDiv = document.createElement('div');
+            customFieldDiv.className = 'form-row';
+            
+            // Criar o campo baseado no tipo selecionado
+            let fieldHtml = '';
+            const fieldId = 'custom-' + fieldName.replace(/\s+/g, '-').toLowerCase();
+            const fieldNameAttr = fieldName.toUpperCase();
+            
+            if (fieldType === 'select') {
+                const optionsText = document.getElementById('select-options-input').value;
+                const options = optionsText.split('\n').map(opt => opt.trim()).filter(opt => opt);
+                
+                const optionsHtml = options.map(opt => 
+                    `<option value="${opt}">${opt}</option>`
+                ).join('');
+                
+                fieldHtml = `
                     <div class="form-group">
                         <label for="${fieldId}">${fieldName}:</label>
                         <select id="${fieldId}" name="${fieldNameAttr}" class="custom-field">
@@ -1211,255 +1105,910 @@
                         </select>
                     </div>
                 `;
-        } else if (fieldType === "number-int") {
-          fieldHtml = `
+            } else if (fieldType === 'number-int') {
+                fieldHtml = `
                     <div class="form-group">
                         <label for="${fieldId}">${fieldName}:</label>
-                        <input type="number" id="${fieldId}" name="${fieldNameAttr}" class="custom-field">
+                        <input type="number" id="${fieldId}" name="${fieldNameAttr}" min="0" class="custom-field">
                     </div>
                 `;
-        } else if (fieldType === "number-double") {
-          fieldHtml = `
+            } else if (fieldType === 'number-double') {
+                fieldHtml = `
                     <div class="form-group">
                         <label for="${fieldId}">${fieldName}:</label>
-                        <input type="number" id="${fieldId}" name="${fieldNameAttr}" step="0.01" class="custom-field">
+                        <input type="number" id="${fieldId}" name="${fieldNameAttr}" step="0.01" min="0" class="custom-field">
                     </div>
                 `;
+            }
+            
+            customFieldDiv.innerHTML = fieldHtml;
+            container.appendChild(customFieldDiv);
+            
+            closeModal();
         }
 
-        customFieldDiv.innerHTML = fieldHtml;
-        container.appendChild(customFieldDiv);
-
-        closeModal();
-      }
-
-      // Gerar e mostrar linha CSV para copiar para Excel
-      function generateAndShowCSVLine() {
-        const form = document.getElementById("oae-form");
-        const formData = new FormData(form);
-
-        // Coletar todos os campos do CSV
-        const csvColumns = [
-          "MODELADO",
-          "CODIGO",
-          "NOME",
-          "UF",
-          "RODOVIA",
-          "KM",
-          "DATA",
-          "ENGENHEIRO",
-          "TECNICO",
-          "COMPRIMENTO",
-          "LARGURA",
-          "ALTURA",
-          "QTD TRAMOS",
-          "COMPRIMENTO TRAMOS",
-          "CORTINA ALTURA",
-          "ALA PARALELA",
-          "ALA PERPENDICULAR",
-          "COMPRIMENTO ALA",
-          "ESPESSURA ALA",
-          "ENCONTRO",
-          "DESLOCAMENTO ESQUERDO ENCONTRO LAJE",
-          "DESLOCAMENTO DIREITO ENCONTRO LAJE",
-          "COMPRIMENTO ENCONTRO LAJE",
-          "LAJE DE TRANSIÇÃO",
-          "ALTURA LONGARINA",
-          "DESLOCAMENTO ESQUERDO",
-          "DESLOCAMENTO DIREITO",
-          "QTD LONGARINAS",
-          "QTD TRANSVERSINAS",
-          "ESPESSURA LONGARINA",
-          "ESPESSURA TRANSVERSINA",
-          "ESPESSURA LAJE",
-          "QTD PILARES",
-          "PILAR DESCENTRALIZADO",
-          "LARGURA PILAR",
-          "COMPRIMENTO PILARES",
-          "ALTURA DO APOIO",
-          "TIPO DE APARELHO DE APOIO",
-          "TIPO DE TRAVESSA",
-          "ALTURA TRAVESSA",
-          "TIPO DE ENCAMISAMENTO",
-          "TIPO DE BLOCO OU SAPATA",
-          "ALTURA BLOCO OU SAPATA",
-          "VIGA DE CONTRAVENTAMENTO DE PILAR",
-          "VIGA DE LIGAÇÃO DE FUNDAÇÕES",
-          "BARREIRA ESQUERDA",
-          "LARGURA BARREIRA ESQUERDA",
-          "BARREIRA DIREITA",
-          "LARGURA BARREIRA DIREITA",
-          "CALÇADA ESQUERDA",
-          "LARGURA CALÇADA ESQUERDA",
-          "CALÇADA DIREITA",
-          "LARGURA CALÇADA DIREITA",
-          "GUARDA RODAS ESQUERDA",
-          "LARGURA GUARDA RODAS ESQUERDA",
-          "GUARDA RODAS DIREITA",
-          "LARGURA GUARDA RODAS DIREITA",
-          "PAVIMENTO",
-          "QTD BUZINOTES",
-        ];
-
-        // Coletar campos personalizados
-        document.querySelectorAll(".custom-field").forEach((field) => {
-          const name = field.getAttribute("name");
-          if (!csvColumns.includes(name)) {
-            csvColumns.push(name);
-          }
-        });
-
-        // Dados para a linha CSV
-        const data = {};
-
-        // Preencher com valores vazios para garantir que todos os campos existam
-        csvColumns.forEach((column) => {
-          data[column] = "";
-        });
-
-        // Preencher com os valores do formulário
-        for (let [key, value] of formData.entries()) {
-          // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
-          if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-            data[key] = value;
-          }
+        // Gerar e mostrar linha CSV para copiar para Excel
+        function generateAndShowCSVLine() {
+            try {
+                const form = document.getElementById('oae-form');
+                const formData = new FormData(form);
+                
+                // Coletar todos os campos do CSV
+                const csvColumns = [
+                    "MODELADO", "CODIGO", "NOME", "UF", "RODOVIA", "KM", "DATA", "ENGENHEIRO", "TECNICO",
+                    "COMPRIMENTO", "LARGURA", "ALTURA", "QTD TRAMOS", "COMPRIMENTO TRAMOS", "CORTINA ALTURA",
+                    "ALA PARALELA", "ALA PERPENDICULAR", "COMPRIMENTO ALA", "ESPESSURA ALA", "ENCONTRO",
+                    "DESLOCAMENTO ESQUERDO ENCONTRO LAJE", "DESLOCAMENTO DIREITO ENCONTRO LAJE", 
+                    "COMPRIMENTO ENCONTRO LAJE", "LAJE DE TRANSIÇÃO", "ALTURA LONGARINA", "DESLOCAMENTO ESQUERDO",
+                    "DESLOCAMENTO DIREITO", "QTD LONGARINAS", "QTD TRANSVERSINAS", "ESPESSURA LONGARINA",
+                    "ESPESSURA TRANSVERSINA", "ESPESSURA LAJE", "QTD PILARES", "PILAR DESCENTRALIZADO",
+                    "LARGURA PILAR", "COMPRIMENTO PILARES", "ALTURA DO APOIO", "TIPO DE APARELHO DE APOIO",
+                    "TIPO DE TRAVESSA", "ALTURA TRAVESSA", "TIPO DE ENCAMISAMENTO", "TIPO DE BLOCO OU SAPATA",
+                    "ALTURA BLOCO OU SAPATA", "VIGA DE CONTRAVENTAMENTO DE PILAR", "VIGA DE LIGAÇÃO DE FUNDAÇÕES",
+                    "BARREIRA ESQUERDA", "LARGURA BARREIRA ESQUERDA", "BARREIRA DIREITA", "LARGURA BARREIRA DIREITA",
+                    "CALÇADA ESQUERDA", "LARGURA CALÇADA ESQUERDA", "CALÇADA DIREITA", "LARGURA CALÇADA DIREITA",
+                    "GUARDA RODAS ESQUERDA", "LARGURA GUARDA RODAS ESQUERDA", "GUARDA RODAS DIREITA",
+                    "LARGURA GUARDA RODAS DIREITA", "PAVIMENTO", "QTD BUZINOTES"
+                ];
+                
+                // Coletar campos personalizados
+                document.querySelectorAll('.custom-field').forEach(field => {
+                    const name = field.getAttribute('name');
+                    if (!csvColumns.includes(name)) {
+                        csvColumns.push(name);
+                    }
+                });
+                
+                // Dados para a linha CSV
+                const data = {};
+                
+                // Preencher com valores vazios para garantir que todos os campos existam
+                csvColumns.forEach(column => {
+                    data[column] = '';
+                });
+                
+                // Preencher com os valores do formulário
+                for (let [key, value] of formData.entries()) {
+                    // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+                    if (!key.startsWith('tramo-') && !key.startsWith('apoio-')) {
+                        data[key] = value;
+                    }
+                }
+                
+                // Checkbox - verificar se está marcado
+                if (document.getElementById('modelado').checked) {
+                    data['MODELADO'] = 'TRUE';
+                } else {
+                    data['MODELADO'] = 'FALSE';
+                }
+                
+                // Coletar valores dos tramos
+                const tramosValues = [];
+                const tramosFields = document.querySelectorAll('.tramo-field');
+                tramosFields.forEach(field => {
+                    tramosValues.push(field.value || '0.00');
+                });
+                data['COMPRIMENTO TRAMOS'] = tramosValues.join(';');
+                
+                // Coletar valores dos apoios
+                const apoiosValues = [];
+                const apoiosFields = document.querySelectorAll('.apoio-field');
+                apoiosFields.forEach(field => {
+                    apoiosValues.push(field.value || '0.00');
+                });
+                data['ALTURA DO APOIO'] = apoiosValues.join(';');
+                
+                // Gerar a linha CSV
+                const csvLine = csvColumns.map(column => data[column] || '').join('\t');
+                
+                // Mostrar a linha para copiar
+                const csvLineElement = document.getElementById('csv-line');
+                csvLineElement.style.display = 'block';
+                csvLineElement.textContent = csvLine;
+                
+                // Selecionar o texto para facilitar a cópia
+                const range = document.createRange();
+                range.selectNode(csvLineElement);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                
+                try {
+                    // Copiar para o clipboard
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                    alert('Linha copiada para a área de transferência!');
+                } catch (err) {
+                    console.error('Não foi possível copiar automaticamente:', err);
+                    alert('Selecione o texto e use Ctrl+C para copiar.');
+                }
+            } catch (error) {
+                console.error('Erro ao gerar linha CSV:', error);
+                alert('Erro ao gerar linha CSV: ' + error.message);
+            }
         }
 
-        // Checkbox - verificar se está marcado
-        if (document.getElementById("modelado").checked) {
-          data["MODELADO"] = "TRUE";
-        } else {
-          data["MODELADO"] = "FALSE";
+        // Exportar para CSV
+        function exportToCSV() {
+            try {
+                const form = document.getElementById('oae-form');
+                const formData = new FormData(form);
+                
+                // Coletar todos os campos padrão
+                const data = {};
+                for (let [key, value] of formData.entries()) {
+                    // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+                    if (!key.startsWith('tramo-') && !key.startsWith('apoio-')) {
+                        data[key] = value;
+                    }
+                }
+                
+                // Checkbox - verificar se está marcado
+                if (document.getElementById('modelado').checked) {
+                    data['MODELADO'] = 'TRUE';
+                } else {
+                    data['MODELADO'] = 'FALSE';
+                }
+                
+                // Coletar valores dos tramos
+                const tramosValues = [];
+                const tramosFields = document.querySelectorAll('.tramo-field');
+                tramosFields.forEach(field => {
+                    tramosValues.push(field.value || '0.00');
+                });
+                data['COMPRIMENTO TRAMOS'] = tramosValues.join(';');
+                
+                // Coletar valores dos apoios
+                const apoiosValues = [];
+                const apoiosFields = document.querySelectorAll('.apoio-field');
+                apoiosFields.forEach(field => {
+                    apoiosValues.push(field.value || '0.00');
+                });
+                data['ALTURA DO APOIO'] = apoiosValues.join(';');
+                
+                // Construir cabeçalhos e linha de dados
+                const headers = Object.keys(data);
+                const csvContent = 
+                    headers.join(',') + '\n' + 
+                    headers.map(header => {
+                        // Valores com vírgula devem ser envolvidos em aspas duplas
+                        const value = data[header];
+                        return (value && value.includes(',')) ? `"${value}"` : value;
+                    }).join(',');
+                
+                // Criar e baixar o arquivo CSV
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `OAE_${data['CODIGO'] || 'nova'}_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Erro ao exportar CSV:', error);
+                alert('Erro ao exportar CSV: ' + error.message);
+            }
         }
 
-        // Coletar valores dos tramos
-        const tramosValues = [];
-        const tramosFields = document.querySelectorAll(".tramo-field");
-        tramosFields.forEach((field) => {
-          tramosValues.push(field.value || "0.00");
-        });
-        data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
-
-        // Coletar valores dos apoios
-        const apoiosValues = [];
-        const apoiosFields = document.querySelectorAll(".apoio-field");
-        apoiosFields.forEach((field) => {
-          apoiosValues.push(field.value || "0.00");
-        });
-        data["ALTURA DO APOIO"] = apoiosValues.join(";");
-
-        // Gerar a linha CSV
-        const csvLine = csvColumns
-          .map((column) => data[column] || "")
-          .join("\t");
-
-        // Mostrar a linha para copiar
-        const csvLineElement = document.getElementById("csv-line");
-        csvLineElement.style.display = "block";
-        csvLineElement.textContent = csvLine;
-
-        // Selecionar o texto para facilitar a cópia
-        const range = document.createRange();
-        range.selectNode(csvLineElement);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-
-        try {
-          // Copiar para o clipboard
-          document.execCommand("copy");
-          window.getSelection().removeAllRanges();
-          alert("Linha copiada para a área de transferência!");
-        } catch (err) {
-          console.error("Não foi possível copiar automaticamente:", err);
-          alert("Selecione o texto e use Ctrl+C para copiar.");
+        // Mostrar modal de importação
+        function showImportModal() {
+            document.getElementById('import-modal').style.display = 'block';
         }
-      }
-
-      // Exportar para CSV
-      function exportToCSV() {
-        const form = document.getElementById("oae-form");
-        const formData = new FormData(form);
-
-        // Coletar todos os campos padrão
-        const data = {};
-        for (let [key, value] of formData.entries()) {
-          // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
-          if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-            data[key] = value;
-          }
+        
+        // Fechar modal de importação
+        function closeImportModal() {
+            document.getElementById('import-modal').style.display = 'none';
         }
 
-        // Checkbox - verificar se está marcado
-        if (document.getElementById("modelado").checked) {
-          data["MODELADO"] = "TRUE";
-        } else {
-          data["MODELADO"] = "FALSE";
+        // Processar arquivo de importação
+        function processImportFile() {
+            try {
+                const fileInput = document.getElementById('csv-file-input');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert('Por favor, selecione um arquivo CSV para importar.');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.readAsText(file);
+                
+                reader.onload = function(event) {
+                    const csvData = event.target.result;
+                    const lines = csvData.split('\n');
+                    
+                    if (lines.length < 2) {
+                        alert('O arquivo CSV não contém dados válidos.');
+                        return;
+                    }
+                    
+                    // Primeira linha contém os cabeçalhos
+                    const headers = lines[0].split(',').map(header => header.trim());
+                    
+                    // Verificar se o arquivo tem várias obras (mais de uma linha de dados)
+                    if (lines.length > 2) {
+                        const works = [];
+                        
+                        // Processar cada linha (exceto a primeira que são os cabeçalhos)
+                        for (let i = 1; i < lines.length; i++) {
+                            if (lines[i].trim() === '') continue; // Pular linhas vazias
+                            
+                            const values = parseCSVLine(lines[i]);
+                            if (values.length !== headers.length) {
+                                console.warn(`Linha ${i + 1} tem número incorreto de campos (${values.length} vs ${headers.length}). Tentando importar mesmo assim.`);
+                            }
+                            
+                            const workData = {};
+                            
+                            // Mapear valores para cabeçalhos
+                            for (let j = 0; j < headers.length; j++) {
+                                if (j < values.length) {
+                                    workData[headers[j]] = values[j];
+                                }
+                            }
+                            
+                            // Verificar se há um código válido
+                            if (workData['CODIGO'] && workData['CODIGO'].trim() !== '') {
+                                works.push(workData);
+                            }
+                        }
+                        
+                        if (works.length > 0) {
+                            // Perguntar se o usuário quer salvar todas as obras no banco de dados
+                            if (confirm(`O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`)) {
+                                saveMultipleWorks(works);
+                            }
+                        } else {
+                            alert('Nenhuma obra válida encontrada no arquivo CSV.');
+                        }
+                    } else {
+                        // Apenas uma obra, carregar no formulário atual
+                        const values = parseCSVLine(lines[1]);
+                        loadCSVDataToForm(headers, values);
+                    }
+                    
+                    closeImportModal();
+                };
+                
+                reader.onerror = function() {
+                    alert('Erro ao ler o arquivo.');
+                };
+            } catch (error) {
+                console.error('Erro ao processar arquivo:', error);
+                alert('Erro ao processar arquivo: ' + error.message);
+            }
+        }
+        
+        // Função auxiliar para analisar uma linha CSV (lidando com valores entre aspas)
+        function parseCSVLine(line) {
+            const values = [];
+            let currentValue = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    values.push(currentValue);
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+            
+            // Não esquecer do último valor
+            values.push(currentValue);
+            
+            return values;
         }
 
-        // Coletar valores dos tramos
-        const tramosValues = [];
-        const tramosFields = document.querySelectorAll(".tramo-field");
-        tramosFields.forEach((field) => {
-          tramosValues.push(field.value || "0.00");
+        // Carregar dados do CSV para o formulário
+        function loadCSVDataToForm(headers, values) {
+            try {
+                clearForm(); // Limpar o formulário antes
+                
+                // Mapear valores para os campos do formulário
+                for (let i = 0; i < headers.length; i++) {
+                    const header = headers[i];
+                    if (i < values.length) {
+                        const value = values[i];
+                        
+                        // Tratar campos especiais
+                        if (header === 'MODELADO') {
+                            document.getElementById('modelado').checked = value.toLowerCase() === 'true';
+                        } else if (header === 'COMPRIMENTO TRAMOS') {
+                            const tramos = value.split(';');
+                            document.getElementById('qtd-tramos').value = tramos.length;
+                            generateTramosFields(); // Regenerar campos de tramos
+                            
+                            // Preencher valores dos tramos
+                            const tramosFields = document.querySelectorAll('.tramo-field');
+                            for (let j = 0; j < tramosFields.length; j++) {
+                                if (j < tramos.length) {
+                                    tramosFields[j].value = tramos[j];
+                                }
+                            }
+                        } else if (header === 'ALTURA DO APOIO') {
+                            const apoios = value.split(';');
+                            // Não precisamos definir o número de apoios, pois isso é calculado com base nos tramos
+                            
+                            // Preencher valores dos apoios
+                            const apoiosFields = document.querySelectorAll('.apoio-field');
+                            for (let j = 0; j < apoiosFields.length; j++) {
+                                if (j < apoios.length) {
+                                    apoiosFields[j].value = apoios[j];
+                                }
+                            }
+                        } else {
+                            // Outros campos
+                            const field = document.querySelector(`[name="${header}"]`);
+                            if (field) {
+                                field.value = value;
+                            }
+                        }
+                    }
+                }
+                
+                // Definir o código atual
+                const codigoField = document.getElementById('codigo');
+                if (codigoField.value) {
+                    currentWorkCode = codigoField.value;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do CSV:', error);
+                alert('Erro ao carregar dados do CSV: ' + error.message);
+            }
+        }
+
+        // Salvar a obra atual no banco de dados
+        function saveCurrentWork() {
+            try {
+                const codigo = document.getElementById('codigo').value.trim();
+                
+                if (!codigo) {
+                    alert('Por favor, preencha o campo Código antes de salvar.');
+                    return;
+                }
+                
+                const formData = collectFormData();
+                
+                if (db) {
+                    const transaction = db.transaction(["obras"], "readwrite");
+                    const objectStore = transaction.objectStore("obras");
+                    
+                    const request = objectStore.put(formData);
+                    
+                    request.onsuccess = function(event) {
+                        alert(`Obra ${codigo} salva com sucesso!`);
+                        currentWorkCode = codigo;
+                        loadWorksList(); // Recarregar a lista de obras
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error("Erro ao salvar a obra:", event.target.error);
+                        alert(`Erro ao salvar a obra: ${event.target.error}`);
+                    };
+                } else {
+                    alert("Banco de dados não está disponível.");
+                }
+            } catch (error) {
+                console.error('Erro ao salvar obra:', error);
+                alert('Erro ao salvar obra: ' + error.message);
+            }
+        }
+        
+        // Salvar múltiplas obras no banco de dados
+        function saveMultipleWorks(works) {
+            try {
+                if (!db) {
+                    alert("Banco de dados não está disponível.");
+                    return;
+                }
+                
+                const transaction = db.transaction(["obras"], "readwrite");
+                const objectStore = transaction.objectStore("obras");
+                
+                let countSuccess = 0;
+                let countError = 0;
+                
+                works.forEach(work => {
+                    const request = objectStore.put(work);
+                    
+                    request.onsuccess = function() {
+                        countSuccess++;
+                        if (countSuccess + countError === works.length) {
+                            alert(`Importação concluída: ${countSuccess} obras importadas com sucesso, ${countError} erros.`);
+                            loadWorksList(); // Recarregar a lista de obras
+                        }
+                    };
+                    
+                    request.onerror = function(event) {
+                        countError++;
+                        console.error(`Erro ao salvar a obra ${work.CODIGO}:`, event.target.error);
+                        if (countSuccess + countError === works.length) {
+                            alert(`Importação concluída: ${countSuccess} obras importadas com sucesso, ${countError} erros.`);
+                            loadWorksList(); // Recarregar a lista de obras
+                        }
+                    };
+                });
+            } catch (error) {
+                console.error('Erro ao salvar múltiplas obras:', error);
+                alert('Erro ao salvar múltiplas obras: ' + error.message);
+            }
+        }
+
+        // Coletar todos os dados do formulário
+        function collectFormData() {
+            try {
+                const form = document.getElementById('oae-form');
+                const formData = new FormData(form);
+                
+                // Objeto para armazenar os dados
+                const data = {};
+                
+                // Processar campos comuns
+                for (let [key, value] of formData.entries()) {
+                    // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+                    if (!key.startsWith('tramo-') && !key.startsWith('apoio-')) {
+                        data[key] = value;
+                    }
+                }
+                
+                // Verificar se o modelado está marcado
+                if (document.getElementById('modelado').checked) {
+                    data['MODELADO'] = 'TRUE';
+                } else {
+                    data['MODELADO'] = 'FALSE';
+                }
+                
+                // Coletar valores dos tramos
+                const tramosValues = [];
+                const tramosFields = document.querySelectorAll('.tramo-field');
+                tramosFields.forEach(field => {
+                    tramosValues.push(field.value || '0.00');
+                });
+                data['COMPRIMENTO TRAMOS'] = tramosValues.join(';');
+                
+                // Coletar valores dos apoios
+                const apoiosValues = [];
+                const apoiosFields = document.querySelectorAll('.apoio-field');
+                apoiosFields.forEach(field => {
+                    apoiosValues.push(field.value || '0.00');
+                });
+                data['ALTURA DO APOIO'] = apoiosValues.join(';');
+                
+                return data;
+            } catch (error) {
+                console.error('Erro ao coletar dados do formulário:', error);
+                alert('Erro ao coletar dados do formulário: ' + error.message);
+                return {};
+            }
+        }
+        
+        // Carregar obra específica do banco de dados
+        function loadWork(codigo) {
+            try {
+                if (!db) {
+                    alert("Banco de dados não está disponível.");
+                    return;
+                }
+                
+                const transaction = db.transaction(["obras"], "readonly");
+                const objectStore = transaction.objectStore("obras");
+                const request = objectStore.get(codigo);
+                
+                request.onsuccess = function(event) {
+                    const work = event.target.result;
+                    
+                    if (work) {
+                        loadWorkToForm(work);
+                        currentWorkCode = codigo;
+                        
+                        // Marcar a obra como selecionada na lista
+                        const workItems = document.querySelectorAll('.work-item');
+                        workItems.forEach(item => {
+                            if (item.getAttribute('data-code') === codigo) {
+                                item.classList.add('selected');
+                            } else {
+                                item.classList.remove('selected');
+                            }
+                        });
+                    } else {
+                        alert(`Obra com código ${codigo} não encontrada.`);
+                    }
+                };
+                
+                request.onerror = function(event) {
+                    console.error("Erro ao carregar a obra:", event.target.error);
+                    alert(`Erro ao carregar a obra: ${event.target.error}`);
+                };
+            } catch (error) {
+                console.error('Erro ao carregar obra:', error);
+                alert('Erro ao carregar obra: ' + error.message);
+            }
+        }
+        
+        // Carregar dados de uma obra para o formulário
+        function loadWorkToForm(work) {
+            try {
+                clearForm(); // Limpar o formulário antes
+                
+                // Processar campos especiais
+                if (work['MODELADO'] === 'TRUE') {
+                    document.getElementById('modelado').checked = true;
+                } else {
+                    document.getElementById('modelado').checked = false;
+                }
+                
+                if (work['COMPRIMENTO TRAMOS']) {
+                    const tramos = work['COMPRIMENTO TRAMOS'].split(';');
+                    document.getElementById('qtd-tramos').value = tramos.length;
+                    generateTramosFields(); // Regenerar campos de tramos
+                    
+                    // Preencher valores dos tramos
+                    const tramosFields = document.querySelectorAll('.tramo-field');
+                    for (let i = 0; i < tramosFields.length; i++) {
+                        if (i < tramos.length) {
+                            tramosFields[i].value = tramos[i];
+                        }
+                    }
+                }
+                
+                if (work['ALTURA DO APOIO']) {
+                    const apoios = work['ALTURA DO APOIO'].split(';');
+                    
+                    // Preencher valores dos apoios
+                    const apoiosFields = document.querySelectorAll('.apoio-field');
+                    for (let i = 0; i < apoiosFields.length; i++) {
+                        if (i < apoios.length) {
+                            apoiosFields[i].value = apoios[i];
+                        }
+                    }
+                }
+                
+                // Processar outros campos
+                for (const [key, value] of Object.entries(work)) {
+                    if (key !== 'MODELADO' && key !== 'COMPRIMENTO TRAMOS' && key !== 'ALTURA DO APOIO') {
+                        const field = document.querySelector(`[name="${key}"]`);
+                        if (field) {
+                            field.value = value;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados no formulário:', error);
+                alert('Erro ao carregar dados no formulário: ' + error.message);
+            }
+        }
+        
+        // Carregar lista de obras do banco de dados
+        function loadWorksList() {
+            try {
+                if (!db) {
+                    console.warn("Banco de dados não está disponível.");
+                    return;
+                }
+                
+                const worksList = document.getElementById('works-list');
+                worksList.innerHTML = '<div class="work-item">Carregando...</div>';
+                
+                const transaction = db.transaction(["obras"], "readonly");
+                const objectStore = transaction.objectStore("obras");
+                const request = objectStore.getAll();
+                
+                request.onsuccess = function(event) {
+                    const works = event.target.result;
+                    
+                    if (works.length === 0) {
+                        worksList.innerHTML = '<div class="work-item">Nenhuma obra cadastrada</div>';
+                    } else {
+                        worksList.innerHTML = '';
+                        
+                        works.forEach(work => {
+                            const workItem = document.createElement('div');
+                            workItem.className = 'work-item';
+                            if (work.CODIGO === currentWorkCode) {
+                                workItem.classList.add('selected');
+                            }
+                            workItem.setAttribute('data-code', work.CODIGO);
+                            
+                            workItem.innerHTML = `
+                                <span>${work.CODIGO} - ${work.NOME || 'Sem nome'}</span>
+                                <button type="button" class="delete-btn" onclick="deleteWork('${work.CODIGO}', event)">Excluir</button>
+                            `;
+                            
+                            workItem.addEventListener('click', function(e) {
+                                if (!e.target.classList.contains('delete-btn')) {
+                                    loadWork(work.CODIGO);
+                                }
+                            });
+                            
+                            worksList.appendChild(workItem);
+                        });
+                    }
+                };
+                
+                request.onerror = function(event) {
+                    console.error("Erro ao carregar a lista de obras:", event.target.error);
+                    worksList.innerHTML = '<div class="work-item">Erro ao carregar obras</div>';
+                };
+            } catch (error) {
+                console.error('Erro ao carregar lista de obras:', error);
+                alert('Erro ao carregar lista de obras: ' + error.message);
+            }
+        }
+        
+        // Filtrar obras por código
+        function filterWorks() {
+            try {
+                const filterText = document.getElementById('filter-works').value.trim().toLowerCase();
+                
+                if (!db) {
+                    alert("Banco de dados não está disponível.");
+                    return;
+                }
+                
+                const worksList = document.getElementById('works-list');
+                worksList.innerHTML = '<div class="work-item">Filtrando...</div>';
+                
+                const transaction = db.transaction(["obras"], "readonly");
+                const objectStore = transaction.objectStore("obras");
+                const request = objectStore.getAll();
+                
+                request.onsuccess = function(event) {
+                    const works = event.target.result;
+                    const filteredWorks = filterText ? 
+                        works.filter(work => 
+                            work.CODIGO.toLowerCase().includes(filterText) || 
+                            (work.NOME && work.NOME.toLowerCase().includes(filterText))
+                        ) : works;
+                    
+                    if (filteredWorks.length === 0) {
+                        worksList.innerHTML = '<div class="work-item">Nenhuma obra encontrada</div>';
+                    } else {
+                        worksList.innerHTML = '';
+                        
+                        filteredWorks.forEach(work => {
+                            const workItem = document.createElement('div');
+                            workItem.className = 'work-item';
+                            if (work.CODIGO === currentWorkCode) {
+                                workItem.classList.add('selected');
+                            }
+                            workItem.setAttribute('data-code', work.CODIGO);
+                            
+                            workItem.innerHTML = `
+                                <span>${work.CODIGO} - ${work.NOME || 'Sem nome'}</span>
+                                <button type="button" class="delete-btn" onclick="deleteWork('${work.CODIGO}', event)">Excluir</button>
+                            `;
+                            
+                            workItem.addEventListener('click', function(e) {
+                                if (!e.target.classList.contains('delete-btn')) {
+                                    loadWork(work.CODIGO);
+                                }
+                            });
+                            
+                            worksList.appendChild(workItem);
+                        });
+                    }
+                };
+                
+                request.onerror = function(event) {
+                    console.error("Erro ao filtrar obras:", event.target.error);
+                    worksList.innerHTML = '<div class="work-item">Erro ao filtrar obras</div>';
+                };
+            } catch (error) {
+                console.error('Erro ao filtrar obras:', error);
+                alert('Erro ao filtrar obras: ' + error.message);
+            }
+        }
+        
+        // Exportar todas as obras para CSV
+        function exportAllWorks() {
+            try {
+                if (!db) {
+                    alert("Banco de dados não está disponível.");
+                    return;
+                }
+                
+                const transaction = db.transaction(["obras"], "readonly");
+                const objectStore = transaction.objectStore("obras");
+                const request = objectStore.getAll();
+                
+                request.onsuccess = function(event) {
+                    const works = event.target.result;
+                    
+                    if (works.length === 0) {
+                        alert('Não há obras para exportar.');
+                        return;
+                    }
+                    
+                    // Determinar todos os campos possíveis nas obras
+                    const allFields = new Set();
+                    works.forEach(work => {
+                        Object.keys(work).forEach(field => allFields.add(field));
+                    });
+                    
+                    const headers = Array.from(allFields);
+                    
+                    // Construir o conteúdo do CSV
+                    let csvContent = headers.join(',') + '\n';
+                    
+                    works.forEach(work => {
+                        const row = headers.map(header => {
+                            const value = work[header] || '';
+                            // Valores com vírgula devem ser envolvidos em aspas duplas
+                            return (value && value.includes(',')) ? `"${value}"` : value;
+                        });
+                        
+                        csvContent += row.join(',') + '\n';
+                    });
+                    
+                    // Criar e baixar o arquivo CSV
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `Todas_OAEs_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                
+                request.onerror = function(event) {
+                    console.error("Erro ao exportar obras:", event.target.error);
+                    alert(`Erro ao exportar obras: ${event.target.error}`);
+                };
+            } catch (error) {
+                console.error('Erro ao exportar todas as obras:', error);
+                alert('Erro ao exportar todas as obras: ' + error.message);
+            }
+        }
+        
+        // Excluir uma obra do banco de dados
+        function deleteWork(codigo, event) {
+            try {
+                event.stopPropagation(); // Evitar que o clique propague para o elemento pai
+                
+                if (confirm(`Tem certeza que deseja excluir a obra ${codigo}?`)) {
+                    if (!db) {
+                        alert("Banco de dados não está disponível.");
+                        return;
+                    }
+                    
+                    const transaction = db.transaction(["obras"], "readwrite");
+                    const objectStore = transaction.objectStore("obras");
+                    const request = objectStore.delete(codigo);
+                    
+                    request.onsuccess = function() {
+                        alert(`Obra ${codigo} excluída com sucesso.`);
+                        
+                        // Se a obra excluída for a atual, limpar o formulário
+                        if (codigo === currentWorkCode) {
+                            clearForm();
+                            currentWorkCode = null;
+                        }
+                        
+                        loadWorksList(); // Recarregar a lista de obras
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error("Erro ao excluir a obra:", event.target.error);
+                        alert(`Erro ao excluir a obra: ${event.target.error}`);
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao excluir obra:', error);
+                alert('Erro ao excluir obra: ' + error.message);
+            }
+        }
+        
+        // Limpar todo o banco de dados
+        function clearDatabase() {
+            try {
+                if (confirm("Tem certeza que deseja limpar todas as obras do banco de dados? Esta ação não pode ser desfeita!")) {
+                    if (!db) {
+                        alert("Banco de dados não está disponível.");
+                        return;
+                    }
+                    
+                    const transaction = db.transaction(["obras"], "readwrite");
+                    const objectStore = transaction.objectStore("obras");
+                    const request = objectStore.clear();
+                    
+                    request.onsuccess = function() {
+                        alert("Banco de dados limpo com sucesso.");
+                        clearForm();
+                        currentWorkCode = null;
+                        loadWorksList(); // Recarregar a lista de obras
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error("Erro ao limpar o banco de dados:", event.target.error);
+                        alert(`Erro ao limpar o banco de dados: ${event.target.error}`);
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao limpar banco de dados:', error);
+                alert('Erro ao limpar banco de dados: ' + error.message);
+            }
+        }
+        
+        // Criar nova obra
+        function createNewWork() {
+            clearForm();
+            currentWorkCode = null;
+            
+            // Remover a seleção de todas as obras na lista
+            const workItems = document.querySelectorAll('.work-item');
+            workItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+        
+        // Mostrar lembrete para salvar dados
+        function showSaveReminder() {
+            try {
+                const reminder = document.getElementById('save-reminder');
+                reminder.style.display = 'block';
+                
+                // Ocultar o lembrete após 5 segundos
+                setTimeout(function() {
+                    reminder.style.display = 'none';
+                }, 5000);
+            } catch (error) {
+                console.error('Erro ao mostrar lembrete:', error);
+            }
+        }
+        
+        // Iniciar lembretes periódicos para salvar dados
+        function startSaveReminders() {
+            try {
+                // Mostrar lembrete a cada 5 minutos
+                saveReminderInterval = setInterval(showSaveReminder, 5 * 60 * 1000);
+            } catch (error) {
+                console.error('Erro ao iniciar lembretes:', error);
+            }
+        }
+        
+        // Limpar formulário
+        function clearForm() {
+            try {
+                document.getElementById('oae-form').reset();
+                document.getElementById('csv-line').style.display = 'none';
+                generateTramosFields(); // Regenerar os campos dinâmicos
+            } catch (error) {
+                console.error('Erro ao limpar formulário:', error);
+                alert('Erro ao limpar formulário: ' + error.message);
+            }
+        }
+        
+        // Importar múltiplas obras (processar arquivo)
+        function importMultipleWorks() {
+            document.getElementById('csv-file-input').click();
+        }
+        
+        // Mostrar o modal de importação de múltiplas obras
+        function showImportModal() {
+            document.getElementById('csv-file-input').value = '';
+            document.getElementById('import-modal').style.display = 'block';
+        }
+        
+        // Atualizar evento do input de arquivo
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('csv-file-input');
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        processImportFile();
+                    }
+                });
+            }
         });
-        data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
-
-        // Coletar valores dos apoios
-        const apoiosValues = [];
-        const apoiosFields = document.querySelectorAll(".apoio-field");
-        apoiosFields.forEach((field) => {
-          apoiosValues.push(field.value || "0.00");
-        });
-        data["ALTURA DO APOIO"] = apoiosValues.join(";");
-
-        // Construir cabeçalhos e linha de dados
-        const headers = Object.keys(data);
-        const csvContent =
-          headers.join(",") +
-          "\n" +
-          headers
-            .map((header) => {
-              // Valores com vírgula devem ser envolvidos em aspas duplas
-              const value = data[header];
-              return value && value.includes(",") ? `"${value}"` : value;
-            })
-            .join(",");
-
-        // Criar e baixar o arquivo CSV
-        const blob = new Blob([csvContent], {
-          type: "text/csv;charset=utf-8;",
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute(
-          "download",
-          `OAE_${data["CODIGO"] || "nova"}_${
-            new Date().toISOString().split("T")[0]
-          }.csv`
-        );
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      // Importar CSV
-      document
-        .getElementById("import-btn")
-        .addEventListener("click", function () {
-          alert(
-            "Funcionalidade de importação será implementada em versão futura."
-          );
-          // A implementação real requer um input file e processamento do CSV
-        });
-
-      // Limpar formulário
-      function clearForm() {
-        document.getElementById("oae-form").reset();
-        document.getElementById("csv-line").style.display = "none";
-        generateTramosFields(); // Regenerar os campos dinâmicos
-      }
     </script>
-  </body>
+</body>
 </html>
