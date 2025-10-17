@@ -1224,144 +1224,147 @@ function detectDateFormat(messages) {
           }
         }
 
+     
+
         // MELHORIAS #2: Função robusta para normalização de status
-        function normalizeStatus(status) {
-          if (!status) return "";
+function normalizeStatus(status) {
+  if (!status) return "";
 
-          // Tratar casos de strings truncadas
-          if (
-            status.endsWith("AVALIAC") ||
-            status.endsWith("AVALIACÃ") ||
-            status.endsWith("AVALIACA")
-          ) {
-            return "AVALIAÇÃO";
-          }
+  // Tratar casos de strings truncadas
+  if (
+    status.endsWith("AVALIAC") ||
+    status.endsWith("AVALIACÃ") ||
+    status.endsWith("AVALIACA")
+  ) {
+    return "AVALIAÇÃO";
+  }
 
-          // Remover caracteres especiais e normalizar espaços
-          let normalized = normalizeText(status)
-            .replace(/\s+/g, " ") // Substituir múltiplos espaços por um único
-            .trim();
+  // Remover caracteres especiais e normalizar espaços
+  let normalized = normalizeText(status)
+    .replace(/\s+/g, " ") // Substituir múltiplos espaços por um único
+    .trim();
 
-          // Verificar prefixos numéricos para reavaliação
-          const reavaliacaoMatch = normalized.match(
-            /^(\d+)[ªa°]?\s*r?e?a?v?a?l?i?a?c?a?o?$/i
-          );
-          if (reavaliacaoMatch || /^[123456789]$/.test(normalized)) {
-            const numero = reavaliacaoMatch ? reavaliacaoMatch[1] : normalized;
-            return `${numero}ª REAVALIAÇÃO`;
-          }
+  // Verificar prefixos numéricos para reavaliação
+  const reavaliacaoMatch = normalized.match(
+    /^(\d+)[ªa°]?\s*r?e?a?v?a?l?i?a?c?a?o?$/i
+  );
+  if (reavaliacaoMatch || /^[123456789]$/.test(normalized)) {
+    const numero = reavaliacaoMatch ? reavaliacaoMatch[1] : normalized;
+    return `${numero}ª REAVALIAÇÃO`;
+  }
 
-          // Padrões específicos com palavras que podem estar juntas
-          if (/obraaguardando|aguardandodrone|obradrone/.test(normalized)) {
-            return "OBRA AGUARDANDO DRONE";
-          }
+  // Padrões específicos com palavras que podem estar juntas
+  if (/obraaguardando|aguardandodrone|obradrone/.test(normalized)) {
+    return "OBRA AGUARDANDO DRONE";
+  }
 
-          if (/correcaocadastral|cadastralcorrecao/.test(normalized)) {
-            return "CORREÇÃO CADASTRAL";
-          }
+  if (/correcaocadastral|cadastralcorrecao/.test(normalized)) {
+    return "CORREÇÃO CADASTRAL";
+  }
 
-          // Padrões para cada tipo de status
-          const statusPatterns = {
-            APROVADA: [
-              "aprovad",
-              "aprovacao",
-              "aprovação",
-              "liberada",
-              "aceita",
-            ],
-            REPROVADA: [
-              "reprovad",
-              "reprovacao",
-              "rejeitad",
-              "desaprovad",
-              "nao aprovad",
-              "não aprovad",
-            ],
-            AVALIAÇÃO: [
-              "avaliaca",
-              "avaliac",
-              "aAvaliaca",
-              "avaliaca",
-              "avaliaca",
-              "avaliaCã",
-              "avaliação",
-              "analise",
-              "análise",
-            ],
-            REAVALIAÇÃO: ["reavaliaca", "reavaliaçã", "reavaliação"],
-            "OBRA AGUARDANDO DRONE": ["aguardando", "drone", "fotos"],
-            "CORREÇÃO CADASTRAL": [
-              "correcao",
-              "correção",
-              "cadastr",
-              "retifica",
-            ],
-          };
+  // Padrões para cada tipo de status
+  const statusPatterns = {
+    APROVADA: [
+      "aprovad",
+      "aprovacao",
+      "aprovação",
+      "liberada",
+      "aceita",
+    ],
+    REPROVADA: [
+      "reprovad",
+      "reprovacao",
+      "rejeitad",
+      "desaprovad",
+      "nao aprovad",
+      "não aprovad",
+    ],
+    AVALIAÇÃO: [
+      "avaliaca",
+      "avaliac",
+      "aAvaliaca",
+      "avaliaca",
+      "avaliaca",
+      "avaliaCã",
+      "avaliação",
+      "analise",
+      "análise",
+    ],
+    REAVALIAÇÃO: ["reavaliaca", "reavaliaçã", "reavaliação"],
+    "OBRA AGUARDANDO DRONE": ["aguardando", "drone", "fotos"],
+    "CORREÇÃO CADASTRAL": [
+      "correcao",
+      "correção",
+      "cadastr",
+      "retifica",
+    ],
+  };
 
-          // Verificar cada padrão
-          for (const [padrao, variantes] of Object.entries(statusPatterns)) {
-            for (const variante of variantes) {
-              if (normalized.includes(variante)) {
-                return padrao;
-              }
-            }
-          }
+  // Verificar cada padrão
+  for (const [padrao, variantes] of Object.entries(statusPatterns)) {
+    for (const variante of variantes) {
+      if (normalized.includes(variante)) {
+        return padrao;
+      }
+    }
+  }
 
-          // Se não encontrou nenhum padrão conhecido, retornar o original em maiúsculas
-          return status.toUpperCase();
-        }
+  // Se não encontrou nenhum padrão conhecido, retornar o original em maiúsculas
+  return status.toUpperCase();
+}
+
 
         function extractStatus(text, message) {
-          const statusMatch = text.match(
-            /Status:?\s*([A-Za-zÀ-ú\s0-9ª<>]+)(?:<|$)/i
-          );
+  const statusMatch = text.match(/Status:?\s*([A-Za-zÀ-ú\s0-9ª<>]+)(?:<|$)/i);
 
-          if (statusMatch) {
-            message.status = normalizeStatus(statusMatch[1].trim());
-          } else if (
-            text.toUpperCase().includes("APROVADA") ||
-            text.includes("aprovada")
-          ) {
-            message.status = "APROVADA";
-          } else if (
-            text.toUpperCase().includes("REPROVADA") ||
-            text.includes("reprovada")
-          ) {
-            message.status = "REPROVADA";
-          } else if (
-            text.toUpperCase().includes("AVALIAÇÃO") ||
-            text.includes("Avaliação") ||
-            text.includes("Avaliaçã") ||
-            text.includes("avaliação")
-          ) {
-            message.status = "AVALIAÇÃO";
-          } else if (
-            text.toUpperCase().includes("REAVALIAÇÃO") ||
-            text.includes("Reavaliação") ||
-            text.includes("reavaliação")
-          ) {
-            message.status = "REAVALIAÇÃO";
-          } else if (text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
-            const match = text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i);
-            message.status = `${match[1]}ª REAVALIAÇÃO`;
-          } else if (
-            text.includes("RETIFICAÇÃO DE CADASTRO") ||
-            normalizeText(text).includes("retificacao")
-          ) {
-            message.status = "RETIFICAÇÃO DE CADASTRO";
-          }
+  if (statusMatch) {
+    message.status = normalizeStatus(statusMatch[1].trim());
+  } else if (
+    text.toUpperCase().includes("APROVADA") ||
+    text.includes("aprovada")
+  ) {
+    message.status = "APROVADA";
+  } else if (
+    text.toUpperCase().includes("REPROVADA") ||
+    text.includes("reprovada")
+  ) {
+    message.status = "REPROVADA";
+  } else if (
+    text.toUpperCase().includes("AVALIAÇÃO") ||
+    text.includes("Avaliação") ||
+    text.includes("Avaliaçã") ||
+    text.includes("avaliação")
+  ) {
+    message.status = "AVALIAÇÃO";
+  } else if (
+    text.toUpperCase().includes("REAVALIAÇÃO") ||
+    text.includes("Reavaliação") ||
+    text.includes("reavaliação")
+  ) {
+    message.status = "REAVALIAÇÃO";
+  } else if (text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
+    const match = text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i);
+    message.status = `${match[1]}ª REAVALIAÇÃO`;
+  } else if (
+    text.includes("RETIFICAÇÃO DE CADASTRO") ||
+    normalizeText(text).includes("retificacao")
+  ) {
+    message.status = "RETIFICAÇÃO DE CADASTRO";
+  }
 
-          // Também verificar campos específicos
-          const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
-          if (fieldMatch) {
-            const field = normalizeText(fieldMatch[1].trim());
-            const value = fieldMatch[2].trim();
+  // Também verificar campos específicos
+  const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
+  if (fieldMatch) {
+    const field = normalizeText(fieldMatch[1].trim());
+    const value = fieldMatch[2].trim();
 
-            if (field.includes("status")) {
-              message.status = normalizeStatus(value);
-            }
-          }
-        }
+    if (field.includes("status")) {
+      message.status = normalizeStatus(value);
+    }
+  }
+}
+
+
 
       // Modifique a função checkAndSaveMessage para armazenar o texto original
 function checkAndSaveMessage(message, text) {
