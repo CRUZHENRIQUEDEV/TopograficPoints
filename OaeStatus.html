@@ -311,6 +311,77 @@
           flex: 1 0 100%;
         }
       }
+
+
+      /* Adicionar isso ao bloco de estilos CSS existente */
+.view-icon {
+  cursor: pointer;
+  color: var(--highlight);
+  font-size: 1.2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.view-icon:hover {
+  color: white;
+  transform: scale(1.2);
+  transition: all 0.2s ease-in-out;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+  background-color: var(--bg-color);
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid var(--highlight);
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.close-modal {
+  color: var(--text-color);
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: var(--highlight);
+}
+
+.message-view {
+  margin-top: 15px;
+  white-space: pre-wrap;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 3px solid var(--highlight);
+}
+
+.message-header {
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+
+
+
     </style>
   </head>
   <body>
@@ -321,6 +392,18 @@
       </header>
 
       <div class="card">
+
+        <!-- Adicionar isso dentro da div "card", antes do textarea -->
+<div class="format-selector">
+  <label for="dateFormatSelect">Formato de Data:</label>
+  <select id="dateFormatSelect">
+    <option value="auto">Detecção Automática</option>
+    <option value="DD/MM/YYYY">Dia/Mês/Ano (DD/MM/YYYY)</option>
+    <option value="MM/DD/YYYY">Mês/Dia/Ano (MM/DD/YYYY)</option>
+  </select>
+  <span id="detectedFormat"></span>
+</div>
+
         <textarea
           id="whatsappText"
           placeholder="Cole aqui as mensagens exportadas do WhatsApp..."
@@ -462,10 +545,44 @@
           <canvas id="tipoChart"></canvas>
         </div>
       </div>
+
+      <!-- Adicionar este código após a última tag div de fechamento -->
+<div id="messageModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <div class="message-header">
+      <h3>Detalhes da Mensagem</h3>
+      <p id="messageInfo"></p>
+    </div>
+    <div id="messageView" class="message-view"></div>
+  </div>
+</div>
+
     </div>
 
     <script>
       // Versão: 6.0 - Correções para processamento de mensagens OAE
+
+      // Adicionar depois do DOMContentLoaded no início do script
+document.getElementById("dateFormatSelect").addEventListener("change", function() {
+    userSelectedFormat = this.value;
+    localStorage.setItem("oaePreferredDateFormat", userSelectedFormat);
+    
+    if (processedData.length > 0) {
+        // Reprocessar os dados se necessário
+        updateTable();
+    }
+});
+
+// Carregar configuração salva (adicionar antes de document.addEventListener("DOMContentLoaded"...))
+if (localStorage.getItem("oaePreferredDateFormat")) {
+    userSelectedFormat = localStorage.getItem("oaePreferredDateFormat");
+    // Definir o valor selecionado depois do DOM estar carregado
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("dateFormatSelect").value = userSelectedFormat;
+    });
+}
+
 
       document.addEventListener("DOMContentLoaded", function () {
         // Função de formatação de data para o formato brasileiro
@@ -528,7 +645,9 @@
         // Dados
         let processedData = [];
         let irregularData = [];
-        let detectedDateFormat = "DD/MM/YYYY"; // Formato padrão (BR)
+let detectedDateFormat = "DD/MM/YYYY"; // Formato padrão (BR)
+let userSelectedFormat = "auto"; // Auto por padrã
+
 
         // Event Listeners
         processBtn.addEventListener("click", processMessages);
@@ -630,27 +749,83 @@
           return tipo.toUpperCase();
         }
 
-        // MELHORIAS #3: Detectar automaticamente o formato de data com base nas mensagens
-        function detectDateFormat(messages) {
-          for (const message of messages) {
-            if (message.data) {
-              const datePart = message.data.split(" ")[0];
-              if (datePart.includes("/")) {
-                const parts = datePart.split("/");
-                // Se tivermos 3 partes e a primeira for maior que 12, é provavelmente DD/MM/YYYY
-                if (parts.length === 3 && parseInt(parts[0], 10) > 12) {
-                  return "DD/MM/YYYY";
+       
+        // Substitua a função detectDateFormat existente por esta versão melhorada
+function detectDateFormat(messages) {
+    // Primeiro, verificar se o usuário escolheu um formato específico
+    if (userSelectedFormat !== "auto") {
+        return userSelectedFormat;
+    }
+
+    // Analisar as mensagens para detectar o formato
+    for (const message of messages) {
+        if (message.data) {
+            // Primeiro verificar formato com colchetes [MM/DD/YY] ou [DD/MM/YY]
+            const bracketMatch = message.data.match(/\[(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+            if (bracketMatch) {
+                const firstNumber = parseInt(bracketMatch[1], 10);
+                const secondNumber = parseInt(bracketMatch[2], 10);
+                
+                // Se o primeiro número > 12, então é um dia (formato DD/MM)
+                if (firstNumber > 12 && secondNumber <= 12) {
+                    return "DD/MM/YYYY";
                 }
-                // Se tivermos 3 partes e a segunda for maior que 12, é provavelmente MM/DD/YYYY
-                if (parts.length === 3 && parseInt(parts[1], 10) > 12) {
-                  return "MM/DD/YYYY";
+                
+                // Se o segundo número > 12, então é um dia (formato MM/DD)
+                if (secondNumber > 12 && firstNumber <= 12) {
+                    return "MM/DD/YYYY";
                 }
-              }
             }
-          }
-          // Se não conseguir detectar, assumir formato brasileiro (DD/MM/YYYY)
-          return "DD/MM/YYYY";
+            
+            // Verificar formato sem colchetes DD/MM/YYYY ou MM/DD/YYYY
+            const datePart = message.data.split(" ")[0];
+            if (datePart.includes("/")) {
+                const parts = datePart.split("/");
+                if (parts.length === 3) {
+                    const firstNumber = parseInt(parts[0], 10);
+                    const secondNumber = parseInt(parts[1], 10);
+                    
+                    // Se o primeiro número > 12, então é um dia (formato DD/MM)
+                    if (firstNumber > 12 && secondNumber <= 12) {
+                        return "DD/MM/YYYY";
+                    }
+                    
+                    // Se o segundo número > 12, então é um dia (formato MM/DD)
+                    if (secondNumber > 12 && firstNumber <= 12) {
+                        return "MM/DD/YYYY";
+                    }
+                }
+            }
         }
+    }
+    
+    // Verificar nas datas de entrega/recebimento/devolução
+    for (const message of messages) {
+        // Verificar todas as datas adicionais no objeto
+        const dates = [message.dataEntrega, message.dataRecebimento, message.dataDevolucao];
+        
+        for (const date of dates) {
+            if (date && date.includes("/")) {
+                const parts = date.split("/");
+                if (parts.length === 3) {
+                    const firstNumber = parseInt(parts[0], 10);
+                    const secondNumber = parseInt(parts[1], 10);
+                    
+                    if (firstNumber > 12 && secondNumber <= 12) {
+                        return "DD/MM/YYYY";
+                    }
+                    if (secondNumber > 12 && firstNumber <= 12) {
+                        return "MM/DD/YYYY";
+                    }
+                }
+            }
+        }
+    }
+    
+    // Se não conseguir detectar, usar o padrão brasileiro
+    return "DD/MM/YYYY";
+}
+
 
         // Função para formatar qualquer data no formato brasileiro
         function formatDateBrazilian(dateObj) {
@@ -1188,38 +1363,45 @@
           }
         }
 
-        function checkAndSaveMessage(message, text) {
-          // Verificar campos obrigatórios
-          const missingFields = [];
-          let fieldsCount = 0;
+      // Modifique a função checkAndSaveMessage para armazenar o texto original
+function checkAndSaveMessage(message, text) {
+  // Armazenar o texto completo da mensagem
+  message.textoOriginal = text;
+  
+  // Verificar campos obrigatórios
+  const missingFields = [];
+  let fieldsCount = 0;
 
-          if (message.lote) fieldsCount++;
-          else missingFields.push("Lote");
+  if (message.lote) fieldsCount++;
+  else missingFields.push("Lote");
 
-          if (message.codigoOAE) fieldsCount++;
-          else missingFields.push("Código OAE");
+  if (message.codigoOAE) fieldsCount++;
+  else missingFields.push("Código OAE");
 
-          if (message.tipoInspecao) fieldsCount++;
-          else missingFields.push("Tipo de Inspeção");
+  if (message.tipoInspecao) fieldsCount++;
+  else missingFields.push("Tipo de Inspeção");
 
-          if (message.status) fieldsCount++;
-          else missingFields.push("Status");
+  if (message.status) fieldsCount++;
+  else missingFields.push("Status");
 
-          // Só adicionar aos dados processados se tiver pelo menos os campos obrigatórios
-          if (fieldsCount >= 3) {
-            processedData.push(message);
-          }
+  // Só adicionar aos dados processados se tiver pelo menos os campos obrigatórios
+  if (fieldsCount >= 3) {
+    processedData.push(message);
+  }
 
-          // Se faltam campos, marcar como irregular
-          if (fieldsCount < 3) {
-            irregularData.push({
-              data: message.data,
-              remetente: message.remetente,
-              texto: text,
-              camposFaltantes: missingFields.join(", "),
-            });
-          }
-        }
+  // Se faltam campos, marcar como irregular
+  if (fieldsCount < 3) {
+    irregularData.push({
+      data: message.data,
+      remetente: message.remetente,
+      texto: text,
+      camposFaltantes: missingFields.join(", "),
+    });
+  }
+}
+
+
+
 
         // MELHORIAS #1: Aplicar normalização de lotes nos filtros
         function applyFilters() {
