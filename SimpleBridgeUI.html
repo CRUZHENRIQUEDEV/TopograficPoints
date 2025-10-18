@@ -654,38 +654,51 @@
         <!-- Informações Gerais -->
         <div class="tab-content active" id="info-content">
           <h2>Informações Gerais da Obra</h2>
-<div class="form-row">
-  <div class="form-group">
-    <label for="modelado">Modelado:</label>
-    <input type="checkbox" id="modelado" name="MODELADO" />
-  </div>
-  <div class="form-group">
-    <label for="gps">GPS:</label>
-    <input type="checkbox" id="gps" name="GPS" />
-  </div>
-  <div class="form-group">
-    <label for="lote" class="required">Lote:</label>
-    <input type="text" id="lote" name="LOTE" required />
-    <div class="error-message" id="lote-error">Este campo é obrigatório</div>
-  </div>
-</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="modelado">Modelado:</label>
+              <input type="checkbox" id="modelado" name="MODELADO" />
+            </div>
+            <div class="form-group">
+              <label for="gps">GPS:</label>
+              <input type="checkbox" id="gps" name="GPS" />
+            </div>
+            <div class="form-group">
+              <label for="lote" class="required">Lote:</label>
+              <input type="text" id="lote" name="LOTE" required />
+              <div class="error-message" id="lote-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+          </div>
 
-<!-- Segunda linha: Código, Fotos Superiores, Fotos Inferiores -->
-<div class="form-row">
-  <div class="form-group">
-    <label for="codigo">Código:</label>
-    <input type="text" id="codigo" name="CODIGO" required />
-  </div>
-  <div class="form-group">
-    <label for="fotos-superiores">Fotos Superiores:</label>
-    <input type="number" id="fotos-superiores" name="FOTOS SUPERIORES" min="0" step="1" />
-  </div>
-  <div class="form-group">
-    <label for="fotos-inferiores">Fotos Inferiores:</label>
-    <input type="number" id="fotos-inferiores" name="FOTOS INFERIORES" min="0" step="1" />
-  </div>
+          <!-- Segunda linha: Código, Fotos Superiores, Fotos Inferiores -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="codigo">Código:</label>
+              <input type="text" id="codigo" name="CODIGO" required />
+            </div>
+            <div class="form-group">
+              <label for="fotos-superiores">Fotos Superiores:</label>
+              <input
+                type="number"
+                id="fotos-superiores"
+                name="FOTOS SUPERIORES"
+                min="0"
+                step="1"
+              />
+            </div>
+            <div class="form-group">
+              <label for="fotos-inferiores">Fotos Inferiores:</label>
+              <input
+                type="number"
+                id="fotos-inferiores"
+                name="FOTOS INFERIORES"
+                min="0"
+                step="1"
+              />
+            </div>
 
-  
             <div class="form-group">
               <label for="nome">Nome:</label>
               <input type="text" id="nome" name="NOME" />
@@ -698,10 +711,7 @@
             </div>
 
             <!-- Versão: 1.0 -->
-<!-- Adicionar estes novos campos na seção de Informações Gerais (dentro da div com id "info-content") -->
-
-
-
+            <!-- Adicionar estes novos campos na seção de Informações Gerais (dentro da div com id "info-content") -->
 
             <div class="form-group">
               <label for="rodovia">Rodovia:</label>
@@ -732,7 +742,6 @@
             </div>
           </div>
 
-
           <div id="info-custom-fields"></div>
           <button
             type="button"
@@ -742,11 +751,6 @@
             + Adicionar Campo
           </button>
         </div>
-
-
-</div>
-
-          
 
         <!-- Configurações Gerais -->
         <div class="tab-content" id="configuracao-content">
@@ -858,12 +862,12 @@
             <div class="form-group">
               <label for="ala-paralela">Ala Paralela:</label>
               <select id="ala-paralela" name="ALA PARALELA">
-
                 <!-- Adicionar após o campo ala-paralela -->
-<div class="error-message" id="ala-paralela-error">Este campo é obrigatório quando o encontro é Parede Frontal Portante</div>
+                <div class="error-message" id="ala-paralela-error">
+                  Este campo é obrigatório quando o encontro é Parede Frontal
+                  Portante
+                </div>
 
-
-                
                 <option value="">Selecione</option>
                 <option value="ALA DE CONCRETO ARMADO">
                   ALA DE CONCRETO ARMADO
@@ -875,7 +879,10 @@
               <label for="ala-perpendicular">Ala Perpendicular:</label>
 
               <!-- Adicionar após o campo ala-perpendicular -->
-<div class="error-message" id="ala-perpendicular-error">Este campo é obrigatório quando o encontro é Parede Frontal Portante</div>
+              <div class="error-message" id="ala-perpendicular-error">
+                Este campo é obrigatório quando o encontro é Parede Frontal
+                Portante
+              </div>
 
               <select id="ala-perpendicular" name="ALA PERPENDICULAR">
                 <option value="">Selecione</option>
@@ -1647,194 +1654,199 @@
       var saveReminderInterval;
       var currentWorkCode = null;
 
-   
-
       const requiredFields = {
-  lote: { type: "text", min: null, required: true },
-  codigo: { type: "text", min: null, required: true },
-  comprimento: { type: "number", min: 0, required: true },
-  largura: { type: "number", min: 0, required: true },
-  altura: { type: "number", min: 0, required: true },
-  "qtd-tramos": { type: "number", min: 1, required: true },
-  "cortina-altura": { type: "number", min: 0, required: true },
-  "ala-paralela": {
-    type: "text",
-    required: function () {
-      // Se o encontro é parede frontal portante e não tem ala perpendicular, então a paralela é obrigatória
-      return document.getElementById("encontro").value === "ENCONTRO - PAREDE FRONTAL PORTANTE" && 
-             (document.getElementById("ala-perpendicular").value === "" || 
-              document.getElementById("ala-perpendicular").value === "Nenhum");
-    }
-  },
-  "ala-perpendicular": {
-    type: "text",
-    required: function () {
-      // Se o encontro é parede frontal portante e não tem ala paralela, então a perpendicular é obrigatória  
-      return document.getElementById("encontro").value === "ENCONTRO - PAREDE FRONTAL PORTANTE" && 
-             (document.getElementById("ala-paralela").value === "" || 
-              document.getElementById("ala-paralela").value === "Nenhum");
-    }
-  },
-  "comprimento-ala": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        (document.getElementById("ala-paralela").value !== "" &&
-          document.getElementById("ala-paralela").value !== "Nenhum") ||
-        (document.getElementById("ala-perpendicular").value !== "" &&
-          document.getElementById("ala-perpendicular").value !== "Nenhum")
-      );
-    },
-  },
-  "espessura-ala": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        (document.getElementById("ala-paralela").value !== "" &&
-          document.getElementById("ala-paralela").value !== "Nenhum") ||
-        (document.getElementById("ala-perpendicular").value !== "" &&
-          document.getElementById("ala-perpendicular").value !== "Nenhum")
-      );
-    },
-  },
-  "deslocamento-esquerdo-encontro-laje": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        document.getElementById("encontro").value === "ENCONTRO LAJE"
-      );
-    },
-  },
-  "deslocamento-direito-encontro-laje": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        document.getElementById("encontro").value === "ENCONTRO LAJE"
-      );
-    },
-  },
-  "comprimento-encontro-laje": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        document.getElementById("encontro").value === "ENCONTRO LAJE"
-      );
-    },
-  },
-  "altura-longarina": { type: "number", min: 0, required: true },
-  "deslocamento-esquerdo": { type: "number", min: 0, required: true },
-  "deslocamento-direito": { type: "number", min: 0, required: true },
-  "qtd-longarinas": { type: "number", min: 0, required: true },
-  "espessura-longarina": { type: "number", min: 0, required: true },
-  "espessura-transversina": {
-    type: "number",
-    min: 0,
-    required: function () {
-      const qtdTransversinas =
-        parseInt(document.getElementById("qtd-transversinas").value) || 0;
-      return qtdTransversinas > 0;
-    },
-  },
-  "espessura-laje": { type: "number", min: 0, required: true },
-  "qtd-pilares": { type: "number", min: 0, required: true },
-  "largura-pilar": { type: "number", min: 0, required: true },
-  "comprimento-pilares": { type: "number", min: 0, required: true },
-  "altura-travessa": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        document.getElementById("tipo-travessa").value !== "" &&
-        document.getElementById("tipo-travessa").value !== "Nenhum"
-      );
-    },
-  },
-  "altura-bloco-sapata": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        document.getElementById("tipo-bloco-sapata").value !== "" &&
-        document.getElementById("tipo-bloco-sapata").value !== "Nenhum"
-      );
-    },
-  },
-  "largura-bloco-sapata": {
-    type: "number",
-    min: 0,
-    required: function () {
-      return (
-        document.getElementById("tipo-bloco-sapata").value !== "" &&
-        document.getElementById("tipo-bloco-sapata").value !== "Nenhum"
-      );
-    },
-  },
-  pavimento: { type: "text", required: true },
-};
+        lote: { type: "text", min: null, required: true },
+        codigo: { type: "text", min: null, required: true },
+        comprimento: { type: "number", min: 0, required: true },
+        largura: { type: "number", min: 0, required: true },
+        altura: { type: "number", min: 0, required: true },
+        "qtd-tramos": { type: "number", min: 1, required: true },
+        "cortina-altura": { type: "number", min: 0, required: true },
+        "ala-paralela": {
+          type: "text",
+          required: function () {
+            // Se o encontro é parede frontal portante e não tem ala perpendicular, então a paralela é obrigatória
+            return (
+              document.getElementById("encontro").value ===
+                "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
+              (document.getElementById("ala-perpendicular").value === "" ||
+                document.getElementById("ala-perpendicular").value === "Nenhum")
+            );
+          },
+        },
+        "ala-perpendicular": {
+          type: "text",
+          required: function () {
+            // Se o encontro é parede frontal portante e não tem ala paralela, então a perpendicular é obrigatória
+            return (
+              document.getElementById("encontro").value ===
+                "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
+              (document.getElementById("ala-paralela").value === "" ||
+                document.getElementById("ala-paralela").value === "Nenhum")
+            );
+          },
+        },
+        "comprimento-ala": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              (document.getElementById("ala-paralela").value !== "" &&
+                document.getElementById("ala-paralela").value !== "Nenhum") ||
+              (document.getElementById("ala-perpendicular").value !== "" &&
+                document.getElementById("ala-perpendicular").value !== "Nenhum")
+            );
+          },
+        },
+        "espessura-ala": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              (document.getElementById("ala-paralela").value !== "" &&
+                document.getElementById("ala-paralela").value !== "Nenhum") ||
+              (document.getElementById("ala-perpendicular").value !== "" &&
+                document.getElementById("ala-perpendicular").value !== "Nenhum")
+            );
+          },
+        },
+        "deslocamento-esquerdo-encontro-laje": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              document.getElementById("encontro").value === "ENCONTRO LAJE"
+            );
+          },
+        },
+        "deslocamento-direito-encontro-laje": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              document.getElementById("encontro").value === "ENCONTRO LAJE"
+            );
+          },
+        },
+        "comprimento-encontro-laje": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              document.getElementById("encontro").value === "ENCONTRO LAJE"
+            );
+          },
+        },
+        "altura-longarina": { type: "number", min: 0, required: true },
+        "deslocamento-esquerdo": { type: "number", min: 0, required: true },
+        "deslocamento-direito": { type: "number", min: 0, required: true },
+        "qtd-longarinas": { type: "number", min: 0, required: true },
+        "espessura-longarina": { type: "number", min: 0, required: true },
+        "espessura-transversina": {
+          type: "number",
+          min: 0,
+          required: function () {
+            const qtdTransversinas =
+              parseInt(document.getElementById("qtd-transversinas").value) || 0;
+            return qtdTransversinas > 0;
+          },
+        },
+        "espessura-laje": { type: "number", min: 0, required: true },
+        "qtd-pilares": { type: "number", min: 0, required: true },
+        "largura-pilar": { type: "number", min: 0, required: true },
+        "comprimento-pilares": { type: "number", min: 0, required: true },
+        "altura-travessa": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              document.getElementById("tipo-travessa").value !== "" &&
+              document.getElementById("tipo-travessa").value !== "Nenhum"
+            );
+          },
+        },
+        "altura-bloco-sapata": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              document.getElementById("tipo-bloco-sapata").value !== "" &&
+              document.getElementById("tipo-bloco-sapata").value !== "Nenhum"
+            );
+          },
+        },
+        "largura-bloco-sapata": {
+          type: "number",
+          min: 0,
+          required: function () {
+            return (
+              document.getElementById("tipo-bloco-sapata").value !== "" &&
+              document.getElementById("tipo-bloco-sapata").value !== "Nenhum"
+            );
+          },
+        },
+        pavimento: { type: "text", required: true },
+      };
 
+      // Função para validar que pelo menos uma ala está selecionada quando o encontro é parede frontal portante
+      function validateAlaWithEncountro() {
+        // Obter o valor do campo encontro
+        const encontroValue = document.getElementById("encontro").value;
 
-// Função para validar que pelo menos uma ala está selecionada quando o encontro é parede frontal portante
-function validateAlaWithEncountro() {
-  // Obter o valor do campo encontro
-  const encontroValue = document.getElementById("encontro").value;
-  
-  // Obter os campos de ala
-  const alaParalelaField = document.getElementById("ala-paralela");
-  const alaPerpendicularField = document.getElementById("ala-perpendicular");
-  
-  // Obter os elementos de erro
-  const alaParalelaError = document.getElementById("ala-paralela-error");
-  const alaPerpendicularError = document.getElementById("ala-perpendicular-error");
-  
-  // Inicialmente remover classes de erro
-  alaParalelaField.classList.remove("error");
-  alaPerpendicularField.classList.remove("error");
-  
-  if (alaParalelaError) alaParalelaError.classList.remove("visible");
-  if (alaPerpendicularError) alaPerpendicularError.classList.remove("visible");
-  
-  // Se o encontro for PAREDE FRONTAL PORTANTE, pelo menos uma ala deve estar selecionada
-  if (encontroValue === "ENCONTRO - PAREDE FRONTAL PORTANTE") {
-    const alaParalelaValue = alaParalelaField.value;
-    const alaPerpendicularValue = alaPerpendicularField.value;
-    
-    // Verificar se pelo menos uma ala está selecionada e não é "Nenhum"
-    const temAlaValida = 
-      (alaParalelaValue && alaParalelaValue !== "Nenhum") || 
-      (alaPerpendicularValue && alaPerpendicularValue !== "Nenhum");
-    
-    if (!temAlaValida) {
-      // Adicionar classe de erro a ambos os campos
-      alaParalelaField.classList.add("error");
-      alaPerpendicularField.classList.add("error");
-      
-      // Exibir mensagens de erro
-      if (alaParalelaError) {
-        alaParalelaError.textContent = "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
-        alaParalelaError.classList.add("visible");
+        // Obter os campos de ala
+        const alaParalelaField = document.getElementById("ala-paralela");
+        const alaPerpendicularField =
+          document.getElementById("ala-perpendicular");
+
+        // Obter os elementos de erro
+        const alaParalelaError = document.getElementById("ala-paralela-error");
+        const alaPerpendicularError = document.getElementById(
+          "ala-perpendicular-error"
+        );
+
+        // Inicialmente remover classes de erro
+        alaParalelaField.classList.remove("error");
+        alaPerpendicularField.classList.remove("error");
+
+        if (alaParalelaError) alaParalelaError.classList.remove("visible");
+        if (alaPerpendicularError)
+          alaPerpendicularError.classList.remove("visible");
+
+        // Se o encontro for PAREDE FRONTAL PORTANTE, pelo menos uma ala deve estar selecionada
+        if (encontroValue === "ENCONTRO - PAREDE FRONTAL PORTANTE") {
+          const alaParalelaValue = alaParalelaField.value;
+          const alaPerpendicularValue = alaPerpendicularField.value;
+
+          // Verificar se pelo menos uma ala está selecionada e não é "Nenhum"
+          const temAlaValida =
+            (alaParalelaValue && alaParalelaValue !== "Nenhum") ||
+            (alaPerpendicularValue && alaPerpendicularValue !== "Nenhum");
+
+          if (!temAlaValida) {
+            // Adicionar classe de erro a ambos os campos
+            alaParalelaField.classList.add("error");
+            alaPerpendicularField.classList.add("error");
+
+            // Exibir mensagens de erro
+            if (alaParalelaError) {
+              alaParalelaError.textContent =
+                "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
+              alaParalelaError.classList.add("visible");
+            }
+
+            if (alaPerpendicularError) {
+              alaPerpendicularError.textContent =
+                "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
+              alaPerpendicularError.classList.add("visible");
+            }
+
+            return false;
+          }
+        }
+
+        return true;
       }
-      
-      if (alaPerpendicularError) {
-        alaPerpendicularError.textContent = "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
-        alaPerpendicularError.classList.add("visible");
-      }
-      
-      return false;
-    }
-  }
-  
-  return true;
-}
 
-
-
-
-      
       // Inicialização do IndexedDB
       function initDB() {
         try {
@@ -2183,73 +2195,66 @@ function validateAlaWithEncountro() {
         return valid;
       }
 
-  
-
-
-
-
       // Modificar a função validateForm() para adicionar nova validação
-function validateForm() {
-  let isValid = true;
-  const missingFields = [];
+      function validateForm() {
+        let isValid = true;
+        const missingFields = [];
 
-  // Validar campos obrigatórios
-  for (const fieldId in requiredFields) {
-    const isFieldValid = validateField(fieldId);
+        // Validar campos obrigatórios
+        for (const fieldId in requiredFields) {
+          const isFieldValid = validateField(fieldId);
 
-    if (!isFieldValid) {
-      isValid = false;
-      const field = document.getElementById(fieldId);
-      const label = document.querySelector(`label[for="${fieldId}"]`);
-      missingFields.push(
-        label ? label.textContent.replace(":", "") : fieldId
-      );
+          if (!isFieldValid) {
+            isValid = false;
+            const field = document.getElementById(fieldId);
+            const label = document.querySelector(`label[for="${fieldId}"]`);
+            missingFields.push(
+              label ? label.textContent.replace(":", "") : fieldId
+            );
 
-      // Se não estiver visível, mostrar a aba correspondente
-      const tabContent = field.closest(".tab-content");
-      if (tabContent && !tabContent.classList.contains("active")) {
-        const tabId = tabContent.id.replace("-content", "");
-        document.querySelector(`.tab[data-tab="${tabId}"]`).click();
+            // Se não estiver visível, mostrar a aba correspondente
+            const tabContent = field.closest(".tab-content");
+            if (tabContent && !tabContent.classList.contains("active")) {
+              const tabId = tabContent.id.replace("-content", "");
+              document.querySelector(`.tab[data-tab="${tabId}"]`).click();
+            }
+          }
+        }
+
+        // Validar tramos
+        const tramosValid = validateTramos();
+        if (!tramosValid) {
+          isValid = false;
+          missingFields.push("Comprimento dos Tramos (mínimo 0.5m)");
+        }
+
+        // Validar apoios
+        const apoiosValid = validateApoios();
+        if (!apoiosValid) {
+          isValid = false;
+          missingFields.push("Altura dos Apoios");
+        }
+
+        // Validar proteção lateral (deve ter pelo menos um tipo em cada lado)
+        const lateralProtectionValid = validateLateralProtection();
+        if (!lateralProtectionValid) {
+          isValid = false;
+          missingFields.push(
+            "Proteção Lateral (barreira, guarda-rodas ou calçada) em ambos os lados"
+          );
+        }
+
+        // Adicionar validação das alas com o encontro
+        const alaWithEncontroValid = validateAlaWithEncountro();
+        if (!alaWithEncontroValid) {
+          isValid = false;
+          missingFields.push(
+            "Ala obrigatória quando o encontro é Parede Frontal Portante"
+          );
+        }
+
+        return { isValid, missingFields };
       }
-    }
-  }
-
-  // Validar tramos
-  const tramosValid = validateTramos();
-  if (!tramosValid) {
-    isValid = false;
-    missingFields.push("Comprimento dos Tramos (mínimo 0.5m)");
-  }
-
-  // Validar apoios
-  const apoiosValid = validateApoios();
-  if (!apoiosValid) {
-    isValid = false;
-    missingFields.push("Altura dos Apoios");
-  }
-
-  // Validar proteção lateral (deve ter pelo menos um tipo em cada lado)
-  const lateralProtectionValid = validateLateralProtection();
-  if (!lateralProtectionValid) {
-    isValid = false;
-    missingFields.push(
-      "Proteção Lateral (barreira, guarda-rodas ou calçada) em ambos os lados"
-    );
-  }
-
-  // Adicionar validação das alas com o encontro
-  const alaWithEncontroValid = validateAlaWithEncountro();
-  if (!alaWithEncontroValid) {
-    isValid = false;
-    missingFields.push("Ala obrigatória quando o encontro é Parede Frontal Portante");
-  }
-
-  return { isValid, missingFields };
-}
-
-
-
-
 
       // Validar proteção lateral
       function validateLateralProtection() {
@@ -3843,8 +3848,6 @@ function validateForm() {
 
       // Função para obter colunas padrão para exportação CSV
       function getCsvColumns() {
-
-
         // Array com todas as colunas padrão em ordem lógica por seção
         return [
           // Informações Gerais
@@ -3924,8 +3927,6 @@ function validateForm() {
           "QTD BUZINOTES",
         ];
       }
-    
-    
     </script>
   </body>
 </html>
