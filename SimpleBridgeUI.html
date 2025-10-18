@@ -5622,40 +5622,49 @@ function exportAllWorks() {
         document.getElementById("import-modal").style.display = "block";
       }
 
-      // Validar comprimento dos tramos em relação ao comprimento total
-      function validateTramosLength() {
-        const comprimentoTotal =
-          parseFloat(document.getElementById("comprimento").value) || 0;
+     
 
-        // Somar comprimentos dos tramos
-        let somaTramos = 0;
-        const tramosFields = document.querySelectorAll(".tramo-field");
-        tramosFields.forEach((field) => {
-          somaTramos += parseFloat(field.value) || 0;
-        });
+      // Versão: 1.0
+// Função corrigida para validar o comprimento dos tramos com tolerância numérica
 
-        // Verificar se a soma dos tramos excede o comprimento total
-        if (somaTramos > comprimentoTotal) {
-          // Destacar os campos com problema
-          document.getElementById("comprimento").classList.add("error");
-          tramosFields.forEach((field) => field.classList.add("error"));
+function validateTramosLength() {
+    // Obter o comprimento total e arredondar para 2 casas decimais
+    const comprimentoTotal = parseFloat(document.getElementById("comprimento").value) || 0;
+    const comprimentoTotalArredondado = Math.round(comprimentoTotal * 100) / 100;
 
-          // Mostrar mensagem de erro
-          alert(
-            `O comprimento total dos tramos (${somaTramos.toFixed(
-              2
-            )}m) não pode exceder o comprimento da estrutura (${comprimentoTotal.toFixed(
-              2
-            )}m).`
-          );
-          return false;
-        }
+    // Somar comprimentos dos tramos
+    let somaTramos = 0;
+    const tramosFields = document.querySelectorAll(".tramo-field");
+    tramosFields.forEach((field) => {
+        somaTramos += parseFloat(field.value) || 0;
+    });
+    
+    // Arredondar a soma dos tramos para 2 casas decimais
+    const somaTramosArredondada = Math.round(somaTramos * 100) / 100;
+    
+    // Definir uma pequena tolerância para comparações de ponto flutuante
+    const epsilon = 0.01; // Tolerância de 1cm
+    
+    // Verificar se a soma dos tramos excede o comprimento total (com tolerância)
+    if (somaTramosArredondada > comprimentoTotalArredondado + epsilon) {
+        // Destacar os campos com problema
+        document.getElementById("comprimento").classList.add("error");
+        tramosFields.forEach((field) => field.classList.add("error"));
 
-        // Remover destaque de erro se estiver tudo certo
-        document.getElementById("comprimento").classList.remove("error");
-        tramosFields.forEach((field) => field.classList.remove("error"));
-        return true;
-      }
+        // Mostrar mensagem de erro com valores arredondados
+        alert(
+            `O comprimento total dos tramos (${somaTramosArredondada.toFixed(2)}m) não pode exceder o comprimento da estrutura (${comprimentoTotalArredondado.toFixed(2)}m).`
+        );
+        return false;
+    }
+    
+    // Remover destaque de erro se estiver tudo certo
+    document.getElementById("comprimento").classList.remove("error");
+    tramosFields.forEach((field) => field.classList.remove("error"));
+    return true;
+}
+
+
 
       // Atualizar evento do input de arquivo
       document.addEventListener("DOMContentLoaded", function () {
