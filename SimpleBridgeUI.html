@@ -629,14 +629,13 @@
 
       <div class="works-panel" id="works-panel" style="display: none">
         <h2>Gerenciamento de Obras</h2>
-        <div class="filter-container">
-        <input 
-        type="text" 
-        id="filter-works" 
-         placeholder="Filtrar por código..."
-          />
-          <button onclick="filterWorks()">Filtrar</button>
-        </div>
+       
+       
+<div class="filter-container">
+  <input type="text" id="filter-works" placeholder="Filtrar por código..." />
+  <input type="text" id="filter-lote" placeholder="Filtrar por lote..." />
+  <button onclick="filterWorks()">Filtrar</button>
+</div>
         <div class="works-list" id="works-list">
           <!-- Lista de obras aqui -->
           <div class="work-item">Nenhuma obra cadastrada</div>
@@ -4277,7 +4276,7 @@ if (qtdPilaresInicial === 0) {
         const sections = [
           {
             title: "Informações Gerais",
-            fields: [
+           fields: [
               "CODIGO",
               "NOME",
               "UF",
@@ -4287,6 +4286,10 @@ if (qtdPilaresInicial === 0) {
               "ENGENHEIRO",
               "TECNICO",
               "MODELADO",
+              "LOTE",
+              "FOTOS SUPERIORES",
+              "FOTOS INFERIORES",
+              "GPS"
             ],
           },
           {
@@ -5316,9 +5319,9 @@ function loadWorksList() {
   }
 }
 
-      // Filtrar obras por código
      // Filtrar obras por código e/ou lote
-function filterWorks() {
+
+     function filterWorks() {
   try {
     const filterText = document.getElementById("filter-works").value.trim().toLowerCase();
     const filterLote = document.getElementById("filter-lote").value.trim().toLowerCase();
@@ -5395,7 +5398,7 @@ function filterWorks() {
     alert("Erro ao filtrar obras: " + error.message);
   }
 }
-    
+
 
       // Exportar todas as obras para CSV
 function exportAllWorks() {
