@@ -645,9 +645,9 @@
    
 <div class="actions">
   <button type="button" onclick="createNewWork()">Nova Obra</button>
-  <button type="button" onclick="importMultipleWorks()">Importar Múltiplas Obras</button>
-  <button type="button" onclick="importPontesReferenceCSV()">Importar CSV de Pontes</button>
-  <button type="button" onclick="exportAllWorks()">Exportar Todas Obras</button>
+  <button type="button" onclick="importMultipleWorks()">Importar Obras para modelar</button>
+  <button type="button" onclick="importPontesReferenceCSV()">Importar CSV BASE DE DADOS</button>
+  <button type="button" onclick="exportAllWorks()">Exportar obras para modelar </button>
   <button type="button" class="delete-btn" onclick="clearDatabase()">Limpar Banco de Dados</button>
 </div>
 
@@ -657,14 +657,12 @@
       </div>
 
       <div class="tabs">
-        <div class="tab active" data-tab="info">Informações Gerais</div>
-        <div class="tab" data-tab="configuracao">Configurações Gerais</div>
-        <div class="tab" data-tab="transicao">Transição</div>
-        <div class="tab" data-tab="superestrutura">Superestrutura</div>
-        <div class="tab" data-tab="apoio">Apoio</div>
-        <div class="tab" data-tab="complementares">
-          Elementos Complementares
-        </div>
+        <div class="tab active" data-tab="info">INFORMAÇÕES GERAIS</div>
+        <div class="tab" data-tab="configuracao">CONFIGURAÇÕES GERAIS</div>
+        <div class="tab" data-tab="transicao">TRANSIÇÃO</div>
+        <div class="tab" data-tab="superestrutura">SUPERESTRUTURA</div>
+        <div class="tab" data-tab="apoio">APOIO</div>
+        <div class="tab" data-tab="complementares">COMPLEMENTARES</div>
       </div>
 
       <form id="oae-form">
@@ -673,7 +671,7 @@
           <h2>Informações Gerais da Obra</h2>
           <div class="form-row">
             <div class="form-group">
-              <label for="modelado">Modelado:</label>
+              <label for="modelado">MODELADO:</label>
               <input type="checkbox" id="modelado" name="MODELADO" />
             </div>
             <div class="form-group">
@@ -681,7 +679,7 @@
               <input type="checkbox" id="gps" name="GPS" />
             </div>
             <div class="form-group">
-              <label for="lote" class="required">Lote:</label>
+              <label for="lote" class="required">LOTE:</label>
               <input type="text" id="lote" name="LOTE" required />
               <div class="error-message" id="lote-error">
                 Este campo é obrigatório
@@ -699,7 +697,7 @@
               </button>
             </div>
             <div class="form-group">
-              <label for="fotos-superiores">Fotos Superiores:</label>
+              <label for="fotos-superiores">FOTOS SUPERIORES</label>
               <input
                 type="number"
                 id="fotos-superiores"
@@ -709,7 +707,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="fotos-inferiores">Fotos Inferiores:</label>
+              <label for="fotos-inferiores">FOTOS INFERIORES</label>
               <input
                 type="number"
                 id="fotos-inferiores"
@@ -720,7 +718,7 @@
             </div>
 
             <div class="form-group">
-              <label for="nome">Nome:</label>
+              <label for="nome">NOME</label>
               <input type="text" id="nome" name="NOME" />
             </div>
           </div>
@@ -732,7 +730,7 @@
 
 
             <div class="form-group">
-              <label for="rodovia">Rodovia:</label>
+              <label for="rodovia">RODOVIA</label>
               <input type="text" id="rodovia" name="RODOVIA" />
             </div>
             <div class="form-group">
@@ -742,7 +740,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="data">Data:</label>
+              <label for="data">DATA</label>
               <input
                 type="text"
                 id="data"
@@ -751,11 +749,11 @@
               />
             </div>
             <div class="form-group">
-              <label for="engenheiro">Engenheiro:</label>
+              <label for="engenheiro">ENGENHEIRO</label>
               <input type="text" id="engenheiro" name="ENGENHEIRO" />
             </div>
             <div class="form-group">
-              <label for="tecnico">Técnico:</label>
+              <label for="tecnico">TECNICO</label>
               <input type="text" id="tecnico" name="TECNICO" />
             </div>
           </div>
@@ -772,10 +770,10 @@
 
         <!-- Configurações Gerais -->
         <div class="tab-content" id="configuracao-content">
-          <h2>Configurações Gerais</h2>
+          <h2>CONFIGURAÇÕES GERAIS</h2>
           <div class="form-row">
             <div class="form-group">
-              <label for="comprimento" class="required">Comprimento (m):</label>
+              <label for="comprimento" class="required">COMPRIMENTO</label>
               <input
                 type="number"
                 id="comprimento"
@@ -789,7 +787,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="largura" class="required">Largura (m):</label>
+              <label for="largura" class="required">LARGURA</label>
               <input
                 type="number"
                 id="largura"
@@ -803,7 +801,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="altura" class="required">Altura (m):</label>
+              <label for="altura" class="required">ALTURA</label>
               <input
                 type="number"
                 id="altura"
@@ -820,7 +818,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="qtd-tramos" class="required"
-                >Quantidade de Tramos:</label
+                >QTD TRAMOS</label
               >
               <input
                 type="number"
@@ -838,7 +836,7 @@
           </div>
 
           <div id="dynamic-tramos" class="dynamic-container">
-            <h3>Comprimento dos Tramos</h3>
+            <h3>COMPRIMENTO TRAMOS</h3>
             <div id="tramos-fields" class="dynamic-fields">
               <!-- Campos gerados dinamicamente para tramos -->
             </div>
@@ -859,11 +857,11 @@
 
         <!-- Transição -->
         <div class="tab-content" id="transicao-content">
-          <h2>Transição</h2>
+          <h2>TRANSIÇÃO</h2>
           <div class="form-row">
             <div class="form-group">
               <label for="cortina-altura" class="required"
-                >Cortina Altura (m):</label
+                >CORTINA ALTURA</label
               >
               <input
                 type="number"
@@ -878,7 +876,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="ala-paralela">Ala Paralela:</label>
+              <label for="ala-paralela">ALA PARALELA</label>
               <select id="ala-paralela" name="ALA PARALELA">
                 <!-- Adicionar após o campo ala-paralela -->
                 <div class="error-message" id="ala-paralela-error">
@@ -894,7 +892,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="ala-perpendicular">Ala Perpendicular:</label>
+              <label for="ala-perpendicular">ALA PERPENDICULAR</label>
 
               <!-- Adicionar após o campo ala-perpendicular -->
               <div class="error-message" id="ala-perpendicular-error">
@@ -913,7 +911,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="comprimento-ala">Comprimento Ala (m):</label>
+              <label for="comprimento-ala">COMPRIMENTO ALA</label>
               <input
                 type="number"
                 id="comprimento-ala"
@@ -927,7 +925,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="espessura-ala">Espessura Ala (m):</label>
+              <label for="espessura-ala">ESPESSURA ALA</label>
               <input
                 type="number"
                 id="espessura-ala"
@@ -937,7 +935,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="encontro">Encontro:</label>
+              <label for="encontro">ENCONTRO</label>
               <select id="encontro" name="ENCONTRO">
                 <option value="">Selecione</option>
                 <option value="Nenhum">Nenhum</option>
@@ -951,7 +949,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="deslocamento-esquerdo-encontro-laje"
-                >Deslocamento Esquerdo Encontro Laje (m):</label
+                >DESLOCAMENTO ESQUERDO ENCONTRO LAJE:</label
               >
               <input
                 type="number"
@@ -963,7 +961,7 @@
             </div>
             <div class="form-group">
               <label for="deslocamento-direito-encontro-laje"
-                >Deslocamento Direito Encontro Laje (m):</label
+                >DESLOCAMENTO DIREITO ENCONTRO LAJE:</label
               >
               <input
                 type="number"
@@ -977,7 +975,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="comprimento-encontro-laje"
-                >Comprimento Encontro Laje (m):</label
+                >COMPRIMENTO ENCONTRO LAJE:</label
               >
               <input
                 type="number"
@@ -988,11 +986,11 @@
               />
             </div>
             <div class="form-group">
-              <label for="laje-transicao">Laje de Transição:</label>
+              <label for="laje-transicao">LAJE TRANSICAO:</label>
               <select id="laje-transicao" name="LAJE DE TRANSIÇÃO">
                 <option value="">Selecione</option>
                 <option value="Nenhum">Nenhum</option>
-                <option value="LAJE DE TRANSIÇÃO">LAJE DE TRANSIÇÃO</option>
+                <option value="LAJE TRANSIÇÃO">LAJE TRANSICAO</option>
               </select>
             </div>
           </div>
@@ -1009,11 +1007,11 @@
 
         <!-- Superestrutura -->
         <div class="tab-content" id="superestrutura-content">
-          <h2>Superestrutura</h2>
+          <h2>SUPERESTRUTURA</h2>
           <div class="form-row">
             <div class="form-group">
               <label for="altura-longarina" class="required"
-                >Altura Longarina (m):</label
+                >ALTURA LONGARINA:</label
               >
               <input
                 type="number"
@@ -1029,7 +1027,7 @@
             </div>
             <div class="form-group">
               <label for="deslocamento-esquerdo" class="required"
-                >Deslocamento Esquerdo (m):</label
+                >DESLOCAMENTO ESQUERDO:</label
               >
               <input
                 type="number"
@@ -1045,7 +1043,7 @@
             </div>
             <div class="form-group">
               <label for="deslocamento-direito" class="required"
-                >Deslocamento Direito (m):</label
+                >DESLOCAMENTO DIREITO:</label
               >
               <input
                 type="number"
@@ -1063,7 +1061,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="qtd-longarinas" class="required"
-                >Quantidade de Longarinas:</label
+                >QTD LONGARINAS</label
               >
               <input
                 type="number"
@@ -1078,7 +1076,7 @@
             </div>
             <div class="form-group">
               <label for="qtd-transversinas"
-                >Quantidade de Transversinas:</label
+                >QTD TRANSVERSINAS</label
               >
               <input
                 type="number"
@@ -1091,7 +1089,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="espessura-longarina" class="required"
-                >Espessura Longarina (m):</label
+                >ESPESSURA LONGARINA:</label
               >
               <input
                 type="number"
@@ -1107,7 +1105,7 @@
             </div>
             <div class="form-group">
               <label for="espessura-transversina"
-                >Espessura Transversina (m):</label
+                >ESPESSURA TRANSVERSINA:</label
               >
               <input
                 type="number"
@@ -1119,7 +1117,7 @@
             </div>
             <div class="form-group">
               <label for="espessura-laje" class="required"
-                >Espessura Laje (m):</label
+                >ESPESSURA LAJE:</label
               >
               <input
                 type="number"
@@ -1147,11 +1145,11 @@
 
         <!-- Apoio -->
         <div class="tab-content" id="apoio-content">
-          <h2>Apoio</h2>
+          <h2>APOIO</h2>
           <div class="form-row">
             <div class="form-group">
               <label for="qtd-pilares" class="required"
-                >Quantidade de Pilares:</label
+                >QTD PILARES</label
               >
               <input
                 type="number"
@@ -1165,7 +1163,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="pilar-descentralizado">Pilar Descentralizado:</label>
+              <label for="pilar-descentralizado">PILAR DESCENTRALIZADO:</label>
               <select id="pilar-descentralizado" name="PILAR DESCENTRALIZADO">
                 <option value="">Selecione</option>
                 <option value="Sim">Sim</option>
@@ -1173,7 +1171,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="largura-pilar">Largura do Pilar (m):</label>
+              <label for="largura-pilar">LARGURA PILAR:</label>
               <input
                 type="number"
                 id="largura-pilar"
@@ -1185,7 +1183,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="comprimento-pilares">Comprimento Pilares (m):</label>
+              <label for="comprimento-pilares">COMPRIMENTO APOIO:</label>
               <input
                 type="number"
                 id="comprimento-pilares"
@@ -1196,7 +1194,7 @@
             </div>
             <div class="form-group">
               <label for="tipo-aparelho-apoio"
-                >Tipo de Aparelho de Apoio:</label
+                >TIPO APARELHO APOIO:</label
               >
               <select id="tipo-aparelho-apoio" name="TIPO DE APARELHO DE APOIO">
                 <option value="">Selecione</option>
@@ -1209,7 +1207,7 @@
           </div>
 
           <div id="dynamic-apoios" class="dynamic-container">
-            <h3>Altura dos Apoios</h3>
+            <h3>ALTURA APOIOS</h3>
             <div id="apoios-fields" class="dynamic-fields">
               <!-- Campos gerados dinamicamente para apoios -->
             </div>
@@ -1220,8 +1218,8 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="tipo-travessa">Tipo de Travessa:</label>
-              <select id="tipo-travessa" name="TIPO DE TRAVESSA">
+              <label for="tipo-travessa">TIPO TRAVESSA</label>
+              <select id="tipo-travessa" name="TIPO TRAVESSA">
                 <option value="">Selecione</option>
                 <option value="TRAVESSA DE APOIO DE CONCRETO ARMADO">
                   TRAVESSA DE APOIO DE CONCRETO ARMADO
@@ -1230,7 +1228,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="altura-travessa">Altura Travessa (m):</label>
+              <label for="altura-travessa">ALTURA TRAVESSA</label>
               <input
                 type="number"
                 id="altura-travessa"
@@ -1243,7 +1241,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="tipo-encamisamento">Tipo de Encamisamento:</label>
+              <label for="tipo-encamisamento">TIPO ENCAMISAMENTO</label>
               <select id="tipo-encamisamento" name="TIPO DE ENCAMISAMENTO">
                 <option value="">Selecione</option>
                 <option value="ENCAMISAMENTO DE PILAR">
@@ -1255,8 +1253,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="tipo-bloco-sapata">Tipo de Bloco ou Sapata:</label>
-              <select id="tipo-bloco-sapata" name="TIPO DE BLOCO OU SAPATA">
+              <label for="tipo-bloco-sapata">TIPO BLOCO SAPATA</label>
+              <select id="tipo-bloco-sapata" name="TIPO BLOCO SAPATA">
                 <option value="">Selecione</option>
                 <option value="BLOCO OU SAPATA DE CONCRETO ARMADO">
                   BLOCO OU SAPATA DE CONCRETO ARMADO
@@ -1266,7 +1264,7 @@
             </div>
             <div class="form-group">
               <label for="altura-bloco-sapata"
-                >Altura Bloco ou Sapata (m):</label
+                >ALTURA BLOCO SAPATA:</label
               >
               <input
                 type="number"
@@ -1278,7 +1276,7 @@
             </div>
             <div class="form-group">
               <label for="largura-bloco-sapata"
-                >Largura Bloco ou Sapata (m):</label
+                >LARGURA BLOCO SAPATA:</label
               >
               <input
                 type="number"
@@ -1292,22 +1290,22 @@
           <div class="form-row">
             <div class="form-group">
               <label for="viga-contraventamento-pilar"
-                >Viga de Contraventamento de Pilar:</label
+                >VIGA CONTRAVENTAMENTO PILAR</label
               >
               <select
                 id="viga-contraventamento-pilar"
-                name="VIGA DE CONTRAVENTAMENTO DE PILAR"
+                name="VIGA DE CONTRAVENTAMENTO PILAR"
               >
                 <option value="">Selecione</option>
-                <option value="VIGA DE CONTRAVENTAMENTO DE PILAR">
-                  VIGA DE CONTRAVENTAMENTO DE PILAR
+                <option value="VIGA DE CONTRAVENTAMENTO PILAR">
+                  VIGA CONTRAVENTAMENTO DE PILAR
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
             </div>
             <div class="form-group">
               <label for="viga-ligacao-fundacoes"
-                >Viga de Ligação de Fundações:</label
+                >VIGA LIGACAO FUNDACOES</label
               >
               <select
                 id="viga-ligacao-fundacoes"
@@ -1334,10 +1332,10 @@
 
         <!-- Elementos Complementares -->
         <div class="tab-content" id="complementares-content">
-          <h2>Elementos Complementares</h2>
+          <h2>ELEMENTOS COMPLEMENTARES</h2>
           <div class="form-row">
             <div class="form-group">
-              <label for="barreira-esquerda">Barreira Esquerda:</label>
+              <label for="barreira-esquerda">BARREIRA ESQUERDA</label>
               <select id="barreira-esquerda" name="BARREIRA ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
@@ -1346,7 +1344,7 @@
             </div>
             <div class="form-group">
               <label for="largura-barreira-esquerda"
-                >Largura Barreira Esquerda (m):</label
+                >BARREIRA DIREITA:</label
               >
               <input
                 type="number"
@@ -1359,7 +1357,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="barreira-direita">Barreira Direita:</label>
+              <label for="barreira-direita">BARREIRA DIREITA</label>
               <select id="barreira-direita" name="BARREIRA DIREITA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
@@ -1368,7 +1366,7 @@
             </div>
             <div class="form-group">
               <label for="largura-barreira-direita"
-                >Largura Barreira Direita (m):</label
+                >LARGURA BARREIRA DIREITA:</label
               >
               <input
                 type="number"
@@ -1381,9 +1379,9 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="calcada-esquerda">Calçada Esquerda:</label>
-              <select id="calcada-esquerda" name="CALÇADA ESQUERDA">
-                <option value="">Selecione</option>
+              <label for="calcada-esquerda">CALCADA ESQUERDA</label>
+                  <select id="calcada-esquerda" name="CALCADA ESQUERDA">
+                  <option value="">Selecione</option>
                 <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
                 </option>
@@ -1392,7 +1390,7 @@
             </div>
             <div class="form-group">
               <label for="largura-calcada-esquerda"
-                >Largura Calçada Esquerda (m):</label
+                >LARGURA CALCADA ESQUERDA:</label
               >
               <input
                 type="number"
@@ -1405,8 +1403,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="calcada-direita">Calçada Direita:</label>
-              <select id="calcada-direita" name="CALÇADA DIREITA">
+              <label for="calcada-direita">CALCADA DIREITA</label>
+              <select id="calcada-direita" name="CALCADA DIREITA">
                 <option value="">Selecione</option>
                 <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
@@ -1416,12 +1414,12 @@
             </div>
             <div class="form-group">
               <label for="largura-calcada-direita"
-                >Largura Calçada Direita (m):</label
+                >LARGURA CALCADA DIREITA</label
               >
               <input
                 type="number"
                 id="largura-calcada-direita"
-                name="LARGURA CALÇADA DIREITA"
+                name="LARGURA CALCADA DIREITA"
                 step="0.01"
                 min="0"
               />
@@ -1429,7 +1427,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="guarda-rodas-esquerda">Guarda Rodas Esquerda:</label>
+              <label for="guarda-rodas-esquerda">GUARDA RODAS ESQUERDA</label>
               <select id="guarda-rodas-esquerda" name="GUARDA RODAS ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="GUARDA-RODAS ANTIGO DO DNER">
@@ -1440,7 +1438,7 @@
             </div>
             <div class="form-group">
               <label for="largura-guarda-rodas-esquerda"
-                >Largura Guarda Rodas Esquerda (m):</label
+                >LARGURA GUARDA RODAS ESQUERDA:</label
               >
               <input
                 type="number"
@@ -1453,7 +1451,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="guarda-rodas-direita">Guarda Rodas Direita:</label>
+              <label for="guarda-rodas-direita">GUARDA RODAS DIREITA</label>
               <select id="guarda-rodas-direita" name="GUARDA RODAS DIREITA">
                 <option value="">Selecione</option>
                 <option value="GUARDA-RODAS ANTIGO DO DNER">
@@ -1464,7 +1462,7 @@
             </div>
             <div class="form-group">
               <label for="largura-guarda-rodas-direita"
-                >Largura Guarda Rodas Direita (m):</label
+                >LARGURA GUARDA RODAS DIREITA:</label
               >
               <input
                 type="number"
@@ -1477,7 +1475,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="pavimento" class="required">Pavimento:</label>
+              <label for="pavimento" class="required">PAVIMENTO</label>
               <select id="pavimento" name="PAVIMENTO" required>
                 <option value="">Selecione</option>
                 <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
@@ -1488,7 +1486,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="qtd-buzinotes">Quantidade de Buzinotes:</label>
+              <label for="qtd-buzinotes">QTD BUZINOTES</label>
               <input
                 type="number"
                 id="qtd-buzinotes"
@@ -3178,6 +3176,453 @@ function initDB() {
   }
 }
 
+
+
+
+// Versão: 1.1
+// Processar arquivo de importação
+function processImportFile() {
+  try {
+    const fileInput = document.getElementById("csv-file-input");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert("Por favor, selecione um arquivo CSV para importar.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsText(file);
+
+    reader.onload = function (event) {
+      const csvData = event.target.result;
+      const lines = csvData.split("\n");
+
+      if (lines.length < 2) {
+        alert("O arquivo CSV não contém dados válidos.");
+        return;
+      }
+
+      // Detectar separador de forma mais robusta
+      const headerLine = lines[0];
+      let separator = ',';
+      if (headerLine.includes('\t')) separator = '\t';
+      else if (headerLine.includes(';')) separator = ';';
+      
+      console.log("Separador detectado:", separator === '\t' ? "TAB" : separator);
+
+      // Primeira linha contém os cabeçalhos
+      const headers = headerLine.split(separator).map((header) => header.trim());
+
+      // Verificar se o arquivo tem várias obras (mais de uma linha de dados)
+      if (lines.length > 2) {
+        const works = [];
+
+        // Processar cada linha (exceto a primeira que são os cabeçalhos)
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].trim() === "") continue; // Pular linhas vazias
+
+          const values = parseCSVLine(lines[i], separator);
+          if (values.length !== headers.length) {
+            console.warn(
+              `Linha ${i + 1} tem número incorreto de campos (${
+                values.length
+              } vs ${headers.length}). Tentando importar mesmo assim.`
+            );
+          }
+
+          const workData = {};
+
+          // Mapear valores para cabeçalhos
+          for (let j = 0; j < headers.length; j++) {
+            if (j < values.length) {
+              workData[headers[j]] = values[j];
+            }
+          }
+
+          // Verificar se há um código válido
+          if (workData["CODIGO"] && workData["CODIGO"].trim() !== "") {
+            works.push(workData);
+          }
+        }
+
+        if (works.length > 0) {
+          // Perguntar se o usuário quer salvar todas as obras no banco de dados
+          if (
+            confirm(
+              `O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`
+            )
+          ) {
+            saveMultipleWorks(works);
+          }
+        } else {
+          alert("Nenhuma obra válida encontrada no arquivo CSV.");
+        }
+      } else {
+        // Apenas uma obra, carregar no formulário atual
+        const values = parseCSVLine(lines[1], separator);
+        loadCSVDataToForm(headers, values);
+      }
+
+      closeImportModal();
+    };
+
+    reader.onerror = function () {
+      alert("Erro ao ler o arquivo.");
+    };
+  } catch (error) {
+    console.error("Erro ao processar arquivo:", error);
+    alert("Erro ao processar arquivo: " + error.message);
+  }
+}
+
+
+
+
+
+// Versão: 1.1
+// Função auxiliar para analisar uma linha CSV (lidando com valores entre aspas e diferentes separadores)
+function parseCSVLine(line, separator = ',') {
+  const values = [];
+  let currentValue = "";
+  let inQuotes = false;
+  
+  if (!line) return [];
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if ((char === separator) && !inQuotes) {
+      values.push(currentValue);
+      currentValue = "";
+    } else {
+      currentValue += char;
+    }
+  }
+
+  // Não esquecer do último valor
+  values.push(currentValue);
+
+  // Trim dos valores para remover espaços em branco
+  return values.map(value => value.trim());
+}
+
+
+
+
+// Versão: 1.1
+// Função para processar o conteúdo do CSV de pontes
+function processPontesCSV(csvData) {
+  try {
+    // Dividir as linhas do CSV
+    const lines = csvData.split('\n');
+    if (lines.length < 2) {
+      alert("O arquivo CSV não contém dados válidos.");
+      return;
+    }
+    
+    // Detectar o separador
+    const headerLine = lines[0];
+    let separator = ',';
+    if (headerLine.includes('\t')) separator = '\t';
+    else if (headerLine.includes(';')) separator = ';';
+    
+    console.log("Separador detectado:", separator === '\t' ? "TAB" : separator);
+    
+    // Obter os cabeçalhos
+    const headers = headerLine.split(separator).map(header => header.trim());
+    
+    // Array para armazenar as pontes
+    const pontes = [];
+    
+    // Processar cada linha de dados
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Pular linhas vazias
+      
+      // Processar linha respeitando aspas e o separador correto
+      const values = parseCSVLine(line, separator);
+      
+      if (values.length < 3) {
+        console.warn(`Linha ${i} com poucos campos (${values.length}), ignorando.`);
+        continue; // Ignorar linhas muito curtas
+      }
+      
+      // Mapear cabeçalhos para índices
+      const headerMap = {};
+      headers.forEach((header, index) => {
+        // Normalizar o cabeçalho para facilitar a correspondência
+        const normalizedHeader = header.toLowerCase().replace(/[\s"']/g, '');
+        headerMap[normalizedHeader] = index;
+      });
+      
+      // Construir objeto ponte com valores padrão
+      const ponte = {
+        Id: generateUniqueId(), // Função para gerar ID único se não existir
+        CodigoSgo: "",
+        Identificacao: "",
+        Municipio: "",
+        Uf: "",
+        Br: "",
+        Km: 0,
+        Comprimento: 0,
+        Largura: 0,
+        AnoConstrucao: "",
+        Latitude: 0,
+        Longitude: 0
+      };
+      
+      // Preencher com valores do CSV
+      // Tentar múltiplas variações de nomes para cada campo
+      ponte.Id = values[headerMap['id'] || 0] || ponte.Id;
+      ponte.CodigoSgo = values[headerMap['codigo'] || headerMap['codigosgo'] || headerMap['códigosgo'] || headerMap['código'] || 0] || "";
+      ponte.Identificacao = values[headerMap['nome'] || headerMap['identificacao'] || headerMap['identificação'] || 1] || "";
+      ponte.Municipio = values[headerMap['municipio'] || headerMap['município'] || 2] || "";
+      ponte.Uf = values[headerMap['uf'] || 3] || "";
+      ponte.Br = (values[headerMap['br'] || headerMap['rodovia'] || 4] || "").replace(/^BR-/i, "");
+      ponte.Km = parseFloat((values[headerMap['km'] || 5] || '0').toString().replace(',', '.')) || 0;
+      ponte.Comprimento = parseFloat((values[headerMap['comprimento'] || 6] || '0').toString().replace(',', '.')) || 0;
+      ponte.Largura = parseFloat((values[headerMap['largura'] || 7] || '0').toString().replace(',', '.')) || 0;
+      ponte.AnoConstrucao = values[headerMap['anoconstrucao'] || headerMap['ano'] || 8] || "";
+      ponte.Latitude = parseFloat((values[headerMap['latitude'] || headerMap['lat'] || 9] || '0').toString().replace(',', '.')) || 0;
+      ponte.Longitude = parseFloat((values[headerMap['longitude'] || headerMap['long'] || 10] || '0').toString().replace(',', '.')) || 0;
+      
+      // Verificar se o objeto tem dados mínimos (código)
+      if (ponte.CodigoSgo) {
+        pontes.push(ponte);
+      } else {
+        console.warn(`Ponte na linha ${i+1} sem código, ignorando.`);
+      }
+    }
+    
+    if (pontes.length > 0) {
+      // Salvar as pontes no banco de dados
+      savePontesReference(pontes);
+      alert(`Importação concluída: ${pontes.length} pontes de referência importadas.`);
+    } else {
+      alert("Nenhuma ponte válida encontrada no arquivo CSV.");
+    }
+  } catch (error) {
+    console.error("Erro ao processar arquivo CSV de pontes:", error);
+    alert("Erro ao processar arquivo CSV de pontes: " + error.message);
+  }
+}
+
+// Função auxiliar para gerar ID único se não existir
+function generateUniqueId() {
+  return 'ponte_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+
+
+
+// Versão: 1.1
+// Função para processar o conteúdo do CSV de pontes
+function processPontesCSV(csvData) {
+  try {
+    // Dividir as linhas do CSV
+    const lines = csvData.split('\n');
+    if (lines.length < 2) {
+      alert("O arquivo CSV não contém dados válidos.");
+      return;
+    }
+    
+    // Detectar o separador
+    const headerLine = lines[0];
+    let separator = ',';
+    if (headerLine.includes('\t')) separator = '\t';
+    else if (headerLine.includes(';')) separator = ';';
+    
+    console.log("Separador detectado:", separator === '\t' ? "TAB" : separator);
+    
+    // Obter os cabeçalhos
+    const headers = headerLine.split(separator).map(header => header.trim());
+    
+    // Array para armazenar as pontes
+    const pontes = [];
+    
+    // Processar cada linha de dados
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Pular linhas vazias
+      
+      // Processar linha respeitando aspas e o separador correto
+      const values = parseCSVLine(line, separator);
+      
+      if (values.length < 3) {
+        console.warn(`Linha ${i} com poucos campos (${values.length}), ignorando.`);
+        continue; // Ignorar linhas muito curtas
+      }
+      
+      // Mapear cabeçalhos para índices
+      const headerMap = {};
+      headers.forEach((header, index) => {
+        // Normalizar o cabeçalho para facilitar a correspondência
+        const normalizedHeader = header.toLowerCase().replace(/[\s"']/g, '');
+        headerMap[normalizedHeader] = index;
+      });
+      
+      // Construir objeto ponte com valores padrão
+      const ponte = {
+        Id: generateUniqueId(), // Função para gerar ID único se não existir
+        CodigoSgo: "",
+        Identificacao: "",
+        Municipio: "",
+        Uf: "",
+        Br: "",
+        Km: 0,
+        Comprimento: 0,
+        Largura: 0,
+        AnoConstrucao: "",
+        Latitude: 0,
+        Longitude: 0
+      };
+      
+      // Preencher com valores do CSV
+      // Tentar múltiplas variações de nomes para cada campo
+      ponte.Id = values[headerMap['id'] || 0] || ponte.Id;
+      ponte.CodigoSgo = values[headerMap['codigo'] || headerMap['codigosgo'] || headerMap['códigosgo'] || headerMap['código'] || 0] || "";
+      ponte.Identificacao = values[headerMap['nome'] || headerMap['identificacao'] || headerMap['identificação'] || 1] || "";
+      ponte.Municipio = values[headerMap['municipio'] || headerMap['município'] || 2] || "";
+      ponte.Uf = values[headerMap['uf'] || 3] || "";
+      ponte.Br = (values[headerMap['br'] || headerMap['rodovia'] || 4] || "").replace(/^BR-/i, "");
+      ponte.Km = parseFloat((values[headerMap['km'] || 5] || '0').toString().replace(',', '.')) || 0;
+      ponte.Comprimento = parseFloat((values[headerMap['comprimento'] || 6] || '0').toString().replace(',', '.')) || 0;
+      ponte.Largura = parseFloat((values[headerMap['largura'] || 7] || '0').toString().replace(',', '.')) || 0;
+      ponte.AnoConstrucao = values[headerMap['anoconstrucao'] || headerMap['ano'] || 8] || "";
+      ponte.Latitude = parseFloat((values[headerMap['latitude'] || headerMap['lat'] || 9] || '0').toString().replace(',', '.')) || 0;
+      ponte.Longitude = parseFloat((values[headerMap['longitude'] || headerMap['long'] || 10] || '0').toString().replace(',', '.')) || 0;
+      
+      // Verificar se o objeto tem dados mínimos (código)
+      if (ponte.CodigoSgo) {
+        pontes.push(ponte);
+      } else {
+        console.warn(`Ponte na linha ${i+1} sem código, ignorando.`);
+      }
+    }
+    
+    if (pontes.length > 0) {
+      // Salvar as pontes no banco de dados
+      savePontesReference(pontes);
+      alert(`Importação concluída: ${pontes.length} pontes de referência importadas.`);
+    } else {
+      alert("Nenhuma ponte válida encontrada no arquivo CSV.");
+    }
+  } catch (error) {
+    console.error("Erro ao processar arquivo CSV de pontes:", error);
+    alert("Erro ao processar arquivo CSV de pontes: " + error.message);
+  }
+}
+
+// Função auxiliar para gerar ID único se não existir
+function generateUniqueId() {
+  return 'ponte_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+
+
+
+// Versão: 1.1
+// Carregar dados do CSV para o formulário
+function loadCSVDataToForm(headers, values) {
+  try {
+    clearForm(); // Limpar o formulário antes
+    
+    console.log("Carregando dados CSV para o formulário:", headers);
+    console.log("Valores:", values);
+
+    // Mapear valores para os campos do formulário
+    const fieldsProcessed = new Set();
+    
+    for (let i = 0; i < headers.length; i++) {
+      const header = headers[i].trim();
+      if (i < values.length && header) {
+        const value = values[i];
+        
+        // Adicionar ao conjunto de campos processados
+        fieldsProcessed.add(header);
+
+        // Tratar campos especiais
+        if (header === "MODELADO") {
+          document.getElementById("modelado").checked = 
+            value.toLowerCase() === "true" || value === "TRUE";
+        } 
+        else if (header === "GPS") {
+          if (document.getElementById("gps")) {
+            document.getElementById("gps").checked = 
+              value.toLowerCase() === "true" || value === "TRUE";
+          }
+        }
+        else if (header === "COMPRIMENTO TRAMOS") {
+          if (value) {
+            const tramos = value.split(";");
+            document.getElementById("qtd-tramos").value = tramos.length;
+            generateTramosFields(); // Regenerar campos de tramos
+
+            // Preencher valores dos tramos
+            const tramosFields = document.querySelectorAll(".tramo-field");
+            for (let j = 0; j < tramosFields.length; j++) {
+              if (j < tramos.length) {
+                tramosFields[j].value = tramos[j];
+              }
+            }
+          }
+        } 
+        else if (header === "ALTURA DO APOIO") {
+          if (value) {
+            const apoios = value.split(";");
+            // Os apoios são regenerados com base nos tramos
+
+            // Preencher valores dos apoios
+            const apoiosFields = document.querySelectorAll(".apoio-field");
+            for (let j = 0; j < apoiosFields.length; j++) {
+              if (j < apoios.length) {
+                apoiosFields[j].value = apoios[j];
+              }
+            }
+          }
+        } 
+        else {
+          // Outros campos - procurar pelo nome ou pelo ID
+          const fieldByName = document.querySelector(`[name="${header}"]`);
+          const fieldById = document.getElementById(header.toLowerCase().replace(/\s+/g, "-"));
+          
+          if (fieldByName) {
+            fieldByName.value = value;
+          } 
+          else if (fieldById) {
+            fieldById.value = value;
+          }
+          else {
+            console.log(`Campo não encontrado para cabeçalho: ${header}`);
+          }
+        }
+      }
+    }
+
+    // Definir o código atual
+    const codigoField = document.getElementById("codigo");
+    if (codigoField && codigoField.value) {
+      currentWorkCode = codigoField.value;
+      console.log("Código atual definido:", currentWorkCode);
+    }
+
+    // Verificar campos obrigatórios não processados
+    console.log("Campos processados:", fieldsProcessed);
+    
+    // Executar validação após carregar
+    validateForm();
+  } catch (error) {
+    console.error("Erro ao carregar dados do CSV:", error);
+    alert("Erro ao carregar dados do CSV: " + error.message);
+  }
+}
+
+
+
+// Versão: 1.1
 // Função para importar CSV de pontes para referência
 function importPontesReferenceCSV() {
   try {
@@ -3191,15 +3636,32 @@ function importPontesReferenceCSV() {
     fileInput.addEventListener('change', function() {
       if (this.files && this.files[0]) {
         const file = this.files[0];
+        console.log("Arquivo selecionado:", file.name, file.size);
+        
+        // Adicionar notificação visual
+        const notification = document.createElement('div');
+        notification.textContent = `Processando arquivo: ${file.name}`;
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.padding = '10px 20px';
+        notification.style.background = 'rgba(52, 152, 219, 0.9)';
+        notification.style.color = 'white';
+        notification.style.borderRadius = '5px';
+        notification.style.zIndex = '1000';
+        document.body.appendChild(notification);
+        
         const reader = new FileReader();
         
         reader.onload = function(event) {
           const csvData = event.target.result;
-          processPontesReferenceCSV(csvData);
+          processPontesCSV(csvData);
+          document.body.removeChild(notification);
         };
         
         reader.onerror = function() {
           alert("Erro ao ler o arquivo.");
+          document.body.removeChild(notification);
         };
         
         reader.readAsText(file);
@@ -3216,6 +3678,9 @@ function importPontesReferenceCSV() {
     alert("Erro ao importar referência de pontes: " + error.message);
   }
 }
+
+
+
 
 // Função para processar o conteúdo do CSV de pontes para referência
 function processPontesReferenceCSV(csvData) {
@@ -4826,119 +5291,7 @@ if (qtdPilaresInicial === 0) {
         document.getElementById("import-modal").style.display = "none";
       }
 
-      // Processar arquivo de importação
-      function processImportFile() {
-        try {
-          const fileInput = document.getElementById("csv-file-input");
-          const file = fileInput.files[0];
-
-          if (!file) {
-            alert("Por favor, selecione um arquivo CSV para importar.");
-            return;
-          }
-
-          const reader = new FileReader();
-          reader.readAsText(file);
-
-          reader.onload = function (event) {
-            const csvData = event.target.result;
-            const lines = csvData.split("\n");
-
-            if (lines.length < 2) {
-              alert("O arquivo CSV não contém dados válidos.");
-              return;
-            }
-
-            // Primeira linha contém os cabeçalhos
-            const headers = lines[0].split(",").map((header) => header.trim());
-
-            // Verificar se o arquivo tem várias obras (mais de uma linha de dados)
-            if (lines.length > 2) {
-              const works = [];
-
-              // Processar cada linha (exceto a primeira que são os cabeçalhos)
-              for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === "") continue; // Pular linhas vazias
-
-                const values = parseCSVLine(lines[i]);
-                if (values.length !== headers.length) {
-                  console.warn(
-                    `Linha ${i + 1} tem número incorreto de campos (${
-                      values.length
-                    } vs ${headers.length}). Tentando importar mesmo assim.`
-                  );
-                }
-
-                const workData = {};
-
-                // Mapear valores para cabeçalhos
-                for (let j = 0; j < headers.length; j++) {
-                  if (j < values.length) {
-                    workData[headers[j]] = values[j];
-                  }
-                }
-
-                // Verificar se há um código válido
-                if (workData["CODIGO"] && workData["CODIGO"].trim() !== "") {
-                  works.push(workData);
-                }
-              }
-
-              if (works.length > 0) {
-                // Perguntar se o usuário quer salvar todas as obras no banco de dados
-                if (
-                  confirm(
-                    `O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`
-                  )
-                ) {
-                  saveMultipleWorks(works);
-                }
-              } else {
-                alert("Nenhuma obra válida encontrada no arquivo CSV.");
-              }
-            } else {
-              // Apenas uma obra, carregar no formulário atual
-              const values = parseCSVLine(lines[1]);
-              loadCSVDataToForm(headers, values);
-            }
-
-            closeImportModal();
-          };
-
-          reader.onerror = function () {
-            alert("Erro ao ler o arquivo.");
-          };
-        } catch (error) {
-          console.error("Erro ao processar arquivo:", error);
-          alert("Erro ao processar arquivo: " + error.message);
-        }
-      }
-
-      // Função auxiliar para analisar uma linha CSV (lidando com valores entre aspas)
-      function parseCSVLine(line) {
-        const values = [];
-        let currentValue = "";
-        let inQuotes = false;
-
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === "," && !inQuotes) {
-            values.push(currentValue);
-            currentValue = "";
-          } else {
-            currentValue += char;
-          }
-        }
-
-        // Não esquecer do último valor
-        values.push(currentValue);
-
-        return values;
-      }
-
+    
       // Carregar dados do CSV para o formulário
       function loadCSVDataToForm(headers, values) {
         try {
@@ -6059,139 +6412,7 @@ function importPontesCSV() {
   }
 }
 
-// Função para processar o conteúdo do CSV de pontes
-function processPontesCSV(csvData) {
-  try {
-    // Dividir as linhas do CSV
-    const lines = csvData.split('\n');
-    if (lines.length < 2) {
-      alert("O arquivo CSV não contém dados válidos.");
-      return;
-    }
-    
-    // Verificar o separador correto (pode ser ; ou ,)
-    const separator = lines[0].includes(';') ? ';' : ',';
-    
-    // Obter os cabeçalhos (primeira linha)
-    const headers = lines[0].split(separator).map(header => header.trim());
-    
-    // Verificar se os cabeçalhos esperados existem
-    const requiredHeaders = ["Id", "CodigoSgo", "Identificacao", "Uf", "Br", "Km"];
-    const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
-    
-    if (missingHeaders.length > 0) {
-      alert("O arquivo CSV não contém os cabeçalhos esperados: " + missingHeaders.join(", "));
-      return;
-    }
-    
-    // Array para armazenar as obras convertidas
-    const obras = [];
-    
-    // Processar cada linha de dados (exceto a primeira que são os cabeçalhos)
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim() === "") continue; // Pular linhas vazias
-      
-      const values = lines[i].split(separator);
-      if (values.length !== headers.length) {
-        console.warn(`Linha ${i + 1} tem número incorreto de campos. Tentando processar mesmo assim.`);
-      }
-      
-      // Criar um objeto para mapear os valores para os índices de cabeçalho
-      const rowData = {};
-      headers.forEach((header, index) => {
-        if (index < values.length) {
-          rowData[header] = values[index].trim();
-        }
-      });
-      
-      // Mapear os dados da ponte para o formato OAE
-      const obra = {
-        CODIGO: rowData.CodigoSgo || "",
-        NOME: rowData.Identificacao || "",
-        UF: rowData.Uf || "",
-        RODOVIA: rowData.Br ? `BR-${rowData.Br}` : "",
-        KM: parseFloat(rowData.Km) || 0,
-        LOTE: `BR-${rowData.Br || "000"}`, // Criar um lote baseado na BR
-        MODELADO: "FALSE",
-        GPS: "FALSE",
-        "FOTOS SUPERIORES": "0",
-        "FOTOS INFERIORES": "0",
-        COMPRIMENTO: "0",
-        LARGURA: "0",
-        ALTURA: "0",
-        "QTD TRAMOS": "1",
-        "COMPRIMENTO TRAMOS": "0.5",
-        "CORTINA ALTURA": "0",
-        "ALTURA LONGARINA": "0",
-        "DESLOCAMENTO ESQUERDO": "0",
-        "DESLOCAMENTO DIREITO": "0",
-        "QTD LONGARINAS": "0",
-        "ESPESSURA LONGARINA": "0",
-        "ESPESSURA LAJE": "0",
-        "QTD PILARES": "0",
-        PAVIMENTO: "PAVIMENTO ASFÁLTICO"
-      };
-      
-      // Se houver um código válido, adicionar à lista
-      if (obra.CODIGO && obra.CODIGO.trim() !== "") {
-        obras.push(obra);
-      }
-    }
-    
-    if (obras.length > 0) {
-      // Perguntar ao usuário se deseja salvar todas as pontes no banco de dados
-      if (confirm(`O arquivo contém ${obras.length} pontes. Deseja importar todas para o banco de dados?`)) {
-        saveMultipleWorks(obras);
-      }
-    } else {
-      alert("Nenhuma ponte válida encontrada no arquivo CSV.");
-    }
-  } catch (error) {
-    console.error("Erro ao processar arquivo CSV de pontes:", error);
-    alert("Erro ao processar arquivo CSV de pontes: " + error.message);
-  }
-}
 
-
-
-// Função para importar CSV de pontes de referência (mantendo nome original)
-function importPontesReferenceCSV() {
-  try {
-    // Criar um input de arquivo oculto
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.csv';
-    fileInput.style.display = 'none';
-    document.body.appendChild(fileInput);
-    
-    fileInput.addEventListener('change', function() {
-      if (this.files && this.files[0]) {
-        const file = this.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = function(event) {
-          const csvData = event.target.result;
-          processPontesCSV(csvData);
-        };
-        
-        reader.onerror = function() {
-          alert("Erro ao ler o arquivo.");
-        };
-        
-        reader.readAsText(file);
-      }
-      
-      // Remover o input após uso
-      document.body.removeChild(fileInput);
-    });
-    
-    // Acionar o clique para abrir o seletor de arquivos
-    fileInput.click();
-  } catch (error) {
-    console.error("Erro ao importar CSV de pontes:", error);
-    alert("Erro ao importar CSV de pontes: " + error.message);
-  }
-}
 
 // Função para processar o conteúdo do CSV de pontes
 function processPontesCSV(csvData) {
