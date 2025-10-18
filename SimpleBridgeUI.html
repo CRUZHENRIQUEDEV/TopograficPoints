@@ -463,13 +463,29 @@
         color: #e3f2fd;
       }
 
-      .error-message {
-        color: #e74c3c;
-        font-size: 12px;
-        margin-top: 4px;
-        display: none;
+      /* Mantenha o posicionamento absoluto */
+      .form-group {
+        position: relative;
       }
 
+      .error-message {
+        display: none; /* Esconde por padrão */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        color: #e74c3c;
+        font-size: 12px;
+        background: rgba(231, 76, 60, 0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+        z-index: 10;
+        width: 100%;
+      }
+
+      /* Exibe apenas quando tem a classe visible */
+      .error-message.visible {
+        display: block;
+      }
       .error-message.visible {
         display: block;
         animation: fadeIn 0.3s ease;
@@ -614,10 +630,10 @@
       <div class="works-panel" id="works-panel" style="display: none">
         <h2>Gerenciamento de Obras</h2>
         <div class="filter-container">
-          <input
-            type="text"
-            id="filter-works"
-            placeholder="Filtrar por código..."
+        <input 
+        type="text" 
+        id="filter-works" 
+         placeholder="Filtrar por código..."
           />
           <button onclick="filterWorks()">Filtrar</button>
         </div>
@@ -625,18 +641,20 @@
           <!-- Lista de obras aqui -->
           <div class="work-item">Nenhuma obra cadastrada</div>
         </div>
-        <div class="actions">
-          <button type="button" onclick="createNewWork()">Nova Obra</button>
-          <button type="button" onclick="importMultipleWorks()">
-            Importar Múltiplas Obras
-          </button>
-          <button type="button" onclick="exportAllWorks()">
-            Exportar Todas Obras
-          </button>
-          <button type="button" class="delete-btn" onclick="clearDatabase()">
-            Limpar Banco de Dados
-          </button>
-        </div>
+       
+       
+   
+<div class="actions">
+  <button type="button" onclick="createNewWork()">Nova Obra</button>
+  <button type="button" onclick="importMultipleWorks()">Importar Múltiplas Obras</button>
+  <button type="button" onclick="importPontesReferenceCSV()">Importar CSV de Pontes</button>
+  <button type="button" onclick="exportAllWorks()">Exportar Todas Obras</button>
+  <button type="button" class="delete-btn" onclick="clearDatabase()">Limpar Banco de Dados</button>
+</div>
+
+
+
+
       </div>
 
       <div class="tabs">
@@ -670,13 +688,16 @@
                 Este campo é obrigatório
               </div>
             </div>
-          </div>
+          </div>        
 
-          <!-- Segunda linha: Código, Fotos Superiores, Fotos Inferiores -->
-          <div class="form-row">
-            <div class="form-group">
-              <label for="codigo">Código:</label>
-              <input type="text" id="codigo" name="CODIGO" required />
+          <!-- Adicione também um botão para buscar pontes no formulário principal, próximo ao campo código -->
+          <div class="form-group">
+            <label for="codigo">Código:</label>
+            <div style="display: flex; gap: 5px;">
+              <input type="text" id="codigo" name="CODIGO" required style="flex-grow: 1;" />
+              <button type="button" onclick="showSearchPontesModal()" title="Buscar ponte de referência">
+                Buscar
+              </button>
             </div>
             <div class="form-group">
               <label for="fotos-superiores">Fotos Superiores:</label>
@@ -710,8 +731,6 @@
               <input type="text" id="uf" name="UF" />
             </div>
 
-            <!-- Versão: 1.0 -->
-            <!-- Adicionar estes novos campos na seção de Informações Gerais (dentro da div com id "info-content") -->
 
             <div class="form-group">
               <label for="rodovia">Rodovia:</label>
@@ -1644,248 +1663,1987 @@
           </button>
         </div>
       </div>
-    </div>
+
+
+        <button type="button" onclick="showExportLoteModal()">Exportar por Lote</button>
+
+        <!-- Modal para exportar por lote -->
+        <div id="export-lote-modal" class="modal">
+          <div class="modal-content">
+            <span class="close-modal" onclick="closeExportLoteModal()">&times;</span>
+            <h3>Exportar Obras por Lote</h3>
+            <div class="form-group">
+              <label for="export-lote-select">Selecione o Lote:</label>
+              <select id="export-lote-select">
+                <!-- Opções serão preenchidas dinamicamente -->
+              </select>
+            </div>
+            <div class="actions">
+              <button type="button" onclick="exportLoteWorks()">Exportar</button>
+              <button type="button" onclick="closeExportLoteModal()">Cancelar</button>
+            </div>
+          </div>
+        </div>
 
     <script>
-      // Versão: 4.0
 
-      // Declarando variáveis globais uma única vez
       var db;
       var saveReminderInterval;
       var currentWorkCode = null;
 
-      const requiredFields = {
-        lote: { type: "text", min: null, required: true },
-        codigo: { type: "text", min: null, required: true },
-        comprimento: { type: "number", min: 0, required: true },
-        largura: { type: "number", min: 0, required: true },
-        altura: { type: "number", min: 0, required: true },
-        "qtd-tramos": { type: "number", min: 1, required: true },
-        "cortina-altura": { type: "number", min: 0, required: true },
-        "ala-paralela": {
-          type: "text",
-          required: function () {
-            // Se o encontro é parede frontal portante e não tem ala perpendicular, então a paralela é obrigatória
-            return (
-              document.getElementById("encontro").value ===
-                "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
-              (document.getElementById("ala-perpendicular").value === "" ||
-                document.getElementById("ala-perpendicular").value === "Nenhum")
-            );
-          },
-        },
-        "ala-perpendicular": {
-          type: "text",
-          required: function () {
-            // Se o encontro é parede frontal portante e não tem ala paralela, então a perpendicular é obrigatória
-            return (
-              document.getElementById("encontro").value ===
-                "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
-              (document.getElementById("ala-paralela").value === "" ||
-                document.getElementById("ala-paralela").value === "Nenhum")
-            );
-          },
-        },
-        "comprimento-ala": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              (document.getElementById("ala-paralela").value !== "" &&
-                document.getElementById("ala-paralela").value !== "Nenhum") ||
-              (document.getElementById("ala-perpendicular").value !== "" &&
-                document.getElementById("ala-perpendicular").value !== "Nenhum")
-            );
-          },
-        },
-        "espessura-ala": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              (document.getElementById("ala-paralela").value !== "" &&
-                document.getElementById("ala-paralela").value !== "Nenhum") ||
-              (document.getElementById("ala-perpendicular").value !== "" &&
-                document.getElementById("ala-perpendicular").value !== "Nenhum")
-            );
-          },
-        },
-        "deslocamento-esquerdo-encontro-laje": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              document.getElementById("encontro").value === "ENCONTRO LAJE"
-            );
-          },
-        },
-        "deslocamento-direito-encontro-laje": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              document.getElementById("encontro").value === "ENCONTRO LAJE"
-            );
-          },
-        },
-        "comprimento-encontro-laje": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              document.getElementById("encontro").value === "ENCONTRO LAJE"
-            );
-          },
-        },
-        "altura-longarina": { type: "number", min: 0, required: true },
-        "deslocamento-esquerdo": { type: "number", min: 0, required: true },
-        "deslocamento-direito": { type: "number", min: 0, required: true },
-        "qtd-longarinas": { type: "number", min: 0, required: true },
-        "espessura-longarina": { type: "number", min: 0, required: true },
-        "espessura-transversina": {
-          type: "number",
-          min: 0,
-          required: function () {
-            const qtdTransversinas =
-              parseInt(document.getElementById("qtd-transversinas").value) || 0;
-            return qtdTransversinas > 0;
-          },
-        },
-        "espessura-laje": { type: "number", min: 0, required: true },
-        "qtd-pilares": { type: "number", min: 0, required: true },
-        "largura-pilar": { type: "number", min: 0, required: true },
-        "comprimento-pilares": { type: "number", min: 0, required: true },
-        "altura-travessa": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              document.getElementById("tipo-travessa").value !== "" &&
-              document.getElementById("tipo-travessa").value !== "Nenhum"
-            );
-          },
-        },
-        "altura-bloco-sapata": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              document.getElementById("tipo-bloco-sapata").value !== "" &&
-              document.getElementById("tipo-bloco-sapata").value !== "Nenhum"
-            );
-          },
-        },
-        "largura-bloco-sapata": {
-          type: "number",
-          min: 0,
-          required: function () {
-            return (
-              document.getElementById("tipo-bloco-sapata").value !== "" &&
-              document.getElementById("tipo-bloco-sapata").value !== "Nenhum"
-            );
-          },
-        },
-        pavimento: { type: "text", required: true },
-      };
 
-      // Função para validar que pelo menos uma ala está selecionada quando o encontro é parede frontal portante
-      function validateAlaWithEncountro() {
-        // Obter o valor do campo encontro
-        const encontroValue = document.getElementById("encontro").value;
+      // Versão: 1.0
+// CORREÇÕES PARA ERROS DE REFERÊNCIA
 
-        // Obter os campos de ala
-        const alaParalelaField = document.getElementById("ala-paralela");
-        const alaPerpendicularField =
-          document.getElementById("ala-perpendicular");
+// 1. Correção para validateAlaWithEncountro
+// Função que estava faltando e causando erro
+function validateAlaWithEncountro() {
+  // Obter o valor do campo encontro
+  const encontroValue = document.getElementById("encontro").value;
 
-        // Obter os elementos de erro
-        const alaParalelaError = document.getElementById("ala-paralela-error");
-        const alaPerpendicularError = document.getElementById(
-          "ala-perpendicular-error"
+  // Obter os campos de ala
+  const alaParalelaField = document.getElementById("ala-paralela");
+  const alaPerpendicularField = document.getElementById("ala-perpendicular");
+
+  // Obter os elementos de erro
+  const alaParalelaError = document.getElementById("ala-paralela-error");
+  const alaPerpendicularError = document.getElementById("ala-perpendicular-error");
+
+  // Inicialmente remover classes de erro
+  if (alaParalelaField) alaParalelaField.classList.remove("error");
+  if (alaPerpendicularField) alaPerpendicularField.classList.remove("error");
+
+  if (alaParalelaError) alaParalelaError.classList.remove("visible");
+  if (alaPerpendicularError) alaPerpendicularError.classList.remove("visible");
+
+  // Se o encontro for PAREDE FRONTAL PORTANTE, pelo menos uma ala deve estar selecionada
+  if (encontroValue === "ENCONTRO - PAREDE FRONTAL PORTANTE") {
+    const alaParalelaValue = alaParalelaField ? alaParalelaField.value : "";
+    const alaPerpendicularValue = alaPerpendicularField ? alaPerpendicularField.value : "";
+
+    // Verificar se pelo menos uma ala está selecionada e não é "Nenhum"
+    const temAlaValida =
+      (alaParalelaValue && alaParalelaValue !== "Nenhum") ||
+      (alaPerpendicularValue && alaPerpendicularValue !== "Nenhum");
+
+    if (!temAlaValida) {
+      // Adicionar classe de erro a ambos os campos
+      if (alaParalelaField) alaParalelaField.classList.add("error");
+      if (alaPerpendicularField) alaPerpendicularField.classList.add("error");
+
+      // Exibir mensagens de erro
+      if (alaParalelaError) {
+        alaParalelaError.textContent =
+          "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
+        alaParalelaError.classList.add("visible");
+      }
+
+      if (alaPerpendicularError) {
+        alaPerpendicularError.textContent =
+          "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
+        alaPerpendicularError.classList.add("visible");
+      }
+
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// 2. Adicionar função debugLog que estava ausente (usada na consultarRodoviasDNIT)
+function debugLog(message) {
+  if (window.console && window.console.log) {
+    console.log(message);
+  }
+}
+
+// 3. Verificar se o objeto requiredFields existe antes de usá-lo no validateForm
+function checkAndCreateRequiredFields() {
+  // Se o objeto já existir, não fazer nada
+  if (window.requiredFields) {
+    return;
+  }
+  
+  // Criar o objeto requiredFields caso ele não exista
+  window.requiredFields = {
+    lote: { type: "text", min: null, required: true },
+    codigo: { type: "text", min: null, required: true },
+    comprimento: { type: "number", min: 0, required: true },
+    largura: { type: "number", min: 0, required: true },
+    altura: { type: "number", min: 0, required: true },
+    "qtd-tramos": { type: "number", min: 1, required: true },
+    "cortina-altura": { type: "number", min: 0, required: true },
+    "ala-paralela": {
+      type: "text",
+      required: function () {
+        const encontroField = document.getElementById("encontro");
+        const alaPerpendicularField = document.getElementById("ala-perpendicular");
+        
+        if (!encontroField || !alaPerpendicularField) return false;
+        
+        // Se o encontro é parede frontal portante e não tem ala perpendicular, então a paralela é obrigatória
+        return (
+          encontroField.value === "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
+          (alaPerpendicularField.value === "" || alaPerpendicularField.value === "Nenhum")
         );
+      },
+    },
+    "ala-perpendicular": {
+      type: "text",
+      required: function () {
+        const encontroField = document.getElementById("encontro");
+        const alaParalelaField = document.getElementById("ala-paralela");
+        
+        if (!encontroField || !alaParalelaField) return false;
+        
+        // Se o encontro é parede frontal portante e não tem ala paralela, então a perpendicular é obrigatória
+        return (
+          encontroField.value === "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
+          (alaParalelaField.value === "" || alaParalelaField.value === "Nenhum")
+        );
+      },
+    },
+    "comprimento-ala": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const alaParalelaField = document.getElementById("ala-paralela");
+        const alaPerpendicularField = document.getElementById("ala-perpendicular");
+        
+        if (!alaParalelaField || !alaPerpendicularField) return false;
+        
+        return (
+          (alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum") ||
+          (alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum")
+        );
+      },
+    },
+    "espessura-ala": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const alaParalelaField = document.getElementById("ala-paralela");
+        const alaPerpendicularField = document.getElementById("ala-perpendicular");
+        
+        if (!alaParalelaField || !alaPerpendicularField) return false;
+        
+        return (
+          (alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum") ||
+          (alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum")
+        );
+      },
+    },
+    "deslocamento-esquerdo-encontro-laje": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const encontroField = document.getElementById("encontro");
+        return encontroField && encontroField.value === "ENCONTRO LAJE";
+      },
+    },
+    "deslocamento-direito-encontro-laje": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const encontroField = document.getElementById("encontro");
+        return encontroField && encontroField.value === "ENCONTRO LAJE";
+      },
+    },
+    "comprimento-encontro-laje": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const encontroField = document.getElementById("encontro");
+        return encontroField && encontroField.value === "ENCONTRO LAJE";
+      },
+    },
+    "altura-longarina": { type: "number", min: 0, required: true },
+    "deslocamento-esquerdo": { type: "number", min: 0, required: true },
+    "deslocamento-direito": { type: "number", min: 0, required: true },
+    "qtd-longarinas": { type: "number", min: 0, required: true },
+    "espessura-longarina": { type: "number", min: 0, required: true },
+    "espessura-transversina": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const qtdTransversinasField = document.getElementById("qtd-transversinas");
+        const qtdTransversinas = parseInt(qtdTransversinasField ? qtdTransversinasField.value : 0) || 0;
+        return qtdTransversinas > 0;
+      },
+    },
+    "espessura-laje": { type: "number", min: 0, required: true },
+    "qtd-pilares": { type: "number", min: 0, required: true },
+    "largura-pilar": { 
+      type: "number", 
+      min: 0, 
+      required: function() {
+        const qtdPilaresField = document.getElementById("qtd-pilares");
+        const qtdPilares = parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
+        return qtdPilares > 0;
+      } 
+    },
+    "comprimento-pilares": { 
+      type: "number", 
+      min: 0, 
+      required: function() {
+        const qtdPilaresField = document.getElementById("qtd-pilares");
+        const qtdPilares = parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
+        return qtdPilares > 0;
+      } 
+    },
+    "altura-travessa": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const tipoTravessaField = document.getElementById("tipo-travessa");
+        return tipoTravessaField && 
+               tipoTravessaField.value !== "" && 
+               tipoTravessaField.value !== "Nenhum";
+      },
+    },
+    "altura-bloco-sapata": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
+        return tipoBlocoSapataField && 
+               tipoBlocoSapataField.value !== "" && 
+               tipoBlocoSapataField.value !== "Nenhum";
+      },
+    },
+    "largura-bloco-sapata": {
+      type: "number",
+      min: 0,
+      required: function () {
+        const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
+        return tipoBlocoSapataField && 
+               tipoBlocoSapataField.value !== "" && 
+               tipoBlocoSapataField.value !== "Nenhum";
+      },
+    },
+    pavimento: { type: "text", required: true },
+  };
+  
+  console.log("Objeto requiredFields criado com sucesso.");
+}
 
-        // Inicialmente remover classes de erro
-        alaParalelaField.classList.remove("error");
-        alaPerpendicularField.classList.remove("error");
+// 4. Função para consultar a API do DNIT corrigida (sem a referência a debugLog)
+async function consultarRodoviasDNIT(lat, lng) {
+  try {
+    if (!lat || !lng) {
+      throw new Error("Latitude e longitude são necessárias para consulta");
+    }
+    
+    const dataRef = new Date().toISOString().split('T')[0];
+    const url = `https://servicos.dnit.gov.br/sgplan/apigeo/rotas/localizarkm?lng=${lng}&lat=${lat}&r=250&data=${dataRef}`;
+    
+    console.log(`Consultando DNIT: ${url}`);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      mode: 'cors'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API DNIT: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log(`Resposta DNIT:`, data);
+    
+    return data;
+  } catch (error) {
+    console.error(`Erro ao consultar DNIT: ${error.message}`);
+    return null;
+  }
+}
 
-        if (alaParalelaError) alaParalelaError.classList.remove("visible");
-        if (alaPerpendicularError)
-          alaPerpendicularError.classList.remove("visible");
+// 5. Atualização da função consultarKmDnit para usar a versão corrigida de consultarRodoviasDNIT
+async function consultarKmDnit() {
+  try {
+    // Verificar se temos os campos de latitude e longitude
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const kmInput = document.getElementById('km');
+    const updateButton = document.getElementById('update-km-button');
+    
+    // Verificar se temos coordenadas para usar
+    if (!latInput || !lngInput || !latInput.value || !lngInput.value) {
+      alert("É necessário ter coordenadas GPS válidas para consultar o KM. Por favor, preencha os campos de Latitude e Longitude.");
+      return;
+    }
+    
+    // Obter valores das coordenadas
+    const lat = parseFloat(latInput.value);
+    const lng = parseFloat(lngInput.value);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      alert("Coordenadas GPS inválidas. Por favor, verifique os valores.");
+      return;
+    }
+    
+    // Atualizar estado do botão para indicar carregamento
+    const originalText = updateButton.textContent;
+    updateButton.disabled = true;
+    updateButton.innerHTML = 'Consultando... <span class="km-loading"></span>';
+    
+    // Criar ou atualizar o elemento de status
+    let statusElement = document.getElementById('km-status');
+    if (!statusElement) {
+      statusElement = document.createElement('div');
+      statusElement.id = 'km-status';
+      statusElement.className = 'km-status';
+      kmInput.parentNode.appendChild(statusElement);
+    }
+    statusElement.textContent = '';
+    
+    // Realizar a consulta com a função corrigida
+    const resultado = await consultarRodoviasDNIT(lat, lng);
+    
+    // Restaurar o botão
+    updateButton.disabled = false;
+    updateButton.textContent = originalText;
+    
 
-        // Se o encontro for PAREDE FRONTAL PORTANTE, pelo menos uma ala deve estar selecionada
-        if (encontroValue === "ENCONTRO - PAREDE FRONTAL PORTANTE") {
-          const alaParalelaValue = alaParalelaField.value;
-          const alaPerpendicularValue = alaPerpendicularField.value;
+  // Processar a resposta que está vindo como JSON já parseado
+  const dados = resultado;
+  
+  if (dados && Array.isArray(dados) && dados.length > 0) {
+    console.log("Dados da API DNIT recebidos:", dados);
+    
+    // Verificar qual BR atual está no formulário
+    const rodoviaInput = document.getElementById('rodovia');
+    const rodoviaAtual = rodoviaInput ? rodoviaInput.value.trim() : '';
+    const brAtualMatch = rodoviaAtual.match(/BR-(\d+)/i);
+    const brAtual = brAtualMatch ? brAtualMatch[1] : '';
+    
+    // Encontrar a melhor correspondência
+    let melhorResultado = null;
+    
+    if (brAtual) {
+      melhorResultado = dados.find(item => item.br === brAtual);
+    }
+    
+    if (!melhorResultado) {
+      melhorResultado = dados[0]; // Usar o primeiro resultado se não houver correspondência
+    }
+    
+    // Atualizar os campos
+    if (melhorResultado) {
+      const km = melhorResultado.km;
+      const rodovia = `BR-${melhorResultado.br}`;
+      
+      console.log("Atualizando UI com:", { km, rodovia });
+      
+      // Atualizar o campo de KM
+      if (kmInput) {
+        kmInput.value = parseFloat(km).toFixed(2);
+        kmInput.style.borderColor = '#27ae60';
+      }
+      
+      // Atualizar rodovia se necessário
+      if (rodoviaInput && (!rodoviaAtual || confirm(`Deseja atualizar a rodovia para ${rodovia}?`))) {
+        rodoviaInput.value = rodovia;
+        rodoviaInput.style.borderColor = '#27ae60';
+      }
+      
+      // Mostrar mensagem de sucesso
+      statusElement.textContent = `KM atualizado para ${parseFloat(km).toFixed(2)} (${rodovia})`;
+      statusElement.style.color = '#27ae60';
+      
+      setTimeout(() => {
+        kmInput.style.borderColor = '';
+        if (rodoviaInput) rodoviaInput.style.borderColor = '';
+      }, 5000);
+      
+      return true;
+    }
+  } else {
+    statusElement.textContent = 'Nenhum resultado encontrado na API do DNIT.';
+    statusElement.style.color = '#e74c3c';
+  }
 
-          // Verificar se pelo menos uma ala está selecionada e não é "Nenhum"
-          const temAlaValida =
-            (alaParalelaValue && alaParalelaValue !== "Nenhum") ||
-            (alaPerpendicularValue && alaPerpendicularValue !== "Nenhum");
 
-          if (!temAlaValida) {
-            // Adicionar classe de erro a ambos os campos
-            alaParalelaField.classList.add("error");
-            alaPerpendicularField.classList.add("error");
+  } catch (error) {
+    console.error("Erro ao consultar API do DNIT:", error);
+    
+    // Restaurar botão
+    const updateButton = document.getElementById('update-km-button');
+    if (updateButton) {
+      updateButton.disabled = false;
+      updateButton.textContent = 'Atualizar KM via DNIT';
+    }
+    
+    // Mostrar mensagem de erro
+    let statusElement = document.getElementById('km-status');
+    if (statusElement) {
+      statusElement.textContent = `Erro: ${error.message}`;
+      statusElement.style.color = '#e74c3c';
+    } else {
+      alert(`Erro ao consultar API do DNIT: ${error.message}`);
+    }
+    
+    return false;
+  }
+}
 
-            // Exibir mensagens de erro
-            if (alaParalelaError) {
-              alaParalelaError.textContent =
-                "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
-              alaParalelaError.classList.add("visible");
-            }
+// 6. Corrigir a função validateForm para verificar o objeto requiredFields
+function safeValidateForm() {
+  // Verificar se o objeto requiredFields existe
+  if (typeof requiredFields === 'undefined' || !requiredFields) {
+    checkAndCreateRequiredFields();
+  }
+  
+  // Resto da função validateForm original
+  let isValid = true;
+  const missingFields = [];
 
-            if (alaPerpendicularError) {
-              alaPerpendicularError.textContent =
-                "É necessário selecionar pelo menos uma ala quando o encontro é Parede Frontal Portante";
-              alaPerpendicularError.classList.add("visible");
-            }
+  // Validar campos obrigatórios
+  for (const fieldId in requiredFields) {
+    const isFieldValid = validateField(fieldId);
 
-            return false;
+    if (!isFieldValid) {
+      isValid = false;
+      const field = document.getElementById(fieldId);
+      const label = document.querySelector(`label[for="${fieldId}"]`);
+      missingFields.push(
+        label ? label.textContent.replace(":", "") : fieldId
+      );
+
+      // Se não estiver visível, mostrar a aba correspondente
+      const tabContent = field.closest(".tab-content");
+      if (tabContent && !tabContent.classList.contains("active")) {
+        const tabId = tabContent.id.replace("-content", "");
+        document.querySelector(`.tab[data-tab="${tabId}"]`).click();
+      }
+    }
+  }
+
+  // Validar tramos
+  const tramosValid = validateTramos();
+  if (!tramosValid) {
+    isValid = false;
+    missingFields.push("Comprimento dos Tramos (mínimo 0.5m)");
+  }
+
+  // Validar apoios
+  const apoiosValid = validateApoios();
+  if (!apoiosValid) {
+    isValid = false;
+    missingFields.push("Altura dos Apoios");
+  }
+
+  // Validar proteção lateral (deve ter pelo menos um tipo em cada lado)
+  const lateralProtectionValid = validateLateralProtection();
+  if (!lateralProtectionValid) {
+    isValid = false;
+    missingFields.push(
+      "Proteção Lateral (barreira, guarda-rodas ou calçada) em ambos os lados"
+    );
+  }
+
+  // Adicionar validação das alas com o encontro
+  const alaWithEncontroValid = validateAlaWithEncountro();
+  if (!alaWithEncontroValid) {
+    isValid = false;
+    missingFields.push(
+      "Ala obrigatória quando o encontro é Parede Frontal Portante"
+    );
+  }
+
+  return { isValid, missingFields };
+}
+
+// 7. Inicialização e verificação de erros
+(function() {
+  // Verificar e criar o objeto requiredFields
+  checkAndCreateRequiredFields();
+  
+  // Substituir a função validateForm globalmente
+  if (typeof validateForm !== 'undefined') {
+    window.originalValidateForm = validateForm;
+    window.validateForm = safeValidateForm;
+  } else {
+    window.validateForm = safeValidateForm;
+  }
+  
+  // Substituir a função consultarRodoviasDNIT globalmente
+  window.consultarRodoviasDNIT = consultarRodoviasDNIT;
+  
+  // Garantir que validateAlaWithEncountro esteja disponível globalmente
+  window.validateAlaWithEncountro = validateAlaWithEncountro;
+  
+  // Adicionar debugLog como função global
+  window.debugLog = debugLog;
+  
+  console.log("Correções aplicadas com sucesso!");
+})();
+
+
+// Versão: 1.0
+
+
+// Versão: 1.0
+// ATUALIZAÇÃO DO CAMPO KM COM CONSULTA DIRETA À API DNIT
+
+// Função para adicionar botão de atualização do KM
+function addKmUpdateButton() {
+  // Verificar se o campo KM existe
+  const kmInput = document.getElementById('km');
+  if (!kmInput) return;
+  
+  // Verificar se já existe um botão de atualização
+  if (document.getElementById('update-km-button')) return;
+  
+  // Criar o contêiner para o botão
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.alignItems = 'center';
+  buttonContainer.style.gap = '5px';
+  
+  // Criar o botão de atualização
+  const updateButton = document.createElement('button');
+  updateButton.id = 'update-km-button';
+  updateButton.type = 'button';
+  updateButton.className = 'update-km-btn';
+  updateButton.textContent = 'Atualizar KM via DNIT';
+  updateButton.style.fontSize = '0.8rem';
+  updateButton.style.padding = '4px 8px';
+  updateButton.style.backgroundColor = '#f39c12';
+  updateButton.style.color = 'white';
+  updateButton.style.border = 'none';
+  updateButton.style.borderRadius = '4px';
+  updateButton.style.cursor = 'pointer';
+  updateButton.title = 'Consultar API do DNIT para atualizar o KM baseado nas coordenadas GPS';
+  
+  // Adicionar evento de clique
+  updateButton.addEventListener('click', consultarKmDnit);
+  
+  // Criar um wrapper para o campo de input
+  const kmWrapper = document.createElement('div');
+  kmWrapper.style.flex = '1';
+  
+  // Mover o campo KM para o novo wrapper
+  const kmParent = kmInput.parentNode;
+  kmParent.removeChild(kmInput);
+  kmWrapper.appendChild(kmInput);
+  
+  // Adicionar o wrapper e o botão ao contêiner
+  buttonContainer.appendChild(kmWrapper);
+  buttonContainer.appendChild(updateButton);
+  
+  // Adicionar o contêiner ao pai original do campo KM
+  kmParent.appendChild(buttonContainer);
+  
+  // Adicionar estilos adicionais
+  const style = document.createElement('style');
+  style.textContent = `
+    .update-km-btn:hover {
+      background-color: #f1c40f !important;
+      transform: translateY(-1px);
+    }
+    .km-loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: km-spin 1s ease-in-out infinite;
+      margin-left: 4px;
+    }
+    @keyframes km-spin {
+      to { transform: rotate(360deg); }
+    }
+    .km-status {
+      font-size: 0.75rem;
+      margin-top: 2px;
+      color: #27ae60;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Função para consultar KM no DNIT
+async function consultarKmDnit() {
+  try {
+    // Verificar se temos os campos de latitude e longitude
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const kmInput = document.getElementById('km');
+    const updateButton = document.getElementById('update-km-button');
+    
+    // Verificar se temos coordenadas para usar
+    if (!latInput || !lngInput || !latInput.value || !lngInput.value) {
+      alert("É necessário ter coordenadas GPS válidas para consultar o KM. Por favor, preencha os campos de Latitude e Longitude.");
+      return;
+    }
+    
+    // Obter valores das coordenadas
+    const lat = parseFloat(latInput.value);
+    const lng = parseFloat(lngInput.value);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      alert("Coordenadas GPS inválidas. Por favor, verifique os valores.");
+      return;
+    }
+    
+    // Atualizar estado do botão para indicar carregamento
+    const originalText = updateButton.textContent;
+    updateButton.disabled = true;
+    updateButton.innerHTML = 'Consultando... <span class="km-loading"></span>';
+    
+    // Criar ou atualizar o elemento de status
+    let statusElement = document.getElementById('km-status');
+    if (!statusElement) {
+      statusElement = document.createElement('div');
+      statusElement.id = 'km-status';
+      statusElement.className = 'km-status';
+      kmInput.parentNode.appendChild(statusElement);
+    }
+    statusElement.textContent = '';
+    
+    // Realizar a consulta
+    const resultado = await consultarRodoviasDNIT(lat, lng);
+    
+    // Restaurar o botão
+    updateButton.disabled = false;
+    updateButton.textContent = originalText;
+    
+    // Processar resultados
+    if (resultado && resultado.features && resultado.features.length > 0) {
+      // Filtrar apenas rodovias federais (BRs)
+      const rodoviasFederais = resultado.features.filter(feature => 
+        feature.properties.sigla_rodov && feature.properties.sigla_rodov.startsWith('BR')
+      );
+      
+      if (rodoviasFederais.length > 0) {
+        // Ordenar pelo mais próximo (menor distância)
+        rodoviasFederais.sort((a, b) => 
+          a.properties.distancia_m - b.properties.distancia_m
+        );
+        
+        // Pegar o resultado mais próximo
+        const melhorResultado = rodoviasFederais[0];
+        const km = melhorResultado.properties.km;
+        const rodovia = melhorResultado.properties.sigla_rodov;
+        const distancia = melhorResultado.properties.distancia_m;
+        
+        // Atualizar o campo de KM
+        if (kmInput) {
+          kmInput.value = parseFloat(km).toFixed(2);
+          kmInput.style.borderColor = '#27ae60';
+          
+          // Atualizar o campo de rodovia se existir
+          const rodoviaInput = document.getElementById('rodovia');
+          if (rodoviaInput) {
+            rodoviaInput.value = rodovia;
+            rodoviaInput.style.borderColor = '#27ae60';
+          }
+          
+          // Mostrar mensagem de sucesso
+          statusElement.textContent = `KM atualizado via DNIT (${distancia.toFixed(0)}m de distância)`;
+          
+          // Restaurar o estilo após alguns segundos
+          setTimeout(() => {
+            kmInput.style.borderColor = '';
+            if (rodoviaInput) rodoviaInput.style.borderColor = '';
+          }, 5000);
+          
+          return true;
+        }
+      } else {
+        statusElement.textContent = 'Nenhuma rodovia federal encontrada próxima às coordenadas.';
+        statusElement.style.color = '#e74c3c';
+      }
+    } else {
+      statusElement.textContent = 'Nenhum resultado encontrado na API do DNIT.';
+      statusElement.style.color = '#e74c3c';
+    }
+  } catch (error) {
+    console.error("Erro ao consultar API do DNIT:", error);
+    
+    // Restaurar botão
+    const updateButton = document.getElementById('update-km-button');
+    if (updateButton) {
+      updateButton.disabled = false;
+      updateButton.textContent = 'Atualizar KM via DNIT';
+    }
+    
+    // Mostrar mensagem de erro
+    let statusElement = document.getElementById('km-status');
+    if (statusElement) {
+      statusElement.textContent = `Erro: ${error.message}`;
+      statusElement.style.color = '#e74c3c';
+    } else {
+      alert(`Erro ao consultar API do DNIT: ${error.message}`);
+    }
+    
+    return false;
+  }
+}
+
+// Inicializar o botão quando o documento estiver pronto
+document.addEventListener('DOMContentLoaded', function() {
+  addKmUpdateButton();
+});
+
+// Se o documento já estiver carregado, adicionar o botão imediatamente
+if (document.readyState !== 'loading') {
+  addKmUpdateButton();
+}
+
+
+
+const ponteModalStyles = document.createElement('style');
+ponteModalStyles.id = 'ponte-details-modal-styles';
+ponteModalStyles.textContent = `
+/* Estilos para o modal de detalhes da ponte */
+.ponte-details-container {
+  margin: 15px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(44, 62, 80, 0.7);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ponte-header {
+  background: linear-gradient(to right, rgba(52, 152, 219, 0.7), rgba(52, 73, 94, 0.7));
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ponte-header strong {
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.ponte-header button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 5px 10px;
+  margin-left: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+}
+
+.ponte-header button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.ponte-fields {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.ponte-field-row {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.ponte-field-row:last-child {
+  border-bottom: none;
+}
+
+.ponte-field-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ponte-field-checkbox {
+  flex: 0 0 220px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #e3f2fd;
+}
+
+.ponte-field-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3498db;
+}
+
+.ponte-field-checkbox input[type="checkbox"]:disabled + span {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ponte-field-value {
+  flex: 1;
+  padding-left: 20px;
+  word-break: break-word;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 5px 10px;
+  border-radius: 4px;
+  border-left: 3px solid rgba(52, 152, 219, 0.7);
+}
+
+.ponte-field-actions {
+  flex: 0 0 auto;
+  margin-left: 10px;
+}
+
+.ponte-field-actions button {
+  background: rgba(52, 152, 219, 0.3);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.ponte-field-actions button:hover {
+  background: rgba(52, 152, 219, 0.6);
+}
+
+.work-item-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.work-item-actions button {
+  background: rgba(52, 152, 219, 0.3);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.work-item-actions button:hover {
+  background: rgba(52, 152, 219, 0.6);
+}
+
+.coords-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.coords-group button {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.coords-group button:hover {
+  background: #2ecc71;
+}
+
+.update-km-btn {
+  background: #f39c12 !important;
+}
+
+.update-km-btn:hover {
+  background: #f1c40f !important;
+}
+
+/* Status de carregamento */
+.loading-indicator {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-left: 5px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+`;
+
+// Adicionar os estilos ao documento apenas se ainda não existirem
+if (!document.getElementById('ponte-details-modal-styles')) {
+  document.head.appendChild(ponteModalStyles);
+}
+
+// PARTE 2: FUNÇÕES DO MODAL DE DETALHES DA PONTE
+
+// Função para consultar API do DNIT para atualizar o KM
+async function consultarDnitApi(latitude, longitude) {
+  try {
+    if (!latitude || !longitude) {
+      throw new Error("Latitude e longitude são necessárias para consultar a API do DNIT");
+    }
+    
+    // Desativar botão e mostrar carregamento
+    const button = document.querySelector('.update-km-btn');
+    if (button) {
+      button.disabled = true;
+      button.innerHTML = 'Consultando API <span class="loading-indicator"></span>';
+    }
+    
+    const dataRef = new Date().toISOString().split('T')[0];
+    const url = `https://servicos.dnit.gov.br/sgplan/apigeo/rotas/localizarkm?lng=${longitude}&lat=${latitude}&r=250&data=${dataRef}`;
+    
+    console.log(`Consultando API DNIT: ${url}`);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API DNIT: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("Resposta da API DNIT:", data);
+    
+    // Restaurar botão
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Consultar DNIT';
+    }
+    
+    // Processar resultados
+    if (data && data.features && data.features.length > 0) {
+      // Filtrar apenas rodovias federais (BRs)
+      const rodoviasFederais = data.features.filter(feature => 
+        feature.properties.sigla_rodov && feature.properties.sigla_rodov.startsWith('BR')
+      );
+      
+      if (rodoviasFederais.length > 0) {
+        // Ordenar pelo mais próximo (menor distância)
+        rodoviasFederais.sort((a, b) => 
+          a.properties.distancia_m - b.properties.distancia_m
+        );
+        
+        // Pegar o resultado mais próximo
+        const melhorResultado = rodoviasFederais[0];
+        const km = melhorResultado.properties.km;
+        const rodovia = melhorResultado.properties.sigla_rodov;
+        const distancia = melhorResultado.properties.distancia_m;
+        
+        // Atualizar os campos no modal
+        const kmField = document.querySelector('input[data-field-from="Km"]');
+        if (kmField) {
+          kmField.checked = true;
+          const kmValueElement = kmField.closest('.ponte-field-row').querySelector('.ponte-field-value');
+          if (kmValueElement) {
+            kmValueElement.innerHTML = `${parseFloat(km).toFixed(2)} <small>(atualizado via DNIT)</small>`;
+            kmValueElement.style.borderLeft = '3px solid #27ae60';
           }
         }
-
-        return true;
+        
+        // Atualizar o valor do rodovia se for BR
+        const brField = document.querySelector('input[data-field-from="Br"]');
+        if (brField && rodovia.startsWith('BR-')) {
+          const brValueElement = brField.closest('.ponte-field-row').querySelector('.ponte-field-value');
+          if (brValueElement) {
+            const brNumber = rodovia.replace('BR-', '');
+            brValueElement.innerHTML = `${brNumber} <small>(atualizado via DNIT)</small>`;
+            brValueElement.style.borderLeft = '3px solid #27ae60';
+          }
+        }
+        
+        return {
+          success: true,
+          km: km,
+          rodovia: rodovia,
+          distancia: distancia
+        };
+      } else {
+        alert("Nenhuma rodovia federal encontrada próxima às coordenadas informadas.");
+        return { success: false };
       }
+    } else {
+      alert("Nenhum resultado encontrado na API do DNIT para as coordenadas informadas.");
+      return { success: false };
+    }
+  } catch (error) {
+    console.error("Erro ao consultar API do DNIT:", error);
+    
+    // Restaurar botão
+    const button = document.querySelector('.update-km-btn');
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Consultar DNIT';
+    }
+    
+    alert(`Erro ao consultar API do DNIT: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+}
+
+// Função para mostrar o modal de detalhes da ponte antes de importar
+function showPonteDetailsModal(ponteId) {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+    
+    const transaction = db.transaction(["pontes"], "readonly");
+    const objectStore = transaction.objectStore("pontes");
+    const request = objectStore.get(ponteId);
+    
+    request.onsuccess = function(event) {
+      const ponte = event.target.result;
+      
+      if (!ponte) {
+        alert("Ponte não encontrada.");
+        return;
+      }
+      
+      // Verificar se o modal já existe
+      let modal = document.getElementById("ponte-details-modal");
+      
+      if (!modal) {
+        // Criar o modal
+        modal = document.createElement("div");
+        modal.id = "ponte-details-modal";
+        modal.className = "modal";
+        
+        document.body.appendChild(modal);
+      }
+      
+      // Mapeamento entre campos da ponte e campos do formulário
+      const fieldMappings = [
+        { from: "CodigoSgo", to: "codigo", label: "Código SGO", type: "text" },
+        { from: "Identificacao", to: "nome", label: "Nome da Ponte", type: "text" },
+        { from: "Uf", to: "uf", label: "UF", type: "text" },
+        { from: "Br", to: "rodovia", label: "Rodovia", type: "text", transform: (value) => `BR-${value}` },
+        { from: "Km", to: "km", label: "Quilômetro", type: "number" },
+        { from: "Comprimento", to: "comprimento", label: "Comprimento (m)", type: "number" },
+        { from: "Largura", to: "largura", label: "Largura (m)", type: "number" },
+        { from: "AnoConstrucao", to: null, label: "Ano de Construção", type: "text" },
+        { from: "Municipio", to: null, label: "Município", type: "text" },
+        { from: "Latitude", to: null, label: "Latitude", type: "number" },
+        { from: "Longitude", to: null, label: "Longitude", type: "number" }
+      ];
+      
+      // Construir conteúdo do modal
+      let modalContent = `
+        <div class="modal-content">
+          <span class="close-modal" onclick="closePonteDetailsModal()">&times;</span>
+          <h3>Confirmar importação de dados da ponte</h3>
+          <p>Selecione os dados que deseja importar para o formulário:</p>
+          
+          <div class="ponte-details-container">
+            <div class="ponte-header">
+              <strong>${ponte.CodigoSgo || ""} - ${ponte.Identificacao || ""}</strong>
+              <div>
+                <button type="button" onclick="toggleAllFields(true)">Marcar Todos</button>
+                <button type="button" onclick="toggleAllFields(false)">Desmarcar Todos</button>
+              </div>
+            </div>
+            
+            <div class="ponte-fields">`;
+      
+      // Adicionar cada campo com checkbox
+      fieldMappings.forEach(field => {
+        const value = ponte[field.from] !== undefined ? ponte[field.from] : "";
+        const isDisabled = value === ""; // Desabilitar se não houver valor
+        const displayValue = field.from === "Br" && value ? `${value}` : value;
+        
+        modalContent += `
+          <div class="ponte-field-row">
+            <label class="ponte-field-checkbox">
+              <input type="checkbox" name="import_${field.from}" ${isDisabled ? "disabled" : "checked"} 
+                data-field-from="${field.from}" data-field-to="${field.to || ""}" 
+                data-field-type="${field.type}" data-has-transform="${field.transform ? 'true' : 'false'}">
+              <span>${field.label}</span>
+            </label>
+            <div class="ponte-field-value">${displayValue}</div>`;
+        
+        // Adicionar botão para coordenadas
+        if (field.from === "Latitude" || field.from === "Longitude") {
+          modalContent += `
+            <div class="ponte-field-actions">
+              <button type="button" onclick="copyToClipboard('${displayValue}')">Copiar</button>
+            </div>`;
+        }
+        
+        modalContent += `</div>`;
+      });
+      
+      // Adicionar seção para coordenadas GPS e consulta DNIT
+      const hasCoords = ponte.Latitude && ponte.Longitude;
+      modalContent += `
+        <div class="coords-group">
+          <div>
+            <strong>Coordenadas GPS:</strong>
+            <div>${hasCoords ? `${ponte.Latitude}, ${ponte.Longitude}` : "Não disponíveis"}</div>
+          </div>`;
+      
+      // Adicionar botão para consultar DNIT apenas se tiver coordenadas
+      if (hasCoords) {
+        modalContent += `
+          <div>
+            <button type="button" class="update-km-btn" 
+              onclick="consultarDnitApi(${ponte.Latitude}, ${ponte.Longitude})">
+              Atualizar KM via DNIT
+            </button>
+          </div>`;
+      }
+      
+      modalContent += `</div>`;
+      
+      // Adicionar campos para latitude e longitude no formulário, se não existirem
+      const formFieldsNeeded = checkAndAddGeoFields();
+      
+      // Verificar se os campos de latitude e longitude estão disponíveis no formulário
+      if (formFieldsNeeded && hasCoords) {
+        modalContent += `
+          <div class="ponte-field-row">
+            <label class="ponte-field-checkbox">
+              <input type="checkbox" name="import_coords" checked>
+              <span>Importar Coordenadas GPS para o Formulário</span>
+            </label>
+          </div>`;
+      }
+      
+      // Fechar containers e adicionar botões de ação
+      modalContent += `
+            </div>
+          </div>
+          
+          <div class="actions">
+            <button type="button" onclick="confirmImportPonte('${ponteId}')">Importar Selecionados</button>
+            <button type="button" onclick="closePonteDetailsModal()">Cancelar</button>
+          </div>
+        </div>
+      `;
+      
+      modal.innerHTML = modalContent;
+      
+      // Exibir o modal
+      modal.style.display = "block";
+    };
+    
+    request.onerror = function(event) {
+      console.error("Erro ao obter ponte:", event.target.error);
+      alert("Erro ao obter dados da ponte.");
+    };
+  } catch (error) {
+    console.error("Erro ao mostrar detalhes da ponte:", error);
+    alert("Erro ao mostrar detalhes da ponte: " + error.message);
+  }
+}
+
+// Verificar e adicionar campos de latitude e longitude ao formulário, se necessário
+function checkAndAddGeoFields() {
+  const formContainer = document.getElementById("info-custom-fields");
+  if (!formContainer) return false;
+  
+  const latField = document.getElementById("latitude");
+  const lngField = document.getElementById("longitude");
+  
+  // Se ambos os campos já existem, não precisamos fazer nada
+  if (latField && lngField) return false;
+  
+  // Se precisamos criar os campos de GPS
+  let fieldsAdded = false;
+  
+  if (!latField) {
+    const latFieldDiv = document.createElement("div");
+    latFieldDiv.className = "form-row";
+    latFieldDiv.innerHTML = `
+      <div class="form-group">
+        <label for="latitude">Latitude:</label>
+        <input type="number" id="latitude" name="LATITUDE" step="0.000001">
+      </div>
+    `;
+    formContainer.appendChild(latFieldDiv);
+    fieldsAdded = true;
+  }
+  
+  if (!lngField) {
+    const lngFieldDiv = document.createElement("div");
+    lngFieldDiv.className = "form-row";
+    lngFieldDiv.innerHTML = `
+      <div class="form-group">
+        <label for="longitude">Longitude:</label>
+        <input type="number" id="longitude" name="LONGITUDE" step="0.000001">
+      </div>
+    `;
+    formContainer.appendChild(lngFieldDiv);
+    fieldsAdded = true;
+  }
+  
+  return fieldsAdded;
+}
+
+// Copiar valor para a área de transferência
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      alert("Valor copiado para a área de transferência!");
+    })
+    .catch(err => {
+      console.error('Erro ao copiar texto: ', err);
+      alert("Não foi possível copiar o texto. Por favor, copie manualmente.");
+    });
+}
+
+// Fechar modal de detalhes da ponte
+function closePonteDetailsModal() {
+  const modal = document.getElementById("ponte-details-modal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+// Marcar/desmarcar todos os campos
+function toggleAllFields(checked) {
+  const checkboxes = document.querySelectorAll('#ponte-details-modal input[type="checkbox"]:not([disabled])');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = checked;
+  });
+}
+
+// Confirmar a importação dos campos selecionados
+function confirmImportPonte(ponteId) {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+    
+    const transaction = db.transaction(["pontes"], "readonly");
+    const objectStore = transaction.objectStore("pontes");
+    const request = objectStore.get(ponteId);
+    
+    request.onsuccess = function(event) {
+      const ponte = event.target.result;
+      
+      if (!ponte) {
+        alert("Ponte não encontrada.");
+        return;
+      }
+      
+      // Coletar campos selecionados
+      const selectedFields = document.querySelectorAll('#ponte-details-modal input[type="checkbox"]:checked');
+      
+      if (selectedFields.length === 0) {
+        alert("Nenhum campo selecionado para importação.");
+        return;
+      }
+      
+      // Preencher os campos do formulário
+      selectedFields.forEach(checkbox => {
+        const fieldName = checkbox.getAttribute("name");
+        
+        // Tratamento especial para coordenadas GPS
+        if (fieldName === "import_coords") {
+          // Importar coordenadas para os campos apropriados
+          const latField = document.getElementById("latitude");
+          const lngField = document.getElementById("longitude");
+          
+          if (latField && ponte.Latitude !== undefined) {
+            latField.value = ponte.Latitude;
+          }
+          
+          if (lngField && ponte.Longitude !== undefined) {
+            lngField.value = ponte.Longitude;
+          }
+          
+          // Marcar o checkbox GPS se existir
+          const gpsCheckbox = document.getElementById("gps");
+          if (gpsCheckbox) {
+            gpsCheckbox.checked = true;
+          }
+          
+          return;
+        }
+        
+        // Importação normal de campos
+        const fieldFrom = checkbox.getAttribute("data-field-from");
+        const fieldTo = checkbox.getAttribute("data-field-to");
+        const fieldType = checkbox.getAttribute("data-field-type");
+        const hasTransform = checkbox.getAttribute("data-has-transform") === "true";
+        
+        if (fieldTo && ponte[fieldFrom] !== undefined) {
+          const field = document.getElementById(fieldTo);
+          
+          if (field) {
+            let value = ponte[fieldFrom];
+            
+            // Aplicar transformação se necessário
+            if (hasTransform && fieldFrom === "Br") {
+              value = `BR-${value}`;
+            }
+            
+            // Formatar de acordo com o tipo de campo
+            if (fieldType === "number" && value !== "") {
+              value = parseFloat(value) || 0;
+            }
+            
+            field.value = value;
+          }
+        }
+      });
+      
+      alert("Dados da ponte importados com sucesso!");
+      closePonteDetailsModal();
+      closeSearchPontesModal(); // Fechar também o modal de busca
+    };
+    
+    request.onerror = function(event) {
+      console.error("Erro ao obter ponte:", event.target.error);
+      alert("Erro ao obter dados da ponte.");
+    };
+  } catch (error) {
+    console.error("Erro ao importar dados da ponte:", error);
+    alert("Erro ao importar dados da ponte: " + error.message);
+  }
+}
+
+// PARTE 3: ATUALIZAÇÃO DA FUNÇÃO DE BUSCA DE PONTES
+
+// Realizar busca de pontes com opção de visualizar detalhes
+function performPontesSearch(isAutoBusca = false) {
+  const searchTerm = document.getElementById("filter-pontes").value.trim();
+  const resultsContainer = document.getElementById("pontes-results");
+  const codigoAtual = isAutoBusca ? searchTerm : document.getElementById("codigo").value.trim();
+  
+  if (!searchTerm) {
+    resultsContainer.innerHTML = '<div class="work-item">Digite um termo para buscar pontes</div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = '<div class="work-item">Buscando...</div>';
+  
+  searchPontesReference(searchTerm, function(results) {
+    if (results.length === 0) {
+      resultsContainer.innerHTML = '<div class="work-item">Nenhuma ponte encontrada</div>';
+      return;
+    }
+    
+    resultsContainer.innerHTML = '';
+    
+    // Verificar se alguma ponte corresponde exatamente ao código atual
+    const codigoExato = results.find(ponte => ponte.CodigoSgo === codigoAtual);
+    
+    results.forEach(ponte => {
+      const ponteItem = document.createElement("div");
+      ponteItem.className = "work-item";
+      
+      // Destacar a ponte que corresponde ao código atual, se houver
+      if (codigoAtual && ponte.CodigoSgo === codigoAtual) {
+        ponteItem.classList.add("selected");
+      }
+      
+      ponteItem.setAttribute("data-id", ponte.Id);
+      
+      // Adicionar mais informações úteis na exibição
+      const km = ponte.Km ? parseFloat(ponte.Km).toFixed(2) : "N/A";
+      const comprimento = ponte.Comprimento ? parseFloat(ponte.Comprimento).toFixed(2) + "m" : "N/A";
+      const largura = ponte.Largura ? parseFloat(ponte.Largura).toFixed(2) + "m" : "N/A";
+      
+      ponteItem.innerHTML = `
+        <div class="work-item-info">
+          <div><strong>${ponte.CodigoSgo || ""}</strong> - ${ponte.Identificacao || ""}</div>
+          <div class="work-item-details">
+            ${ponte.Uf || ""} | BR-${ponte.Br || ""} | KM ${km} | ${comprimento} x ${largura}
+          </div>
+        </div>
+        <div class="work-item-actions">
+          <button type="button" onclick="showPonteDetailsModal('${ponte.Id}')">Usar Dados</button>
+        </div>
+      `;
+      
+      resultsContainer.appendChild(ponteItem);
+    });
+    
+    // Se for auto-busca e encontrou uma correspondência exata, sugerir usar
+    if (isAutoBusca && codigoExato) {
+      if (confirm(`Encontramos a ponte "${codigoExato.Identificacao}" correspondente ao código ${codigoAtual}. Deseja ver seus detalhes?`)) {
+        showPonteDetailsModal(codigoExato.Id);
+      }
+    }
+  });
+}
+
+// PARTE 4: INICIALIZAÇÃO E CONFIGURAÇÃO 
+
+// Função para inicializar o sistema de pontes quando o documento carregar
+function initPonteSystem() {
+  // Adicionar os estilos CSS
+  if (!document.getElementById('ponte-details-modal-styles')) {
+    document.head.appendChild(ponteModalStyles);
+  }
+  
+  // Substituir a função usePonteData
+  window.usePonteData = function(ponteId) {
+    showPonteDetailsModal(ponteId);
+  };
+  
+  console.log("Sistema de detalhes de pontes inicializado com sucesso!");
+}
+
+// Inicializar quando o documento estiver pronto
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPonteSystem);
+} else {
+  initPonteSystem();
+}
 
       // Inicialização do IndexedDB
-      function initDB() {
-        try {
-          const request = window.indexedDB.open("OAEDatabase", 1);
+function initDB() {
+  try {
+    // Incrementar versão para 3 para adicionar a nova object store
+    const request = window.indexedDB.open("OAEDatabase", 3);
 
-          request.onerror = function (event) {
-            console.error(
-              "Erro ao abrir o banco de dados:",
-              event.target.errorCode
-            );
-            alert(
-              "Erro ao inicializar o banco de dados. Algumas funcionalidades podem não estar disponíveis."
-            );
-          };
+    request.onerror = function (event) {
+      console.error("Erro ao abrir o banco de dados:", event.target.errorCode);
+      alert("Erro ao inicializar o banco de dados. Algumas funcionalidades podem não estar disponíveis.");
+    };
 
-          request.onupgradeneeded = function (event) {
-            const database = event.target.result;
-            // Criar object store para as obras
-            if (!database.objectStoreNames.contains("obras")) {
-              const objectStore = database.createObjectStore("obras", {
-                keyPath: "CODIGO",
-              });
-              objectStore.createIndex("CODIGO", "CODIGO", { unique: true });
-            }
-          };
-
-          request.onsuccess = function (event) {
-            db = event.target.result;
-            console.log("Banco de dados inicializado com sucesso");
-            loadWorksList(); // Carregar lista de obras
-
-            // Iniciar lembretes de salvamento
-            startSaveReminders();
-          };
-        } catch (error) {
-          console.error("Erro na inicialização do banco de dados:", error);
-          alert("Erro ao inicializar o banco de dados: " + error.message);
+    request.onupgradeneeded = function (event) {
+      const database = event.target.result;
+      const oldVersion = event.oldVersion;
+      
+      // Para novas instalações (banco não existe)
+      if (oldVersion < 1) {
+        // Criar object store para as obras
+        const objectStore = database.createObjectStore("obras", {
+          keyPath: "CODIGO",
+        });
+        objectStore.createIndex("CODIGO", "CODIGO", { unique: true });
+        objectStore.createIndex("LOTE", "LOTE", { unique: false });
+      } 
+      // Para usuários atualizando de v1 para v2
+      else if (oldVersion === 1) {
+        // Adicionar o novo índice ao objectStore existente
+        const objectStore = event.target.transaction.objectStore("obras");
+        if (!objectStore.indexNames.contains("LOTE")) {
+          objectStore.createIndex("LOTE", "LOTE", { unique: false });
         }
       }
+      
+      // Para usuários atualizando para v3 (adicionar pontes)
+      if (oldVersion < 3) {
+        // Verificar se a object store já existe
+        if (!database.objectStoreNames.contains("pontes")) {
+          // Criar object store para as pontes
+          const pontesStore = database.createObjectStore("pontes", {
+            keyPath: "Id"
+          });
+          // Criar índices úteis para busca
+          pontesStore.createIndex("CodigoSgo", "CodigoSgo", { unique: true });
+          pontesStore.createIndex("Uf", "Uf", { unique: false });
+          pontesStore.createIndex("Br", "Br", { unique: false });
+          pontesStore.createIndex("Identificacao", "Identificacao", { unique: false });
+        }
+      }
+    };
+
+    request.onsuccess = function (event) {
+      db = event.target.result;
+      console.log("Banco de dados inicializado com sucesso");
+      loadWorksList(); // Carregar lista de obras
+
+      // Iniciar lembretes de salvamento
+      startSaveReminders();
+    };
+  } catch (error) {
+    console.error("Erro na inicialização do banco de dados:", error);
+    alert("Erro ao inicializar o banco de dados: " + error.message);
+  }
+}
+
+// Função para importar CSV de pontes para referência
+function importPontesReferenceCSV() {
+  try {
+    // Criar um input de arquivo oculto
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.csv';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const csvData = event.target.result;
+          processPontesReferenceCSV(csvData);
+        };
+        
+        reader.onerror = function() {
+          alert("Erro ao ler o arquivo.");
+        };
+        
+        reader.readAsText(file);
+      }
+      
+      // Remover o input após uso
+      document.body.removeChild(fileInput);
+    });
+    
+    // Acionar o clique para abrir o seletor de arquivos
+    fileInput.click();
+  } catch (error) {
+    console.error("Erro ao importar referência de pontes:", error);
+    alert("Erro ao importar referência de pontes: " + error.message);
+  }
+}
+
+// Função para processar o conteúdo do CSV de pontes para referência
+function processPontesReferenceCSV(csvData) {
+  try {
+    // Dividir as linhas do CSV
+    const lines = csvData.split('\n');
+    if (lines.length < 2) {
+      alert("O arquivo CSV não contém dados válidos.");
+      return;
+    }
+    
+    // Verificar o separador correto (pode ser ; ou ,)
+    const separator = lines[0].includes(';') ? ';' : ',';
+    
+    // Obter os cabeçalhos (primeira linha)
+    const headers = lines[0].split(separator).map(header => header.trim());
+    
+    // Verificar se os cabeçalhos esperados existem
+    const requiredHeaders = ["Id", "CodigoSgo", "Identificacao", "Uf", "Br", "Km"];
+    const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
+    
+    if (missingHeaders.length > 0) {
+      alert("O arquivo CSV não contém os cabeçalhos esperados: " + missingHeaders.join(", "));
+      return;
+    }
+    
+    // Array para armazenar as pontes de referência
+    const pontes = [];
+    
+    // Processar cada linha de dados (exceto a primeira que são os cabeçalhos)
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === "") continue; // Pular linhas vazias
+      
+      const values = lines[i].split(separator);
+      if (values.length !== headers.length) {
+        console.warn(`Linha ${i + 1} tem número incorreto de campos. Tentando processar mesmo assim.`);
+        continue; // Pular linhas com formato incorreto
+      }
+      
+      // Criar um objeto para mapear os valores para os índices de cabeçalho
+      const ponte = {};
+      headers.forEach((header, index) => {
+        if (index < values.length) {
+          // Converter Km para número se possível
+          if (header === "Km") {
+            ponte[header] = parseFloat(values[index].replace(',', '.')) || 0;
+          } else {
+            ponte[header] = values[index].trim();
+          }
+        }
+      });
+      
+      // Se houver um Id válido, adicionar à lista
+      if (ponte.Id && ponte.Id.trim() !== "") {
+        pontes.push(ponte);
+      }
+    }
+    
+    if (pontes.length > 0) {
+      // Salvar as pontes no banco de dados
+      savePontesReference(pontes);
+    } else {
+      alert("Nenhuma ponte válida encontrada no arquivo CSV.");
+    }
+  } catch (error) {
+    console.error("Erro ao processar arquivo CSV de pontes:", error);
+    alert("Erro ao processar arquivo CSV de pontes: " + error.message);
+  }
+}
+
+// Função para salvar as pontes de referência no banco de dados
+function savePontesReference(pontes) {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+    
+    const transaction = db.transaction(["pontes"], "readwrite");
+    const objectStore = transaction.objectStore("pontes");
+    
+    let countSuccess = 0;
+    let countError = 0;
+    let processed = 0;
+    
+    // Limpar store antes de inserir novos dados
+    objectStore.clear().onsuccess = function() {
+      pontes.forEach((ponte) => {
+        const request = objectStore.add(ponte);
+        
+        request.onsuccess = function() {
+          countSuccess++;
+          processed++;
+          checkComplete();
+        };
+        
+        request.onerror = function(event) {
+          countError++;
+          processed++;
+          console.error(`Erro ao salvar a ponte ${ponte.CodigoSgo}:`, event.target.error);
+          checkComplete();
+        };
+      });
+    };
+    
+    function checkComplete() {
+      if (processed === pontes.length) {
+        alert(`Importação concluída: ${countSuccess} pontes de referência importadas com sucesso, ${countError} erros.`);
+      }
+    }
+    
+    transaction.oncomplete = function() {
+      console.log("Transação de importação de pontes de referência concluída.");
+    };
+    
+    transaction.onerror = function(event) {
+      console.error("Erro na transação de importação de pontes:", event.target.error);
+    };
+  } catch (error) {
+    console.error("Erro ao salvar pontes de referência:", error);
+    alert("Erro ao salvar pontes de referência: " + error.message);
+  }
+}
+
+// Função para buscar pontes de referência
+function searchPontesReference(searchTerm, callback) {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+    
+    const transaction = db.transaction(["pontes"], "readonly");
+    const objectStore = transaction.objectStore("pontes");
+    const request = objectStore.getAll();
+    
+    request.onsuccess = function(event) {
+      const pontes = event.target.result;
+      
+      // Filtrar pontes com base no termo de busca
+      const filteredPontes = pontes.filter(ponte => 
+        ponte.CodigoSgo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ponte.Identificacao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ponte.Uf.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ponte.Br.toString().includes(searchTerm)
+      );
+      
+      callback(filteredPontes);
+    };
+    
+    request.onerror = function(event) {
+      console.error("Erro ao buscar pontes:", event.target.error);
+      callback([]);
+    };
+  } catch (error) {
+    console.error("Erro ao buscar pontes de referência:", error);
+    callback([]);
+  }
+}
+
+// Função para mostrar modal de busca de pontes
+
+// Função para mostrar modal de busca de pontes
+function showSearchPontesModal() {
+  // Verificar se já existe o modal, se não, criar
+  let modal = document.getElementById("search-pontes-modal");
+  
+  if (!modal) {
+    // Criar o modal
+    modal = document.createElement("div");
+    modal.id = "search-pontes-modal";
+    modal.className = "modal";
+    
+    modal.innerHTML = `
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeSearchPontesModal()">&times;</span>
+        <h3>Buscar Pontes de Referência</h3>
+        <div class="filter-container">
+          <input type="text" id="filter-pontes" placeholder="Buscar ponte por código, nome, UF ou BR..." />
+          <button onclick="performPontesSearch()">Buscar</button>
+        </div>
+        <div id="pontes-results" class="works-list" style="max-height:400px;">
+          <!-- Resultados da busca serão exibidos aqui -->
+          <div class="work-item">Digite um termo para buscar pontes</div>
+        </div>
+        <div class="actions">
+          <button type="button" onclick="closeSearchPontesModal()">Fechar</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Adicionar evento para tecla Enter no campo de busca
+    const searchInput = document.getElementById("filter-pontes");
+    searchInput.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        performPontesSearch();
+      }
+    });
+  }
+  
+  // Exibir o modal
+  modal.style.display = "block";
+  
+  // Verificar se já existe um código digitado
+  const codigoAtual = document.getElementById("codigo").value.trim();
+  if (codigoAtual) {
+    // Preencher o campo de busca com o código atual
+    document.getElementById("filter-pontes").value = codigoAtual;
+    
+    // Realizar a busca automaticamente
+    performPontesSearch(true);
+  }
+}
+
+// Realizar busca de pontes
+function performPontesSearch(isAutoBusca = false) {
+  const searchTerm = document.getElementById("filter-pontes").value.trim();
+  const resultsContainer = document.getElementById("pontes-results");
+  const codigoAtual = isAutoBusca ? searchTerm : document.getElementById("codigo").value.trim();
+  
+  if (!searchTerm) {
+    resultsContainer.innerHTML = '<div class="work-item">Digite um termo para buscar pontes</div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = '<div class="work-item">Buscando...</div>';
+  
+  searchPontesReference(searchTerm, function(results) {
+    if (results.length === 0) {
+      resultsContainer.innerHTML = '<div class="work-item">Nenhuma ponte encontrada</div>';
+      return;
+    }
+    
+    resultsContainer.innerHTML = '';
+    
+    // Verificar se alguma ponte corresponde exatamente ao código atual
+    const codigoExato = results.find(ponte => ponte.CodigoSgo === codigoAtual);
+    
+    results.forEach(ponte => {
+      const ponteItem = document.createElement("div");
+      ponteItem.className = "work-item";
+      
+      // Destacar a ponte que corresponde ao código atual, se houver
+      if (codigoAtual && ponte.CodigoSgo === codigoAtual) {
+        ponteItem.classList.add("selected");
+      }
+      
+      ponteItem.setAttribute("data-id", ponte.Id);
+      
+      ponteItem.innerHTML = `
+        <span>${ponte.CodigoSgo} - ${ponte.Identificacao} (${ponte.Uf} BR-${ponte.Br} KM ${ponte.Km})</span>
+        <button type="button" onclick="usePonteData('${ponte.Id}')">Usar</button>
+      `;
+      
+      resultsContainer.appendChild(ponteItem);
+    });
+    
+    // Se for auto-busca e encontrou uma correspondência exata, sugerir usar
+    if (isAutoBusca && codigoExato) {
+      if (confirm(`Encontramos a ponte "${codigoExato.Identificacao}" correspondente ao código ${codigoAtual}. Deseja usar esses dados?`)) {
+        usePonteData(codigoExato.Id);
+      }
+    }
+  });
+}
+
+// Usar os dados da ponte selecionada
+function usePonteData(ponteId) {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+    
+    const transaction = db.transaction(["pontes"], "readonly");
+    const objectStore = transaction.objectStore("pontes");
+    const request = objectStore.get(ponteId);
+    
+    request.onsuccess = function(event) {
+      const ponte = event.target.result;
+      
+      if (ponte) {
+        // Preencher os campos do formulário com os dados da ponte
+        document.getElementById("codigo").value = ponte.CodigoSgo || "";
+        document.getElementById("nome").value = ponte.Identificacao || "";
+        document.getElementById("uf").value = ponte.Uf || "";
+        document.getElementById("rodovia").value = ponte.Br ? `BR-${ponte.Br}` : "";
+        document.getElementById("km").value = ponte.Km || 0;
+        // Não preencher o lote automaticamente
+        
+        alert("Dados da ponte importados com sucesso!");
+        closeSearchPontesModal();
+      } else {
+        alert("Ponte não encontrada.");
+      }
+    };
+    
+    request.onerror = function(event) {
+      console.error("Erro ao obter ponte:", event.target.error);
+      alert("Erro ao obter dados da ponte.");
+    };
+  } catch (error) {
+    console.error("Erro ao usar dados da ponte:", error);
+    alert("Erro ao usar dados da ponte: " + error.message);
+  }
+}
+
+
+// Fechar modal de busca de pontes
+function closeSearchPontesModal() {
+  const modal = document.getElementById("search-pontes-modal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+// Realizar busca de pontes
+function performPontesSearch() {
+  const searchTerm = document.getElementById("filter-pontes").value.trim();
+  const resultsContainer = document.getElementById("pontes-results");
+  
+  if (!searchTerm) {
+    resultsContainer.innerHTML = '<div class="work-item">Digite um termo para buscar pontes</div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = '<div class="work-item">Buscando...</div>';
+  
+  searchPontesReference(searchTerm, function(results) {
+    if (results.length === 0) {
+      resultsContainer.innerHTML = '<div class="work-item">Nenhuma ponte encontrada</div>';
+      return;
+    }
+    
+    resultsContainer.innerHTML = '';
+    
+    results.forEach(ponte => {
+      const ponteItem = document.createElement("div");
+      ponteItem.className = "work-item";
+      ponteItem.setAttribute("data-id", ponte.Id);
+      
+      ponteItem.innerHTML = `
+        <span>${ponte.CodigoSgo} - ${ponte.Identificacao} (${ponte.Uf} BR-${ponte.Br} KM ${ponte.Km})</span>
+        <button type="button" onclick="usePonteData('${ponte.Id}')">Usar</button>
+      `;
+      
+      resultsContainer.appendChild(ponteItem);
+    });
+  });
+}
+
+
+// Função para consultar API do DNIT
+async function consultarRodoviasDNIT(lat, lng) {
+  try {
+    const dataRef = new Date().toISOString().split('T')[0];
+    const url = `https://servicos.dnit.gov.br/sgplan/apigeo/rotas/localizarkm?lng=${lng}&lat=${lat}&r=250&data=${dataRef}`;
+    
+    debugLog(`Consultando DNIT: ${url}`);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      mode: 'cors'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API DNIT: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    debugLog(`Resposta DNIT: ${JSON.stringify(data)}`);
+    
+    return data;
+  } catch (error) {
+    debugLog(`Erro ao consultar DNIT: ${error.message}`);
+    return [];
+  }
+}
+
+
+// Usar os dados da ponte selecionada
+function usePonteData(ponteId) {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+    
+    const transaction = db.transaction(["pontes"], "readonly");
+    const objectStore = transaction.objectStore("pontes");
+    const request = objectStore.get(ponteId);
+    
+    request.onsuccess = function(event) {
+      const ponte = event.target.result;
+      
+      if (ponte) {
+        // Preencher os campos do formulário com os dados da ponte
+        document.getElementById("codigo").value = ponte.CodigoSgo || "";
+        document.getElementById("nome").value = ponte.Identificacao || "";
+        document.getElementById("uf").value = ponte.Uf || "";
+        document.getElementById("rodovia").value = ponte.Br ? `BR-${ponte.Br}` : "";
+        document.getElementById("km").value = ponte.Km || 0;
+        
+        alert("Dados da ponte importados com sucesso!");
+        closeSearchPontesModal();
+      } else {
+        alert("Ponte não encontrada.");
+      }
+    };
+    
+    request.onerror = function(event) {
+      console.error("Erro ao obter ponte:", event.target.error);
+      alert("Erro ao obter dados da ponte.");
+    };
+  } catch (error) {
+    console.error("Erro ao usar dados da ponte:", error);
+    alert("Erro ao usar dados da ponte: " + error.message);
+  }
+}
+
+
+
 
       // Ativação das abas
       document.addEventListener("DOMContentLoaded", function () {
@@ -2010,8 +3768,151 @@
         });
       }
 
+
+
       // Configurar validações de campos
-      function setupValidations() {
+function setupValidations() {
+  // Adicionar validação para campos numéricos (mínimo 0)
+  document.querySelectorAll('input[type="number"]').forEach((input) => {
+    // Garantir que o valor não seja negativo
+    input.addEventListener("change", function () {
+      const min = parseFloat(this.getAttribute("min") || 0);
+      const value = parseFloat(this.value) || 0;
+
+      if (value < min) {
+        this.value = min;
+      }
+    });
+
+    // Validação ao sair do campo
+    input.addEventListener("blur", function () {
+      validateField(this.id);
+    });
+  });
+
+  // Validação para campos de texto obrigatórios
+  document
+    .querySelectorAll('input[type="text"][required], select[required]')
+    .forEach((input) => {
+      input.addEventListener("blur", function () {
+        validateField(this.id);
+      });
+    });
+
+  // Validações específicas para campos condicionais
+  document
+    .getElementById("ala-paralela")
+    .addEventListener("change", function () {
+      validateField("comprimento-ala");
+      validateField("espessura-ala");
+    });
+
+  document
+    .getElementById("ala-perpendicular")
+    .addEventListener("change", function () {
+      validateField("comprimento-ala");
+      validateField("espessura-ala");
+    });
+
+  document
+    .getElementById("encontro")
+    .addEventListener("change", function () {
+      validateField("deslocamento-esquerdo-encontro-laje");
+      validateField("deslocamento-direito-encontro-laje");
+      validateField("comprimento-encontro-laje");
+    });
+
+  document
+    .getElementById("qtd-transversinas")
+    .addEventListener("change", function () {
+      validateField("espessura-transversina");
+    });
+
+  document
+    .getElementById("tipo-travessa")
+    .addEventListener("change", function () {
+      validateField("altura-travessa");
+    });
+
+  document
+    .getElementById("tipo-bloco-sapata")
+    .addEventListener("change", function () {
+      validateField("altura-bloco-sapata");
+      validateField("largura-bloco-sapata");
+    });
+
+  // Validações para proteção lateral
+  const lateralProtectionFields = [
+    "barreira-esquerda",
+    "barreira-direita",
+    "guarda-rodas-esquerda",
+    "guarda-rodas-direita",
+    "calcada-esquerda",
+    "calcada-direita",
+  ];
+
+  lateralProtectionFields.forEach((fieldId) => {
+    document
+      .getElementById(fieldId)
+      .addEventListener("change", validateLateralProtection);
+  });
+
+  // Validação para campos dependentes da quantidade de pilares
+  document.getElementById("qtd-pilares").addEventListener("change", function() {
+    const qtdPilares = parseInt(this.value) || 0;
+    const campoLarguraPilar = document.getElementById("largura-pilar");
+    const campoComprimentoPilares = document.getElementById("comprimento-pilares");
+    
+    // Se não houver pilares (qtdPilares = 0)
+    if (qtdPilares === 0) {
+      // Desabilitar campos
+      campoLarguraPilar.disabled = true;
+      campoComprimentoPilares.disabled = true;
+      
+      // Limpar valores
+      campoLarguraPilar.value = "";
+      campoComprimentoPilares.value = "";
+      
+      // Remover validações de erro
+      campoLarguraPilar.classList.remove("error");
+      campoComprimentoPilares.classList.remove("error");
+      
+      // Remover mensagens de erro se existirem
+      const larguraErro = document.getElementById("largura-pilar-error");
+      const comprimentoErro = document.getElementById("comprimento-pilares-error");
+      
+      if (larguraErro) larguraErro.classList.remove("visible");
+      if (comprimentoErro) comprimentoErro.classList.remove("visible");
+    } else {
+      // Habilitar campos quando houver pilares
+      campoLarguraPilar.disabled = false;
+      campoComprimentoPilares.disabled = false;
+    }
+  });
+}
+
+// Adicionar esta verificação na função document.addEventListener("DOMContentLoaded", function() {
+// após a chamada para setupValidations():
+
+// Verificar estado inicial dos campos de pilares
+const qtdPilaresInicial = parseInt(document.getElementById("qtd-pilares").value) || 0;
+if (qtdPilaresInicial === 0) {
+  document.getElementById("largura-pilar").disabled = true;
+  document.getElementById("comprimento-pilares").disabled = true;
+}
+
+
+        // Adicionar na função setupValidations()
+        document
+          .getElementById("encontro")
+          .addEventListener("change", validateAlaWithEncountro);
+        document
+          .getElementById("ala-paralela")
+          .addEventListener("change", validateAlaWithEncountro);
+        document
+          .getElementById("ala-perpendicular")
+          .addEventListener("change", validateAlaWithEncountro);
+
         // Adicionar validação para campos numéricos (mínimo 0)
         document.querySelectorAll('input[type="number"]').forEach((input) => {
           // Garantir que o valor não seja negativo
@@ -2096,7 +3997,9 @@
             .getElementById(fieldId)
             .addEventListener("change", validateLateralProtection);
         });
-      }
+      
+
+
 
       // Validar um campo específico
       function validateField(fieldId) {
@@ -3209,6 +5112,14 @@
             data["MODELADO"] = "FALSE";
           }
 
+
+          if (document.getElementById("gps").checked) {
+  data["GPS"] = "TRUE";
+} else {
+  data["GPS"] = "FALSE";
+}
+
+
           // Coletar valores dos tramos
           const tramosValues = [];
           const tramosFields = document.querySelectorAll(".tramo-field");
@@ -3339,217 +5250,224 @@
       }
 
       // Carregar lista de obras do banco de dados
-      function loadWorksList() {
-        try {
-          if (!db) {
-            console.warn("Banco de dados não está disponível.");
-            return;
-          }
+function loadWorksList() {
+  try {
+    if (!db) {
+      console.warn("Banco de dados não está disponível.");
+      return;
+    }
 
-          const worksList = document.getElementById("works-list");
-          worksList.innerHTML = '<div class="work-item">Carregando...</div>';
+    const worksList = document.getElementById("works-list");
+    worksList.innerHTML = '<div class="work-item">Carregando...</div>';
 
-          const transaction = db.transaction(["obras"], "readonly");
-          const objectStore = transaction.objectStore("obras");
-          const request = objectStore.getAll();
+    const transaction = db.transaction(["obras"], "readonly");
+    const objectStore = transaction.objectStore("obras");
+    const request = objectStore.getAll();
 
-          request.onsuccess = function (event) {
-            const works = event.target.result;
+    request.onsuccess = function (event) {
+      const works = event.target.result;
 
-            if (works.length === 0) {
+      if (works.length === 0) {
               worksList.innerHTML =
                 '<div class="work-item">Nenhuma obra cadastrada</div>';
-            } else {
-              worksList.innerHTML = "";
+      } else {
+        worksList.innerHTML = "";
 
-              works.forEach((work) => {
-                const workItem = document.createElement("div");
-                workItem.className = "work-item";
-                if (work.CODIGO === currentWorkCode) {
-                  workItem.classList.add("selected");
-                }
-                workItem.setAttribute("data-code", work.CODIGO);
+        works.forEach((work) => {
+          const workItem = document.createElement("div");
+          workItem.className = "work-item";
+          if (work.CODIGO === currentWorkCode) {
+            workItem.classList.add("selected");
+          }
+          workItem.setAttribute("data-code", work.CODIGO);
+          workItem.setAttribute("data-lote", work.LOTE || "");
 
-                workItem.innerHTML = `
-                                <span>${work.CODIGO} - ${
-                  work.NOME || "Sem nome"
-                }</span>
-                                <button type="button" class="delete-btn" onclick="deleteWork('${
-                                  work.CODIGO
-                                }', event)">Excluir</button>
-                            `;
+          workItem.innerHTML = `
+            <span>${work.CODIGO} - Lote: ${work.LOTE || "N/A"} - ${
+              work.NOME || "Sem nome"
+            }</span>
+            <button type="button" class="delete-btn" onclick="deleteWork('${
+            work.CODIGO
+            }', event)">Excluir</button>
+          `;
 
-                workItem.addEventListener("click", function (e) {
-                  if (!e.target.classList.contains("delete-btn")) {
-                    loadWork(work.CODIGO);
-                  }
-                });
-
-                worksList.appendChild(workItem);
-              });
+          workItem.addEventListener("click", function (e) {
+            if (!e.target.classList.contains("delete-btn")) {
+              loadWork(work.CODIGO);
             }
-          };
+          });
 
-          request.onerror = function (event) {
-            console.error(
-              "Erro ao carregar a lista de obras:",
-              event.target.error
-            );
-            worksList.innerHTML =
-              '<div class="work-item">Erro ao carregar obras</div>';
-          };
-        } catch (error) {
-          console.error("Erro ao carregar lista de obras:", error);
-          alert("Erro ao carregar lista de obras: " + error.message);
-        }
+          worksList.appendChild(workItem);
+        });
       }
+    };
+
+    request.onerror = function (event) {
+      console.error(
+        "Erro ao carregar a lista de obras:", 
+        event.target.error
+        );
+      worksList.innerHTML = 
+      '<div class="work-item">Erro ao carregar obras</div>';
+    };
+  } catch (error) {
+    console.error("Erro ao carregar lista de obras:", error);
+    alert("Erro ao carregar lista de obras: " + error.message);
+  }
+}
 
       // Filtrar obras por código
-      function filterWorks() {
-        try {
-          const filterText = document
-            .getElementById("filter-works")
-            .value.trim()
-            .toLowerCase();
+     // Filtrar obras por código e/ou lote
+function filterWorks() {
+  try {
+    const filterText = document.getElementById("filter-works").value.trim().toLowerCase();
+    const filterLote = document.getElementById("filter-lote").value.trim().toLowerCase();
 
-          if (!db) {
-            alert("Banco de dados não está disponível.");
-            return;
-          }
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
 
-          const worksList = document.getElementById("works-list");
-          worksList.innerHTML = '<div class="work-item">Filtrando...</div>';
+    const worksList = document.getElementById("works-list");
+    worksList.innerHTML = '<div class="work-item">Filtrando...</div>';
 
-          const transaction = db.transaction(["obras"], "readonly");
-          const objectStore = transaction.objectStore("obras");
-          const request = objectStore.getAll();
+    const transaction = db.transaction(["obras"], "readonly");
+    const objectStore = transaction.objectStore("obras");
+    const request = objectStore.getAll();
 
-          request.onsuccess = function (event) {
-            const works = event.target.result;
-            const filteredWorks = filterText
-              ? works.filter(
-                  (work) =>
-                    work.CODIGO.toLowerCase().includes(filterText) ||
-                    (work.NOME && work.NOME.toLowerCase().includes(filterText))
-                )
-              : works;
-
-            if (filteredWorks.length === 0) {
-              worksList.innerHTML =
-                '<div class="work-item">Nenhuma obra encontrada</div>';
-            } else {
-              worksList.innerHTML = "";
-
-              filteredWorks.forEach((work) => {
-                const workItem = document.createElement("div");
-                workItem.className = "work-item";
-                if (work.CODIGO === currentWorkCode) {
-                  workItem.classList.add("selected");
-                }
-                workItem.setAttribute("data-code", work.CODIGO);
-
-                workItem.innerHTML = `
-                                <span>${work.CODIGO} - ${
-                  work.NOME || "Sem nome"
-                }</span>
-                                <button type="button" class="delete-btn" onclick="deleteWork('${
-                                  work.CODIGO
-                                }', event)">Excluir</button>
-                            `;
-
-                workItem.addEventListener("click", function (e) {
-                  if (!e.target.classList.contains("delete-btn")) {
-                    loadWork(work.CODIGO);
-                  }
-                });
-
-                worksList.appendChild(workItem);
-              });
-            }
-          };
-
-          request.onerror = function (event) {
-            console.error("Erro ao filtrar obras:", event.target.error);
-            worksList.innerHTML =
-              '<div class="work-item">Erro ao filtrar obras</div>';
-          };
-        } catch (error) {
-          console.error("Erro ao filtrar obras:", error);
-          alert("Erro ao filtrar obras: " + error.message);
-        }
+    request.onsuccess = function (event) {
+      const works = event.target.result;
+      let filteredWorks = works;
+      
+      // Filtrar por código e nome
+      if (filterText) {
+        filteredWorks = filteredWorks.filter(
+          (work) =>
+            (work.CODIGO && work.CODIGO.toLowerCase().includes(filterText)) ||
+            (work.NOME && work.NOME.toLowerCase().includes(filterText))
+        );
       }
+      
+      // Filtrar por lote
+      if (filterLote) {
+        filteredWorks = filteredWorks.filter(
+          (work) => 
+            work.LOTE && work.LOTE.toLowerCase().includes(filterLote)
+        );
+      }
+
+      if (filteredWorks.length === 0) {
+        worksList.innerHTML = '<div class="work-item">Nenhuma obra encontrada</div>';
+      } else {
+        worksList.innerHTML = "";
+
+        filteredWorks.forEach((work) => {
+          const workItem = document.createElement("div");
+          workItem.className = "work-item";
+          if (work.CODIGO === currentWorkCode) {
+            workItem.classList.add("selected");
+          }
+          workItem.setAttribute("data-code", work.CODIGO);
+          workItem.setAttribute("data-lote", work.LOTE || "");
+
+          workItem.innerHTML = `
+            <span>${work.CODIGO} - Lote: ${work.LOTE || "N/A"} - ${work.NOME || "Sem nome"}</span>
+            <button type="button" class="delete-btn" onclick="deleteWork('${work.CODIGO}', event)">Excluir</button>
+          `;
+
+          workItem.addEventListener("click", function (e) {
+            if (!e.target.classList.contains("delete-btn")) {
+              loadWork(work.CODIGO);
+            }
+          });
+
+          worksList.appendChild(workItem);
+        });
+      }
+    };
+
+    request.onerror = function (event) {
+      console.error("Erro ao filtrar obras:", event.target.error);
+      worksList.innerHTML = '<div class="work-item">Erro ao filtrar obras</div>';
+    };
+  } catch (error) {
+    console.error("Erro ao filtrar obras:", error);
+    alert("Erro ao filtrar obras: " + error.message);
+  }
+}
+    
 
       // Exportar todas as obras para CSV
-      function exportAllWorks() {
-        try {
-          if (!db) {
-            alert("Banco de dados não está disponível.");
-            return;
-          }
+function exportAllWorks() {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
 
-          const transaction = db.transaction(["obras"], "readonly");
-          const objectStore = transaction.objectStore("obras");
-          const request = objectStore.getAll();
+    const transaction = db.transaction(["obras"], "readonly");
+    const objectStore = transaction.objectStore("obras");
+    const request = objectStore.getAll();
 
-          request.onsuccess = function (event) {
-            const works = event.target.result;
+    request.onsuccess = function (event) {
+      const works = event.target.result;
 
-            if (works.length === 0) {
-              alert("Não há obras para exportar.");
-              return;
-            }
-
-            // Obter colunas definidas
-            const csvColumns = getCsvColumns();
-
-            // Verificar campos personalizados em todas as obras
-            works.forEach((work) => {
-              Object.keys(work).forEach((field) => {
-                if (!csvColumns.includes(field)) {
-                  csvColumns.push(field);
-                }
-              });
-            });
-
-            // Construir o conteúdo do CSV
-            let csvContent = csvColumns.join(",") + "\n";
-
-            works.forEach((work) => {
-              const row = csvColumns.map((column) => {
-                const value = work[column] || "";
-                // Valores com vírgula devem ser envolvidos em aspas duplas
-                return value && value.includes(",") ? `"${value}"` : value;
-              });
-
-              csvContent += row.join(",") + "\n";
-            });
-
-            // Criar e baixar o arquivo CSV
-            const blob = new Blob([csvContent], {
-              type: "text/csv;charset=utf-8;",
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute(
-              "download",
-              `Todas_OAEs_${new Date().toISOString().split("T")[0]}.csv`
-            );
-            link.style.display = "none";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          };
-
-          request.onerror = function (event) {
-            console.error("Erro ao exportar obras:", event.target.error);
-            alert(`Erro ao exportar obras: ${event.target.error}`);
-          };
-        } catch (error) {
-          console.error("Erro ao exportar todas as obras:", error);
-          alert("Erro ao exportar todas as obras: " + error.message);
-        }
+      if (works.length === 0) {
+        alert("Não há obras para exportar.");
+        return;
       }
+
+      // Obter colunas definidas
+      const csvColumns = getCsvColumns();
+
+      // Verificar campos personalizados em todas as obras
+      works.forEach((work) => {
+        Object.keys(work).forEach((field) => {
+          if (!csvColumns.includes(field)) {
+            csvColumns.push(field);
+          }
+        });
+      });
+
+      // Correção: Inicializar a variável csvContent
+      let csvContent = csvColumns.join("\t") + "\n";
+
+      works.forEach((work) => {
+        const row = csvColumns.map((column) => {
+          const value = work[column] || "";
+          // Valores com tabs devem ser envolvidos em aspas duplas
+          return value && value.includes("\t") ? `"${value}"` : value;
+        });
+
+        csvContent += row.join("\t") + "\n";
+      });
+
+      // Criar e baixar o arquivo CSV
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `Todas_OAEs_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    request.onerror = function (event) {
+      console.error("Erro ao exportar obras:", event.target.error);
+      alert(`Erro ao exportar obras: ${event.target.error}`);
+    };
+  } catch (error) {
+    console.error("Erro ao exportar todas as obras:", error);
+    alert("Erro ao exportar todas as obras: " + error.message);
+  }
+}
 
       // Excluir uma obra do banco de dados
       function deleteWork(codigo, event) {
@@ -3927,6 +5845,407 @@
           "QTD BUZINOTES",
         ];
       }
+
+
+function showExportLoteModal() {
+  try {
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+
+    // Limpar e preencher o select com os lotes disponíveis
+    const loteSelect = document.getElementById("export-lote-select");
+    loteSelect.innerHTML = '<option value="">Carregando lotes...</option>';
+
+    const transaction = db.transaction(["obras"], "readonly");
+    const objectStore = transaction.objectStore("obras");
+    const index = objectStore.index("LOTE");
+    const request = index.openCursor(null, "nextunique");
+
+    const lotes = new Set();
+
+    request.onsuccess = function(event) {
+      const cursor = event.target.result;
+      
+      if (cursor) {
+        // Adicionar lote ao conjunto se existir
+        if (cursor.key) {
+          lotes.add(cursor.key);
+        }
+        cursor.continue();
+      } else {
+        // Todos os lotes foram coletados, preencher o select
+        loteSelect.innerHTML = '';
+        
+        if (lotes.size === 0) {
+          loteSelect.innerHTML = '<option value="">Nenhum lote encontrado</option>';
+        } else {
+          // Ordenar os lotes
+          const lotesOrdenados = Array.from(lotes).sort();
+          
+          // Adicionar opção para cada lote
+          lotesOrdenados.forEach(lote => {
+            const option = document.createElement('option');
+            option.value = lote;
+            option.textContent = lote;
+            loteSelect.appendChild(option);
+          });
+        }
+      }
+    };
+
+    request.onerror = function(event) {
+      console.error("Erro ao carregar lotes:", event.target.error);
+      loteSelect.innerHTML = '<option value="">Erro ao carregar lotes</option>';
+    };
+
+    // Mostrar o modal
+    document.getElementById("export-lote-modal").style.display = "block";
+  } catch (error) {
+    console.error("Erro ao exibir modal de exportação por lote:", error);
+    alert("Erro ao exibir modal de exportação por lote: " + error.message);
+  }
+}
+
+function closeExportLoteModal() {
+  document.getElementById("export-lote-modal").style.display = "none";
+}
+
+function exportLoteWorks() {
+  try {
+    const loteSelect = document.getElementById("export-lote-select");
+    const lote = loteSelect.value;
+    
+    if (!lote) {
+      alert("Por favor, selecione um lote para exportar.");
+      return;
+    }
+
+    if (!db) {
+      alert("Banco de dados não está disponível.");
+      return;
+    }
+
+    const transaction = db.transaction(["obras"], "readonly");
+    const objectStore = transaction.objectStore("obras");
+    const index = objectStore.index("LOTE");
+    const request = index.getAll(lote);
+
+    request.onsuccess = function(event) {
+      const works = event.target.result;
+
+      if (works.length === 0) {
+        alert(`Não há obras no lote "${lote}" para exportar.`);
+        return;
+      }
+
+      // Obter colunas definidas
+      const csvColumns = getCsvColumns();
+
+      // Verificar campos personalizados em todas as obras
+      works.forEach((work) => {
+        Object.keys(work).forEach((field) => {
+          if (!csvColumns.includes(field)) {
+            csvColumns.push(field);
+          }
+        });
+      });
+
+      // Construir o conteúdo do CSV (usando TAB como separador)
+      let csvContent = csvColumns.join("\t") + "\n";
+
+      works.forEach((work) => {
+        const row = csvColumns.map((column) => {
+          const value = work[column] || "";
+          // Valores com tabs devem ser envolvidos em aspas duplas
+          return value && value.includes("\t") ? `"${value}"` : value;
+        });
+
+        csvContent += row.join("\t") + "\n";
+      });
+
+      // Criar e baixar o arquivo CSV
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `OAEs_Lote_${lote.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Fechar o modal após exportação
+      closeExportLoteModal();
+    };
+
+    request.onerror = function(event) {
+      console.error(`Erro ao exportar obras do lote "${lote}":`, event.target.error);
+      alert(`Erro ao exportar obras do lote "${lote}": ${event.target.error}`);
+    };
+  } catch (error) {
+    console.error("Erro ao exportar obras por lote:", error);
+    alert("Erro ao exportar obras por lote: " + error.message);
+  }
+}
+
+
+// Função para importar CSV de pontes para o IndexedDB
+function importPontesCSV() {
+  try {
+    // Criar um input de arquivo oculto
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.csv';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const csvData = event.target.result;
+          processPontesCSV(csvData);
+        };
+        
+        reader.onerror = function() {
+          alert("Erro ao ler o arquivo.");
+        };
+        
+        reader.readAsText(file);
+      }
+      
+      // Remover o input após uso
+      document.body.removeChild(fileInput);
+    });
+    
+    // Acionar o clique para abrir o seletor de arquivos
+    fileInput.click();
+  } catch (error) {
+    console.error("Erro ao importar CSV de pontes:", error);
+    alert("Erro ao importar CSV de pontes: " + error.message);
+  }
+}
+
+// Função para processar o conteúdo do CSV de pontes
+function processPontesCSV(csvData) {
+  try {
+    // Dividir as linhas do CSV
+    const lines = csvData.split('\n');
+    if (lines.length < 2) {
+      alert("O arquivo CSV não contém dados válidos.");
+      return;
+    }
+    
+    // Verificar o separador correto (pode ser ; ou ,)
+    const separator = lines[0].includes(';') ? ';' : ',';
+    
+    // Obter os cabeçalhos (primeira linha)
+    const headers = lines[0].split(separator).map(header => header.trim());
+    
+    // Verificar se os cabeçalhos esperados existem
+    const requiredHeaders = ["Id", "CodigoSgo", "Identificacao", "Uf", "Br", "Km"];
+    const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
+    
+    if (missingHeaders.length > 0) {
+      alert("O arquivo CSV não contém os cabeçalhos esperados: " + missingHeaders.join(", "));
+      return;
+    }
+    
+    // Array para armazenar as obras convertidas
+    const obras = [];
+    
+    // Processar cada linha de dados (exceto a primeira que são os cabeçalhos)
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === "") continue; // Pular linhas vazias
+      
+      const values = lines[i].split(separator);
+      if (values.length !== headers.length) {
+        console.warn(`Linha ${i + 1} tem número incorreto de campos. Tentando processar mesmo assim.`);
+      }
+      
+      // Criar um objeto para mapear os valores para os índices de cabeçalho
+      const rowData = {};
+      headers.forEach((header, index) => {
+        if (index < values.length) {
+          rowData[header] = values[index].trim();
+        }
+      });
+      
+      // Mapear os dados da ponte para o formato OAE
+      const obra = {
+        CODIGO: rowData.CodigoSgo || "",
+        NOME: rowData.Identificacao || "",
+        UF: rowData.Uf || "",
+        RODOVIA: rowData.Br ? `BR-${rowData.Br}` : "",
+        KM: parseFloat(rowData.Km) || 0,
+        LOTE: `BR-${rowData.Br || "000"}`, // Criar um lote baseado na BR
+        MODELADO: "FALSE",
+        GPS: "FALSE",
+        "FOTOS SUPERIORES": "0",
+        "FOTOS INFERIORES": "0",
+        COMPRIMENTO: "0",
+        LARGURA: "0",
+        ALTURA: "0",
+        "QTD TRAMOS": "1",
+        "COMPRIMENTO TRAMOS": "0.5",
+        "CORTINA ALTURA": "0",
+        "ALTURA LONGARINA": "0",
+        "DESLOCAMENTO ESQUERDO": "0",
+        "DESLOCAMENTO DIREITO": "0",
+        "QTD LONGARINAS": "0",
+        "ESPESSURA LONGARINA": "0",
+        "ESPESSURA LAJE": "0",
+        "QTD PILARES": "0",
+        PAVIMENTO: "PAVIMENTO ASFÁLTICO"
+      };
+      
+      // Se houver um código válido, adicionar à lista
+      if (obra.CODIGO && obra.CODIGO.trim() !== "") {
+        obras.push(obra);
+      }
+    }
+    
+    if (obras.length > 0) {
+      // Perguntar ao usuário se deseja salvar todas as pontes no banco de dados
+      if (confirm(`O arquivo contém ${obras.length} pontes. Deseja importar todas para o banco de dados?`)) {
+        saveMultipleWorks(obras);
+      }
+    } else {
+      alert("Nenhuma ponte válida encontrada no arquivo CSV.");
+    }
+  } catch (error) {
+    console.error("Erro ao processar arquivo CSV de pontes:", error);
+    alert("Erro ao processar arquivo CSV de pontes: " + error.message);
+  }
+}
+
+
+
+// Função para importar CSV de pontes de referência (mantendo nome original)
+function importPontesReferenceCSV() {
+  try {
+    // Criar um input de arquivo oculto
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.csv';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const csvData = event.target.result;
+          processPontesCSV(csvData);
+        };
+        
+        reader.onerror = function() {
+          alert("Erro ao ler o arquivo.");
+        };
+        
+        reader.readAsText(file);
+      }
+      
+      // Remover o input após uso
+      document.body.removeChild(fileInput);
+    });
+    
+    // Acionar o clique para abrir o seletor de arquivos
+    fileInput.click();
+  } catch (error) {
+    console.error("Erro ao importar CSV de pontes:", error);
+    alert("Erro ao importar CSV de pontes: " + error.message);
+  }
+}
+
+// Função para processar o conteúdo do CSV de pontes
+function processPontesCSV(csvData) {
+  try {
+    // Dividir as linhas do CSV
+    const lines = csvData.split('\n');
+    if (lines.length < 2) {
+      alert("O arquivo CSV não contém dados válidos.");
+      return;
+    }
+    
+    // Detectar o separador
+    const headerLine = lines[0];
+    let separator = ',';
+    if (headerLine.includes(';')) separator = ';';
+    if (headerLine.includes('\t')) separator = '\t';
+    
+    // Obter os cabeçalhos
+    const headers = headerLine.split(separator).map(header => header.trim());
+    
+    // Array para armazenar as pontes
+    const pontes = [];
+    
+    // Processar cada linha de dados
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Pular linhas vazias
+      
+      // Processar linha respeitando aspas
+      const values = parseCSVLine(line, separator);
+      
+      if (values.length < 5) continue; // Ignorar linhas muito curtas
+      
+      // Mapear cabeçalhos para índices
+      const headerMap = {};
+      headers.forEach((header, index) => {
+        const normalizedHeader = header.toLowerCase().replace(/[\s"']/g, '');
+        headerMap[normalizedHeader] = index;
+      });
+      
+      // Extrair dados com base nos índices
+      const ponte = {
+        Id: values[headerMap['id'] || 0] || '',
+        CodigoSgo: values[headerMap['codigosgo'] || headerMap['códigosgo'] || 1] || '',
+        Identificacao: values[headerMap['identificacao'] || headerMap['identificação'] || 2] || '',
+        Municipio: values[headerMap['municipio'] || headerMap['município'] || 3] || '',
+        Uf: values[headerMap['uf'] || 4] || '',
+        Br: values[headerMap['rodovia'] || 6] || '',
+        Km: parseFloat((values[headerMap['km'] || 7] || '0').toString().replace(',', '.')) || 0,
+        Comprimento: parseFloat((values[headerMap['comprimento'] || 9] || '0').toString().replace(',', '.')) || 0,
+        Largura: parseFloat((values[headerMap['largura'] || 10] || '0').toString().replace(',', '.')) || 0,
+        AnoConstrucao: values[headerMap['ano'] || 11] || '',
+        Latitude: parseFloat((values[headerMap['latitude'] || 12] || '0').toString().replace(',', '.')) || 0,
+        Longitude: parseFloat((values[headerMap['longitude'] || 13] || '0').toString().replace(',', '.')) || 0
+      };
+      
+      // Verificar se o objeto tem dados mínimos
+      if (ponte.Id && ponte.CodigoSgo) {
+        pontes.push(ponte);
+      }
+    }
+    
+    if (pontes.length > 0) {
+      // Salvar as pontes no banco de dados
+      savePontesReference(pontes);
+      alert(`Importação concluída: ${pontes.length} pontes de referência importadas.`);
+    } else {
+      alert("Nenhuma ponte válida encontrada no arquivo CSV.");
+    }
+  } catch (error) {
+    console.error("Erro ao processar arquivo CSV de pontes:", error);
+    alert("Erro ao processar arquivo CSV de pontes: " + error.message);
+  }
+}
+
+
+
+
     </script>
   </body>
 </html>
