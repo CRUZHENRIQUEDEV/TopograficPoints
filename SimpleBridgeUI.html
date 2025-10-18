@@ -3769,7 +3769,10 @@ function usePonteData(ponteId) {
 
 
 
-      // Configurar validações de campos
+   
+      // Versão: 1.0
+// Função setupValidations completa com a correção para os campos de pilar
+
 function setupValidations() {
   // Adicionar validação para campos numéricos (mínimo 0)
   document.querySelectorAll('input[type="number"]').forEach((input) => {
@@ -3857,22 +3860,19 @@ function setupValidations() {
   });
 
   // Validação para campos dependentes da quantidade de pilares
+  // AQUI ESTÁ A CORREÇÃO PARA O PROBLEMA DOS CAMPOS DE PILAR
   document.getElementById("qtd-pilares").addEventListener("change", function() {
     const qtdPilares = parseInt(this.value) || 0;
     const campoLarguraPilar = document.getElementById("largura-pilar");
     const campoComprimentoPilares = document.getElementById("comprimento-pilares");
     
-    // Se não houver pilares (qtdPilares = 0)
+    // CORREÇÃO: Nunca desabilitar os campos, independentemente da quantidade de pilares
+    campoLarguraPilar.disabled = false;
+    campoComprimentoPilares.disabled = false;
+    
+    // Manter apenas a lógica de validação visual
     if (qtdPilares === 0) {
-      // Desabilitar campos
-      campoLarguraPilar.disabled = true;
-      campoComprimentoPilares.disabled = true;
-      
-      // Limpar valores
-      campoLarguraPilar.value = "";
-      campoComprimentoPilares.value = "";
-      
-      // Remover validações de erro
+      // Remover marcações de erro
       campoLarguraPilar.classList.remove("error");
       campoComprimentoPilares.classList.remove("error");
       
@@ -3882,16 +3882,28 @@ function setupValidations() {
       
       if (larguraErro) larguraErro.classList.remove("visible");
       if (comprimentoErro) comprimentoErro.classList.remove("visible");
-    } else {
-      // Habilitar campos quando houver pilares
-      campoLarguraPilar.disabled = false;
-      campoComprimentoPilares.disabled = false;
     }
   });
+
+  // Validação para campos de encontro e alas
+  document
+    .getElementById("encontro")
+    .addEventListener("change", validateAlaWithEncountro);
+  document
+    .getElementById("ala-paralela")
+    .addEventListener("change", validateAlaWithEncountro);
+  document
+    .getElementById("ala-perpendicular")
+    .addEventListener("change", validateAlaWithEncountro);
+
+  // Verificar estado inicial dos campos de pilares
+  const qtdPilaresInicial = parseInt(document.getElementById("qtd-pilares").value) || 0;
+  
+  // CORREÇÃO: Garantir que os campos de pilar nunca estejam desabilitados na inicialização
+  document.getElementById("largura-pilar").disabled = false;
+  document.getElementById("comprimento-pilares").disabled = false;
 }
 
-// Adicionar esta verificação na função document.addEventListener("DOMContentLoaded", function() {
-// após a chamada para setupValidations():
 
 // Verificar estado inicial dos campos de pilares
 const qtdPilaresInicial = parseInt(document.getElementById("qtd-pilares").value) || 0;
