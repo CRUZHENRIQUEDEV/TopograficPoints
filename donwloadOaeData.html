@@ -163,11 +163,11 @@
                     <strong>Aguarde a coleta automática</strong> de todos os dados
                 </div>
 
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <strong>Exporte os dados:</strong><br>
-                    Digite <code>downloadCSV()</code> ou <code>downloadJSON()</code>
-                </div>
+               <div class="step">
+    <span class="step-number">5</span>
+    <strong>Exporte os dados:</strong><br>
+    Digite <code>downloadTodosCSV()</code> para baixar ambos os arquivos CSV simultaneamente
+</div>
             </div>
 
             <div class="section">
@@ -176,236 +176,7 @@
                 </button>
 
                 <div class="code-box" id="codigoScript">// Versão: 5.0 - DNIT OAE Extractor - CSV Simplificado (12 campos essenciais)
-(async function() {
-    console.log('🚀 DNIT OAE Extractor v5.0 - CSV Simplificado');
-    console.log('═══════════════════════════════════════\n');
-
-   // Versão: 6.0 - Constantes e Variáveis Iniciais Atualizadas
-
-// URLs da API
-const API_BASE_URL_OAE = 'https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/CadastroOae/obterListaManterOaes';
-const API_BASE_URL_INSPECAO = 'https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/InspecaoOae';
-
-// IDs dos responsáveis
-const RESPONSAVEIS = [
-    '36228eff-525f-4629-b406-f308ebe605da',
-    '21484127-2d2f-4a72-9382-83e21bd03dc6',
-    '5c2a0c7d-6308-4b79-82ec-9e7a2cbd1af5',
-    'c2536023-a24c-4d2d-8dd1-541fc559d3b9',
-    '3d0448dd-c9d1-4da1-92c3-f05fd9b2351a',
-    '2ece7b1c-4550-488c-a9fc-aa49fd0e0f3f',
-    '598d003e-cd89-46e3-ba26-e0a880ce743f',
-    '570a3aef-92fc-4ef2-b660-eccd8fcc2ec7',
-    'b6988556-b011-4f6e-a119-70d29727bb08',
-    '2c42ab19-c634-412e-92a6-382979ad3ca2',
-    'b6988556-b011-4f6e-a119-70d29727bb08'
-];
-
-// Tipo de inspeção (para endpoint de inspeções)
-const TIPO_INSPECAO_ROTINEIRA = 1;
-
-// Armazenamento dos dados
-let dadosCadastrais = [];  // Dados de OAEs (cadastrais)
-let dadosInspecoes = [];   // Dados de inspeções rotineiras
-let bearerToken = null;    // Token de autenticação
-
-    function obterBearerToken() {
-        console.log('🔑 Buscando Bearer Token...');
-        
-        try {
-            const oidcKey = Object.keys(sessionStorage).find(key => 
-                key.includes('oidc-user') && key.includes('dnit.gov.br')
-            );
-            
-            if (oidcKey) {
-                const oidcData = JSON.parse(sessionStorage.getItem(oidcKey));
-                if (oidcData && oidcData.access_token) {
-                    console.log('✅ Token encontrado no sessionStorage');
-                    return oidcData.access_token;
-                }
-            }
-        } catch (e) {
-            console.log('⚠️ Erro ao buscar token:', e.message);
-        }
-
-        console.log('⚠️ Token não encontrado');
-        return null;
-    }
-
-    function construirURL(pageIndex = 0) {
-        const params = [];
-        params.push('pageSize=15');
-        params.push('status=5');
-        
-        RESPONSAVEIS.forEach(id => {
-            params.push(`responsaveis=${id}`);
-        });
-        
-        if (pageIndex > 0) {
-            params.push(`pageIndex=${pageIndex}`);
-        }
-        
-        return `${API_BASE_URL}?${params.join('&')}`;
-    }
-
-    async function fazerRequisicao(url, token) {
-        const headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'Authorization': `Bearer ${token}`
-        };
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: headers,
-            credentials: 'include'
-        });
-
-        return response;
-    }
-
-    async function extrairDados(token) {
-        console.log('\n📊 Iniciando extração...\n');
-        
-        try {
-            let pageIndex = 0;
-            let hasNextPage = true;
-            let totalCount = 0;
-
-            while (hasNextPage) {
-                console.log(`📄 Buscando página ${pageIndex + 1}...`);
-                
-                const url = construirURL(pageIndex);
-                const response = await fazerRequisicao(url, token);
-
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                todosOsDados.push(...data.items);
-                totalCount = data.totalCount;
-                hasNextPage = data.hasNextPage;
-                pageIndex++;
-
-                console.log(`   ✅ ${data.items.length} itens coletados`);
-                console.log(`   📊 Progresso: ${todosOsDados.length}/${totalCount}`);
-            }
-
-            console.log('\n🎉 EXTRAÇÃO CONCLUÍDA!\n');
-            exibirEstatisticas();
-            configurarExportacao();
-
-        } catch (error) {
-            console.error('\n❌ ERRO:', error.message);
-        }
-    }
-
-    function exibirEstatisticas() {
-        console.log('═══════════════════════════════════════');
-        console.log('📊 ESTATÍSTICAS:');
-        console.log('═══════════════════════════════════════');
-        console.log(`   Total de OAEs: ${todosOsDados.length}`);
-        console.log(`   BRs únicas: ${[...new Set(todosOsDados.map(item => item.br))].length}`);
-        console.log(`   Estados: ${[...new Set(todosOsDados.map(item => item.uf))].length}`);
-        
-        const porStatus = todosOsDados.reduce((acc, item) => {
-            acc[item.status] = (acc[item.status] || 0) + 1;
-            return acc;
-        }, {});
-        
-        console.log('\n   Status:');
-        Object.entries(porStatus).forEach(([status, count]) => {
-            console.log(`     - ${status}: ${count}`);
-        });
-        
-        console.log('═══════════════════════════════════════\n');
-    }
-
-    function configurarExportacao() {
-        window.todosOsDados = todosOsDados;
-        
-        window.downloadJSON = function() {
-            const dataStr = JSON.stringify(todosOsDados, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `oaes_dnit_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            console.log('✅ Arquivo JSON baixado!');
-        };
-
-        window.downloadCSV = function() {
-            // CSV com campos essenciais
-            const headers = [
-                'ID OAE',
-                'Identificação',
-                'Natureza Estrutura',
-                'ID Natureza Estrutura',
-                'Código SGO',
-                'BR',
-                'UF',
-                'Status',
-                'KM',
-                'Nome Inspetor',
-                'Nome Avaliador',
-                'Localizado'
-            ];
-            
-            const rows = todosOsDados.map(item => [
-                item.idOae || '',
-                item.identificacao || '',
-                item.naturezaEstrutura || '',
-                item.idNaturezaEstrutura || '',
-                item.codigoSgo || '',
-                item.br || '',
-                item.uf || '',
-                item.status || '',
-                item.km || '',
-                item.nomeInspetor || '',
-                item.nomeAvaliador || '',
-                item.localizado || ''
-            ]);
-            
-            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `oaes_dnit_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            console.log('✅ Arquivo CSV baixado!');
-        };
-
-        console.log('💾 COMANDOS DE EXPORTAÇÃO:');
-        console.log('   • downloadJSON() - Baixar JSON completo');
-        console.log('   • downloadCSV()  - Baixar CSV com 12 campos essenciais');
-        console.log('   • todosOsDados   - Ver dados no console\n');
-    }
-
-    window.extrairComToken = async function(token) {
-        todosOsDados = [];
-        bearerToken = token.replace('Bearer ', '');
-        await extrairDados(bearerToken);
-    };
-
-    bearerToken = obterBearerToken();
-    
-    if (bearerToken) {
-        console.log('🎯 Token encontrado! Iniciando...\n');
-        await extrairDados(bearerToken);
-    } else {
-        console.log('⚠️ Token não encontrado automaticamente\n');
-        console.log('📋 Execute: extrairComToken("SEU_TOKEN")');
-    }
-
-})();</div>
+</div>
             </div>
 
             <div class="section">
@@ -429,20 +200,21 @@ let bearerToken = null;    // Token de autenticação
                 </div>
             </div>
 
-            <div class="section">
-                <h2>🎯 Funcionalidades</h2>
-                <div class="info">
-                    <ul>
-                        <li>✅ Detecta token automaticamente</li>
-                        <li>✅ Coleta TODAS as páginas automaticamente</li>
-                        <li>✅ CSV simplificado com 12 campos essenciais</li>
-                        <li>✅ JSON completo com todos os dados</li>
-                        <li>✅ UTF-8 com BOM para Excel</li>
-                        <li>✅ Estatísticas detalhadas</li>
-                        <li>✅ Sem problemas de CORS</li>
-                    </ul>
-                </div>
-            </div>
+        <div class="section">
+    <h2>🎯 Funcionalidades</h2>
+    <div class="info">
+        <ul>
+            <li>⭐ <strong>NOVO:</strong> Download simultâneo de CSV Cadastral e Rotineira</li>
+            <li>⭐ <strong>NOVO:</strong> Nome de arquivo padronizado (OBRAS_APROVADAS_XXX_DATA_HORA)</li>
+            <li>✅ Detecta token automaticamente</li>
+            <li>✅ Coleta TODAS as páginas automaticamente</li>
+            <li>✅ Exporta dados completos em CSV e JSON</li>
+            <li>✅ UTF-8 com BOM para compatibilidade com Excel</li>
+            <li>✅ Estatísticas detalhadas no console</li>
+            <li>✅ Sem problemas de CORS</li>
+        </ul>
+    </div>
+</div>
         </div>
     </div>
 
@@ -704,140 +476,10 @@ let bearerToken = null;    // Token de autenticação
         console.log('═══════════════════════════════════════\n');
     }
 
-    /**
-     * Configura funções de exportação e torna os dados acessíveis globalmente
-     */
-    function configurarExportacao() {
-        // Torna os dados acessíveis globalmente
-        window.dadosCadastrais = dadosCadastrais;
-        window.dadosInspecoes = dadosInspecoes;
-        
-        // Exportação JSON
-        window.downloadJSONCadastral = function() {
-            const dataStr = JSON.stringify(dadosCadastrais, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `oaes_cadastral_dnit_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            console.log('✅ Arquivo JSON CADASTRAL baixado!');
-        };
-        
-        window.downloadJSONInspecoes = function() {
-            const dataStr = JSON.stringify(dadosInspecoes, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `oaes_inspecoes_dnit_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            console.log('✅ Arquivo JSON INSPEÇÕES baixado!');
-        };
+   
 
-        // Exportação CSV
-        window.downloadCSVCadastral = function() {
-            const headers = [
-                'ID OAE',
-                'Identificação',
-                'Natureza Estrutura',
-                'ID Natureza Estrutura',
-                'Código SGO',
-                'BR',
-                'UF',
-                'Status',
-                'KM',
-                'Nome Inspetor',
-                'Nome Avaliador',
-                'Data Última Atualização'
-            ];
-            
-            const rows = dadosCadastrais.map(item => [
-                item.idOae || '',
-                item.identificacaoObra || '',
-                item.naturezaEstrutura || '',
-                item.idNaturezaEstrutura || '',
-                item.codigoEstrutura || '',
-                item.br || '',
-                item.uf || '',
-                item.status || '',
-                item.km || '',
-                item.nomeInspetor || '',
-                item.nomeAvaliador || '',
-                item.dataUltimaAtualizacaoFormatada || ''
-            ]);
-            
-            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `oaes_cadastral_dnit_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            console.log('✅ Arquivo CSV CADASTRAL baixado!');
-        };
 
-        window.downloadCSVInspecoes = function() {
-            const headers = [
-                'ID OAE',
-                'ID Inspeção',
-                'Identificação',
-                'BR',
-                'UF',
-                'KM',
-                'Status',
-                'Natureza Estrutura',
-                'Nome Inspetor',
-                'Nome Avaliador',
-                'Data Inspeção',
-                'Data Última Atualização'
-            ];
-            
-            const rows = dadosInspecoes.map(item => [
-                item.idOae || '',
-                item.idInspecao || '',
-                item.identificacaoObra || '',
-                item.br || '',
-                item.uf || '',
-                item.km || '',
-                item.status || '',
-                item.naturezaEstrutura || '',
-                item.nomeInspetor || '',
-                item.nomeAvaliador || '',
-                item.dataInspecaoFormatada || '',
-                item.dataUltimaAtualizacaoFormatada || ''
-            ]);
-            
-            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `oaes_inspecoes_dnit_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            console.log('✅ Arquivo CSV INSPEÇÕES baixado!');
-        };
 
-        console.log('💾 COMANDOS DE EXPORTAÇÃO:');
-        console.log('   • downloadCSVCadastral()    - Baixar CSV com dados cadastrais');
-        console.log('   • downloadCSVInspecoes()    - Baixar CSV com inspeções rotineiras');
-        console.log('   • downloadJSONCadastral()   - Baixar JSON de dados cadastrais');
-        console.log('   • downloadJSONInspecoes()   - Baixar JSON de inspeções rotineiras');
-        console.log('   • dadosCadastrais           - Ver dados cadastrais no console');
-        console.log('   • dadosInspecoes            - Ver inspeções no console\n');
-    }
 
     /**
      * Inicia a extração de ambos os conjuntos de dados
@@ -859,6 +501,210 @@ let bearerToken = null;    // Token de autenticação
             console.error('\n❌ ERRO NA EXTRAÇÃO:', error.message);
         }
     }
+
+
+    /**
+ * Configura funções de exportação e torna os dados acessíveis globalmente
+ */
+function configurarExportacao() {
+    // Torna os dados acessíveis globalmente
+    window.dadosCadastrais = dadosCadastrais;
+    window.dadosInspecoes = dadosInspecoes;
+    
+    // Exportação JSON
+    window.downloadJSONCadastral = function() {
+        const dataHora = gerarDataHoraFormatada();
+        const dataStr = JSON.stringify(dadosCadastrais, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `OBRAS_APROVADAS_CADASTRAL_${dataHora}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('✅ Arquivo JSON CADASTRAL baixado!');
+    };
+    
+    window.downloadJSONInspecoes = function() {
+        const dataHora = gerarDataHoraFormatada();
+        const dataStr = JSON.stringify(dadosInspecoes, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `OBRAS_APROVADAS_ROTINEIRA_${dataHora}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('✅ Arquivo JSON INSPEÇÕES baixado!');
+    };
+
+   
+    // Exportação CSV para inspeções rotineiras
+    window.downloadCSVInspecoes = function() {
+        const dataHora = gerarDataHoraFormatada();
+        const headers = [
+            'ID OAE',
+            'ID Inspeção',
+            'Identificação',
+            'BR',
+            'UF',
+            'KM',
+            'Status',
+            'Natureza Estrutura',
+            'Nome Inspetor',
+            'Nome Avaliador',
+            'Data Inspeção',
+            'Data Última Atualização'
+        ];
+        
+        const rows = dadosInspecoes.map(item => [
+            item.idOae || '',
+            item.idInspecao || '',
+            item.identificacaoObra || '',
+            item.br || '',
+            item.uf || '',
+            item.km || '',
+            item.status || '',
+            item.naturezaEstrutura || '',
+            item.nomeInspetor || '',
+            item.nomeAvaliador || '',
+            item.dataInspecaoFormatada || '',
+            item.dataUltimaAtualizacaoFormatada || ''
+        ]);
+        
+        const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `OBRAS_APROVADAS_ROTINEIRA_${dataHora}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('✅ Arquivo CSV INSPEÇÕES baixado!');
+    };
+
+    // Download simultâneo de ambos os CSVs
+    window.downloadTodosCSV = function() {
+        const dataHora = gerarDataHoraFormatada();
+        console.log('📦 Iniciando download simultâneo dos arquivos CSV...');
+        
+        // Preparar CSV Cadastral
+        const headersCadastral = [
+            'ID OAE',
+            'Identificação',
+            'Natureza Estrutura',
+            'ID Natureza Estrutura',
+            'Código SGO',
+            'BR',
+            'UF',
+            'Status',
+            'KM',
+            'Nome Inspetor',
+            'Nome Avaliador',
+            'Data Última Atualização'
+        ];
+        
+        const rowsCadastral = dadosCadastrais.map(item => [
+            item.idOae || '',
+            item.identificacaoObra || '',
+            item.naturezaEstrutura || '',
+            item.idNaturezaEstrutura || '',
+            item.codigoEstrutura || '',
+            item.br || '',
+            item.uf || '',
+            item.status || '',
+            item.km || '',
+            item.nomeInspetor || '',
+            item.nomeAvaliador || '',
+            item.dataUltimaAtualizacaoFormatada || ''
+        ]);
+        
+        // Preparar CSV Inspeções
+        const headersInspecoes = [
+            'ID OAE',
+            'ID Inspeção',
+            'Identificação',
+            'BR',
+            'UF',
+            'KM',
+            'Status',
+            'Natureza Estrutura',
+            'Nome Inspetor',
+            'Nome Avaliador',
+            'Data Inspeção',
+            'Data Última Atualização'
+        ];
+        
+        const rowsInspecoes = dadosInspecoes.map(item => [
+            item.idOae || '',
+            item.idInspecao || '',
+            item.identificacaoObra || '',
+            item.br || '',
+            item.uf || '',
+            item.km || '',
+            item.status || '',
+            item.naturezaEstrutura || '',
+            item.nomeInspetor || '',
+            item.nomeAvaliador || '',
+            item.dataInspecaoFormatada || '',
+            item.dataUltimaAtualizacaoFormatada || ''
+        ]);
+        
+        // Criar e baixar CSV Cadastral
+        const csvCadastral = [headersCadastral, ...rowsCadastral].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+        const blobCadastral = new Blob(['\uFEFF' + csvCadastral], { type: 'text/csv;charset=utf-8;' });
+        const urlCadastral = URL.createObjectURL(blobCadastral);
+        const linkCadastral = document.createElement('a');
+        linkCadastral.href = urlCadastral;
+        linkCadastral.download = `OBRAS_APROVADAS_CADASTRAL_${dataHora}.csv`;
+        document.body.appendChild(linkCadastral);
+        
+        // Criar e baixar CSV Inspeções
+        const csvInspecoes = [headersInspecoes, ...rowsInspecoes].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+        const blobInspecoes = new Blob(['\uFEFF' + csvInspecoes], { type: 'text/csv;charset=utf-8;' });
+        const urlInspecoes = URL.createObjectURL(blobInspecoes);
+        const linkInspecoes = document.createElement('a');
+        linkInspecoes.href = urlInspecoes;
+        linkInspecoes.download = `OBRAS_APROVADAS_ROTINEIRA_${dataHora}.csv`;
+        document.body.appendChild(linkInspecoes);
+        
+        // Executar os downloads em sequência (com pequeno atraso para evitar problemas)
+        setTimeout(() => {
+            linkCadastral.click();
+            setTimeout(() => {
+                linkInspecoes.click();
+                
+                // Limpar recursos
+                setTimeout(() => {
+                    document.body.removeChild(linkCadastral);
+                    document.body.removeChild(linkInspecoes);
+                    URL.revokeObjectURL(urlCadastral);
+                    URL.revokeObjectURL(urlInspecoes);
+                }, 100);
+                
+                console.log('✅ Ambos os arquivos CSV baixados com sucesso!');
+            }, 500);
+        }, 100);
+    };
+
+    // Exibir instruções de exportação
+    console.log('💾 COMANDOS DE EXPORTAÇÃO:');
+    console.log('   • downloadTodosCSV()        - ⭐ BAIXAR AMBOS OS CSVs AO MESMO TEMPO');
+    console.log('   • downloadCSVCadastral()    - Baixar CSV com dados cadastrais');
+    console.log('   • downloadCSVInspecoes()    - Baixar CSV com inspeções rotineiras');
+    console.log('   • downloadJSONCadastral()   - Baixar JSON de dados cadastrais');
+    console.log('   • downloadJSONInspecoes()   - Baixar JSON de inspeções rotineiras');
+    console.log('   • dadosCadastrais           - Ver dados cadastrais no console');
+    console.log('   • dadosInspecoes            - Ver inspeções no console\n');
+}
+
+
 
     /**
      * Função global para extrair dados com um token fornecido manualmente
@@ -883,6 +729,802 @@ let bearerToken = null;    // Token de autenticação
     }
 
 })();
+
+
+
+/**
+ * Realiza o download simultâneo dos arquivos CSV de dados cadastrais e inspeções rotineiras
+ * Utiliza os formatos de nome de arquivo OBRAS_APROVADAS_CADASTRAL_DATA_HORA.csv 
+ * e OBRAS_APROVADAS_ROTINEIRA_DATA_HORA.csv
+ */
+window.downloadTodosCSV = function() {
+    const dataHora = gerarDataHoraFormatada();
+    console.log('📦 Iniciando download simultâneo dos arquivos CSV...');
+    
+    // Preparar CSV Cadastral
+    const headersCadastral = [
+        'ID OAE',
+        'Identificação',
+        'Natureza Estrutura',
+        'ID Natureza Estrutura',
+        'Código SGO',
+        'BR',
+        'UF',
+        'Status',
+        'KM',
+        'Nome Inspetor',
+        'Nome Avaliador',
+        'Data Última Atualização'
+    ];
+    
+    const rowsCadastral = dadosCadastrais.map(item => [
+        item.idOae || '',
+        item.identificacaoObra || '',
+        item.naturezaEstrutura || '',
+        item.idNaturezaEstrutura || '',
+        item.codigoEstrutura || '',
+        item.br || '',
+        item.uf || '',
+        item.status || '',
+        item.km || '',
+        item.nomeInspetor || '',
+        item.nomeAvaliador || '',
+        item.dataUltimaAtualizacaoFormatada || ''
+    ]);
+    
+    // Preparar CSV Inspeções
+    const headersInspecoes = [
+        'ID OAE',
+        'ID Inspeção',
+        'Identificação',
+        'BR',
+        'UF',
+        'KM',
+        'Status',
+        'Natureza Estrutura',
+        'Nome Inspetor',
+        'Nome Avaliador',
+        'Data Inspeção',
+        'Data Última Atualização'
+    ];
+    
+    const rowsInspecoes = dadosInspecoes.map(item => [
+        item.idOae || '',
+        item.idInspecao || '',
+        item.identificacaoObra || '',
+        item.br || '',
+        item.uf || '',
+        item.km || '',
+        item.status || '',
+        item.naturezaEstrutura || '',
+        item.nomeInspetor || '',
+        item.nomeAvaliador || '',
+        item.dataInspecaoFormatada || '',
+        item.dataUltimaAtualizacaoFormatada || ''
+    ]);
+    
+    // Criar e baixar CSV Cadastral
+    const csvCadastral = [headersCadastral, ...rowsCadastral].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+    const blobCadastral = new Blob(['\uFEFF' + csvCadastral], { type: 'text/csv;charset=utf-8;' });
+    const urlCadastral = URL.createObjectURL(blobCadastral);
+    const linkCadastral = document.createElement('a');
+    linkCadastral.href = urlCadastral;
+    linkCadastral.download = `OBRAS_APROVADAS_CADASTRAL_${dataHora}.csv`;
+    document.body.appendChild(linkCadastral);
+    
+    // Criar e baixar CSV Inspeções
+    const csvInspecoes = [headersInspecoes, ...rowsInspecoes].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+    const blobInspecoes = new Blob(['\uFEFF' + csvInspecoes], { type: 'text/csv;charset=utf-8;' });
+    const urlInspecoes = URL.createObjectURL(blobInspecoes);
+    const linkInspecoes = document.createElement('a');
+    linkInspecoes.href = urlInspecoes;
+    linkInspecoes.download = `OBRAS_APROVADAS_ROTINEIRA_${dataHora}.csv`;
+    document.body.appendChild(linkInspecoes);
+    
+    // Executar os downloads em sequência (com pequeno atraso para evitar problemas)
+    setTimeout(() => {
+        linkCadastral.click();
+        setTimeout(() => {
+            linkInspecoes.click();
+            
+            // Limpar recursos
+            setTimeout(() => {
+                document.body.removeChild(linkCadastral);
+                document.body.removeChild(linkInspecoes);
+                URL.revokeObjectURL(urlCadastral);
+                URL.revokeObjectURL(urlInspecoes);
+            }, 100);
+            
+            console.log('✅ Ambos os arquivos CSV baixados com sucesso!');
+        }, 500);
+    }, 100);
+};
+
+
+
+/**
+ * Exporta os dados de inspeções rotineiras para um arquivo CSV
+ * Utiliza o formato de nome de arquivo OBRAS_APROVADAS_ROTINEIRA_DATA_HORA.csv
+ */
+window.downloadCSVInspecoes = function() {
+    const dataHora = gerarDataHoraFormatada();
+    const headers = [
+        'ID OAE',
+        'ID Inspeção',
+        'Identificação',
+        'BR',
+        'UF',
+        'KM',
+        'Status',
+        'Natureza Estrutura',
+        'Nome Inspetor',
+        'Nome Avaliador',
+        'Data Inspeção',
+        'Data Última Atualização'
+    ];
+    
+    const rows = dadosInspecoes.map(item => [
+        item.idOae || '',
+        item.idInspecao || '',
+        item.identificacaoObra || '',
+        item.br || '',
+        item.uf || '',
+        item.km || '',
+        item.status || '',
+        item.naturezaEstrutura || '',
+        item.nomeInspetor || '',
+        item.nomeAvaliador || '',
+        item.dataInspecaoFormatada || '',
+        item.dataUltimaAtualizacaoFormatada || ''
+    ]);
+    
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `OBRAS_APROVADAS_ROTINEIRA_${dataHora}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    console.log('✅ Arquivo CSV INSPEÇÕES baixado!');
+};
+
+
+
+
+// Versão: 1.0
+/**
+ * Gera string de data e hora formatada para uso nos nomes de arquivos
+ * @returns {string} Data e hora no formato AAAA-MM-DD_HH-MM-SS
+ */
+function gerarDataHoraFormatada() {
+    const agora = new Date();
+    
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    const horas = String(agora.getHours()).padStart(2, '0');
+    const minutos = String(agora.getMinutes()).padStart(2, '0');
+    const segundos = String(agora.getSeconds()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}_${horas}-${minutos}-${segundos}`;
+}
+
+
+// Função para copiar o código
+function copiarCodigo() {
+    const codigo = document.getElementById('codigoScript').textContent;
+    navigator.clipboard.writeText(codigo)
+        .then(() => {
+            alert('Código copiado para a área de transferência! Cole no console do navegador.');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar código:', err);
+            alert('Não foi possível copiar automaticamente. Selecione o código manualmente e use Ctrl+C.');
+        });
+}
+
+
+
+
+
+
+
+
+
+// O script que deve aparecer na div #codigoScript:
+document.getElementById('codigoScript').textContent =
+ `// Versão: 7.0 - DNIT OAE Extractor - Download Simultâneo Cadastral e Rotineira
+(async function() {
+    console.log('🚀 DNIT OAE Extractor v7.0 - Cadastro e Inspeções Rotineiras');
+    console.log('═══════════════════════════════════════\\n');
+    // URLs da API
+    const API_BASE_URL_OAE = 'https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/CadastroOae/obterListaManterOaes';
+    const API_BASE_URL_INSPECAO = 'https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/InspecaoOae';
+    // IDs dos responsáveis
+    const RESPONSAVEIS = [
+        '36228eff-525f-4629-b406-f308ebe605da',
+        '21484127-2d2f-4a72-9382-83e21bd03dc6',
+        '5c2a0c7d-6308-4b79-82ec-9e7a2cbd1af5',
+        'c2536023-a24c-4d2d-8dd1-541fc559d3b9',
+        '3d0448dd-c9d1-4da1-92c3-f05fd9b2351a',
+        '2ece7b1c-4550-488c-a9fc-aa49fd0e0f3f',
+        '598d003e-cd89-46e3-ba26-e0a880ce743f',
+        '570a3aef-92fc-4ef2-b660-eccd8fcc2ec7',
+        'b6988556-b011-4f6e-a119-70d29727bb08',
+        '2c42ab19-c634-412e-92a6-382979ad3ca2',
+        'b6988556-b011-4f6e-a119-70d29727bb08'
+    ];
+    // Tipo de inspeção (para endpoint de inspeções)
+    const TIPO_INSPECAO_ROTINEIRA = 1;
+    // Armazenamento dos dados
+    let dadosCadastrais = [];  // Dados de OAEs (cadastrais)
+    let dadosInspecoes = [];   // Dados de inspeções rotineiras
+    let bearerToken = null;    // Token de autenticação
+    /**
+     * Gera string de data e hora formatada para uso nos nomes de arquivos
+     * @returns {string} Data e hora no formato AAAA-MM-DD_HH-MM-SS
+     */
+    function gerarDataHoraFormatada() {
+        const agora = new Date();
+        
+        const ano = agora.getFullYear();
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const horas = String(agora.getHours()).padStart(2, '0');
+        const minutos = String(agora.getMinutes()).padStart(2, '0');
+        const segundos = String(agora.getSeconds()).padStart(2, '0');
+        
+        return \`\${ano}-\${mes}-\${dia}_\${horas}-\${minutos}-\${segundos}\`;
+    }
+    /**
+     * Obtém o token de autenticação do sessionStorage
+     * @returns {string|null} Token de autenticação ou null se não encontrado
+     */
+    function obterBearerToken() {
+        console.log('🔑 Buscando Bearer Token...');
+        
+        try {
+            const oidcKey = Object.keys(sessionStorage).find(key => 
+                key.includes('oidc-user') && key.includes('dnit.gov.br')
+            );
+            
+            if (oidcKey) {
+                const oidcData = JSON.parse(sessionStorage.getItem(oidcKey));
+                if (oidcData && oidcData.access_token) {
+                    console.log('✅ Token encontrado no sessionStorage');
+                    return oidcData.access_token;
+                }
+            }
+        } catch (e) {
+            console.log('⚠️ Erro ao buscar token:', e.message);
+        }
+        console.log('⚠️ Token não encontrado');
+        return null;
+    }
+    /**
+     * Constrói a URL para o endpoint de cadastro OAE
+     * @param {number} pageIndex - Índice da página (começa em 0)
+     * @returns {string} URL formatada
+     */
+    function construirURLCadastral(pageIndex = 0) {
+        const params = [];
+        params.push('pageSize=15');
+        params.push('status=5');
+        
+        RESPONSAVEIS.forEach(id => {
+            params.push(\`responsaveis=\${id}\`);
+        });
+        
+        if (pageIndex > 0) {
+            params.push(\`pageIndex=\${pageIndex}\`);
+        }
+        
+        return \`\${API_BASE_URL_OAE}?\${params.join('&')}\`;
+    }
+    /**
+     * Constrói a URL para o endpoint de inspeções rotineiras
+     * @param {number} pageIndex - Índice da página (começa em 0)
+     * @returns {string} URL formatada
+     */
+    function construirURLInspecao(pageIndex = 0) {
+        const params = [];
+        params.push('pageSize=15');
+        params.push('status=5');
+        params.push(\`tipoInspecao=\${TIPO_INSPECAO_ROTINEIRA}\`);
+        
+        RESPONSAVEIS.forEach(id => {
+            params.push(\`responsaveis=\${id}\`);
+        });
+        
+        if (pageIndex > 0) {
+            params.push(\`pageIndex=\${pageIndex}\`);
+        }
+        
+        return \`\${API_BASE_URL_INSPECAO}?\${params.join('&')}\`;
+    }
+    /**
+     * Realiza uma requisição HTTP GET
+     * @param {string} url - URL da requisição
+     * @param {string} token - Bearer token para autenticação
+     * @returns {Promise<Response>} Resposta da requisição
+     */
+    async function fazerRequisicao(url, token) {
+        const headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Authorization': \`Bearer \${token}\`
+        };
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+        });
+        return response;
+    }
+    /**
+     * Extrai dados cadastrais de OAEs
+     * @param {string} token - Bearer token para autenticação
+     */
+    async function extrairDadosCadastrais(token) {
+        console.log('\\n📊 Iniciando extração de dados CADASTRAIS...\\n');
+        
+        try {
+            let pageIndex = 0;
+            let hasNextPage = true;
+            let totalCount = 0;
+            while (hasNextPage) {
+                console.log(\`📄 Buscando página \${pageIndex + 1} (Cadastral)...\`);
+                
+                const url = construirURLCadastral(pageIndex);
+                const response = await fazerRequisicao(url, token);
+                if (!response.ok) {
+                    throw new Error(\`Erro HTTP \${response.status}: \${response.statusText}\`);
+                }
+                const data = await response.json();
+                dadosCadastrais.push(...data.items);
+                totalCount = data.totalCount;
+                hasNextPage = data.hasNextPage;
+                pageIndex++;
+                console.log(\`   ✅ \${data.items.length} OAEs coletadas\`);
+                console.log(\`   📊 Progresso: \${dadosCadastrais.length}/\${totalCount}\`);
+            }
+            console.log('\\n🎉 EXTRAÇÃO DE DADOS CADASTRAIS CONCLUÍDA!\\n');
+            exibirEstatisticasCadastrais();
+            
+        } catch (error) {
+            console.error('\\n❌ ERRO AO EXTRAIR DADOS CADASTRAIS:', error.message);
+        }
+    }
+    /**
+     * Extrai dados de inspeções rotineiras
+     * @param {string} token - Bearer token para autenticação
+     */
+    async function extrairDadosInspecoes(token) {
+        console.log('\\n📊 Iniciando extração de INSPEÇÕES ROTINEIRAS...\\n');
+        
+        try {
+            let pageIndex = 0;
+            let hasNextPage = true;
+            let totalCount = 0;
+            while (hasNextPage) {
+                console.log(\`📄 Buscando página \${pageIndex + 1} (Inspeções)...\`);
+                
+                const url = construirURLInspecao(pageIndex);
+                const response = await fazerRequisicao(url, token);
+                if (!response.ok) {
+                    throw new Error(\`Erro HTTP \${response.status}: \${response.statusText}\`);
+                }
+                const data = await response.json();
+                dadosInspecoes.push(...data.items);
+                totalCount = data.totalCount;
+                hasNextPage = data.hasNextPage;
+                pageIndex++;
+                console.log(\`   ✅ \${data.items.length} inspeções coletadas\`);
+                console.log(\`   📊 Progresso: \${dadosInspecoes.length}/\${totalCount}\`);
+            }
+            console.log('\\n🎉 EXTRAÇÃO DE INSPEÇÕES ROTINEIRAS CONCLUÍDA!\\n');
+            exibirEstatisticasInspecoes();
+            
+        } catch (error) {
+            console.error('\\n❌ ERRO AO EXTRAIR INSPEÇÕES:', error.message);
+        }
+    }
+    /**
+     * Exibe estatísticas dos dados cadastrais coletados
+     */
+    function exibirEstatisticasCadastrais() {
+        console.log('═══════════════════════════════════════');
+        console.log('📊 ESTATÍSTICAS - DADOS CADASTRAIS:');
+        console.log('═══════════════════════════════════════');
+        console.log(\`   Total de OAEs: \${dadosCadastrais.length}\`);
+        
+        if (dadosCadastrais.length > 0) {
+            console.log(\`   BRs únicas: \${[...new Set(dadosCadastrais.map(item => item.br))].length}\`);
+            console.log(\`   Estados: \${[...new Set(dadosCadastrais.map(item => item.uf))].length}\`);
+            
+            const porStatus = dadosCadastrais.reduce((acc, item) => {
+                acc[item.status] = (acc[item.status] || 0) + 1;
+                return acc;
+            }, {});
+            
+            console.log('\\n   Status:');
+            Object.entries(porStatus).forEach(([status, count]) => {
+                console.log(\`     - \${status}: \${count}\`);
+            });
+        }
+        
+        console.log('═══════════════════════════════════════\\n');
+    }
+    /**
+     * Exibe estatísticas das inspeções rotineiras coletadas
+     */
+    function exibirEstatisticasInspecoes() {
+        console.log('═══════════════════════════════════════');
+        console.log('📊 ESTATÍSTICAS - INSPEÇÕES ROTINEIRAS:');
+        console.log('═══════════════════════════════════════');
+        console.log(\`   Total de Inspeções: \${dadosInspecoes.length}\`);
+        
+        if (dadosInspecoes.length > 0) {
+            console.log(\`   BRs únicas: \${[...new Set(dadosInspecoes.map(item => item.br))].length}\`);
+            console.log(\`   Estados: \${[...new Set(dadosInspecoes.map(item => item.uf))].length}\`);
+            
+            const porStatus = dadosInspecoes.reduce((acc, item) => {
+                acc[item.status] = (acc[item.status] || 0) + 1;
+                return acc;
+            }, {});
+            
+            console.log('\\n   Status:');
+            Object.entries(porStatus).forEach(([status, count]) => {
+                console.log(\`     - \${status}: \${count}\`);
+            });
+        }
+        
+        console.log('═══════════════════════════════════════\\n');
+    }
+    /**
+     * Configura funções de exportação e torna os dados acessíveis globalmente
+     */
+    function configurarExportacao() {
+        // Torna os dados acessíveis globalmente
+        window.dadosCadastrais = dadosCadastrais;
+        window.dadosInspecoes = dadosInspecoes;
+        
+        // Exportação JSON
+        window.downloadJSONCadastral = function() {
+            const dataHora = gerarDataHoraFormatada();
+            const dataStr = JSON.stringify(dadosCadastrais, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = \`OBRAS_APROVADAS_CADASTRAL_\${dataHora}.json\`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Arquivo JSON CADASTRAL baixado!');
+        };
+        
+        window.downloadJSONInspecoes = function() {
+            const dataHora = gerarDataHoraFormatada();
+            const dataStr = JSON.stringify(dadosInspecoes, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = \`OBRAS_APROVADAS_ROTINEIRA_\${dataHora}.json\`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Arquivo JSON INSPEÇÕES baixado!');
+        };
+        // Exportação CSV Individual
+        window.downloadCSVCadastral = function() {
+            const dataHora = gerarDataHoraFormatada();
+            const headers = [
+                'ID OAE',
+                'Identificação',
+                'Natureza Estrutura',
+                'ID Natureza Estrutura',
+                'CODIGO ESTRUTURA',
+                'BR',
+                'UF',
+                'Status',
+                'KM',
+                'Nome Inspetor',
+                'Nome Avaliador',
+                'Data Última Atualização'
+            ];
+            
+            const rows = dadosCadastrais.map(item => [
+                item.idOae || '',
+                item.identificacaoObra || '',
+                item.naturezaEstrutura || '',
+                item.idNaturezaEstrutura || '',
+                item.codigoSgo || '',
+                item.br || '',
+                item.uf || '',
+                item.status || '',
+                item.km || '',
+                item.nomeInspetor || '',
+                item.nomeAvaliador || '',
+                item.dataUltimaAtualizacaoFormatada || ''
+            ]);
+            
+            const csv = [headers, ...rows].map(row => row.map(cell => \`"\${cell}"\`).join(';')).join('\\n');
+            const blob = new Blob(['\\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = \`OBRAS_APROVADAS_CADASTRAL_\${dataHora}.csv\`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Arquivo CSV CADASTRAL baixado!');
+        };
+        window.downloadCSVInspecoes = function() {
+            const dataHora = gerarDataHoraFormatada();
+            const headers = [
+                'ID OAE',
+                'ID Inspeção',
+                'CODIGO ESTRUTURA',
+                'Identificação',
+                'BR',
+                'UF',
+                'KM',
+                'Status',
+                'Natureza Estrutura',
+                'Nome Inspetor',
+                'Nome Avaliador',
+                'Data Inspeção',
+                'Data Última Atualização'
+            ];
+            
+            const rows = dadosInspecoes.map(item => [
+                item.idOae || '',
+                item.idInspecao || '',
+                item.codigoEstrutura || '',
+                item.identificacaoObra || '',
+                item.br || '',
+                item.uf || '',
+                item.km || '',
+                item.status || '',
+                item.naturezaEstrutura || '',
+                item.nomeInspetor || '',
+                item.nomeAvaliador || '',
+                item.dataInspecaoFormatada || '',
+                item.dataUltimaAtualizacaoFormatada || ''
+            ]);
+            
+            const csv = [headers, ...rows].map(row => row.map(cell => \`"\${cell}"\`).join(';')).join('\\n');
+            const blob = new Blob(['\\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = \`OBRAS_APROVADAS_ROTINEIRA_\${dataHora}.csv\`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Arquivo CSV INSPEÇÕES baixado!');
+        };
+        // Download simultâneo de ambos os CSVs
+        window.downloadTodosCSV = function() {
+            const dataHora = gerarDataHoraFormatada();
+            console.log('📦 Iniciando download simultâneo dos arquivos CSV...');
+            
+            // Preparar CSV Cadastral
+            const headersCadastral = [
+                'ID OAE',
+                'Identificação',
+                'Natureza Estrutura',
+                'ID Natureza Estrutura',
+                'CODIGO ESTRUTURA',
+                'BR',
+                'UF',
+                'Status',
+                'KM',
+                'Nome Inspetor',
+                'Nome Avaliador',
+                'Data Última Atualização'
+            ];
+            
+            const rowsCadastral = dadosCadastrais.map(item => [
+                item.idOae || '',
+                item.identificacaoObra || '',
+                item.naturezaEstrutura || '',
+                item.idNaturezaEstrutura || '',
+                item.codigoSgo || '',
+                item.br || '',
+                item.uf || '',
+                item.status || '',
+                item.km || '',
+                item.nomeInspetor || '',
+                item.nomeAvaliador || '',
+                item.dataUltimaAtualizacaoFormatada || ''
+            ]);
+            
+            // Preparar CSV Inspeções
+            const headersInspecoes = [
+                'ID OAE',
+                'ID Inspeção',
+                'CODIGO ESTRUTURA',
+                'Identificação',
+                'BR',
+                'UF',
+                'KM',
+                'Status',
+                'Natureza Estrutura',
+                'Nome Inspetor',
+                'Nome Avaliador',
+                'Data Inspeção',
+                'Data Última Atualização'
+            ];
+            
+            const rowsInspecoes = dadosInspecoes.map(item => [
+                item.idOae || '',
+                item.idInspecao || '',
+                item.codigoEstrutura || '',
+                item.identificacaoObra || '',
+                item.br || '',
+                item.uf || '',
+                item.km || '',
+                item.status || '',
+                item.naturezaEstrutura || '',
+                item.nomeInspetor || '',
+                item.nomeAvaliador || '',
+                item.dataInspecaoFormatada || '',
+                item.dataUltimaAtualizacaoFormatada || ''
+            ]);
+            
+            // Criar e baixar CSV Cadastral
+            const csvCadastral = [headersCadastral, ...rowsCadastral].map(row => row.map(cell => \`"\${cell}"\`).join(';')).join('\\n');
+            const blobCadastral = new Blob(['\\uFEFF' + csvCadastral], { type: 'text/csv;charset=utf-8;' });
+            const urlCadastral = URL.createObjectURL(blobCadastral);
+            const linkCadastral = document.createElement('a');
+            linkCadastral.href = urlCadastral;
+            linkCadastral.download = \`OBRAS_APROVADAS_CADASTRAL_\${dataHora}.csv\`;
+            document.body.appendChild(linkCadastral);
+            
+            // Criar e baixar CSV Inspeções
+            const csvInspecoes = [headersInspecoes, ...rowsInspecoes].map(row => row.map(cell => \`"\${cell}"\`).join(';')).join('\\n');
+            const blobInspecoes = new Blob(['\\uFEFF' + csvInspecoes], { type: 'text/csv;charset=utf-8;' });
+            const urlInspecoes = URL.createObjectURL(blobInspecoes);
+            const linkInspecoes = document.createElement('a');
+            linkInspecoes.href = urlInspecoes;
+            linkInspecoes.download = \`OBRAS_APROVADAS_ROTINEIRA_\${dataHora}.csv\`;
+            document.body.appendChild(linkInspecoes);
+            
+            // Executar os downloads em sequência (com pequeno atraso para evitar problemas)
+            setTimeout(() => {
+                linkCadastral.click();
+                setTimeout(() => {
+                    linkInspecoes.click();
+                    
+                    // Limpar recursos
+                    setTimeout(() => {
+                        document.body.removeChild(linkCadastral);
+                        document.body.removeChild(linkInspecoes);
+                        URL.revokeObjectURL(urlCadastral);
+                        URL.revokeObjectURL(urlInspecoes);
+                    }, 100);
+                    
+                    console.log('✅ Ambos os arquivos CSV baixados com sucesso!');
+                }, 500);
+            }, 100);
+        };
+        console.log('💾 COMANDOS DE EXPORTAÇÃO:');
+        console.log('   • downloadTodosCSV()        - ⭐ BAIXAR AMBOS OS CSVs AO MESMO TEMPO');
+        console.log('   • downloadCSVCadastral()    - Baixar CSV com dados cadastrais');
+        console.log('   • downloadCSVInspecoes()    - Baixar CSV com inspeções rotineiras');
+        console.log('   • downloadJSONCadastral()   - Baixar JSON de dados cadastrais');
+        console.log('   • downloadJSONInspecoes()   - Baixar JSON de inspeções rotineiras');
+        console.log('   • dadosCadastrais           - Ver dados cadastrais no console');
+        console.log('   • dadosInspecoes            - Ver inspeções no console\\n');
+    }
+    /**
+     * Inicia a extração de ambos os conjuntos de dados
+     */
+    async function iniciarExtracao() {
+        try {
+            console.log('🔄 Iniciando extração de todos os dados...');
+            
+            // Dados cadastrais
+            await extrairDadosCadastrais(bearerToken);
+            
+            // Inspeções rotineiras
+            await extrairDadosInspecoes(bearerToken);
+            
+            // Configura exportação após concluir ambas as extrações
+            configurarExportacao();
+            console.log('\\n✅ EXTRAÇÃO COMPLETA! Use os comandos de exportação para baixar os dados.');
+            console.log('⭐ DICA: Use downloadTodosCSV() para baixar ambos os arquivos CSV de uma vez!\\n');
+        } catch (error) {
+            console.error('\\n❌ ERRO NA EXTRAÇÃO:', error.message);
+        }
+    }
+    /**
+     * Função global para extrair dados com um token fornecido manualmente
+     * @param {string} token - Bearer token para autenticação
+     */
+    window.extrairComToken = async function(token) {
+        dadosCadastrais = [];
+        dadosInspecoes = [];
+        bearerToken = token.replace('Bearer ', '');
+        await iniciarExtracao();
+    };
+    // Inicia o processo
+    bearerToken = obterBearerToken();
+    
+    if (bearerToken) {
+        console.log('🎯 Token encontrado! Iniciando...\\n');
+        await iniciarExtracao();
+    } else {
+        console.log('⚠️ Token não encontrado automaticamente\\n');
+        console.log('📋 Execute: extrairComToken("SEU_TOKEN")');
+    }
+})();`;
+
+
+
+
+
+
+/**
+ * Exporta os dados cadastrais para um arquivo CSV
+ * Utiliza o formato de nome de arquivo OBRAS_APROVADAS_CADASTRAL_DATA_HORA.csv
+ */
+window.downloadCSVCadastral = function() {
+    const dataHora = gerarDataHoraFormatada();
+    const headers = [
+        'ID OAE',
+        'Identificação',
+        'Natureza Estrutura',
+        'ID Natureza Estrutura',
+        'Código SGO',
+        'BR',
+        'UF',
+        'Status',
+        'KM',
+        'Nome Inspetor',
+        'Nome Avaliador',
+        'Data Última Atualização'
+    ];
+    
+    const rows = dadosCadastrais.map(item => [
+        item.idOae || '',
+        item.identificacaoObra || '',
+        item.naturezaEstrutura || '',
+        item.idNaturezaEstrutura || '',
+        item.codigoEstrutura || '',
+        item.br || '',
+        item.uf || '',
+        item.status || '',
+        item.km || '',
+        item.nomeInspetor || '',
+        item.nomeAvaliador || '',
+        item.dataUltimaAtualizacaoFormatada || ''
+    ]);
+    
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `OBRAS_APROVADAS_CADASTRAL_${dataHora}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    console.log('✅ Arquivo CSV CADASTRAL baixado!');
+};
+
+
+
     </script>
 </body>
 </html>
