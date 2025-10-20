@@ -2529,7 +2529,213 @@
         document.head.appendChild(ponteModalStyles);
       }
 
-      // PARTE 2: FUNÇÕES DO MODAL DE DETALHES DA PONTE
+
+      
+
+
+// Versão: 3.0
+// Função aprimorada para importMultipleWorks
+
+function importMultipleWorks() {
+  try {
+    console.log("Iniciando função importMultipleWorks...");
+    
+    // Verificar se já existe um input file, e removê-lo se existir
+    const oldInput = document.getElementById("import-multiple-works-input");
+    if (oldInput) {
+      document.body.removeChild(oldInput);
+    }
+    
+    // Criar um novo input de arquivo
+    const fileInput = document.createElement("input");
+    fileInput.id = "import-multiple-works-input";
+    fileInput.type = "file";
+    fileInput.accept = ".csv";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+    
+    // Adicionar evento change com tratamento de erro explícito
+    fileInput.addEventListener("change", function(event) {
+      try {
+        console.log("Arquivo selecionado no input importMultipleWorks");
+        
+        if (!this.files || this.files.length === 0) {
+          console.warn("Nenhum arquivo selecionado");
+          return;
+        }
+        
+        const file = this.files[0];
+        console.log(`Arquivo selecionado: ${file.name}, tamanho: ${file.size}, tipo: ${file.type}`);
+        
+        // Verificar extensão
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+          alert("Por favor, selecione um arquivo CSV válido.");
+          console.warn("Arquivo com extensão não CSV");
+          return;
+        }
+        
+        // Mostrar notificação de processamento
+        const notification = document.createElement("div");
+        notification.textContent = `Processando ${file.name}...`;
+        notification.style.position = "fixed";
+        notification.style.bottom = "20px";
+        notification.style.right = "20px";
+        notification.style.padding = "15px 20px";
+        notification.style.background = "rgba(52, 152, 219, 0.8)";
+        notification.style.color = "white";
+        notification.style.borderRadius = "5px";
+        notification.style.zIndex = "1000";
+        document.body.appendChild(notification);
+        
+        // Criar um leitor de arquivo
+        const reader = new FileReader();
+        
+        // Configurar handler de evento de conclusão de leitura
+        reader.onload = function(e) {
+          try {
+            console.log("Arquivo lido com sucesso, tamanho:", e.target.result.length);
+            
+            const csvData = e.target.result;
+            if (!csvData || csvData.trim() === "") {
+              alert("O arquivo CSV está vazio.");
+              document.body.removeChild(notification);
+              return;
+            }
+            
+            const lines = csvData.split(/\r?\n/);
+            console.log(`Arquivo contém ${lines.length} linhas`);
+            
+            if (lines.length < 2) {
+              alert("O arquivo CSV não contém dados suficientes (precisa ter cabeçalhos e pelo menos uma linha de dados).");
+              document.body.removeChild(notification);
+              return;
+            }
+            
+            // Detectar separador
+            const headerLine = lines[0];
+            let separator = ",";
+            if (headerLine.includes("\t")) separator = "\t";
+            else if (headerLine.includes(";")) separator = ";";
+            
+            console.log(`Separador detectado: '${separator === "\t" ? "TAB" : separator}'`);
+            
+            // Obter cabeçalhos
+            const headers = headerLine.split(separator).map(header => header.trim());
+            console.log(`Cabeçalhos: ${headers.join(", ")}`);
+            
+            // Verificar cabeçalhos mínimos
+            if (!headers.includes("CODIGO")) {
+              alert("O arquivo CSV não contém o cabeçalho obrigatório 'CODIGO'.");
+              document.body.removeChild(notification);
+              return;
+            }
+            
+            // Processar obras
+            const works = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line) {
+                console.log(`Linha ${i+1} vazia, ignorando.`);
+                continue;
+              }
+              
+              const values = parseCSVLine(line, separator);
+              console.log(`Linha ${i+1}: ${values.length} valores`);
+              
+              if (values.length < 3) {
+                console.warn(`Linha ${i+1} muito curta, ignorando.`);
+                continue;
+              }
+              
+              // Criar objeto de dados para a obra
+              const workData = {};
+              
+              // Mapear valores para cabeçalhos
+              for (let j = 0; j < headers.length; j++) {
+                if (j < values.length) {
+                  workData[headers[j]] = values[j];
+                }
+              }
+              
+              // Verificar código válido
+              if (workData["CODIGO"] && workData["CODIGO"].trim() !== "") {
+                works.push(workData);
+                console.log(`Obra processada: ${workData["CODIGO"]}`);
+              } else {
+                console.warn(`Linha ${i+1} sem código, ignorando.`);
+              }
+            }
+            
+            // Remover a notificação
+            document.body.removeChild(notification);
+            
+            if (works.length > 0) {
+              console.log(`Total de ${works.length} obras processadas com sucesso.`);
+              
+              // Mostrar confirmação para salvar
+              if (confirm(`O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`)) {
+                console.log("Usuário confirmou salvamento, chamando saveMultipleWorks");
+                saveMultipleWorks(works);
+              } else {
+                console.log("Usuário cancelou a importação");
+              }
+            } else {
+              alert("Nenhuma obra válida encontrada no arquivo CSV.");
+            }
+          } catch (parseError) {
+            console.error("Erro ao processar CSV:", parseError);
+            alert("Erro ao processar o arquivo CSV: " + parseError.message);
+            
+            if (document.body.contains(notification)) {
+              document.body.removeChild(notification);
+            }
+          }
+        };
+        
+        // Configurar handler de erro de leitura
+        reader.onerror = function(errorEvent) {
+          console.error("Erro na leitura do arquivo:", errorEvent);
+          alert("Erro ao ler o arquivo: " + (errorEvent.target.error?.message || "Erro desconhecido"));
+          
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        };
+        
+        // Iniciar a leitura do arquivo
+        console.log("Iniciando leitura do arquivo...");
+        reader.readAsText(file);
+        
+      } catch (fileError) {
+        console.error("Erro ao processar o arquivo selecionado:", fileError);
+        alert("Erro ao processar o arquivo: " + fileError.message);
+      } finally {
+        // Remover o input após o uso para evitar problemas de limpeza
+        setTimeout(() => {
+          if (document.body.contains(fileInput)) {
+            document.body.removeChild(fileInput);
+          }
+        }, 1000);
+      }
+    });
+    
+    // Acionar o clique no input para abrir o seletor de arquivos
+    console.log("Acionando clique no input file...");
+    fileInput.click();
+    
+  } catch (mainError) {
+    console.error("Erro crítico em importMultipleWorks:", mainError);
+    alert("Erro ao importar obras: " + mainError.message);
+  }
+}
+
+// Substituir a função global
+window.importMultipleWorks = importMultipleWorks;
+
+
+
+
 
       // Função para consultar API do DNIT para atualizar o KM
       async function consultarDnitApi(latitude, longitude) {
@@ -3364,107 +3570,241 @@
         }
       }
 
-      // Versão: 1.1
-      // Processar arquivo de importação
-      function processImportFile() {
-        try {
-          const fileInput = document.getElementById("csv-file-input");
-          const file = fileInput.files[0];
+     
 
-          if (!file) {
-            alert("Por favor, selecione um arquivo CSV para importar.");
+      // Versão: 3.0
+// Função aprimorada para processamento de arquivo CSV com diagnóstico
+
+function processImportFile() {
+  try {
+    console.log("Iniciando processamento do arquivo CSV...");
+    const fileInput = document.getElementById("csv-file-input");
+    
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert("Nenhum arquivo selecionado. Por favor, selecione um arquivo CSV para importar.");
+      console.error("Nenhum arquivo selecionado");
+      return;
+    }
+    
+    const file = fileInput.files[0];
+    console.log("Arquivo selecionado:", file.name, "tamanho:", file.size, "tipo:", file.type);
+    
+    // Verificar se é realmente um arquivo CSV
+    if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
+      alert("O arquivo selecionado não parece ser um CSV válido. Extensão ou tipo incorreto.");
+      console.error("Tipo de arquivo inválido:", file.type);
+      return;
+    }
+    
+    // Criar um leitor de arquivo com tratamento de erro explícito
+    const reader = new FileReader();
+    
+    reader.onload = function(event) {
+      try {
+        console.log("Arquivo lido com sucesso. Tamanho dos dados:", event.target.result.length);
+        const csvData = event.target.result;
+        
+        // Verificar se há conteúdo
+        if (!csvData || csvData.trim() === "") {
+          alert("O arquivo CSV está vazio.");
+          console.error("Arquivo CSV vazio");
+          return;
+        }
+        
+        // Dividir em linhas
+        const lines = csvData.split(/\r?\n/);
+        console.log("Número de linhas detectadas:", lines.length);
+        
+        if (lines.length < 2) {
+          alert("O arquivo CSV não contém dados válidos (precisa ter pelo menos 2 linhas).");
+          console.error("Arquivo CSV com menos de 2 linhas");
+          return;
+        }
+        
+        // Detectar separador de forma mais robusta
+        const headerLine = lines[0];
+        let separator = detectSeparator(headerLine);
+        console.log("Separador detectado:", separator === "\t" ? "TAB" : separator);
+        
+        if (!separator) {
+          alert("Não foi possível detectar o separador no arquivo CSV.");
+          console.error("Não foi possível detectar o separador");
+          return;
+        }
+        
+        // Obter cabeçalhos
+        const headers = headerLine.split(separator).map(header => header.trim());
+        console.log("Cabeçalhos detectados:", headers);
+        
+        if (headers.length < 3) {
+          alert("O arquivo CSV não contém cabeçalhos suficientes.");
+          console.error("Arquivo CSV com poucos cabeçalhos:", headers.length);
+          return;
+        }
+        
+        // Verificar se o arquivo tem várias obras (mais de uma linha de dados)
+        if (lines.length > 2) {
+          console.log("Detectado arquivo com múltiplas obras");
+          const works = [];
+          
+          // Processar cada linha (exceto a primeira que são os cabeçalhos)
+          for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === "") {
+              console.log(`Linha ${i+1} vazia, ignorando.`);
+              continue; // Pular linhas vazias
+            }
+            
+            const values = parseCSVLine(lines[i], separator);
+            console.log(`Linha ${i+1}: ${values.length} valores vs ${headers.length} cabeçalhos`);
+            
+            if (values.length !== headers.length) {
+              console.warn(`Linha ${i+1} tem número incorreto de campos (${values.length} vs ${headers.length}).`);
+              // Continuar processando, mas registrar o aviso
+            }
+            
+            const workData = {};
+            
+            // Mapear valores para cabeçalhos
+            for (let j = 0; j < headers.length; j++) {
+              if (j < values.length) {
+                workData[headers[j]] = values[j];
+              } else {
+                workData[headers[j]] = ""; // Campo vazio para campos faltantes
+              }
+            }
+            
+            // Verificar se há um código válido
+            if (workData["CODIGO"] && workData["CODIGO"].trim() !== "") {
+              works.push(workData);
+              console.log(`Obra '${workData["CODIGO"]}' processada com sucesso.`);
+            } else {
+              console.warn(`Linha ${i+1} sem código válido, ignorando.`);
+            }
+          }
+          
+          if (works.length > 0) {
+            console.log(`Total de ${works.length} obras processadas com sucesso.`);
+            
+            // Perguntar se o usuário quer salvar todas as obras no banco de dados
+            if (confirm(`O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`)) {
+              saveMultipleWorks(works);
+            }
+          } else {
+            alert("Nenhuma obra válida encontrada no arquivo CSV.");
+            console.error("Nenhuma obra válida encontrada");
+          }
+        } else {
+          console.log("Detectado arquivo com uma única obra");
+          // Apenas uma obra, carregar no formulário atual
+          const values = parseCSVLine(lines[1], separator);
+          console.log("Valores da obra única:", values.length);
+          
+          if (values.length < 3) {
+            alert("A linha de dados não contém informações suficientes para uma obra.");
+            console.error("Dados insuficientes para uma obra");
             return;
           }
-
-          const reader = new FileReader();
-          reader.readAsText(file);
-
-          reader.onload = function (event) {
-            const csvData = event.target.result;
-            const lines = csvData.split("\n");
-
-            if (lines.length < 2) {
-              alert("O arquivo CSV não contém dados válidos.");
-              return;
-            }
-
-            // Detectar separador de forma mais robusta
-            const headerLine = lines[0];
-            let separator = ",";
-            if (headerLine.includes("\t")) separator = "\t";
-            else if (headerLine.includes(";")) separator = ";";
-
-            console.log(
-              "Separador detectado:",
-              separator === "\t" ? "TAB" : separator
-            );
-
-            // Primeira linha contém os cabeçalhos
-            const headers = headerLine
-              .split(separator)
-              .map((header) => header.trim());
-
-            // Verificar se o arquivo tem várias obras (mais de uma linha de dados)
-            if (lines.length > 2) {
-              const works = [];
-
-              // Processar cada linha (exceto a primeira que são os cabeçalhos)
-              for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === "") continue; // Pular linhas vazias
-
-                const values = parseCSVLine(lines[i], separator);
-                if (values.length !== headers.length) {
-                  console.warn(
-                    `Linha ${i + 1} tem número incorreto de campos (${
-                      values.length
-                    } vs ${headers.length}). Tentando importar mesmo assim.`
-                  );
-                }
-
-                const workData = {};
-
-                // Mapear valores para cabeçalhos
-                for (let j = 0; j < headers.length; j++) {
-                  if (j < values.length) {
-                    workData[headers[j]] = values[j];
-                  }
-                }
-
-                // Verificar se há um código válido
-                if (workData["CODIGO"] && workData["CODIGO"].trim() !== "") {
-                  works.push(workData);
-                }
-              }
-
-              if (works.length > 0) {
-                // Perguntar se o usuário quer salvar todas as obras no banco de dados
-                if (
-                  confirm(
-                    `O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`
-                  )
-                ) {
-                  saveMultipleWorks(works);
-                }
-              } else {
-                alert("Nenhuma obra válida encontrada no arquivo CSV.");
-              }
-            } else {
-              // Apenas uma obra, carregar no formulário atual
-              const values = parseCSVLine(lines[1], separator);
-              loadCSVDataToForm(headers, values);
-            }
-
-            closeImportModal();
-          };
-
-          reader.onerror = function () {
-            alert("Erro ao ler o arquivo.");
-          };
-        } catch (error) {
-          console.error("Erro ao processar arquivo:", error);
-          alert("Erro ao processar arquivo: " + error.message);
+          
+          loadCSVDataToForm(headers, values);
+          console.log("Dados carregados no formulário com sucesso");
         }
+        
+        closeImportModal();
+      } catch (parseError) {
+        console.error("Erro ao processar dados do CSV:", parseError);
+        alert("Erro ao processar os dados do CSV: " + parseError.message);
       }
+    };
+    
+    reader.onerror = function(errorEvent) {
+      console.error("Erro ao ler o arquivo:", errorEvent);
+      alert("Erro ao ler o arquivo: " + (errorEvent.target.error?.message || "Erro desconhecido"));
+    };
+    
+    console.log("Iniciando leitura do arquivo...");
+    reader.readAsText(file);
+    
+  } catch (error) {
+    console.error("Erro crítico ao processar arquivo:", error);
+    alert("Erro ao processar arquivo: " + error.message);
+  }
+}
+
+// Função auxiliar para detectar o separador
+function detectSeparator(headerLine) {
+  if (!headerLine) return null;
+  
+  // Contadores para cada tipo de separador
+  const counts = {
+    "\t": (headerLine.match(/\t/g) || []).length,
+    ",": (headerLine.match(/,/g) || []).length,
+    ";": (headerLine.match(/;/g) || []).length
+  };
+  
+  // Encontrar o separador mais frequente
+  let maxCount = 0;
+  let detectedSeparator = null;
+  
+  for (const [sep, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      detectedSeparator = sep;
+    }
+  }
+  
+  // Se não for possível detectar, usar a vírgula como padrão
+  return detectedSeparator || ",";
+}
+
+// Função aprimorada para analisar linha CSV
+function parseCSVLine(line, separator = ",") {
+  if (!line) return [];
+  
+  // Tratamento especial para separador de tabulação
+  if (separator === "\t") {
+    return line.split(separator).map(value => value.trim());
+  }
+  
+  const values = [];
+  let currentValue = "";
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      if (i < line.length - 1 && line[i + 1] === '"') {
+        // Escape para aspas duplas dentro de aspas
+        currentValue += '"';
+        i++; // Pular o próximo caractere
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === separator && !inQuotes) {
+      values.push(currentValue);
+      currentValue = "";
+    } else {
+      currentValue += char;
+    }
+  }
+  
+  // Não esquecer o último valor
+  values.push(currentValue);
+  
+  // Trim dos valores para remover espaços em branco
+  return values.map(value => value.trim());
+}
+
+// Substituir a função global
+window.processImportFile = processImportFile;
+window.parseCSVLine = parseCSVLine;
+window.detectSeparator = detectSeparator;
+
+
+
+
+
+
 
       // Versão: 1.1
       // Função auxiliar para analisar uma linha CSV (lidando com valores entre aspas e diferentes separadores)
@@ -6175,11 +6515,6 @@
           console.error("Erro ao limpar formulário:", error);
           alert("Erro ao limpar formulário: " + error.message);
         }
-      }
-
-      // Importar múltiplas obras (processar arquivo)
-      function importMultipleWorks() {
-        document.getElementById("csv-file-input").click();
       }
 
       // Mostrar o modal de importação de múltiplas obras
