@@ -5602,217 +5602,8 @@ window.detectSeparator = detectSeparator;
         closeModal();
       }
 
-      // Gerar e mostrar linha CSV para copiar para Excel
-      function generateAndShowCSVLine() {
-        try {
-          // Validar primeiro
-          const { isValid, missingFields } = validateForm();
-          if (!isValid) {
-            alert(
-              "Por favor, preencha todos os campos obrigatórios antes de gerar a linha CSV."
-            );
-            return;
-          }
 
-          // Validar dimensões
-          if (
-            !validateTramosLength() ||
-            !validateHeights() ||
-            !validateDisplacements()
-          ) {
-            return; // Interrompe a execução se qualquer validação falhar
-          }
-
-          const form = document.getElementById("oae-form");
-          const formData = new FormData(form);
-
-          // Obter colunas definidas
-          const csvColumns = getCsvColumns();
-
-          // Coletar campos personalizados
-          document.querySelectorAll(".custom-field").forEach((field) => {
-            const name = field.getAttribute("name");
-            if (!csvColumns.includes(name)) {
-              csvColumns.push(name);
-            }
-          });
-
-          // Dados para a linha CSV
-          const data = {};
-
-          // Preencher com valores vazios para garantir que todos os campos existam
-          csvColumns.forEach((column) => {
-            data[column] = "";
-          });
-
-          // Preencher com os valores do formulário
-          for (let [key, value] of formData.entries()) {
-            // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
-            if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-              data[key] = value;
-            }
-          }
-
-          // Checkbox - verificar se está marcado
-          if (document.getElementById("modelado").checked) {
-            data["MODELADO"] = "TRUE";
-          } else {
-            data["MODELADO"] = "FALSE";
-          }
-
-          // Coletar valores dos tramos
-          const tramosValues = [];
-          const tramosFields = document.querySelectorAll(".tramo-field");
-          tramosFields.forEach((field) => {
-            tramosValues.push(field.value || "0.50");
-          });
-          data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
-
-          // Coletar valores dos apoios
-          const apoiosValues = [];
-          const apoiosFields = document.querySelectorAll(".apoio-field");
-          apoiosFields.forEach((field) => {
-            apoiosValues.push(field.value || "0.00");
-          });
-          data["ALTURA APOIO"] = apoiosValues.join(";");
-
-          // Gerar a linha CSV
-          const csvLine = csvColumns
-            .map((column) => data[column] || "")
-            .join("\t");
-
-          // Mostrar a linha para copiar
-          const csvLineElement = document.getElementById("csv-line");
-          csvLineElement.style.display = "block";
-          csvLineElement.textContent = csvLine;
-
-          // Selecionar o texto para facilitar a cópia
-          const range = document.createRange();
-          range.selectNode(csvLineElement);
-          window.getSelection().removeAllRanges();
-          window.getSelection().addRange(range);
-
-          try {
-            // Copiar para o clipboard
-            document.execCommand("copy");
-            window.getSelection().removeAllRanges();
-            alert("Linha copiada para a área de transferência!");
-          } catch (err) {
-            console.error("Não foi possível copiar automaticamente:", err);
-            alert("Selecione o texto e use Ctrl+C para copiar.");
-          }
-        } catch (error) {
-          console.error("Erro ao gerar linha CSV:", error);
-          alert("Erro ao gerar linha CSV: " + error.message);
-        }
-      }
-
-      // Exportar para CSV
-      function exportToCSV() {
-        try {
-          // Validar primeiro
-          const { isValid, missingFields } = validateForm();
-          if (!isValid) {
-            alert(
-              "Por favor, preencha todos os campos obrigatórios antes de exportar para CSV."
-            );
-            return;
-          }
-
-          // Validar dimensões
-          if (
-            !validateTramosLength() ||
-            !validateHeights() ||
-            !validateDisplacements()
-          ) {
-            return; // Interrompe a execução se qualquer validação falhar
-          }
-          const form = document.getElementById("oae-form");
-          const formData = new FormData(form);
-
-          // Obter colunas definidas
-          const csvColumns = getCsvColumns();
-
-          // Coletar campos personalizados
-          document.querySelectorAll(".custom-field").forEach((field) => {
-            const name = field.getAttribute("name");
-            if (!csvColumns.includes(name)) {
-              csvColumns.push(name);
-            }
-          });
-
-          // Coletar todos os campos padrão
-          const data = {};
-          // Inicializar com valores vazios
-          csvColumns.forEach((column) => {
-            data[column] = "";
-          });
-
-          for (let [key, value] of formData.entries()) {
-            // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
-            if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-              data[key] = value;
-            }
-          }
-
-          // Checkbox - verificar se está marcado
-          if (document.getElementById("modelado").checked) {
-            data["MODELADO"] = "TRUE";
-          } else {
-            data["MODELADO"] = "FALSE";
-          }
-
-          // Coletar valores dos tramos
-          const tramosValues = [];
-          const tramosFields = document.querySelectorAll(".tramo-field");
-          tramosFields.forEach((field) => {
-            tramosValues.push(field.value || "0.50");
-          });
-          data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
-
-          // Coletar valores dos apoios
-          const apoiosValues = [];
-          const apoiosFields = document.querySelectorAll(".apoio-field");
-          apoiosFields.forEach((field) => {
-            apoiosValues.push(field.value || "0.00");
-          });
-          data["ALTURA APOIO"] = apoiosValues.join(";");
-
-          // Construir cabeçalhos e linha de dados
-          const csvContent =
-            csvColumns.join(",") +
-            "\n" +
-            csvColumns
-              .map((column) => {
-                // Valores com vírgula devem ser envolvidos em aspas duplas
-                const value = data[column] || "";
-                return value && value.includes(",") ? `"${value}"` : value;
-              })
-              .join(",");
-
-          // Criar e baixar o arquivo CSV
-          const blob = new Blob([csvContent], {
-            type: "text/csv;charset=utf-8;",
-          });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.setAttribute("href", url);
-          link.setAttribute(
-            "download",
-            `OAE_${data["CODIGO"] || "nova"}_${
-              new Date().toISOString().split("T")[0]
-            }.csv`
-          );
-          link.style.display = "none";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (error) {
-          console.error("Erro ao exportar CSV:", error);
-          alert("Erro ao exportar CSV: " + error.message);
-        }
-      }
-
+      
       // Mostrar modal de importação
       function showImportModal() {
         document.getElementById("import-modal").style.display = "block";
@@ -6306,78 +6097,7 @@ window.detectSeparator = detectSeparator;
         }
       }
 
-      // Exportar todas as obras para CSV
-      function exportAllWorks() {
-        try {
-          if (!db) {
-            alert("Banco de dados não está disponível.");
-            return;
-          }
-
-          const transaction = db.transaction(["obras"], "readonly");
-          const objectStore = transaction.objectStore("obras");
-          const request = objectStore.getAll();
-
-          request.onsuccess = function (event) {
-            const works = event.target.result;
-
-            if (works.length === 0) {
-              alert("Não há obras para exportar.");
-              return;
-            }
-
-            // Obter colunas definidas
-            const csvColumns = getCsvColumns();
-
-            // Verificar campos personalizados em todas as obras
-            works.forEach((work) => {
-              Object.keys(work).forEach((field) => {
-                if (!csvColumns.includes(field)) {
-                  csvColumns.push(field);
-                }
-              });
-            });
-
-            // Correção: Inicializar a variável csvContent
-            let csvContent = csvColumns.join("\t") + "\n";
-
-            works.forEach((work) => {
-              const row = csvColumns.map((column) => {
-                const value = work[column] || "";
-                // Valores com tabs devem ser envolvidos em aspas duplas
-                return value && value.includes("\t") ? `"${value}"` : value;
-              });
-
-              csvContent += row.join("\t") + "\n";
-            });
-
-            // Criar e baixar o arquivo CSV
-            const blob = new Blob([csvContent], {
-              type: "text/csv;charset=utf-8;",
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute(
-              "download",
-              `Todas_OAEs_${new Date().toISOString().split("T")[0]}.csv`
-            );
-            link.style.display = "none";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          };
-
-          request.onerror = function (event) {
-            console.error("Erro ao exportar obras:", event.target.error);
-            alert(`Erro ao exportar obras: ${event.target.error}`);
-          };
-        } catch (error) {
-          console.error("Erro ao exportar todas as obras:", error);
-          alert("Erro ao exportar todas as obras: " + error.message);
-        }
-      }
-
+ 
       // Excluir uma obra do banco de dados
       function deleteWork(codigo, event) {
         try {
@@ -6679,90 +6399,9 @@ window.detectSeparator = detectSeparator;
         return true;
       }
 
-      // Versão: 2.0
-      // Função para obter colunas padrão para exportação CSV
-      function getCsvColumns() {
-        // Array com todas as colunas padrão em ordem lógica por seção
-        return [
-          // Informações Gerais
-          "MODELADO",
-          "NOME",
-          "CODIGO",
-          "LOTE",
-          "GPS",
-          "FOTOS SUPERIORES",
-          "FOTOS INFERIORES",
-          "UF",
-          "RODOVIA",
-          "KM",
-          "DATA",
-          "ENGENHEIRO",
-          "TECNICO",
-          "LATITUDE",
-          "LONGITUDE",
 
-          // Configurações Gerais
-          "COMPRIMENTO",
-          "LARGURA",
-          "ALTURA",
-          "QTD TRAMOS",
-          "COMPRIMENTO TRAMOS",
 
-          // Elementos de Transição
-          "CORTINA ALTURA",
-          "ALA PARALELA",
-          "ALA PERPENDICULAR",
-          "COMPRIMENTO ALA",
-          "ESPESSURA ALA",
-          "TIPO ENCONTRO",
-          "DESLOCAMENTO ESQUERDO ENCONTRO LAJE",
-          "DESLOCAMENTO DIREITO ENCONTRO LAJE",
-          "COMPRIMENTO ENCONTRO LAJE",
-          "LAJE TRANSICAO",
 
-          // Elementos de Superestrutura
-          "ALTURA LONGARINA",
-          "DESLOCAMENTO ESQUERDO",
-          "DESLOCAMENTO DIREITO",
-          "QTD LONGARINAS",
-          "QTD TRANSVERSINAS",
-          "ESPESSURA LONGARINA",
-          "ESPESSURA TRANSVERSINA",
-          "ESPESSURA LAJE",
-
-          // Elementos de Apoio
-          "QTD PILARES",
-          "PILAR DESCENTRALIZADO",
-          "LARGURA PILAR",
-          "COMPRIMENTO PILARES",
-          "ALTURA APOIO",
-          "TIPO APARELHO APOIO",
-          "TIPO TRAVESSA",
-          "ALTURA TRAVESSA",
-          "TIPO ENCAMISAMENTO",
-          "TIPO BLOCO SAPATA",
-          "ALTURA BLOCO SAPATA",
-          "LARGURA BLOCO SAPATA",
-          "VIGA CONTRAVENTAMENTO PILAR",
-          "VIGA LIGACAO FUNDACOES",
-
-          // Elementos Complementares
-          "BARREIRA ESQUERDA",
-          "LARGURA BARREIRA ESQUERDA",
-          "BARREIRA DIREITA",
-          "LARGURA BARREIRA DIREITA",
-          "CALCADA ESQUERDA",
-          "LARGURA CALCADA ESQUERDA",
-          "CALCADA DIREITA",
-          "LARGURA CALCADA DIREITA",
-          "GUARDA RODAS ESQUERDA",
-          "LARGURA GUARDA RODAS ESQUERDA",
-          "GUARDA RODAS DIREITA",
-          "LARGURA GUARDA RODAS DIREITA",
-          "TIPO PAVIMENTO",
-          "QTD BUZINOTES",
-        ];
-      }
 
       function showExportLoteModal() {
         try {
@@ -6834,95 +6473,6 @@ window.detectSeparator = detectSeparator;
         document.getElementById("export-lote-modal").style.display = "none";
       }
 
-      function exportLoteWorks() {
-        try {
-          const loteSelect = document.getElementById("export-lote-select");
-          const lote = loteSelect.value;
-
-          if (!lote) {
-            alert("Por favor, selecione um lote para exportar.");
-            return;
-          }
-
-          if (!db) {
-            alert("Banco de dados não está disponível.");
-            return;
-          }
-
-          const transaction = db.transaction(["obras"], "readonly");
-          const objectStore = transaction.objectStore("obras");
-          const index = objectStore.index("LOTE");
-          const request = index.getAll(lote);
-
-          request.onsuccess = function (event) {
-            const works = event.target.result;
-
-            if (works.length === 0) {
-              alert(`Não há obras no lote "${lote}" para exportar.`);
-              return;
-            }
-
-            // Obter colunas definidas
-            const csvColumns = getCsvColumns();
-
-            // Verificar campos personalizados em todas as obras
-            works.forEach((work) => {
-              Object.keys(work).forEach((field) => {
-                if (!csvColumns.includes(field)) {
-                  csvColumns.push(field);
-                }
-              });
-            });
-
-            // Construir o conteúdo do CSV (usando TAB como separador)
-            let csvContent = csvColumns.join("\t") + "\n";
-
-            works.forEach((work) => {
-              const row = csvColumns.map((column) => {
-                const value = work[column] || "";
-                // Valores com tabs devem ser envolvidos em aspas duplas
-                return value && value.includes("\t") ? `"${value}"` : value;
-              });
-
-              csvContent += row.join("\t") + "\n";
-            });
-
-            // Criar e baixar o arquivo CSV
-            const blob = new Blob([csvContent], {
-              type: "text/csv;charset=utf-8;",
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute(
-              "download",
-              `OAEs_Lote_${lote.replace(/[^a-zA-Z0-9]/g, "_")}_${
-                new Date().toISOString().split("T")[0]
-              }.csv`
-            );
-            link.style.display = "none";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Fechar o modal após exportação
-            closeExportLoteModal();
-          };
-
-          request.onerror = function (event) {
-            console.error(
-              `Erro ao exportar obras do lote "${lote}":`,
-              event.target.error
-            );
-            alert(
-              `Erro ao exportar obras do lote "${lote}": ${event.target.error}`
-            );
-          };
-        } catch (error) {
-          console.error("Erro ao exportar obras por lote:", error);
-          alert("Erro ao exportar obras por lote: " + error.message);
-        }
-      }
 
       // Função para importar CSV de pontes para o IndexedDB
       function importPontesCSV() {
@@ -7366,6 +6916,501 @@ window.detectSeparator = detectSeparator;
       if (document.readyState !== "loading") {
         fixRequiredFieldsValidation();
       }
+
+
+
+
+      // Versão: 3.0
+// Função para obter colunas padrão para exportação CSV com CODIGO como segunda coluna
+function getCsvColumns() {
+    // Array com todas as colunas padrão em ordem lógica por seção
+    return [
+        // Informações Gerais - CODIGO movido para segunda posição
+        "MODELADO",
+        "CODIGO",  // Agora como segunda coluna
+        "NOME",
+        "LOTE",
+        "GPS",
+        "FOTOS SUPERIORES",
+        "FOTOS INFERIORES",
+        "UF",
+        "RODOVIA",
+        "KM",
+        "DATA",
+        "ENGENHEIRO",
+        "TECNICO",
+        "LATITUDE",
+        "LONGITUDE",
+
+        // Configurações Gerais
+        "COMPRIMENTO",
+        "LARGURA",
+        "ALTURA",
+        "QTD TRAMOS",
+        "COMPRIMENTO TRAMOS",
+
+        // Elementos de Transição
+        "CORTINA ALTURA",
+        "ALA PARALELA",
+        "ALA PERPENDICULAR",
+        "COMPRIMENTO ALA",
+        "ESPESSURA ALA",
+        "TIPO ENCONTRO",
+        "DESLOCAMENTO ESQUERDO ENCONTRO LAJE",
+        "DESLOCAMENTO DIREITO ENCONTRO LAJE",
+        "COMPRIMENTO ENCONTRO LAJE",
+        "LAJE TRANSICAO",
+
+        // Elementos de Superestrutura
+        "ALTURA LONGARINA",
+        "DESLOCAMENTO ESQUERDO",
+        "DESLOCAMENTO DIREITO",
+        "QTD LONGARINAS",
+        "QTD TRANSVERSINAS",
+        "ESPESSURA LONGARINA",
+        "ESPESSURA TRANSVERSINA",
+        "ESPESSURA LAJE",
+
+        // Elementos de Apoio
+        "QTD PILARES",
+        "PILAR DESCENTRALIZADO",
+        "LARGURA PILAR",
+        "COMPRIMENTO PILARES",
+        "ALTURA APOIO",
+        "TIPO APARELHO APOIO",
+        "TIPO TRAVESSA",
+        "ALTURA TRAVESSA",
+        "TIPO ENCAMISAMENTO",
+        "TIPO BLOCO SAPATA",
+        "ALTURA BLOCO SAPATA",
+        "LARGURA BLOCO SAPATA",
+        "VIGA CONTRAVENTAMENTO PILAR",
+        "VIGA LIGACAO FUNDACOES",
+
+        // Elementos Complementares
+        "BARREIRA ESQUERDA",
+        "LARGURA BARREIRA ESQUERDA",
+        "BARREIRA DIREITA",
+        "LARGURA BARREIRA DIREITA",
+        "CALCADA ESQUERDA",
+        "LARGURA CALCADA ESQUERDA",
+        "CALCADA DIREITA",
+        "LARGURA CALCADA DIREITA",
+        "GUARDA RODAS ESQUERDA",
+        "LARGURA GUARDA RODAS ESQUERDA",
+        "GUARDA RODAS DIREITA",
+        "LARGURA GUARDA RODAS DIREITA",
+        "TIPO PAVIMENTO",
+        "QTD BUZINOTES",
+    ];
+}
+
+// Substituir a função global
+window.getCsvColumns = getCsvColumns;
+
+
+
+
+
+// Versão: 3.0
+// Função atualizada para exportar CSV com CODIGO como texto preservando zeros à esquerda
+function exportToCSV() {
+    try {
+        // Validar primeiro
+        const { isValid, missingFields } = validateForm();
+        if (!isValid) {
+            alert("Por favor, preencha todos os campos obrigatórios antes de exportar para CSV.");
+            return;
+        }
+
+        // Validar dimensões
+        if (!validateTramosLength() || !validateHeights() || !validateDisplacements()) {
+            return; // Interrompe a execução se qualquer validação falhar
+        }
+        const form = document.getElementById("oae-form");
+        const formData = new FormData(form);
+
+        // Obter colunas definidas
+        const csvColumns = getCsvColumns();
+
+        // Coletar campos personalizados
+        document.querySelectorAll(".custom-field").forEach((field) => {
+            const name = field.getAttribute("name");
+            if (!csvColumns.includes(name)) {
+                csvColumns.push(name);
+            }
+        });
+
+        // Coletar todos os campos padrão
+        const data = {};
+        // Inicializar com valores vazios
+        csvColumns.forEach((column) => {
+            data[column] = "";
+        });
+
+        for (let [key, value] of formData.entries()) {
+            // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+            if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
+                data[key] = value;
+            }
+        }
+
+        // Checkbox - verificar se está marcado
+        if (document.getElementById("modelado").checked) {
+            data["MODELADO"] = "TRUE";
+        } else {
+            data["MODELADO"] = "FALSE";
+        }
+
+        // Coletar valores dos tramos
+        const tramosValues = [];
+        const tramosFields = document.querySelectorAll(".tramo-field");
+        tramosFields.forEach((field) => {
+            tramosValues.push(field.value || "0.50");
+        });
+        data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
+
+        // Coletar valores dos apoios
+        const apoiosValues = [];
+        const apoiosFields = document.querySelectorAll(".apoio-field");
+        apoiosFields.forEach((field) => {
+            apoiosValues.push(field.value || "0.00");
+        });
+        data["ALTURA APOIO"] = apoiosValues.join(";");
+
+        // Construir cabeçalhos e linha de dados
+        const csvContent = csvColumns.join(",") + "\n" + csvColumns.map((column) => {
+            // Valores com vírgula devem ser envolvidos em aspas duplas
+            const value = data[column] || "";
+            
+            // Tratamento especial para CODIGO - sempre como texto com aspas para preservar zeros à esquerda
+            if (column === "CODIGO") {
+                return `"${value}"`; // Sempre colocar entre aspas para garantir tratamento como texto
+            }
+            
+            // Para outros campos, só coloca aspas se tiver vírgulas
+            return value && value.includes(",") ? `"${value}"` : value;
+        }).join(",");
+
+        // Criar e baixar o arquivo CSV
+        const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `OAE_${data["CODIGO"] || "nova"}_${new Date().toISOString().split("T")[0]}.csv`);
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error("Erro ao exportar CSV:", error);
+        alert("Erro ao exportar CSV: " + error.message);
+    }
+}
+
+// Substituir a função global
+window.exportToCSV = exportToCSV;
+
+
+
+// Versão: 3.0
+// Função atualizada para exportar todas as obras com CODIGO tratado como texto
+function exportAllWorks() {
+    try {
+        if (!db) {
+            alert("Banco de dados não está disponível.");
+            return;
+        }
+
+        const transaction = db.transaction(["obras"], "readonly");
+        const objectStore = transaction.objectStore("obras");
+        const request = objectStore.getAll();
+
+        request.onsuccess = function (event) {
+            const works = event.target.result;
+
+            if (works.length === 0) {
+                alert("Não há obras para exportar.");
+                return;
+            }
+
+            // Obter colunas definidas
+            const csvColumns = getCsvColumns();
+
+            // Verificar campos personalizados em todas as obras
+            works.forEach((work) => {
+                Object.keys(work).forEach((field) => {
+                    if (!csvColumns.includes(field)) {
+                        csvColumns.push(field);
+                    }
+                });
+            });
+
+            // Inicializar o conteúdo CSV com os cabeçalhos
+            let csvContent = csvColumns.join("\t") + "\n";
+
+            works.forEach((work) => {
+                const row = csvColumns.map((column) => {
+                    const value = work[column] || "";
+                    
+                    // Tratamento especial para CODIGO - sempre como texto para preservar zeros à esquerda
+                    if (column === "CODIGO") {
+                        // Usar aspas duplas para garantir que seja tratado como texto
+                        return `"${value}"`;
+                    }
+                    
+                    // Valores com tabs devem ser envolvidos em aspas duplas
+                    return value && value.includes("\t") ? `"${value}"` : value;
+                });
+
+                csvContent += row.join("\t") + "\n";
+            });
+
+            // Criar e baixar o arquivo CSV
+            const blob = new Blob([csvContent], {
+                type: "text/csv;charset=utf-8;",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Todas_OAEs_${new Date().toISOString().split("T")[0]}.csv`);
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        request.onerror = function (event) {
+            console.error("Erro ao exportar obras:", event.target.error);
+            alert(`Erro ao exportar obras: ${event.target.error}`);
+        };
+    } catch (error) {
+        console.error("Erro ao exportar todas as obras:", error);
+        alert("Erro ao exportar todas as obras: " + error.message);
+    }
+}
+
+// Substituir a função global
+window.exportAllWorks = exportAllWorks;
+
+
+
+// Versão: 3.0
+// Função atualizada para exportar obras por lote com CODIGO tratado como texto
+function exportLoteWorks() {
+    try {
+        const loteSelect = document.getElementById("export-lote-select");
+        const lote = loteSelect.value;
+
+        if (!lote) {
+            alert("Por favor, selecione um lote para exportar.");
+            return;
+        }
+
+        if (!db) {
+            alert("Banco de dados não está disponível.");
+            return;
+        }
+
+        const transaction = db.transaction(["obras"], "readonly");
+        const objectStore = transaction.objectStore("obras");
+        const index = objectStore.index("LOTE");
+        const request = index.getAll(lote);
+
+        request.onsuccess = function (event) {
+            const works = event.target.result;
+
+            if (works.length === 0) {
+                alert(`Não há obras no lote "${lote}" para exportar.`);
+                return;
+            }
+
+            // Obter colunas definidas
+            const csvColumns = getCsvColumns();
+
+            // Verificar campos personalizados em todas as obras
+            works.forEach((work) => {
+                Object.keys(work).forEach((field) => {
+                    if (!csvColumns.includes(field)) {
+                        csvColumns.push(field);
+                    }
+                });
+            });
+
+            // Construir o conteúdo do CSV (usando TAB como separador)
+            let csvContent = csvColumns.join("\t") + "\n";
+
+            works.forEach((work) => {
+                const row = csvColumns.map((column) => {
+                    const value = work[column] || "";
+                    
+                    // Tratamento especial para CODIGO - sempre como texto para preservar zeros à esquerda
+                    if (column === "CODIGO") {
+                        // Usar aspas duplas para garantir que seja tratado como texto
+                        return `"${value}"`;
+                    }
+                    
+                    // Valores com tabs devem ser envolvidos em aspas duplas
+                    return value && value.includes("\t") ? `"${value}"` : value;
+                });
+
+                csvContent += row.join("\t") + "\n";
+            });
+
+            // Criar e baixar o arquivo CSV
+            const blob = new Blob([csvContent], {
+                type: "text/csv;charset=utf-8;",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `OAEs_Lote_${lote.replace(/[^a-zA-Z0-9]/g, "_")}_${new Date().toISOString().split("T")[0]}.csv`);
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Fechar o modal após exportação
+            closeExportLoteModal();
+        };
+
+        request.onerror = function (event) {
+            console.error(`Erro ao exportar obras do lote "${lote}":`, event.target.error);
+            alert(`Erro ao exportar obras do lote "${lote}": ${event.target.error}`);
+        };
+    } catch (error) {
+        console.error("Erro ao exportar obras por lote:", error);
+        alert("Erro ao exportar obras por lote: " + error.message);
+    }
+}
+
+// Substituir a função global
+window.exportLoteWorks = exportLoteWorks;
+
+
+
+
+// Versão: 3.0
+// Função atualizada para gerar linha CSV com CODIGO como texto preservando zeros à esquerda
+function generateAndShowCSVLine() {
+    try {
+        // Validar primeiro
+        const { isValid, missingFields } = validateForm();
+        if (!isValid) {
+            alert("Por favor, preencha todos os campos obrigatórios antes de gerar a linha CSV.");
+            return;
+        }
+
+        // Validar dimensões
+        if (!validateTramosLength() || !validateHeights() || !validateDisplacements()) {
+            return; // Interrompe a execução se qualquer validação falhar
+        }
+
+        const form = document.getElementById("oae-form");
+        const formData = new FormData(form);
+
+        // Obter colunas definidas
+        const csvColumns = getCsvColumns();
+
+        // Coletar campos personalizados
+        document.querySelectorAll(".custom-field").forEach((field) => {
+            const name = field.getAttribute("name");
+            if (!csvColumns.includes(name)) {
+                csvColumns.push(name);
+            }
+        });
+
+        // Dados para a linha CSV
+        const data = {};
+
+        // Preencher com valores vazios para garantir que todos os campos existam
+        csvColumns.forEach((column) => {
+            data[column] = "";
+        });
+
+        // Preencher com os valores do formulário
+        for (let [key, value] of formData.entries()) {
+            // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+            if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
+                data[key] = value;
+            }
+        }
+
+        // Checkbox - verificar se está marcado
+        if (document.getElementById("modelado").checked) {
+            data["MODELADO"] = "TRUE";
+        } else {
+            data["MODELADO"] = "FALSE";
+        }
+
+        // Coletar valores dos tramos
+        const tramosValues = [];
+        const tramosFields = document.querySelectorAll(".tramo-field");
+        tramosFields.forEach((field) => {
+            tramosValues.push(field.value || "0.50");
+        });
+        data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
+
+        // Coletar valores dos apoios
+        const apoiosValues = [];
+        const apoiosFields = document.querySelectorAll(".apoio-field");
+        apoiosFields.forEach((field) => {
+            apoiosValues.push(field.value || "0.00");
+        });
+        data["ALTURA APOIO"] = apoiosValues.join(";");
+
+        // Gerar a linha CSV
+        const csvLine = csvColumns.map((column) => {
+            // Tratamento especial para CODIGO para preservar zeros à esquerda
+            if (column === "CODIGO") {
+                return `"${data[column] || ""}"`;
+            }
+            
+            // Para os demais campos, manter o comportamento original
+            return data[column] || "";
+        }).join("\t");
+
+        // Mostrar a linha para copiar
+        const csvLineElement = document.getElementById("csv-line");
+        csvLineElement.style.display = "block";
+        csvLineElement.textContent = csvLine;
+
+        // Selecionar o texto para facilitar a cópia
+        const range = document.createRange();
+        range.selectNode(csvLineElement);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        try {
+            // Copiar para o clipboard
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+            alert("Linha copiada para a área de transferência!");
+        } catch (err) {
+            console.error("Não foi possível copiar automaticamente:", err);
+            alert("Selecione o texto e use Ctrl+C para copiar.");
+        }
+    } catch (error) {
+        console.error("Erro ao gerar linha CSV:", error);
+        alert("Erro ao gerar linha CSV: " + error.message);
+    }
+}
+
+// Substituir a função global
+window.generateAndShowCSVLine = generateAndShowCSVLine;
+
+
+
+
+
+
+
+
+
+
+
     </script>
   </body>
 </html>
