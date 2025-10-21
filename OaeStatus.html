@@ -381,6 +381,40 @@
 
 
 
+.most-recent-badge {
+  background-color: var(--info);
+  color: white;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 0.75em;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+/* Adicionar efeito de destaque para a linha da mensagem mais recente na tabela */
+tr.most-recent-row {
+  background-color: rgba(52, 152, 219, 0.15) !important;
+  position: relative;
+}
+
+tr.most-recent-row::after {
+  content: "mais recente";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--info);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.7em;
+}
+
+
+
+
+
+
 
     </style>
   </head>
@@ -2153,69 +2187,83 @@ function checkAndSaveMessage(message, text) {
           updateTable(processedData);
         }
 
-        function exportToCSV() {
-          if (processedData.length === 0) {
-            alert("Não há dados para exportar.");
-            return;
-          }
 
-          // Cabeçalhos
-          const headers = [
-            "Data",
-            "Remetente",
-            "Lote",
-            "Código OAE",
-            "Tipo de Inspeção",
-            "Data de Entrega/Envio",
-            "Data de Recebimento",
-            "Data de Devolução/Retorno",
-            "Status",
-          ];
 
-          // Linhas de dados
-          const rows = processedData.map((message) => [
-            message.data || "",
-            message.remetente || "",
-            message.lote || "",
-            message.codigoOAE || "",
-            message.tipoInspecao || "",
-            message.dataEntrega || "",
-            message.dataRecebimento || "",
-            message.dataDevolucao || "",
-            message.status || "",
-          ]);
 
-          // Montar CSV
-          const csvContent = [
-            headers.join(","),
-            ...rows.map((row) =>
-              row
-                .map((cell) => `"${(cell || "").replace(/"/g, '""')}"`)
-                .join(",")
-            ),
-          ].join("\n");
+        // Versão: 2.0
+function exportToCSV() {
+  if (processedData.length === 0) {
+    alert("Não há dados para exportar.");
+    return;
+  }
 
-          // Download
-          const blob = new Blob([csvContent], {
-            type: "text/csv;charset=utf-8;",
-          });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
+  // Obter a data atual
+  const now = new Date();
+  
+  // Formatar a data e hora no padrão desejado
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  // Montar o nome do arquivo
+  const fileName = `HISTORICO_MENSAGENS_ESCRITORIO_${day}${month}${year}_${hours}${minutes}`;
 
-          link.setAttribute("href", url);
-          link.setAttribute(
-            "download",
-            `dados-oae-${new Date()
-              .toISOString()
-              .slice(0, 19)
-              .replace(/[:.]/g, "-")}.csv`
-          );
-          link.style.display = "none";
+  // Cabeçalhos
+  const headers = [
+    "Data",
+    "Remetente",
+    "Lote",
+    "Código OAE",
+    "Tipo de Inspeção",
+    "Data de Entrega/Envio",
+    "Data de Recebimento",
+    "Data de Devolução/Retorno",
+    "Status",
+  ];
 
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+  // Linhas de dados
+  const rows = processedData.map((message) => [
+    message.data || "",
+    message.remetente || "",
+    message.lote || "",
+    message.codigoOAE || "",
+    message.tipoInspecao || "",
+    message.dataEntrega || "",
+    message.dataRecebimento || "",
+    message.dataDevolucao || "",
+    message.status || "",
+  ]);
+
+  // Montar CSV
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) =>
+      row
+        .map((cell) => `"${(cell || "").replace(/"/g, '""')}"`)
+        .join(",")
+    ),
+  ].join("\n");
+
+  // Download
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${fileName}.csv`);
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+
 
         // Funções Auxiliares
         function normalizeText(text) {
@@ -2409,6 +2457,210 @@ function checkAndSaveMessage(message, text) {
           }
         }
       });
+
+
+
+      // Versão: 1.0
+// Função para identificar a mensagem mais recente nos dados processados
+function getMostRecentMessage(processedData) {
+  if (!processedData || processedData.length === 0) {
+    return null; // Retorna null se não houver dados
+  }
+
+  // Criar uma cópia dos dados para não modificar o original
+  const dataToSort = [...processedData];
+
+  // Função para converter uma string de data em objeto Date
+  function extractDateFromMessageString(dateString) {
+    if (!dateString) return null;
+
+    // Formato com colchetes [DD/MM/YY, HH:MM:SS]
+    const bracketMatch = dateString.match(/\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]/);
+    if (bracketMatch) {
+      const datePart = bracketMatch[1];
+      const timePart = bracketMatch[2];
+      
+      // Converter para formato que o Date possa interpretar
+      const parts = datePart.split('/');
+      
+      // Determinar se está no formato DD/MM/YYYY ou MM/DD/YYYY baseado no formato detectado
+      if (detectedDateFormat === "MM/DD/YYYY") {
+        // Formato americano MM/DD/YYYY
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        const year = parts[2].length === 2 ? (parseInt(parts[2]) < 50 ? 2000 + parseInt(parts[2]) : 1900 + parseInt(parts[2])) : parseInt(parts[2]);
+        
+        const timeParts = timePart.split(':');
+        const hour = parseInt(timeParts[0], 10);
+        const minute = parseInt(timeParts[1], 10);
+        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+        
+        return new Date(year, month, day, hour, minute, second);
+      } else {
+        // Formato brasileiro DD/MM/YYYY
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parts[2].length === 2 ? (parseInt(parts[2]) < 50 ? 2000 + parseInt(parts[2]) : 1900 + parseInt(parts[2])) : parseInt(parts[2]);
+        
+        const timeParts = timePart.split(':');
+        const hour = parseInt(timeParts[0], 10);
+        const minute = parseInt(timeParts[1], 10);
+        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+        
+        return new Date(year, month, day, hour, minute, second);
+      }
+    }
+    
+    // Formato padrão DD/MM/YYYY HH:MM ou MM/DD/YYYY HH:MM
+    const standardMatch = dateString.match(/(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?)/);
+    if (standardMatch) {
+      const datePart = standardMatch[1];
+      const timePart = standardMatch[2];
+      
+      // Converter para formato que o Date possa interpretar
+      const parts = datePart.split('/');
+      
+      // Determinar formato baseado no formato detectado
+      if (detectedDateFormat === "MM/DD/YYYY") {
+        // Formato americano
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        
+        const timeParts = timePart.split(':');
+        const hour = parseInt(timeParts[0], 10);
+        const minute = parseInt(timeParts[1], 10);
+        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+        
+        return new Date(year, month, day, hour, minute, second);
+      } else {
+        // Formato brasileiro
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        
+        const timeParts = timePart.split(':');
+        const hour = parseInt(timeParts[0], 10);
+        const minute = parseInt(timeParts[1], 10);
+        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+        
+        return new Date(year, month, day, hour, minute, second);
+      }
+    }
+    
+    // Se não conseguir extrair a data, retorna null
+    return null;
+  }
+
+  // Ordenar as mensagens por data (mais recente para mais antiga)
+  dataToSort.sort((a, b) => {
+    const dateA = extractDateFromMessageString(a.data);
+    const dateB = extractDateFromMessageString(b.data);
+    
+    // Se conseguiu extrair as datas, comparar
+    if (dateA && dateB) {
+      return dateB - dateA; // Ordenar do mais recente para o mais antigo
+    }
+    
+    // Se não conseguiu extrair alguma das datas, considerar como menor
+    if (dateA && !dateB) return -1;
+    if (!dateA && dateB) return 1;
+    
+    // Se não conseguiu extrair ambas as datas, manter a ordem original
+    return 0;
+  });
+
+  // Retorna a mensagem mais recente (primeira após ordenação)
+  return dataToSort.length > 0 ? dataToSort[0] : null;
+}
+
+// Função auxiliar para formatar a data para exibição
+function formatDateTimeForDisplay(dateObj) {
+  if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+    return "";
+  }
+  
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  const hours = String(dateObj.getHours()).padStart(2, '0');
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+
+// Versão: 1.1
+// Adicionar o botão na interface HTML - Colocar este código após o botão "exportBtn" existente
+
+function addMostRecentExportButton() {
+  // Encontrar o grupo de botões existente
+  const buttonGroup = document.querySelector('.button-group');
+  
+  // Verificar se o grupo de botões existe
+  if (!buttonGroup) {
+    console.error('Grupo de botões não encontrado');
+    return;
+  }
+  
+  // Verificar se o botão já existe para evitar duplicação
+  if (document.getElementById('exportMostRecentBtn')) {
+    return;
+  }
+  
+  // Criar o novo botão
+  const exportMostRecentBtn = document.createElement('button');
+  exportMostRecentBtn.id = 'exportMostRecentBtn';
+  exportMostRecentBtn.disabled = true; // Inicialmente desabilitado
+  
+  // Adicionar o evento de clique
+  exportMostRecentBtn.addEventListener('click', exportMostRecentToCSV);
+  
+  // Adicionar o botão ao grupo
+  buttonGroup.appendChild(exportMostRecentBtn);
+  
+  // Atualizar o CSS para o novo botão
+  const style = document.createElement('style');
+  style.textContent = `
+    button#exportMostRecentBtn {
+      background-color: var(--info);
+      margin-left: 10px;
+    }
+    button#exportMostRecentBtn:hover {
+      opacity: 0.9;
+    }
+    button#exportMostRecentBtn:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Adicionar esta linha ao final da função DOMContentLoaded existente
+document.addEventListener("DOMContentLoaded", function() {
+  // Código existente...
+  
+  // Adicionar o botão para exportar a mensagem mais recente
+  addMostRecentExportButton();
+});
+
+
+function updateProcessMessages() {
+  // Localizar o final da função processMessages existente e adicionar:
+  
+  // Habilitar o botão de exportar mensagem mais recente se houver dados
+  const exportMostRecentBtn = document.getElementById('exportMostRecentBtn');
+  if (exportMostRecentBtn) {
+    exportMostRecentBtn.disabled = processedData.length === 0;
+  }
+}
+
+
+
+
+
     </script>
   </body>
 </html>
