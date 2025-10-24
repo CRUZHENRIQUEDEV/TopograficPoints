@@ -351,10 +351,7 @@
         cursor: pointer;
         font-size: 24px;
         font-weight: bold;
-        color: rgba(255, 255, 255, 0.7);
-        transition: color 0.3s;
       }
-
       .close-modal:hover {
         color: #fff;
       }
@@ -554,6 +551,66 @@
         color: #333;
       }
 
+
+
+      /* Adicionar ao <style> - Estilo para os campos de apoio em grid */
+.apoios-header {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(52, 152, 219, 0.2);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.apoio-column {
+  color: #e3f2fd;
+}
+
+.apoio-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  align-items: center;
+}
+
+.apoio-label {
+  font-weight: 500;
+  color: #e3f2fd;
+  text-align: center;
+}
+
+.apoio-altura-field,
+.apoio-comp-field,
+.apoio-larg-field {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.apoio-altura-field:focus,
+.apoio-comp-field:focus,
+.apoio-larg-field:focus {
+  border-color: rgba(52, 152, 219, 0.8);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+
+
       /* Animações */
       @keyframes fadeIn {
         from {
@@ -586,31 +643,9 @@
         }
       }
 
-      /* Responsividade */
-      @media (max-width: 768px) {
-        .container {
-          padding: 1rem;
-          width: 95%;
-        }
+    
 
-        .form-group {
-          flex: 1 0 100%;
-        }
-
-        .actions {
-          justify-content: center;
-        }
-
-        .tab {
-          padding: 8px 12px;
-          font-size: 14px;
-        }
-
-        .modal-content {
-          width: 95%;
-          margin: 10% auto;
-        }
-      }
+      
     </style>
   </head>
   <body>
@@ -749,7 +784,7 @@
 
             <div class="form-group">
               <label for="rodovia">RODOVIA</label>
-              <input type="text" id="rodovia" name="RODOVIA" />
+              <input type="number" id="rodovia" name="RODOVIA" />
             </div>
             <div class="form-group">
               <label for="km">KM:</label>
@@ -784,6 +819,8 @@
                 type="number"
                 id="latitude"
                 name="LATITUDE"
+                min="-90.99999999999"
+                max="99.999999999999"
                 step="0.000001"
               />
             </div>
@@ -794,6 +831,8 @@
               <input
                 type="number"
                 id="longitude"
+                min="-180.99999999999"
+                max="180.999999999999"
                 name="LONGITUDE"
                 step="0.000001"
               />
@@ -810,90 +849,95 @@
           </button>
         </div>
 
-        <!-- Configurações Gerais -->
-        <div class="tab-content" id="configuracao-content">
-          <h2>CONFIGURAÇÕES GERAIS</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="comprimento" class="required">COMPRIMENTO</label>
-              <input
-                type="number"
-                id="comprimento"
-                name="COMPRIMENTO"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="comprimento-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="largura" class="required">LARGURA</label>
-              <input
-                type="number"
-                id="largura"
-                name="LARGURA"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="largura-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="altura" class="required">ALTURA</label>
-              <input
-                type="number"
-                id="altura"
-                name="ALTURA"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="altura-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="qtd-tramos" class="required">QTD TRAMOS</label>
-              <input
-                type="number"
-                id="qtd-tramos"
-                name="QTD TRAMOS"
-                min="1"
-                value="1"
-                required
-                onchange="generateTramosFields()"
-              />
-              <div class="error-message" id="qtd-tramos-error">
-                Este campo é obrigatório e deve ser no mínimo 1
-              </div>
-            </div>
-          </div>
 
-          <div id="dynamic-tramos" class="dynamic-container">
-            <h3>COMPRIMENTO TRAMOS</h3>
-            <div id="tramos-fields" class="dynamic-fields">
-              <!-- Campos gerados dinamicamente para tramos -->
-            </div>
-            <div class="error-message" id="tramos-error">
-              Todos os tramos devem ter comprimento mínimo de 0.5m
-            </div>
-          </div>
 
-          <div id="config-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('config-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
+<!-- Configurações Gerais -->
+<div class="tab-content" id="configuracao-content">
+  <h2>CONFIGURAÇÕES GERAIS</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="comprimento" class="required">COMPRIMENTO</label>
+      <input
+        type="number"
+        id="comprimento"
+        name="COMPRIMENTO"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="comprimento-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="largura" class="required">LARGURA</label>
+      <input
+        type="number"
+        id="largura"
+        name="LARGURA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="largura-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="altura" class="required">ALTURA</label>
+      <input
+        type="number"
+        id="altura"
+        name="ALTURA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="altura-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="qtd-tramos" class="required">QTD TRAMOS</label>
+      <input
+        type="number" 
+        id="qtd-tramos" 
+        name="QTD TRAMOS"
+        min="1"
+        value="1" 
+        required
+        onchange="generateTramosFields()"
+      />
+      <div class="error-message" id="qtd-tramos-error">
+        Este campo é obrigatório e deve ser no mínimo 1
+      </div>
+    </div>
+  </div>
+
+  <div id="dynamic-tramos" class="dynamic-container">
+    <h3>COMPRIMENTO TRAMOS</h3>
+    <div id="tramos-fields" class="dynamic-fields">
+      <!-- Campos gerados dinamicamente para tramos -->
+    </div>
+    <div class="error-message" id="tramos-error">
+      Todos os tramos devem ter comprimento mínimo de 0.5m
+    </div>
+  </div>
+
+  <div id="config-custom-fields"></div>
+  <button
+    type="button"
+    class="add-btn"
+    onclick="showAddField('config-custom-fields')"
+  >
+    + Adicionar Campo
+  </button>
+</div>
+
+
+
 
         <!-- Transição -->
         <div class="tab-content" id="transicao-content">
@@ -901,8 +945,8 @@
           <div class="form-row">
             <div class="form-group">
               <label for="cortina-altura" class="required"
-                >CORTINA ALTURA</label
-              >
+              >CORTINA ALTURA</label
+                >
               <input
                 type="number"
                 id="cortina-altura"
@@ -916,8 +960,8 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="ala-paralela">ALA PARALELA</label>
-              <select id="ala-paralela" name="ALA PARALELA">
+              <label for="ala-paralela">TIPO ALA PARALELA</label>
+              <select id="ala-paralela" name="TIPO ALA PARALELA">
                 <!-- Adicionar após o campo ala-paralela -->
                 <div class="error-message" id="ala-paralela-error">
                   Este campo é obrigatório quando o encontro é Parede Frontal
@@ -932,7 +976,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="ala-perpendicular">ALA PERPENDICULAR</label>
+              <label for="ala-perpendicular">TIPO ALA PERPENDICULAR</label>
 
               <!-- Adicionar após o campo ala-perpendicular -->
               <div class="error-message" id="ala-perpendicular-error">
@@ -940,7 +984,7 @@
                 Portante
               </div>
 
-              <select id="ala-perpendicular" name="ALA PERPENDICULAR">
+              <select id="ala-perpendicular" name="TIPO ALA PERPENDICULAR">
                 <option value="">Selecione</option>
                 <option value="ALA DE CONCRETO ARMADO">
                   ALA DE CONCRETO ARMADO
@@ -980,10 +1024,9 @@
               <select id="tipo-encontro" name="TIPO ENCONTRO">
                 <option value="">Selecione</option>
                 <option value="Nenhum">Nenhum</option>
-                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">
-                  ENCONTRO - PAREDE FRONTAL PORTANTE
-                </option>
+                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">ENCONTRO - PAREDE FRONTAL PORTANTE</option>
                 <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
+                <option value="ENCONTRO DE ALVENARIA DE PEDRA">ENCONTRO DE ALVENARIA DE PEDRA</option>
               </select>
             </div>
           </div>
@@ -1046,139 +1089,158 @@
           </button>
         </div>
 
-        <!-- Superestrutura -->
-        <div class="tab-content" id="superestrutura-content">
-          <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="altura-longarina" class="required"
-                >ALTURA LONGARINA</label
-              >
-              <input
-                type="number"
-                id="altura-longarina"
-                name="ALTURA LONGARINA"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="altura-longarina-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="deslocamento-esquerdo" class="required"
-                >DESLOCAMENTO ESQUERDO</label
-              >
-              <input
-                type="number"
-                id="deslocamento-esquerdo"
-                name="DESLOCAMENTO ESQUERDO"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="deslocamento-esquerdo-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="deslocamento-direito" class="required"
-                >DESLOCAMENTO DIREITO</label
-              >
-              <input
-                type="number"
-                id="deslocamento-direito"
-                name="DESLOCAMENTO DIREITO"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="deslocamento-direito-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="qtd-longarinas" class="required"
-                >QTD LONGARINAS</label
-              >
-              <input
-                type="number"
-                id="qtd-longarinas"
-                name="QTD LONGARINAS"
-                min="0"
-                required
-              />
-              <div class="error-message" id="qtd-longarinas-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
-              <input
-                type="number"
-                id="qtd-transversinas"
-                name="QTD TRANSVERSINAS"
-                min="0"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="espessura-longarina" class="required"
-                >ESPESSURA LONGARINA</label
-              >
-              <input
-                type="number"
-                id="espessura-longarina"
-                name="ESPESSURA LONGARINA"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="espessura-longarina-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="espessura-transversina">ESPESSURA TRANSVERSINA</label>
-              <input
-                type="number"
-                id="espessura-transversina"
-                name="ESPESSURA TRANSVERSINA"
-                step="0.01"
-                min="0"
-              />
-            </div>
-            <div class="form-group">
-              <label for="espessura-laje" class="required"
-                >ESPESSURA LAJE:</label
-              >
-              <input
-                type="number"
-                id="espessura-laje"
-                name="ESPESSURA LAJE"
-                step="0.01"
-                min="0"
-                required
-              />
-              <div class="error-message" id="espessura-laje-error">
-                Este campo é obrigatório
-              </div>
-            </div>
-          </div>
 
-          <div id="superestrutura-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('superestrutura-custom-fields')"
-          >
-            + Adicionar Campo
-          </button>
-        </div>
+
+<!-- Superestrutura -->
+<div class="tab-content" id="superestrutura-content">
+  <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="altura-longarina" class="required"
+        >ALTURA LONGARINA</label
+      >
+      <input
+        type="number"
+        id="altura-longarina"
+        name="ALTURA LONGARINA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="altura-longarina-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="deslocamento-esquerdo" class="required"
+        >DESLOCAMENTO ESQUERDO</label
+      >
+      <input
+        type="number"
+        id="deslocamento-esquerdo"
+        name="DESLOCAMENTO ESQUERDO"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="deslocamento-esquerdo-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="deslocamento-direito" class="required"
+        >DESLOCAMENTO DIREITO</label
+      >
+      <input
+        type="number"
+        id="deslocamento-direito"
+        name="DESLOCAMENTO DIREITO"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="deslocamento-direito-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="qtd-longarinas" class="required"
+        >QTD LONGARINAS</label
+      >
+      <input
+        type="number"
+        id="qtd-longarinas"
+        name="QTD LONGARINAS"
+        min="0"
+        step= "1"
+        required
+      />
+      <div class="error-message" id="qtd-longarinas-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
+      <input
+        type="number"
+        id="qtd-transversinas"
+        name="QTD TRANSVERSINAS"
+        min="0"
+        step="1"
+      />
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="espessura-longarina" class="required"
+        >ESPESSURA LONGARINA</label
+      >
+      <input
+        type="number"
+        id="espessura-longarina"
+        name="ESPESSURA LONGARINA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="espessura-longarina-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="espessura-transversina">ESPESSURA TRANSVERSINA</label>
+      <input
+        type="number"
+        id="espessura-transversina"
+        name="ESPESSURA TRANSVERSINA"
+        step="0.01"
+        min="0"
+      />
+    </div>
+    <div class="form-group">
+      <label for="espessura-laje" class="required"
+        >ESPESSURA LAJE:</label
+      >
+      <input
+        type="number"
+        id="espessura-laje"
+        name="ESPESSURA LAJE"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="espessura-laje-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+  </div>
+
+  <div id="superestrutura-custom-fields"></div>
+  <button
+    type="button"
+    class="add-btn"
+    onclick="showAddField('superestrutura-custom-fields')"
+  >
+    + Adicionar Campo
+  </button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         <!-- Apoio -->
         <div class="tab-content" id="apoio-content">
@@ -1186,13 +1248,13 @@
           <div class="form-row">
             <div class="form-group">
               <label for="qtd-pilares" class="required">QTD PILARES</label>
-              <input
-                type="number"
-                id="qtd-pilares"
-                name="QTD PILARES"
-                min="0"
-                required
-              />
+      <input
+        type="number"
+        id="qtd-pilares"
+        name="QTD PILARES"
+        min="0"
+        required
+      />
               <div class="error-message" id="qtd-pilares-error">
                 Este campo é obrigatório
               </div>
@@ -1205,47 +1267,32 @@
                 <option value="Não">Não</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="largura-pilar">LARGURA PILAR</label>
-              <input
-                type="number"
-                id="largura-pilar"
-                name="LARGURA PILAR"
-                step="0.01"
-                min="0"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="comprimento-pilares">COMPRIMENTO APOIO</label>
-              <input
-                type="number"
-                id="comprimento-pilares"
-                name="COMPRIMENTO PILARES"
-                step="0.01"
-                min="0"
-              />
-            </div>
-            <div class="form-group">
+                        <div class="form-group">
               <label for="tipo-aparelho-apoio">TIPO APARELHO APOIO</label>
               <select id="tipo-aparelho-apoio" name="TIPO APARELHO APOIO">
                 <option value="">Selecione</option>
-                <option value="APARELHO DE APOIO DE NEOPRENE FRETADO">
-                  APARELHO DE APOIO DE NEOPRENE FRETADO
-                </option>
+        <option value="APARELHO DE APOIO DE NEOPRENE FRETADO"> APARELHO DE APOIO DE NEOPRENE FRETADO </option>
+        <option value="APARELHO DE APOIO ROLO METÁLICO"> APARELHO DE APOIO ROLO METÁLICO </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
             </div>
           </div>
 
+ 
+  <!-- Área de apoios com os três campos -->
           <div id="dynamic-apoios" class="dynamic-container">
-            <h3>ALTURA APOIOS</h3>
-            <div id="apoios-fields" class="dynamic-fields">
-              <!-- Campos gerados dinamicamente para apoios -->
-            </div>
+    <h3>APOIOS</h3>
+    <div class="apoios-header">
+      <div class="apoio-column">APOIO</div>
+      <div class="apoio-column">ALT.</div>
+      <div class="apoio-column">COMP.</div>
+      <div class="apoio-column">LARG.</div>
+    </div>
+    <div id="apoios-fields" class="dynamic-fields">
+      <!-- Campos gerados dinamicamente para apoios -->
+    </div>
             <div class="error-message" id="apoios-error">
-              Todos os apoios precisam ser preenchidos
+      Todos os campos de apoio precisam ser preenchidos
             </div>
           </div>
 
@@ -1262,13 +1309,13 @@
             </div>
             <div class="form-group">
               <label for="altura-travessa">ALTURA TRAVESSA</label>
-              <input
-                type="number"
-                id="altura-travessa"
-                name="ALTURA TRAVESSA"
-                step="0.01"
-                min="0"
-              />
+      <input
+        type="number"
+        id="altura-travessa"
+        name="ALTURA TRAVESSA"
+        step="0.01"
+        min="0"
+      />
               <div class="error-message" id="altura-travessa-error">
                 Este campo é obrigatório se uma travessa estiver selecionada
               </div>
@@ -1284,6 +1331,7 @@
               </select>
             </div>
           </div>
+  
           <div class="form-row">
             <div class="form-group">
               <label for="tipo-bloco-sapata">TIPO BLOCO SAPATA</label>
@@ -1297,47 +1345,38 @@
             </div>
             <div class="form-group">
               <label for="altura-bloco-sapata">ALTURA BLOCO SAPATA</label>
-              <input
-                type="number"
-                id="altura-bloco-sapata"
-                name="ALTURA BLOCO SAPATA"
-                step="0.01"
-                min="0"
-              />
+      <input
+        type="number"
+        id="altura-bloco-sapata"
+        name="ALTURA BLOCO SAPATA"
+        step="0.01"
+        min="0"
+      />
             </div>
             <div class="form-group">
               <label for="largura-bloco-sapata">LARGURA BLOCO SAPATA</label>
-              <input
-                type="number"
-                id="largura-bloco-sapata"
-                name="LARGURA BLOCO SAPATA"
-                step="0.01"
-                min="0"
-              />
+      <input
+        type="number"
+        id="largura-bloco-sapata"
+        name="LARGURA BLOCO SAPATA"
+        step="0.01"
+        min="0"
+      />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="viga-contraventamento-pilar"
-                >VIGA CONTRAVENTAMENTO PILAR</label
-              >
-              <select
-                id="viga-contraventamento-pilar"
-                name="VIGA CONTRAVENTAMENTO PILAR"
-              >
+      <label for="tipo-contraventamento-pilar">TIPO CONTRAVENTAMENTO PILAR</label>
+      <select
+        id="tipo-contraventamento-pilar"
+        name="VIGA CONTRAVENTAMENTO PILAR"
+      >
                 <option value="">Selecione</option>
-                <option value="VIGA CONTRAVENTAMENTO PILAR">
-                  VIGA CONTRAVENTAMENTO DE PILAR
+        <option value="VIGA">
+          VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
                 </option>
-                <option value="Nenhum">Nenhum</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="viga-ligacao-fundacoes">VIGA LIGACAO FUNDACOES</label>
-              <select id="viga-ligacao-fundacoes" name="VIGA LIGACAO FUNDACOES">
-                <option value="">Selecione</option>
-                <option value="VIGA LIGACAO FUNDACOES">
-                  VIGA DE LIGAÇÃO DE FUNDAÇÕES
+        <option value="PAREDE">
+          PAREDE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
@@ -1345,13 +1384,28 @@
           </div>
 
           <div id="apoio-custom-fields"></div>
-          <button
-            type="button"
-            class="add-btn"
-            onclick="showAddField('apoio-custom-fields')"
-          >
+  <button
+    type="button"
+    class="add-btn"
+    onclick="showAddField('apoio-custom-fields')"
+  >
             + Adicionar Campo
           </button>
+
+
+
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
         </div>
 
         <!-- Elementos Complementares -->
@@ -1359,15 +1413,17 @@
           <h2>ELEMENTOS COMPLEMENTARES</h2>
           <div class="form-row">
             <div class="form-group">
-              <label for="barreira-esquerda">BARREIRA ESQUERDA</label>
-              <select id="barreira-esquerda" name="BARREIRA ESQUERDA">
+              <label for="tipo-barreira-esquerda">TIPO BARREIRA ESQUERDA</label>
+              <select id="tipo-barreira-esquerda" name="TIPO BARREIRA ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">BARREIRA QUALQUER DE CONCRETO ARMADO</option>
+                <option value="BARREIRA COM GUARDA-CORPO">BARREIRA COM GUARDA-CORPO</option>
                 <option value="Nenhum">Nenhum</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="largura-barreira-esquerda">BARREIRA DIREITA:</label>
+              <label for="largura-barreira-esquerda">LARGURA BARREIRA ESQUERDA</label>
               <input
                 type="number"
                 id="largura-barreira-esquerda"
@@ -1379,10 +1435,11 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="barreira-direita">BARREIRA DIREITA</label>
-              <select id="barreira-direita" name="BARREIRA DIREITA">
+              <label for="tipo-barreira-direita">TIPO BARREIRA DIREITA</label>
+              <select id="tipo-barreira-direita" name="TIPO BARREIRA DIREITA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">BARREIRA QUALQUER DE CONCRETO ARMADO</option>
                 <option value="Nenhum">Nenhum</option>
               </select>
             </div>
@@ -1401,8 +1458,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="calcada-esquerda">CALCADA ESQUERDA</label>
-              <select id="calcada-esquerda" name="CALCADA ESQUERDA">
+              <label for="calcada-esquerda">TIPO CALCADA ESQUERDA</label>
+              <select id="calcada-esquerda" name="TIPO CALCADA ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="CALCADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
@@ -1425,8 +1482,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="calcada-direita">CALCADA DIREITA</label>
-              <select id="calcada-direita" name="CALCADA DIREITA">
+              <label for="calcada-direita">TIPO CALCADA DIREITA</label>
+              <select id="calcada-direita" name="TIPO CALCADA DIREITA">
                 <option value="">Selecione</option>
                 <option value="CALCADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
@@ -1449,8 +1506,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="guarda-rodas-esquerda">GUARDA RODAS ESQUERDA</label>
-              <select id="guarda-rodas-esquerda" name="GUARDA RODAS ESQUERDA">
+              <label for="guarda-rodas-esquerdo">GUARDA RODAS ESQUERDO</label>
+              <select id="guarda-rodas-esquerdo" name="GUARDA RODAS ESQUERDO">
                 <option value="">Selecione</option>
                 <option value="GUARDA-RODAS ANTIGO DO DNER">
                   GUARDA-RODAS ANTIGO DO DNER
@@ -1459,13 +1516,13 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="largura-guarda-rodas-esquerda"
-                >LARGURA GUARDA RODAS ESQUERDA:</label
+              <label for="largura-guarda-rodas-esquerdo"
+                >LARGURA GUARDA RODAS ESQUERDO</label
               >
               <input
-                type="number"
-                id="largura-guarda-rodas-esquerda"
-                name="LARGURA GUARDA RODAS ESQUERDA"
+              id="largura-guarda-rodas-esquerdo"
+              type="number"
+                name="LARGURA GUARDA RODAS ESQUERDO"
                 step="0.01"
                 min="0"
               />
@@ -1473,8 +1530,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="guarda-rodas-direita">GUARDA RODAS DIREITA</label>
-              <select id="guarda-rodas-direita" name="GUARDA RODAS DIREITA">
+              <label for="guarda-rodas-direito">GUARDA RODAS DIREITO</label>
+              <select id="guarda-rodas-direito" name="GUARDA RODAS DIREITO">
                 <option value="">Selecione</option>
                 <option value="GUARDA-RODAS ANTIGO DO DNER">
                   GUARDA-RODAS ANTIGO DO DNER
@@ -1483,13 +1540,13 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="largura-guarda-rodas-direita"
-                >LARGURA GUARDA RODAS DIREITA:</label
+              <label for="largura-guarda-rodas-direito"
+                >LARGURA GUARDA RODAS DIREITO</label
               >
               <input
                 type="number"
-                id="largura-guarda-rodas-direita"
-                name="LARGURA GUARDA RODAS DIREITA"
+                id="largura-guarda-rodas-direito"
+                name="LARGURA GUARDA RODAS DIREITO"
                 step="0.01"
                 min="0"
               />
@@ -1501,6 +1558,7 @@
               <select id="pavimento" name="TIPO PAVIMENTO" required>
                 <option value="">Selecione</option>
                 <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
+                <option value="PAVIMENTO DE CONCRETO">PAVIMENTO DE CONCRETO</option>
                 <option value="Nenhum">Nenhum</option>
               </select>
               <div class="error-message" id="pavimento-error">
@@ -1544,9 +1602,16 @@
             + Adicionar Campo
           </button>
         </div>
+      
+      
+      
+
+
+      
       </form>
 
       <div id="csv-line"></div>
+
 
       <!-- Botões de Ação -->
       <div class="actions">
@@ -1556,11 +1621,7 @@
         <button type="button" id="export-btn" onclick="exportToCSV()">
           Exportar para CSV
         </button>
-        <button
-          type="button"
-          class="copy-btn"
-          onclick="generateAndShowCSVLine()"
-        >
+        <button type="button" class="copy-btn" onclick="generateAndShowCSVLine()">
           Copiar Linha para Excel
         </button>
         <button type="button" id="save-btn" onclick="showSummaryBeforeSave()">
@@ -1631,7 +1692,7 @@
         <div class="actions">
           <button type="button" onclick="addCustomField()">
             Adicionar Campo
-          </button>
+        <input type="hidden" id="target-container">
           <button type="button" onclick="closeModal()">Cancelar</button>
         </div>
       </div>
@@ -1657,15 +1718,15 @@
         <span class="close-modal" onclick="closeSummaryModal()">&times;</span>
         <h3>Resumo da Obra</h3>
 
-        <div
-          id="missing-fields-container"
-          class="missing-fields-list"
-          style="display: none"
-        >
-          <h4>Campos Obrigatórios Não Preenchidos:</h4>
-          <ul id="missing-fields-list"></ul>
-          <p>Por favor, preencha os campos obrigatórios antes de salvar.</p>
-        </div>
+<!-- Versão: 1.0 -->
+<!-- Elemento HTML com sintaxe corrigida -->
+
+<div id="missing-fields-container" class="missing-fields-list" style="display: none">
+  <span class="close-modal" onclick="closeSummaryModal()">×</span>
+  <h4>Campos Obrigatórios Não Preenchidos:</h4>
+  <ul id="missing-fields-list"></ul>
+  <p>Por favor, preencha os campos obrigatórios antes de salvar.</p>
+</div>
 
         <div id="summary-content"></div>
 
@@ -1715,8 +1776,6 @@
       var saveReminderInterval;
       var currentWorkCode = null;
 
-      // Versão: 1.0
-      // Função corrigida para o sistema de abas
 
       // Função para inicializar o sistema de abas
       function initTabSystem() {
@@ -2024,6 +2083,9 @@
           return null;
         }
       }
+
+
+
 
       // 6. Corrigir a função validateForm para verificar o objeto requiredFields
       function safeValidateForm() {
@@ -2933,10 +2995,10 @@ window.importMultipleWorks = importMultipleWorks;
 
         // 2. Campos de proteção lateral
         const protectionFields = [
-          "barreira-esquerda",
-          "barreira-direita",
-          "guarda-rodas-esquerda",
-          "guarda-rodas-direita",
+          "tipo-barreira-esquerda",
+          "tipo-barreira-direita",
+          "guarda-rodas-esquerdo",
+          "guarda-rodas-direito",
           "calcada-esquerda",
           "calcada-direita",
         ];
@@ -4738,10 +4800,10 @@ window.detectSeparator = detectSeparator;
 
         // Validações para proteção lateral
         const lateralProtectionFields = [
-          "barreira-esquerda",
-          "barreira-direita",
-          "guarda-rodas-esquerda",
-          "guarda-rodas-direita",
+          "tipo-barreira-esquerda",
+          "tipo-barreira-direita",
+          "guarda-rodas-esquerdo",
+          "guarda-rodas-direito",
           "calcada-esquerda",
           "calcada-direita",
         ];
@@ -4884,10 +4946,10 @@ window.detectSeparator = detectSeparator;
 
       // Validações para proteção lateral
       const lateralProtectionFields = [
-        "barreira-esquerda",
-        "barreira-direita",
-        "guarda-rodas-esquerda",
-        "guarda-rodas-direita",
+        "tipo-barreira-esquerda",
+        "tipo-barreira-direita",
+        "guarda-rodas-esquerdo",
+        "guarda-rodas-direito",
         "calcada-esquerda",
         "calcada-direita",
       ];
@@ -5060,51 +5122,51 @@ window.detectSeparator = detectSeparator;
       function validateLateralProtection() {
         // Verificar lado esquerdo
         const hasLeftProtection =
-          (document.getElementById("barreira-esquerda").value !== "" &&
-            document.getElementById("barreira-esquerda").value !== "Nenhum") ||
-          (document.getElementById("guarda-rodas-esquerda").value !== "" &&
-            document.getElementById("guarda-rodas-esquerda").value !==
+          (document.getElementById("tipo-barreira-esquerda").value !== "" &&
+            document.getElementById("tipo-barreira-esquerda").value !== "Nenhum") ||
+          (document.getElementById("guarda-rodas-esquerdo").value !== "" &&
+            document.getElementById("guarda-rodas-esquerdo").value !==
               "Nenhum") ||
           (document.getElementById("calcada-esquerda").value !== "" &&
             document.getElementById("calcada-esquerda").value !== "Nenhum");
 
         // Verificar lado direito
         const hasRightProtection =
-          (document.getElementById("barreira-direita").value !== "" &&
-            document.getElementById("barreira-direita").value !== "Nenhum") ||
-          (document.getElementById("guarda-rodas-direita").value !== "" &&
-            document.getElementById("guarda-rodas-direita").value !==
+          (document.getElementById("tipo-barreira-direita").value !== "" &&
+            document.getElementById("tipo-barreira-direita").value !== "Nenhum") ||
+          (document.getElementById("guarda-rodas-direito").value !== "" &&
+            document.getElementById("guarda-rodas-direito").value !==
               "Nenhum") ||
           (document.getElementById("calcada-direita").value !== "" &&
             document.getElementById("calcada-direita").value !== "Nenhum");
 
         // Destacar campos com erro se não houver proteção
         if (!hasLeftProtection) {
-          document.getElementById("barreira-esquerda").classList.add("error");
+          document.getElementById("tipo-barreira-esquerda").classList.add("error");
           document
-            .getElementById("guarda-rodas-esquerda")
+            .getElementById("guarda-rodas-esquerdo")
             .classList.add("error");
           document.getElementById("calcada-esquerda").classList.add("error");
         } else {
           document
-            .getElementById("barreira-esquerda")
+            .getElementById("tipo-barreira-esquerda")
             .classList.remove("error");
           document
-            .getElementById("guarda-rodas-esquerda")
+            .getElementById("guarda-rodas-esquerdo")
             .classList.remove("error");
           document.getElementById("calcada-esquerda").classList.remove("error");
         }
 
         if (!hasRightProtection) {
-          document.getElementById("barreira-direita").classList.add("error");
+          document.getElementById("tipo-barreira-direita").classList.add("error");
           document
-            .getElementById("guarda-rodas-direita")
+            .getElementById("guarda-rodas-direito")
             .classList.add("error");
           document.getElementById("calcada-direita").classList.add("error");
         } else {
-          document.getElementById("barreira-direita").classList.remove("error");
+          document.getElementById("tipo-barreira-direita").classList.remove("error");
           document
-            .getElementById("guarda-rodas-direita")
+            .getElementById("guarda-rodas-direito")
             .classList.remove("error");
           document.getElementById("calcada-direita").classList.remove("error");
         }
@@ -5205,8 +5267,8 @@ window.detectSeparator = detectSeparator;
           ],
           Transição: [
             "CORTINA ALTURA",
-            "ALA PARALELA",
-            "ALA PERPENDICULAR",
+            "TIPO ALA PARALELA",
+            "TIPO ALA PERPENDICULAR",
             "COMPRIMENTO ALA",
             "ESPESSURA ALA",
             "TIPO ENCONTRO",
@@ -5242,7 +5304,7 @@ window.detectSeparator = detectSeparator;
             "VIGA LIGACAO FUNDACOES",
           ],
           "Elementos Complementares": [
-            "BARREIRA ESQUERDA",
+            "TIPO BARREIRA ESQUERDA",
             "LARGURA BARREIRA ESQUERDA",
             "BARREIRA DIREITA",
             "LARGURA BARREIRA DIREITA",
@@ -5343,39 +5405,63 @@ window.detectSeparator = detectSeparator;
       // Substituir a função global
       window.generateSummary = generateSummary;
 
-      // Modificação da função generateTramosFields para garantir um campo visível
-      function generateTramosFields() {
-        const qtdTramos =
-          parseInt(document.getElementById("qtd-tramos").value) || 1;
-        const tramosContainer = document.getElementById("tramos-fields");
-        tramosContainer.innerHTML = "";
 
-        // Garantir mínimo de 1 tramo
-        if (qtdTramos < 1) {
-          document.getElementById("qtd-tramos").value = 1;
-          return generateTramosFields();
-        }
 
-        // Gerar campos para tramos em pilha
-        for (let i = 1; i <= qtdTramos; i++) {
-          const div = document.createElement("div");
-          div.className = "dynamic-field";
-          div.innerHTML = `
-            <label for="tramo-${i}">Tramo ${i}:</label>
-            <input type="number" id="tramo-${i}" name="tramo-${i}" step="0.01" min="0.5" class="tramo-field" value="${
-            i === 1 ? "0.5" : ""
-          }">
-        `;
-          tramosContainer.appendChild(div);
+// Versão: 4.1
+// Modificação da função generateTramosFields para preservar valores ao trocar de aba
+function generateTramosFields() {
+  const qtdTramos =
+    parseInt(document.getElementById("qtd-tramos").value) || 1;
+  const tramosContainer = document.getElementById("tramos-fields");
+  
+  // Garantir mínimo de 1 tramo
+  if (qtdTramos < 1) {
+    document.getElementById("qtd-tramos").value = 1;
+    return generateTramosFields();
+  }
 
-          // Adicionar validação
-          const input = div.querySelector("input");
-          input.addEventListener("blur", validateTramos);
-        }
+  // Verificar se já existem campos com a quantidade correta
+  const existingFields = tramosContainer.querySelectorAll(".tramo-field");
+  if (existingFields.length === qtdTramos) {
+    // Campos já existem com a quantidade correta, não recriar
+    generateApoiosFields(qtdTramos);
+    return;
+  }
 
-        // Atualizar também os campos de apoios
-        generateApoiosFields(qtdTramos);
-      }
+  // Salvar valores existentes antes de recriar
+  const savedValues = {};
+  existingFields.forEach((field) => {
+    if (field.value) {
+      savedValues[field.id] = field.value;
+    }
+  });
+
+  // Limpar e recriar apenas se a quantidade mudou
+  tramosContainer.innerHTML = "";
+
+  // Gerar campos para tramos em pilha
+  for (let i = 1; i <= qtdTramos; i++) {
+    const div = document.createElement("div");
+    div.className = "dynamic-field";
+    const fieldId = `tramo-${i}`;
+    const savedValue = savedValues[fieldId] || (i === 1 ? "0.5" : "");
+    
+    div.innerHTML = `
+      <label for="${fieldId}">Tramo ${i}:</label>
+      <input type="number" id="${fieldId}" name="${fieldId}" step="0.01" min="0.5" class="tramo-field" value="${savedValue}">
+    `;
+    tramosContainer.appendChild(div);
+
+    // Adicionar validação
+    const input = div.querySelector("input");
+    input.addEventListener("blur", validateTramos);
+  }
+
+  // Atualizar também os campos de apoios
+  generateApoiosFields(qtdTramos);
+}
+
+
 
       // Adicionar uma função de inicialização que será chamada ao abrir a aba
       function initConfiguracao() {
@@ -5482,26 +5568,34 @@ window.detectSeparator = detectSeparator;
         initTabSystem();
       }
 
-      // Gerar campos dinâmicos para apoios (qtdTramos - 1)
-      function generateApoiosFields(qtdTramos) {
-        const qtdApoios = qtdTramos > 1 ? qtdTramos - 1 : 0;
-        const apoiosContainer = document.getElementById("apoios-fields");
-        apoiosContainer.innerHTML = "";
 
-        for (let i = 1; i <= qtdApoios; i++) {
-          const div = document.createElement("div");
-          div.className = "dynamic-field";
-          div.innerHTML = `
-                    <label for="apoio-${i}">Apoio ${i}:</label>
-                    <input type="number" id="apoio-${i}" name="apoio-${i}" step="0.01" min="0" class="apoio-field">
-                `;
-          apoiosContainer.appendChild(div);
+// Versão: 4.0
+// Gerar campos dinâmicos para apoios com 3 inputs: altura, comprimento e largura
+function generateApoiosFields(qtdTramos) {
+  const qtdApoios = qtdTramos > 1 ? qtdTramos - 1 : 0;
+  const apoiosContainer = document.getElementById("apoios-fields");
+  apoiosContainer.innerHTML = "";
 
-          // Adicionar validação
-          const input = div.querySelector("input");
-          input.addEventListener("blur", validateApoios);
-        }
-      }
+  for (let i = 1; i <= qtdApoios; i++) {
+    const div = document.createElement("div");
+    div.className = "apoio-row";
+    div.innerHTML = `
+      <div class="apoio-label">Apoio ${i}</div>
+      <input type="number" id="apoio-altura-${i}" name="apoio-altura-${i}" step="0.01" min="0" class="apoio-altura-field" placeholder="0.00">
+      <input type="number" id="apoio-comp-${i}" name="apoio-comp-${i}" step="0.01" min="0" class="apoio-comp-field" placeholder="0.00">
+      <input type="number" id="apoio-larg-${i}" name="apoio-larg-${i}" step="0.01" min="0" class="apoio-larg-field" placeholder="0.00">
+    `;
+    apoiosContainer.appendChild(div);
+
+    // Adicionar validação para os 3 inputs
+    const inputs = div.querySelectorAll("input");
+    inputs.forEach(input => {
+      input.addEventListener("blur", validateApoios);
+    });
+  }
+}
+
+
 
       // Mostrar modal para adicionar campo
       function showAddField(targetContainer) {
@@ -6744,10 +6838,10 @@ window.detectSeparator = detectSeparator;
 
           // Lista segura de campos a serem validados para proteção lateral
           const lateralProtectionFields = [
-            "barreira-esquerda",
-            "barreira-direita",
-            "guarda-rodas-esquerda",
-            "guarda-rodas-direita",
+            "tipo-barreira-esquerda",
+            "tipo-barreira-direita",
+            "guarda-rodas-esquerdo",
+            "guarda-rodas-direito",
             "calcada-esquerda",
             "calcada-direita",
           ];
@@ -6984,22 +7078,22 @@ function getCsvColumns() {
         "TIPO BLOCO SAPATA",
         "ALTURA BLOCO SAPATA",
         "LARGURA BLOCO SAPATA",
-        "VIGA CONTRAVENTAMENTO PILAR",
+        "TIPO CONTRAVENTAMENTO PILAR",
         "VIGA LIGACAO FUNDACOES",
 
         // Elementos Complementares
-        "BARREIRA ESQUERDA",
+        "TIPO BARREIRA ESQUERDA",
         "LARGURA BARREIRA ESQUERDA",
         "BARREIRA DIREITA",
         "LARGURA BARREIRA DIREITA",
         "CALCADA ESQUERDA",
         "LARGURA CALCADA ESQUERDA",
-        "CALCADA DIREITA",
+        "TIPO CALCADA DIREITA",
         "LARGURA CALCADA DIREITA",
-        "GUARDA RODAS ESQUERDA",
+        "GUARDA RODAS ESQUERDO",
         "LARGURA GUARDA RODAS ESQUERDA",
-        "GUARDA RODAS DIREITA",
-        "LARGURA GUARDA RODAS DIREITA",
+        "GUARDA RODAS DIREITO",
+        "LARGURA GUARDA RODAS DIREITO",
         "TIPO PAVIMENTO",
         "QTD BUZINOTES",
     ];
@@ -7292,6 +7386,7 @@ window.exportLoteWorks = exportLoteWorks;
 
 
 
+
 // Versão: 3.0
 // Função atualizada para gerar linha CSV com CODIGO como texto preservando zeros à esquerda
 function generateAndShowCSVLine() {
@@ -7396,7 +7491,7 @@ function generateAndShowCSVLine() {
         console.error("Erro ao gerar linha CSV:", error);
         alert("Erro ao gerar linha CSV: " + error.message);
     }
-}
+  }
 
 // Substituir a função global
 window.generateAndShowCSVLine = generateAndShowCSVLine;
@@ -7411,6 +7506,9 @@ window.generateAndShowCSVLine = generateAndShowCSVLine;
 
 
 
-    </script>
-  </body>
-</html>
+
+
+</script>
+  
+
+</body></html>
