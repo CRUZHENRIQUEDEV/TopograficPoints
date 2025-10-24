@@ -5054,28 +5054,59 @@ function setupValidations() {
         return valid;
       }
 
-      // Validar apoios
-      function validateApoios() {
-        const apoiosFields = document.querySelectorAll(".apoio-field");
-        const errorElement = document.getElementById("apoios-error");
-        let valid = true;
+// Versão: 4.9
+// Validar que todos os 3 campos de cada apoio estejam preenchidos
+function validateApoios() {
+  const apoiosRows = document.querySelectorAll(".apoio-row");
+  const errorElement = document.getElementById("apoios-error");
+  let valid = true;
+  const emptyFields = [];
 
-        apoiosFields.forEach((field) => {
-          field.classList.remove("error");
-          if (!field.value.trim()) {
-            field.classList.add("error");
-            valid = false;
-          }
-        });
-
-        if (!valid && errorElement) {
-          errorElement.classList.add("visible");
-        } else if (errorElement) {
-          errorElement.classList.remove("visible");
-        }
-
-        return valid;
+  apoiosRows.forEach((row, index) => {
+    const alturaField = row.querySelector(".apoio-altura-field");
+    const compField = row.querySelector(".apoio-comp-field");
+    const largField = row.querySelector(".apoio-larg-field");
+    
+    // Remover marcação de erro primeiro
+    if (alturaField) alturaField.classList.remove("error");
+    if (compField) compField.classList.remove("error");
+    if (largField) largField.classList.remove("error");
+    
+    // Verificar se algum campo está vazio
+    const alturaVazia = !alturaField || !alturaField.value.trim() || parseFloat(alturaField.value) === 0;
+    const compVazio = !compField || !compField.value.trim() || parseFloat(compField.value) === 0;
+    const largVazio = !largField || !largField.value.trim() || parseFloat(largField.value) === 0;
+    
+    if (alturaVazia || compVazio || largVazio) {
+      valid = false;
+      
+      // Marcar campos vazios com erro
+      if (alturaVazia && alturaField) {
+        alturaField.classList.add("error");
+        emptyFields.push(`Apoio ${index + 1} - Altura`);
       }
+      if (compVazio && compField) {
+        compField.classList.add("error");
+        emptyFields.push(`Apoio ${index + 1} - Comprimento`);
+      }
+      if (largVazio && largField) {
+        largField.classList.add("error");
+        emptyFields.push(`Apoio ${index + 1} - Largura`);
+      }
+    }
+  });
+
+  // Mostrar ou ocultar mensagem de erro
+  if (!valid && errorElement) {
+    errorElement.textContent = `Campos obrigatórios vazios: ${emptyFields.join(", ")}`;
+    errorElement.style.display = "block";
+  } else if (errorElement) {
+    errorElement.style.display = "none";
+  }
+
+  return valid;
+}
+
 
       // Modificar a função validateForm() para adicionar nova validação
       function validateForm() {
@@ -5426,9 +5457,8 @@ function setupValidations() {
       window.generateSummary = generateSummary;
 
 
-
-// Versão: 4.1
-// Modificação da função generateTramosFields para preservar valores ao trocar de aba
+// Versão: 4.11
+// Modificação da função generateTramosFields com validação de soma
 function generateTramosFields() {
   const qtdTramos =
     parseInt(document.getElementById("qtd-tramos").value) || 1;
@@ -5475,13 +5505,14 @@ function generateTramosFields() {
     // Adicionar validação
     const input = div.querySelector("input");
     input.addEventListener("blur", validateTramos);
-    input.addEventListener("blur", validateTramosSum); // Adicionar esta linha
-
+    input.addEventListener("blur", validateTramosSum); // Validar soma ao sair do campo
+    input.addEventListener("change", validateTramosSum); // Validar soma ao mudar valor
   }
 
   // Atualizar também os campos de apoios
   generateApoiosFields(qtdTramos);
 }
+
 
 
 
@@ -5828,8 +5859,8 @@ function generateApoiosFields(qtdTramos) {
       }
 
 
-// Versão: 4.2
-// Salvar a obra atual no banco de dados
+// Versão: 4.10
+// Salvar a obra atual no banco de dados com validação completa de apoios
 function saveCurrentWork() {
   try {
     // Validar o formulário
@@ -5845,14 +5876,23 @@ function saveCurrentWork() {
     if (
       !validateTramosLength() ||
       !validateHeights() ||
-      !validateDisplacements() ||
-      !validateTramosSum()
+      !validateDisplacements()
     ) {
       return; // Interrompe a execução se qualquer validação falhar
     }
-
-
-
+    
+    // Validar soma dos tramos
+    if (!validateTramosSum()) {
+      alert("A soma dos tramos deve ser igual ao comprimento total da ponte.");
+      return;
+    }
+    
+    // Validar apoios (apenas se houver apoios)
+    const apoiosRows = document.querySelectorAll(".apoio-row");
+    if (apoiosRows.length > 0 && !validateApoios()) {
+      alert("Por favor, preencha todos os campos dos apoios (altura, comprimento e largura).");
+      return;
+    }
     
     const codigo = document.getElementById("codigo").value.trim();
 
@@ -7608,11 +7648,11 @@ window.generateAndShowCSVLine = generateAndShowCSVLine;
 
 
 
-
-// Versão: 4.6
-// Função para validar que a soma dos tramos seja igual ao comprimento total
+// Versão: 5.0
+// Função para validar que todos os tramos estejam preenchidos e a soma seja igual ao comprimento total
 function validateTramosSum() {
   const comprimentoTotal = parseFloat(document.getElementById("comprimento").value) || 0;
+  const qtdTramos = parseInt(document.getElementById("qtd-tramos").value) || 1;
   const tramosFields = document.querySelectorAll(".tramo-field");
   
   // Se não houver comprimento total definido, não validar ainda
@@ -7625,6 +7665,35 @@ function validateTramosSum() {
     return true;
   }
   
+  const errorElement = document.getElementById("tramos-sum-error");
+  let valid = true;
+  const tramosVazios = [];
+  
+  // Verificar se todos os tramos estão preenchidos
+  tramosFields.forEach((field, index) => {
+    const valor = parseFloat(field.value) || 0;
+    
+    // Remover marcação de erro primeiro
+    field.classList.remove("error");
+    
+    // Se houver mais de 1 tramo, TODOS devem estar preenchidos
+    if (qtdTramos > 1 && valor === 0) {
+      field.classList.add("error");
+      tramosVazios.push(`Tramo ${index + 1}`);
+      valid = false;
+    }
+  });
+  
+  // Se houver tramos vazios, mostrar erro específico
+  if (tramosVazios.length > 0) {
+    if (errorElement) {
+      errorElement.textContent = `ERRO: Os seguintes tramos precisam ser preenchidos: ${tramosVazios.join(", ")}`;
+      errorElement.style.display = "block";
+    }
+    document.getElementById("comprimento").classList.remove("error");
+    return false;
+  }
+  
   // Calcular a soma dos tramos
   let somaTramos = 0;
   tramosFields.forEach((field) => {
@@ -7635,8 +7704,6 @@ function validateTramosSum() {
   // Arredondar para 2 casas decimais para evitar problemas de precisão
   somaTramos = Math.round(somaTramos * 100) / 100;
   const comprimentoArredondado = Math.round(comprimentoTotal * 100) / 100;
-  
-  const errorElement = document.getElementById("tramos-sum-error");
   
   // Verificar se a soma é exatamente igual ao comprimento
   if (somaTramos !== comprimentoArredondado) {
@@ -7664,10 +7731,6 @@ function validateTramosSum() {
     return true;
   }
 }
-
-
-
-
 
 
 
