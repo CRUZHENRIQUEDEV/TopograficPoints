@@ -1372,10 +1372,10 @@
         name="VIGA CONTRAVENTAMENTO PILAR"
       >
                 <option value="">Selecione</option>
-        <option value="VIGA">
+        <option value="VIGA DE CONTRAVENTAMENTO DE PILAR">
           VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
                 </option>
-        <option value="PAREDE">
+        <option value="PAREDE DE CONTRAVENTAMENTO DE PILAR">
           PAREDE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
                 </option>
                 <option value="Nenhum">Nenhum</option>
@@ -1461,7 +1461,7 @@
               <label for="calcada-esquerda">TIPO CALCADA ESQUERDA</label>
               <select id="calcada-esquerda" name="TIPO CALCADA ESQUERDA">
                 <option value="">Selecione</option>
-                <option value="CALCADA PARA PEDESTRES DE CONCRETO ARMADO">
+                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
                 </option>
                 <option value="Nenhum">Nenhum</option>
@@ -1485,7 +1485,7 @@
               <label for="calcada-direita">TIPO CALCADA DIREITA</label>
               <select id="calcada-direita" name="TIPO CALCADA DIREITA">
                 <option value="">Selecione</option>
-                <option value="CALCADA PARA PEDESTRES DE CONCRETO ARMADO">
+                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
                 </option>
                 <option value="Nenhum">Nenhum</option>
@@ -5770,60 +5770,65 @@ function generateApoiosFields(qtdTramos) {
         }
       }
 
-      // Salvar a obra atual no banco de dados
-      function saveCurrentWork() {
-        try {
-          // Validar o formulário
-          const { isValid, missingFields } = validateForm();
-          if (!isValid) {
-            alert(
-              "Por favor, preencha todos os campos obrigatórios antes de salvar."
-            );
-            return;
-          }
 
-          // Validar dimensões
-          if (
-            !validateTramosLength() ||
-            !validateHeights() ||
-            !validateDisplacements()
-          ) {
-            return; // Interrompe a execução se qualquer validação falhar
-          }
-          const codigo = document.getElementById("codigo").value.trim();
+// Versão: 4.2
+// Salvar a obra atual no banco de dados
+function saveCurrentWork() {
+  try {
+    // Validar o formulário
+    const { isValid, missingFields } = validateForm();
+    if (!isValid) {
+      alert(
+        "Por favor, preencha todos os campos obrigatórios antes de salvar."
+      );
+      return;
+    }
 
-          if (!codigo) {
-            alert("Por favor, preencha o campo Código antes de salvar.");
-            return;
-          }
+    // Validar dimensões
+    if (
+      !validateTramosLength() ||
+      !validateHeights() ||
+      !validateDisplacements()
+    ) {
+      return; // Interrompe a execução se qualquer validação falhar
+    }
+    
+    const codigo = document.getElementById("codigo").value.trim();
 
-          const formData = collectFormData();
+    if (!codigo) {
+      alert("Por favor, preencha o campo Código antes de salvar.");
+      return;
+    }
 
-          if (db) {
-            const transaction = db.transaction(["obras"], "readwrite");
-            const objectStore = transaction.objectStore("obras");
+    const formData = collectFormData();
 
-            const request = objectStore.put(formData);
+    if (db) {
+      const transaction = db.transaction(["obras"], "readwrite");
+      const objectStore = transaction.objectStore("obras");
 
-            request.onsuccess = function (event) {
-              alert(`Obra ${codigo} salva com sucesso!`);
-              currentWorkCode = codigo;
-              loadWorksList(); // Recarregar a lista de obras
-              closeSummaryModal(); // Fechar o modal de resumo se estiver aberto
-            };
+      const request = objectStore.put(formData);
 
-            request.onerror = function (event) {
-              console.error("Erro ao salvar a obra:", event.target.error);
-              alert(`Erro ao salvar a obra: ${event.target.error}`);
-            };
-          } else {
-            alert("Banco de dados não está disponível.");
-          }
-        } catch (error) {
-          console.error("Erro ao salvar obra:", error);
-          alert("Erro ao salvar obra: " + error.message);
-        }
-      }
+      request.onsuccess = function (event) {
+        alert(`Obra ${codigo} salva com sucesso!`);
+        currentWorkCode = codigo;
+        loadWorksList(); // Recarregar a lista de obras
+        closeSummaryModal(); // Fechar o modal de resumo se estiver aberto
+      };
+
+      request.onerror = function (event) {
+        console.error("Erro ao salvar a obra:", event.target.error);
+        alert(`Erro ao salvar a obra: ${event.target.error}`);
+      };
+    } else {
+      alert("Banco de dados não está disponível.");
+    }
+  } catch (error) {
+    console.error("Erro ao salvar obra:", error);
+    alert("Erro ao salvar obra: " + error.message);
+  }
+}
+
+
 
       // Salvar múltiplas obras no banco de dados
       function saveMultipleWorks(works) {
@@ -5872,61 +5877,72 @@ function generateApoiosFields(qtdTramos) {
         }
       }
 
-      // Coletar todos os dados do formulário
-      function collectFormData() {
-        try {
-          const form = document.getElementById("oae-form");
-          const formData = new FormData(form);
 
-          // Objeto para armazenar os dados
-          const data = {};
+// Versão: 4.3
+// Coletar todos os dados do formulário com suporte aos 3 campos de apoio
+function collectFormData() {
+  try {
+    const form = document.getElementById("oae-form");
+    const formData = new FormData(form);
 
-          // Processar campos comuns
-          for (let [key, value] of formData.entries()) {
-            // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
-            if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-              data[key] = value;
-            }
-          }
+    // Objeto para armazenar os dados
+    const data = {};
 
-          // Verificar se o modelado está marcado
-          if (document.getElementById("modelado").checked) {
-            data["MODELADO"] = "TRUE";
-          } else {
-            data["MODELADO"] = "FALSE";
-          }
-
-          if (document.getElementById("gps").checked) {
-            data["GPS"] = "TRUE";
-          } else {
-            data["GPS"] = "FALSE";
-          }
-
-          // Coletar valores dos tramos
-          const tramosValues = [];
-          const tramosFields = document.querySelectorAll(".tramo-field");
-          tramosFields.forEach((field) => {
-            // Garantir valor mínimo de 0.5
-            const value = parseFloat(field.value) || 0;
-            tramosValues.push(value < 0.5 ? "0.50" : field.value);
-          });
-          data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
-
-          // Coletar valores dos apoios
-          const apoiosValues = [];
-          const apoiosFields = document.querySelectorAll(".apoio-field");
-          apoiosFields.forEach((field) => {
-            apoiosValues.push(field.value || "0.00");
-          });
-          data["ALTURA APOIO"] = apoiosValues.join(";");
-
-          return data;
-        } catch (error) {
-          console.error("Erro ao coletar dados do formulário:", error);
-          alert("Erro ao coletar dados do formulário: " + error.message);
-          return {};
-        }
+    // Processar campos comuns
+    for (let [key, value] of formData.entries()) {
+      // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
+      if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
+        data[key] = value;
       }
+    }
+
+    // Verificar se o modelado está marcado
+    if (document.getElementById("modelado").checked) {
+      data["MODELADO"] = "TRUE";
+    } else {
+      data["MODELADO"] = "FALSE";
+    }
+
+    if (document.getElementById("gps").checked) {
+      data["GPS"] = "TRUE";
+    } else {
+      data["GPS"] = "FALSE";
+    }
+
+    // Coletar valores dos tramos
+    const tramosValues = [];
+    const tramosFields = document.querySelectorAll(".tramo-field");
+    tramosFields.forEach((field) => {
+      // Garantir valor mínimo de 0.5
+      const value = parseFloat(field.value) || 0;
+      tramosValues.push(value < 0.5 ? "0.50" : field.value);
+    });
+    data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
+
+    // Coletar valores dos apoios (altura, largura e comprimento dos pilares)
+    const alturas = [];
+    const larguras = [];
+    const comprimentos = [];
+
+    document.querySelectorAll(".apoio-altura-field").forEach(f => alturas.push(f.value || "0.00"));
+    document.querySelectorAll(".apoio-larg-field").forEach(f => larguras.push(f.value || "0.00"));
+    document.querySelectorAll(".apoio-comp-field").forEach(f => comprimentos.push(f.value || "0.00"));
+
+    data["ALTURA APOIO"] = alturas.join(";");
+    data["LARGURA PILAR"] = larguras.join(";");
+    data["COMPRIMENTO PILARES"] = comprimentos.join(";");
+
+    return data;
+  } catch (error) {
+    console.error("Erro ao coletar dados do formulário:", error);
+    alert("Erro ao coletar dados do formulário: " + error.message);
+    return {};
+  }
+}
+
+
+
+
 
       // Carregar obra específica do banco de dados
       function loadWork(codigo) {
@@ -5971,65 +5987,80 @@ function generateApoiosFields(qtdTramos) {
         }
       }
 
-      // Carregar dados de uma obra para o formulário
-      function loadWorkToForm(work) {
-        try {
-          clearForm(); // Limpar o formulário antes
 
-          // Processar campos especiais
-          if (work["MODELADO"] === "TRUE") {
-            document.getElementById("modelado").checked = true;
-          } else {
-            document.getElementById("modelado").checked = false;
-          }
 
-          if (work["COMPRIMENTO TRAMOS"]) {
-            const tramos = work["COMPRIMENTO TRAMOS"].split(";");
-            document.getElementById("qtd-tramos").value = tramos.length;
-            generateTramosFields(); // Regenerar campos de tramos
 
-            // Preencher valores dos tramos
-            const tramosFields = document.querySelectorAll(".tramo-field");
-            for (let i = 0; i < tramosFields.length; i++) {
-              if (i < tramos.length) {
-                tramosFields[i].value = tramos[i];
-              }
-            }
-          }
+      // Versão: 4.5
+// Função para carregar dados de uma obra no formulário
+function loadWorkToForm(work) {
+  try {
+    clearForm(); // Limpar o formulário antes
 
-          if (work["ALTURA APOIO"]) {
-            const apoios = work["ALTURA APOIO"].split(";");
+    // Processar campos especiais
+    if (work["MODELADO"] === "TRUE") {
+      document.getElementById("modelado").checked = true;
+    } else {
+      document.getElementById("modelado").checked = false;
+    }
 
-            // Preencher valores dos apoios
-            const apoiosFields = document.querySelectorAll(".apoio-field");
-            for (let i = 0; i < apoiosFields.length; i++) {
-              if (i < apoios.length) {
-                apoiosFields[i].value = apoios[i];
-              }
-            }
-          }
+    if (work["COMPRIMENTO TRAMOS"]) {
+      const tramos = work["COMPRIMENTO TRAMOS"].split(";");
+      document.getElementById("qtd-tramos").value = tramos.length;
+      generateTramosFields(); // Regenerar campos de tramos
 
-          // Processar outros campos
-          for (const [key, value] of Object.entries(work)) {
-            if (
-              key !== "MODELADO" &&
-              key !== "COMPRIMENTO TRAMOS" &&
-              key !== "ALTURA APOIO"
-            ) {
-              const field = document.querySelector(`[name="${key}"]`);
-              if (field) {
-                field.value = value;
-              }
-            }
-          }
-
-          // Executar validação após carregar
-          validateForm();
-        } catch (error) {
-          console.error("Erro ao carregar dados no formulário:", error);
-          alert("Erro ao carregar dados no formulário: " + error.message);
+      // Preencher valores dos tramos
+      const tramosFields = document.querySelectorAll(".tramo-field");
+      for (let i = 0; i < tramosFields.length; i++) {
+        if (i < tramos.length) {
+          tramosFields[i].value = tramos[i];
         }
       }
+    }
+
+    // Carregar os 3 campos de apoio: altura, largura e comprimento dos pilares
+    if (work["ALTURA APOIO"] || work["LARGURA PILAR"] || work["COMPRIMENTO PILARES"]) {
+      const alturas = work["ALTURA APOIO"] ? work["ALTURA APOIO"].split(";") : [];
+      const larguras = work["LARGURA PILAR"] ? work["LARGURA PILAR"].split(";") : [];
+      const comprimentos = work["COMPRIMENTO PILARES"] ? work["COMPRIMENTO PILARES"].split(";") : [];
+
+      // Preencher valores dos apoios nos 3 campos
+      const apoiosAlturaFields = document.querySelectorAll(".apoio-altura-field");
+      const apoiosLargFields = document.querySelectorAll(".apoio-larg-field");
+      const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
+
+      for (let i = 0; i < apoiosAlturaFields.length; i++) {
+        if (i < alturas.length) apoiosAlturaFields[i].value = alturas[i];
+        if (i < larguras.length) apoiosLargFields[i].value = larguras[i];
+        if (i < comprimentos.length) apoiosCompFields[i].value = comprimentos[i];
+      }
+    }
+
+    // Processar outros campos
+    for (const [key, value] of Object.entries(work)) {
+      if (
+        key !== "MODELADO" &&
+        key !== "COMPRIMENTO TRAMOS" &&
+        key !== "ALTURA APOIO" &&
+        key !== "LARGURA PILAR" &&
+        key !== "COMPRIMENTO PILARES"
+      ) {
+        const field = document.querySelector(`[name="${key}"]`);
+        if (field) {
+          field.value = value;
+        }
+      }
+    }
+
+    // Executar validação após carregar
+    validateForm();
+  } catch (error) {
+    console.error("Erro ao carregar dados no formulário:", error);
+    alert("Erro ao carregar dados no formulário: " + error.message);
+  }
+}
+
+
+
 
       // Carregar lista de obras do banco de dados
       function loadWorksList() {
@@ -7387,8 +7418,10 @@ window.exportLoteWorks = exportLoteWorks;
 
 
 
-// Versão: 3.0
-// Função atualizada para gerar linha CSV com CODIGO como texto preservando zeros à esquerda
+
+
+// Versão: 4.4
+// Função atualizada para gerar linha CSV com CODIGO como texto e 3 campos de apoio
 function generateAndShowCSVLine() {
     try {
         // Validar primeiro
@@ -7448,13 +7481,18 @@ function generateAndShowCSVLine() {
         });
         data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
 
-        // Coletar valores dos apoios
-        const apoiosValues = [];
-        const apoiosFields = document.querySelectorAll(".apoio-field");
-        apoiosFields.forEach((field) => {
-            apoiosValues.push(field.value || "0.00");
-        });
-        data["ALTURA APOIO"] = apoiosValues.join(";");
+        // Coletar valores dos apoios (altura, largura e comprimento dos pilares)
+        const alturas = [];
+        const larguras = [];
+        const comprimentos = [];
+
+        document.querySelectorAll(".apoio-altura-field").forEach(f => alturas.push(f.value || "0.00"));
+        document.querySelectorAll(".apoio-larg-field").forEach(f => larguras.push(f.value || "0.00"));
+        document.querySelectorAll(".apoio-comp-field").forEach(f => comprimentos.push(f.value || "0.00"));
+
+        data["ALTURA APOIO"] = alturas.join(";");
+        data["LARGURA PILAR"] = larguras.join(";");
+        data["COMPRIMENTO PILARES"] = comprimentos.join(";");
 
         // Gerar a linha CSV
         const csvLine = csvColumns.map((column) => {
@@ -7491,7 +7529,13 @@ function generateAndShowCSVLine() {
         console.error("Erro ao gerar linha CSV:", error);
         alert("Erro ao gerar linha CSV: " + error.message);
     }
-  }
+}
+
+
+
+
+
+
 
 // Substituir a função global
 window.generateAndShowCSVLine = generateAndShowCSVLine;
