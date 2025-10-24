@@ -865,9 +865,9 @@
         min="0"
         required
       />
-      <div class="error-message" id="comprimento-error">
-        Este campo é obrigatório
-      </div>
+    <div class="error-message" id="tramos-sum-error" style="display: none; margin-top: 10px;">
+  A soma dos tramos deve ser igual ao comprimento total
+</div>
     </div>
     <div class="form-group">
       <label for="largura" class="required">LARGURA</label>
@@ -4724,148 +4724,168 @@ window.detectSeparator = detectSeparator;
         });
       }
 
-      // Versão: 1.0
-      // Função setupValidations completa com a atualização para TIPO ENCONTRO
+      
 
-      function setupValidations() {
-        // Adicionar validação para campos numéricos (mínimo 0)
-        document.querySelectorAll('input[type="number"]').forEach((input) => {
-          // Garantir que o valor não seja negativo
-          input.addEventListener("change", function () {
-            const min = parseFloat(this.getAttribute("min") || 0);
-            const value = parseFloat(this.value) || 0;
 
-            if (value < min) {
-              this.value = min;
-            }
-          });
 
-          // Validação ao sair do campo
-          input.addEventListener("blur", function () {
-            validateField(this.id);
-          });
-        });
 
-        // Validação para campos de texto obrigatórios
-        document
-          .querySelectorAll('input[type="text"][required], select[required]')
-          .forEach((input) => {
-            input.addEventListener("blur", function () {
-              validateField(this.id);
-            });
-          });
+// Versão: 4.7
+// Função setupValidations completa com validação de soma dos tramos
 
-        // Validações específicas para campos condicionais
-        document
-          .getElementById("ala-paralela")
-          .addEventListener("change", function () {
-            validateField("comprimento-ala");
-            validateField("espessura-ala");
-          });
+function setupValidations() {
 
-        document
-          .getElementById("ala-perpendicular")
-          .addEventListener("change", function () {
-            validateField("comprimento-ala");
-            validateField("espessura-ala");
-          });
+  
+  // Adicionar validação para campos numéricos (mínimo 0)
+  document.querySelectorAll('input[type="number"]').forEach((input) => {
+    // Garantir que o valor não seja negativo
+    input.addEventListener("change", function () {
+      const min = parseFloat(this.getAttribute("min") || 0);
+      const value = parseFloat(this.value) || 0;
 
-        // ALTERAÇÃO: Substituir "encontro" por "tipo-encontro"
-        document
-          .getElementById("tipo-encontro")
-          .addEventListener("change", function () {
-            validateField("deslocamento-esquerdo-encontro-laje");
-            validateField("deslocamento-direito-encontro-laje");
-            validateField("comprimento-encontro-laje");
-          });
-
-        document
-          .getElementById("qtd-transversinas")
-          .addEventListener("change", function () {
-            validateField("espessura-transversina");
-          });
-
-        document
-          .getElementById("tipo-travessa")
-          .addEventListener("change", function () {
-            validateField("altura-travessa");
-          });
-
-        document
-          .getElementById("tipo-bloco-sapata")
-          .addEventListener("change", function () {
-            validateField("altura-bloco-sapata");
-            validateField("largura-bloco-sapata");
-          });
-
-        // Validações para proteção lateral
-        const lateralProtectionFields = [
-          "tipo-barreira-esquerda",
-          "tipo-barreira-direita",
-          "guarda-rodas-esquerdo",
-          "guarda-rodas-direito",
-          "calcada-esquerda",
-          "calcada-direita",
-        ];
-
-        lateralProtectionFields.forEach((fieldId) => {
-          document
-            .getElementById(fieldId)
-            .addEventListener("change", validateLateralProtection);
-        });
-
-        // Validação para campos dependentes da quantidade de pilares
-        document
-          .getElementById("qtd-pilares")
-          .addEventListener("change", function () {
-            const qtdPilares = parseInt(this.value) || 0;
-            const campoLarguraPilar = document.getElementById("largura-pilar");
-            const campoComprimentoPilares = document.getElementById(
-              "comprimento-pilares"
-            );
-
-            // CORREÇÃO: Nunca desabilitar os campos, independentemente da quantidade de pilares
-            campoLarguraPilar.disabled = false;
-            campoComprimentoPilares.disabled = false;
-
-            // Manter apenas a lógica de validação visual
-            if (qtdPilares === 0) {
-              // Remover marcações de erro
-              campoLarguraPilar.classList.remove("error");
-              campoComprimentoPilares.classList.remove("error");
-
-              // Remover mensagens de erro se existirem
-              const larguraErro = document.getElementById(
-                "largura-pilar-error"
-              );
-              const comprimentoErro = document.getElementById(
-                "comprimento-pilares-error"
-              );
-
-              if (larguraErro) larguraErro.classList.remove("visible");
-              if (comprimentoErro) comprimentoErro.classList.remove("visible");
-            }
-          });
-
-        // ALTERAÇÃO: Substituir "encontro" por "tipo-encontro"
-        document
-          .getElementById("tipo-encontro")
-          .addEventListener("change", validateAlaWithEncountro);
-        document
-          .getElementById("ala-paralela")
-          .addEventListener("change", validateAlaWithEncountro);
-        document
-          .getElementById("ala-perpendicular")
-          .addEventListener("change", validateAlaWithEncountro);
-
-        // Verificar estado inicial dos campos de pilares
-        const qtdPilaresInicial =
-          parseInt(document.getElementById("qtd-pilares").value) || 0;
-
-        // CORREÇÃO: Garantir que os campos de pilar nunca estejam desabilitados na inicialização
-        document.getElementById("largura-pilar").disabled = false;
-        document.getElementById("comprimento-pilares").disabled = false;
+      if (value < min) {
+        this.value = min;
       }
+    });
+
+    // Validação ao sair do campo
+    input.addEventListener("blur", function () {
+      validateField(this.id);
+    });
+  });
+
+  // Validação para campos de texto obrigatórios
+  document
+    .querySelectorAll('input[type="text"][required], select[required]')
+    .forEach((input) => {
+      input.addEventListener("blur", function () {
+        validateField(this.id);
+      });
+    });
+
+  // Validações específicas para campos condicionais
+  document
+    .getElementById("ala-paralela")
+    .addEventListener("change", function () {
+      validateField("comprimento-ala");
+      validateField("espessura-ala");
+    });
+
+  document
+    .getElementById("ala-perpendicular")
+    .addEventListener("change", function () {
+      validateField("comprimento-ala");
+      validateField("espessura-ala");
+    });
+
+  // ALTERAÇÃO: Substituir "encontro" por "tipo-encontro"
+  document
+    .getElementById("tipo-encontro")
+    .addEventListener("change", function () {
+      validateField("deslocamento-esquerdo-encontro-laje");
+      validateField("deslocamento-direito-encontro-laje");
+      validateField("comprimento-encontro-laje");
+    });
+
+  document
+    .getElementById("qtd-transversinas")
+    .addEventListener("change", function () {
+      validateField("espessura-transversina");
+    });
+
+  document
+    .getElementById("tipo-travessa")
+    .addEventListener("change", function () {
+      validateField("altura-travessa");
+    });
+
+  document
+    .getElementById("tipo-bloco-sapata")
+    .addEventListener("change", function () {
+      validateField("altura-bloco-sapata");
+      validateField("largura-bloco-sapata");
+    });
+
+  // Validações para proteção lateral
+  const lateralProtectionFields = [
+    "tipo-barreira-esquerda",
+    "tipo-barreira-direita",
+    "guarda-rodas-esquerdo",
+    "guarda-rodas-direito",
+    "calcada-esquerda",
+    "calcada-direita",
+  ];
+
+  lateralProtectionFields.forEach((fieldId) => {
+    document
+      .getElementById(fieldId)
+      .addEventListener("change", validateLateralProtection);
+  });
+
+  // Validação para campos dependentes da quantidade de pilares
+  document
+    .getElementById("qtd-pilares")
+    .addEventListener("change", function () {
+      const qtdPilares = parseInt(this.value) || 0;
+      const campoLarguraPilar = document.getElementById("largura-pilar");
+      const campoComprimentoPilares = document.getElementById(
+        "comprimento-pilares"
+      );
+
+      // CORREÇÃO: Nunca desabilitar os campos, independentemente da quantidade de pilares
+      campoLarguraPilar.disabled = false;
+      campoComprimentoPilares.disabled = false;
+
+      // Manter apenas a lógica de validação visual
+      if (qtdPilares === 0) {
+        // Remover marcações de erro
+        campoLarguraPilar.classList.remove("error");
+        campoComprimentoPilares.classList.remove("error");
+
+        // Remover mensagens de erro se existirem
+        const larguraErro = document.getElementById(
+          "largura-pilar-error"
+        );
+        const comprimentoErro = document.getElementById(
+          "comprimento-pilares-error"
+        );
+
+        if (larguraErro) larguraErro.classList.remove("visible");
+        if (comprimentoErro) comprimentoErro.classList.remove("visible");
+      }
+    });
+
+  // ALTERAÇÃO: Substituir "encontro" por "tipo-encontro"
+  document
+    .getElementById("tipo-encontro")
+    .addEventListener("change", validateAlaWithEncountro);
+  document
+    .getElementById("ala-paralela")
+    .addEventListener("change", validateAlaWithEncountro);
+  document
+    .getElementById("ala-perpendicular")
+    .addEventListener("change", validateAlaWithEncountro);
+
+  // Validar soma dos tramos quando comprimento total mudar
+  document
+    .getElementById("comprimento")
+    .addEventListener("blur", validateTramosSum);
+
+  // Verificar estado inicial dos campos de pilares
+  const qtdPilaresInicial =
+    parseInt(document.getElementById("qtd-pilares").value) || 0;
+
+  // CORREÇÃO: Garantir que os campos de pilar nunca estejam desabilitados na inicialização
+  document.getElementById("largura-pilar").disabled = false;
+  document.getElementById("comprimento-pilares").disabled = false;
+}
+
+
+
+
+
+
+
+
 
       // Verificar estado inicial dos campos de pilares
       const qtdPilaresInicial =
@@ -5455,6 +5475,8 @@ function generateTramosFields() {
     // Adicionar validação
     const input = div.querySelector("input");
     input.addEventListener("blur", validateTramos);
+    input.addEventListener("blur", validateTramosSum); // Adicionar esta linha
+
   }
 
   // Atualizar também os campos de apoios
@@ -5569,21 +5591,54 @@ function generateTramosFields() {
       }
 
 
-// Versão: 4.0
+
+      
+      // Versão: 4.8
 // Gerar campos dinâmicos para apoios com 3 inputs: altura, comprimento e largura
 function generateApoiosFields(qtdTramos) {
   const qtdApoios = qtdTramos > 1 ? qtdTramos - 1 : 0;
   const apoiosContainer = document.getElementById("apoios-fields");
+  
+  // Verificar se já existem campos com a quantidade correta
+  const existingRows = apoiosContainer.querySelectorAll(".apoio-row");
+  if (existingRows.length === qtdApoios) {
+    // Campos já existem com a quantidade correta, não recriar
+    return;
+  }
+  
+  // Salvar valores existentes antes de recriar
+  const savedValues = {
+    alturas: {},
+    comprimentos: {},
+    larguras: {}
+  };
+  
+  existingRows.forEach((row, index) => {
+    const alturaField = row.querySelector(".apoio-altura-field");
+    const compField = row.querySelector(".apoio-comp-field");
+    const largField = row.querySelector(".apoio-larg-field");
+    
+    if (alturaField && alturaField.value) savedValues.alturas[index + 1] = alturaField.value;
+    if (compField && compField.value) savedValues.comprimentos[index + 1] = compField.value;
+    if (largField && largField.value) savedValues.larguras[index + 1] = largField.value;
+  });
+  
+  // Limpar e recriar apenas se a quantidade mudou
   apoiosContainer.innerHTML = "";
 
   for (let i = 1; i <= qtdApoios; i++) {
     const div = document.createElement("div");
     div.className = "apoio-row";
+    
+    const alturaValue = savedValues.alturas[i] || "";
+    const compValue = savedValues.comprimentos[i] || "";
+    const largValue = savedValues.larguras[i] || "";
+    
     div.innerHTML = `
       <div class="apoio-label">Apoio ${i}</div>
-      <input type="number" id="apoio-altura-${i}" name="apoio-altura-${i}" step="0.01" min="0" class="apoio-altura-field" placeholder="0.00">
-      <input type="number" id="apoio-comp-${i}" name="apoio-comp-${i}" step="0.01" min="0" class="apoio-comp-field" placeholder="0.00">
-      <input type="number" id="apoio-larg-${i}" name="apoio-larg-${i}" step="0.01" min="0" class="apoio-larg-field" placeholder="0.00">
+      <input type="number" id="apoio-altura-${i}" name="apoio-altura-${i}" step="0.01" min="0" class="apoio-altura-field" placeholder="0.00" value="${alturaValue}">
+      <input type="number" id="apoio-comp-${i}" name="apoio-comp-${i}" step="0.01" min="0" class="apoio-comp-field" placeholder="0.00" value="${compValue}">
+      <input type="number" id="apoio-larg-${i}" name="apoio-larg-${i}" step="0.01" min="0" class="apoio-larg-field" placeholder="0.00" value="${largValue}">
     `;
     apoiosContainer.appendChild(div);
 
@@ -5594,6 +5649,8 @@ function generateApoiosFields(qtdTramos) {
     });
   }
 }
+
+
 
 
 
@@ -5788,10 +5845,14 @@ function saveCurrentWork() {
     if (
       !validateTramosLength() ||
       !validateHeights() ||
-      !validateDisplacements()
+      !validateDisplacements() ||
+      !validateTramosSum()
     ) {
       return; // Interrompe a execução se qualquer validação falhar
     }
+
+
+
     
     const codigo = document.getElementById("codigo").value.trim();
 
@@ -7544,6 +7605,65 @@ window.generateAndShowCSVLine = generateAndShowCSVLine;
 
 
 
+
+
+
+
+// Versão: 4.6
+// Função para validar que a soma dos tramos seja igual ao comprimento total
+function validateTramosSum() {
+  const comprimentoTotal = parseFloat(document.getElementById("comprimento").value) || 0;
+  const tramosFields = document.querySelectorAll(".tramo-field");
+  
+  // Se não houver comprimento total definido, não validar ainda
+  if (comprimentoTotal === 0) {
+    return true;
+  }
+  
+  // Se não houver tramos, não validar
+  if (tramosFields.length === 0) {
+    return true;
+  }
+  
+  // Calcular a soma dos tramos
+  let somaTramos = 0;
+  tramosFields.forEach((field) => {
+    const valor = parseFloat(field.value) || 0;
+    somaTramos += valor;
+  });
+  
+  // Arredondar para 2 casas decimais para evitar problemas de precisão
+  somaTramos = Math.round(somaTramos * 100) / 100;
+  const comprimentoArredondado = Math.round(comprimentoTotal * 100) / 100;
+  
+  const errorElement = document.getElementById("tramos-sum-error");
+  
+  // Verificar se a soma é exatamente igual ao comprimento
+  if (somaTramos !== comprimentoArredondado) {
+    const diferenca = Math.abs(comprimentoArredondado - somaTramos).toFixed(2);
+    
+    if (errorElement) {
+      errorElement.textContent = `ERRO: A soma dos tramos (${somaTramos.toFixed(2)}m) deve ser igual ao comprimento total (${comprimentoArredondado.toFixed(2)}m). Diferença: ${diferenca}m`;
+      errorElement.style.display = "block";
+    }
+    
+    // Destacar campos com erro
+    tramosFields.forEach(field => field.classList.add("error"));
+    document.getElementById("comprimento").classList.add("error");
+    
+    return false;
+  } else {
+    // Remover erro se estiver correto
+    if (errorElement) {
+      errorElement.style.display = "none";
+    }
+    
+    tramosFields.forEach(field => field.classList.remove("error"));
+    document.getElementById("comprimento").classList.remove("error");
+    
+    return true;
+  }
+}
 
 
 
