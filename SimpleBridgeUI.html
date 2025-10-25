@@ -5979,8 +5979,10 @@ function saveCurrentWork() {
       }
 
 
-// Versão: 4.3
-// Coletar todos os dados do formulário com suporte aos 3 campos de apoio
+
+
+// Versão: 2.0
+// Função atualizada para coletar dados do formulário com normalização de decimais
 function collectFormData() {
   try {
     const form = document.getElementById("oae-form");
@@ -5993,7 +5995,22 @@ function collectFormData() {
     for (let [key, value] of formData.entries()) {
       // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
       if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-        data[key] = value;
+        // Aplicar normalização em campos numéricos/medidas
+        // Lista de campos que devem ser normalizados
+        const camposNumericos = [
+          "COMPRIMENTO",
+          "LARGURA",
+          "ALTURA",
+          "DESLOCAMENTO",
+          "KM_INICIAL",
+          "KM_FINAL"
+        ];
+        
+        if (camposNumericos.includes(key.toUpperCase())) {
+          data[key] = normalizeDecimal(value);
+        } else {
+          data[key] = value;
+        }
       }
     }
 
@@ -6010,24 +6027,33 @@ function collectFormData() {
       data["GPS"] = "FALSE";
     }
 
-    // Coletar valores dos tramos
+    // Coletar valores dos tramos COM normalização
     const tramosValues = [];
     const tramosFields = document.querySelectorAll(".tramo-field");
     tramosFields.forEach((field) => {
       // Garantir valor mínimo de 0.5
       const value = parseFloat(field.value) || 0;
-      tramosValues.push(value < 0.5 ? "0.50" : field.value);
+      const normalizedValue = normalizeDecimal(value < 0.5 ? "0.50" : field.value);
+      tramosValues.push(normalizedValue);
     });
     data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
 
-    // Coletar valores dos apoios (altura, largura e comprimento dos pilares)
+    // Coletar valores dos apoios COM normalização
     const alturas = [];
     const larguras = [];
     const comprimentos = [];
 
-    document.querySelectorAll(".apoio-altura-field").forEach(f => alturas.push(f.value || "0.00"));
-    document.querySelectorAll(".apoio-larg-field").forEach(f => larguras.push(f.value || "0.00"));
-    document.querySelectorAll(".apoio-comp-field").forEach(f => comprimentos.push(f.value || "0.00"));
+    document.querySelectorAll(".apoio-altura-field").forEach(f => {
+      alturas.push(normalizeDecimal(f.value || "0.00"));
+    });
+    
+    document.querySelectorAll(".apoio-larg-field").forEach(f => {
+      larguras.push(normalizeDecimal(f.value || "0.00"));
+    });
+    
+    document.querySelectorAll(".apoio-comp-field").forEach(f => {
+      comprimentos.push(normalizeDecimal(f.value || "0.00"));
+    });
 
     data["ALTURA APOIO"] = alturas.join(";");
     data["LARGURA PILAR"] = larguras.join(";");
@@ -6041,8 +6067,7 @@ function collectFormData() {
   }
 }
 
-
-
+      
 
 
       // Carregar obra específica do banco de dados
@@ -7422,9 +7447,8 @@ function exportAllWorks() {
 window.exportAllWorks = exportAllWorks;
 
 
-
-// Versão: 3.0
-// Função atualizada para exportar obras por lote com CODIGO tratado como texto
+// Versão: 3.1
+// Função atualizada para exportar obras por lote com CODIGO e LOTE tratados como texto, e normalização de decimais
 function exportLoteWorks() {
     try {
         const loteSelect = document.getElementById("export-lote-select");
@@ -7470,12 +7494,39 @@ function exportLoteWorks() {
 
             works.forEach((work) => {
                 const row = csvColumns.map((column) => {
-                    const value = work[column] || "";
+                    let value = work[column] || "";
                     
-                    // Tratamento especial para CODIGO - sempre como texto para preservar zeros à esquerda
-                    if (column === "CODIGO") {
-                        // Usar aspas duplas para garantir que seja tratado como texto
+                    // Tratamento especial para CODIGO e LOTE - sempre como texto para preservar zeros à esquerda
+                    if (column === "CODIGO" || column === "LOTE") {
                         return `"${value}"`;
+                    }
+                    
+                    // Aplicar normalização em campos numéricos/medidas
+                    const camposNumericos = [
+                        "COMPRIMENTO",
+                        "LARGURA",
+                        "ALTURA",
+                        "DESLOCAMENTO",
+                        "KM_INICIAL",
+                        "KM_FINAL"
+                    ];
+                    
+                    if (camposNumericos.includes(column)) {
+                        value = normalizeDecimal(value);
+                    }
+                    
+                    // Aplicar normalização em campos que contêm múltiplos valores separados por ";"
+                    const camposMultiplos = [
+                        "COMPRIMENTO TRAMOS",
+                        "ALTURA APOIO",
+                        "LARGURA PILAR",
+                        "COMPRIMENTO PILARES"
+                    ];
+                    
+                    if (camposMultiplos.includes(column) && value) {
+                        // Dividir, normalizar cada valor e juntar novamente
+                        const valoresNormalizados = value.split(";").map(v => normalizeDecimal(v.trim()));
+                        value = valoresNormalizados.join(";");
                     }
                     
                     // Valores com tabs devem ser envolvidos em aspas duplas
@@ -7512,17 +7563,16 @@ function exportLoteWorks() {
     }
 }
 
+
+
 // Substituir a função global
 window.exportLoteWorks = exportLoteWorks;
 
 
 
 
-
-
-
-// Versão: 4.4
-// Função atualizada para gerar linha CSV com CODIGO como texto e 3 campos de apoio
+// Versão: 4.5
+// Função atualizada para gerar linha CSV com LOTE e CODIGO como texto, e normalização de decimais
 function generateAndShowCSVLine() {
     try {
         // Validar primeiro
@@ -7563,7 +7613,21 @@ function generateAndShowCSVLine() {
         for (let [key, value] of formData.entries()) {
             // Ignorar campos dos tramos/apoios dinâmicos (eles são tratados separadamente)
             if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-                data[key] = value;
+                // Aplicar normalização em campos numéricos/medidas
+                const camposNumericos = [
+                    "COMPRIMENTO",
+                    "LARGURA",
+                    "ALTURA",
+                    "DESLOCAMENTO",
+                    "KM_INICIAL",
+                    "KM_FINAL"
+                ];
+                
+                if (camposNumericos.includes(key.toUpperCase())) {
+                    data[key] = normalizeDecimal(value);
+                } else {
+                    data[key] = value;
+                }
             }
         }
 
@@ -7574,22 +7638,31 @@ function generateAndShowCSVLine() {
             data["MODELADO"] = "FALSE";
         }
 
-        // Coletar valores dos tramos
+        // Coletar valores dos tramos COM normalização
         const tramosValues = [];
         const tramosFields = document.querySelectorAll(".tramo-field");
         tramosFields.forEach((field) => {
-            tramosValues.push(field.value || "0.50");
+            const normalizedValue = normalizeDecimal(field.value || "0.50");
+            tramosValues.push(normalizedValue);
         });
         data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
 
-        // Coletar valores dos apoios (altura, largura e comprimento dos pilares)
+        // Coletar valores dos apoios COM normalização
         const alturas = [];
         const larguras = [];
         const comprimentos = [];
 
-        document.querySelectorAll(".apoio-altura-field").forEach(f => alturas.push(f.value || "0.00"));
-        document.querySelectorAll(".apoio-larg-field").forEach(f => larguras.push(f.value || "0.00"));
-        document.querySelectorAll(".apoio-comp-field").forEach(f => comprimentos.push(f.value || "0.00"));
+        document.querySelectorAll(".apoio-altura-field").forEach(f => {
+            alturas.push(normalizeDecimal(f.value || "0.00"));
+        });
+        
+        document.querySelectorAll(".apoio-larg-field").forEach(f => {
+            larguras.push(normalizeDecimal(f.value || "0.00"));
+        });
+        
+        document.querySelectorAll(".apoio-comp-field").forEach(f => {
+            comprimentos.push(normalizeDecimal(f.value || "0.00"));
+        });
 
         data["ALTURA APOIO"] = alturas.join(";");
         data["LARGURA PILAR"] = larguras.join(";");
@@ -7597,8 +7670,8 @@ function generateAndShowCSVLine() {
 
         // Gerar a linha CSV
         const csvLine = csvColumns.map((column) => {
-            // Tratamento especial para CODIGO para preservar zeros à esquerda
-            if (column === "CODIGO") {
+            // Tratamento especial para CODIGO e LOTE para preservar como texto (zeros à esquerda)
+            if (column === "CODIGO" || column === "LOTE") {
                 return `"${data[column] || ""}"`;
             }
             
@@ -7631,10 +7704,6 @@ function generateAndShowCSVLine() {
         alert("Erro ao gerar linha CSV: " + error.message);
     }
 }
-
-
-
-
 
 
 
@@ -7730,6 +7799,38 @@ function validateTramosSum() {
     
     return true;
   }
+}
+
+
+
+
+// Versão: 1.0
+/**
+ * Normaliza valores decimais adicionando zero à esquerda quando necessário
+ * @param {string|number} value - Valor a ser normalizado
+ * @returns {string} - Valor normalizado
+ * Exemplos:
+ * ".5" → "0.5"
+ * ".25" → "0.25"
+ * "5" → "5"
+ * "" → ""
+ * null → ""
+ */
+function normalizeDecimal(value) {
+    // Se valor for nulo, undefined ou string vazia, retorna vazio
+    if (value === null || value === undefined || value === "") {
+        return "";
+    }
+    
+    // Converter para string se for número
+    const stringValue = String(value).trim();
+    
+    // Se começar com ponto, adicionar zero à esquerda
+    if (stringValue.startsWith(".")) {
+        return "0" + stringValue;
+    }
+    
+    return stringValue;
 }
 
 
