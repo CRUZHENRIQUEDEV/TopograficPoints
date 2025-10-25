@@ -960,10 +960,10 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="ala-paralela">TIPO ALA PARALELA</label>
-              <select id="ala-paralela" name="TIPO ALA PARALELA">
-                <!-- Adicionar após o campo ala-paralela -->
-                <div class="error-message" id="ala-paralela-error">
+              <label for="tipo-ala-paralela">TIPO ALA PARALELA</label>
+              <select id="tipo-ala-paralela" name="TIPO ALA PARALELA">
+                <!-- Adicionar após o campo tipo-ala-paralela -->
+                <div class="error-message" id="tipo-ala-paralela-error">
                   Este campo é obrigatório quando o encontro é Parede Frontal
                   Portante
                 </div>
@@ -976,15 +976,15 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="ala-perpendicular">TIPO ALA PERPENDICULAR</label>
+              <label for="tipo-ala-perpendicular">TIPO ALA PERPENDICULAR</label>
 
-              <!-- Adicionar após o campo ala-perpendicular -->
-              <div class="error-message" id="ala-perpendicular-error">
+              <!-- Adicionar após o campo tipo-ala-perpendicular -->
+              <div class="error-message" id="tipo-ala-perpendicular-error">
                 Este campo é obrigatório quando o encontro é Parede Frontal
                 Portante
               </div>
 
-              <select id="ala-perpendicular" name="TIPO ALA PERPENDICULAR">
+              <select id="tipo-ala-perpendicular" name="TIPO ALA PERPENDICULAR">
                 <option value="">Selecione</option>
                 <option value="ALA DE CONCRETO ARMADO">
                   ALA DE CONCRETO ARMADO
@@ -1877,12 +1877,12 @@
           altura: { type: "number", min: 0, required: true },
           "qtd-tramos": { type: "number", min: 1, required: true },
           "cortina-altura": { type: "number", min: 0, required: true },
-          "ala-paralela": {
+          "tipo-ala-paralela": {
             type: "text",
             required: function () {
               const encontroField = document.getElementById("tipo-encontro");
               const alaPerpendicularField =
-                document.getElementById("ala-perpendicular");
+                document.getElementById("tipo-ala-perpendicular");
 
               if (!encontroField || !alaPerpendicularField) return false;
 
@@ -1894,11 +1894,11 @@
               );
             },
           },
-          "ala-perpendicular": {
+          "tipo-ala-perpendicular": {
             type: "text",
             required: function () {
               const encontroField = document.getElementById("tipo-encontro");
-              const alaParalelaField = document.getElementById("ala-paralela");
+              const alaParalelaField = document.getElementById("tipo-ala-paralela");
 
               if (!encontroField || !alaParalelaField) return false;
 
@@ -1914,9 +1914,9 @@
             type: "number",
             min: 0,
             required: function () {
-              const alaParalelaField = document.getElementById("ala-paralela");
+              const alaParalelaField = document.getElementById("tipo-ala-paralela");
               const alaPerpendicularField =
-                document.getElementById("ala-perpendicular");
+                document.getElementById("tipo-ala-perpendicular");
 
               if (!alaParalelaField || !alaPerpendicularField) return false;
 
@@ -1932,9 +1932,9 @@
             type: "number",
             min: 0,
             required: function () {
-              const alaParalelaField = document.getElementById("ala-paralela");
+              const alaParalelaField = document.getElementById("tipo-ala-paralela");
               const alaPerpendicularField =
-                document.getElementById("ala-perpendicular");
+                document.getElementById("tipo-ala-perpendicular");
 
               if (!alaParalelaField || !alaPerpendicularField) return false;
 
@@ -3019,9 +3019,9 @@ window.importMultipleWorks = importMultipleWorks;
         // 3. Validação de encontro e alas
         if (typeof validateAlaWithEncountro === "function") {
           addEventIfExists("tipo-encontro", "change", validateAlaWithEncountro);
-          addEventIfExists("ala-paralela", "change", validateAlaWithEncountro);
+          addEventIfExists("tipo-ala-paralela", "change", validateAlaWithEncountro);
           addEventIfExists(
-            "ala-perpendicular",
+            "tipo-ala-perpendicular",
             "change",
             validateAlaWithEncountro
           );
@@ -4771,14 +4771,14 @@ function setupValidations() {
 
   // Validações específicas para campos condicionais
   document
-    .getElementById("ala-paralela")
+    .getElementById("tipo-ala-paralela")
     .addEventListener("change", function () {
       validateField("comprimento-ala");
       validateField("espessura-ala");
     });
 
   document
-    .getElementById("ala-perpendicular")
+    .getElementById("tipo-ala-perpendicular")
     .addEventListener("change", function () {
       validateField("comprimento-ala");
       validateField("espessura-ala");
@@ -4866,10 +4866,10 @@ function setupValidations() {
     .getElementById("tipo-encontro")
     .addEventListener("change", validateAlaWithEncountro);
   document
-    .getElementById("ala-paralela")
+    .getElementById("tipo-ala-paralela")
     .addEventListener("change", validateAlaWithEncountro);
   document
-    .getElementById("ala-perpendicular")
+    .getElementById("tipo-ala-perpendicular")
     .addEventListener("change", validateAlaWithEncountro);
 
   // Validar soma dos tramos quando comprimento total mudar
@@ -4931,14 +4931,14 @@ function setupValidations() {
 
       // Validações específicas para campos condicionais
       document
-        .getElementById("ala-paralela")
+        .getElementById("tipo-ala-paralela")
         .addEventListener("change", function () {
           validateField("comprimento-ala");
           validateField("espessura-ala");
         });
 
       document
-        .getElementById("ala-perpendicular")
+        .getElementById("tipo-ala-perpendicular")
         .addEventListener("change", function () {
           validateField("comprimento-ala");
           validateField("espessura-ala");
@@ -6893,17 +6893,17 @@ function loadWorkToForm(work) {
         const encontroValue = encontroField.value;
 
         // Obter os campos de ala
-        const alaParalelaField = document.getElementById("ala-paralela");
+        const alaParalelaField = document.getElementById("tipo-ala-paralela");
         const alaPerpendicularField =
-          document.getElementById("ala-perpendicular");
+          document.getElementById("tipo-ala-perpendicular");
 
         // Se algum dos campos não existir, não validar
         if (!alaParalelaField || !alaPerpendicularField) return true;
 
         // Obter os elementos de erro
-        const alaParalelaError = document.getElementById("ala-paralela-error");
+        const alaParalelaError = document.getElementById("tipo-ala-paralela-error");
         const alaPerpendicularError = document.getElementById(
-          "ala-perpendicular-error"
+          "tipo-ala-perpendicular-error"
         );
 
         // Inicialmente remover classes de erro
@@ -7040,8 +7040,8 @@ function loadWorkToForm(work) {
           // Campos relacionados ao encontro e alas
           const relatedFields = {
             "tipo-encontro": validateAlaWithEncountro,
-            "ala-paralela": validateAlaWithEncountro,
-            "ala-perpendicular": validateAlaWithEncountro,
+            "tipo-ala-paralela": validateAlaWithEncountro,
+            "tipo-ala-perpendicular": validateAlaWithEncountro,
           };
 
           // Adicionar event listeners apenas para elementos que existem
@@ -7208,8 +7208,8 @@ function getCsvColumns() {
 
         // Elementos de Transição
         "CORTINA ALTURA",
-        "ALA PARALELA",
-        "ALA PERPENDICULAR",
+        "TIPO ALA PARALELA",
+        "TIPO ALA PERPENDICULAR",
         "COMPRIMENTO ALA",
         "ESPESSURA ALA",
         "TIPO ENCONTRO",
@@ -7253,7 +7253,7 @@ function getCsvColumns() {
         "TIPO CALCADA DIREITA",
         "LARGURA CALCADA DIREITA",
         "GUARDA RODAS ESQUERDO",
-        "LARGURA GUARDA RODAS ESQUERDA",
+        "LARGURA GUARDA RODAS ESQUERDO",
         "GUARDA RODAS DIREITO",
         "LARGURA GUARDA RODAS DIREITO",
         "TIPO PAVIMENTO",
