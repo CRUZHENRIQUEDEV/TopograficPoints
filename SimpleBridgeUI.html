@@ -907,7 +907,9 @@
         name="QTD TRAMOS"
         min="1"
         value="1" 
+        step= "1"
         required
+        oninput="forceIntegerOnly(this)"
         onchange="generateTramosFields()"
       />
       <div class="error-message" id="qtd-tramos-error">
@@ -1155,6 +1157,7 @@
         name="QTD LONGARINAS"
         min="0"
         step= "1"
+        oninput="forceIntegerOnly(this)"
         required
       />
       <div class="error-message" id="qtd-longarinas-error">
@@ -1169,6 +1172,7 @@
         name="QTD TRANSVERSINAS"
         min="0"
         step="1"
+        oninput="forceIntegerOnly(this)"
       />
     </div>
   </div>
@@ -1251,6 +1255,8 @@
       <input
         type="number"
         id="qtd-pilares"
+        step= "1"
+        oninput="forceIntegerOnly(this)"
         name="QTD PILARES"
         min="0"
         required
@@ -1577,6 +1583,8 @@
               <input
                 type="number"
                 id="qtd-buzinotes"
+                step= "1"
+                oninput="forceIntegerOnly(this)"
                 name="QTD BUZINOTES"
                 min="0"
               />
@@ -4168,6 +4176,13 @@ window.detectSeparator = detectSeparator;
           alert("Erro ao carregar dados do CSV: " + error.message);
         }
       }
+
+
+
+      function forceIntegerOnly(input) {
+  input.value = input.value.replace(/[^0-9]/g, '');
+}
+
 
       // Versão: 1.1
       // Função para importar CSV de pontes para referência
