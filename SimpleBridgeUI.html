@@ -6,6 +6,19 @@
     <title>OAE - Interface de Preenchimento</title>
 
     <style>
+
+
+
+      .export-btn {
+  background: linear-gradient(45deg, #9b59b6, #8e44ad);
+}
+
+.export-btn:hover {
+  background: linear-gradient(45deg, #8e44ad, #9b59b6);
+}
+
+
+
       /* Base de estilo do novo design */
       * {
         margin: 0;
@@ -696,6 +709,9 @@
           </button>
           <button type="button" class="delete-btn" onclick="clearDatabase()">
             Limpar Banco de Dados
+          </button>
+          <button onclick="exportToJSON()" class="export-btn">
+            📄 Exportar JSON
           </button>
         </div>
       </div>
@@ -1394,33 +1410,16 @@
               </select>
             </div>
           </div>
-
-
-          
+   
 
           <div id="apoio-custom-fields"></div>
-  <button
-    type="button"
-    class="add-btn"
-    onclick="showAddField('apoio-custom-fields')"
-  >
+          <button
+              type="button"
+              class="add-btn"
+              onclick="showAddField('apoio-custom-fields')"
+            >
             + Adicionar Campo
           </button>
-
-
-
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
         </div>
 
 
@@ -1475,8 +1474,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="calcada-esquerda">TIPO CALCADA ESQUERDA</label>
-              <select id="calcada-esquerda" name="TIPO CALCADA ESQUERDA">
+              <label for="tipo-calcada-esquerda">TIPO CALCADA ESQUERDA</label>
+              <select id="tipo-calcada-esquerda" name="TIPO CALCADA ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
@@ -1499,8 +1498,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="calcada-direita">TIPO CALCADA DIREITA</label>
-              <select id="calcada-direita" name="TIPO CALCADA DIREITA">
+              <label for="tipo-calcada-direita">TIPO CALCADA DIREITA</label>
+              <select id="tipo-calcada-direita" name="TIPO CALCADA DIREITA">
                 <option value="">Selecione</option>
                 <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
                   CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
@@ -1649,6 +1648,8 @@
         <button type="button" id="clear-btn" onclick="clearForm()">
           Limpar Formulário
         </button>
+
+        
       </div>
 
       <!-- Input para importação de arquivos oculto -->
@@ -3018,8 +3019,8 @@ window.importMultipleWorks = importMultipleWorks;
           "tipo-barreira-direita",
           "guarda-rodas-esquerdo",
           "guarda-rodas-direito",
-          "calcada-esquerda",
-          "calcada-direita",
+          "tipo-calcada-esquerda",
+          "tipo-calcada-direita",
         ];
 
         for (const field of protectionFields) {
@@ -4837,8 +4838,8 @@ function setupValidations() {
     "tipo-barreira-direita",
     "guarda-rodas-esquerdo",
     "guarda-rodas-direito",
-    "calcada-esquerda",
-    "calcada-direita",
+    "tipo-calcada-esquerda",
+    "tipo-calcada-direita",
   ];
 
   lateralProtectionFields.forEach((fieldId) => {
@@ -4996,8 +4997,8 @@ function setupValidations() {
         "tipo-barreira-direita",
         "guarda-rodas-esquerdo",
         "guarda-rodas-direito",
-        "calcada-esquerda",
-        "calcada-direita",
+        "tipo-calcada-esquerda",
+        "tipo-calcada-direita",
       ];
 
       lateralProtectionFields.forEach((fieldId) => {
@@ -5204,8 +5205,8 @@ function validateApoios() {
           (document.getElementById("guarda-rodas-esquerdo").value !== "" &&
             document.getElementById("guarda-rodas-esquerdo").value !==
               "Nenhum") ||
-          (document.getElementById("calcada-esquerda").value !== "" &&
-            document.getElementById("calcada-esquerda").value !== "Nenhum");
+          (document.getElementById("tipo-calcada-esquerda").value !== "" &&
+            document.getElementById("tipo-calcada-esquerda").value !== "Nenhum");
 
         // Verificar lado direito
         const hasRightProtection =
@@ -5214,8 +5215,8 @@ function validateApoios() {
           (document.getElementById("guarda-rodas-direito").value !== "" &&
             document.getElementById("guarda-rodas-direito").value !==
               "Nenhum") ||
-          (document.getElementById("calcada-direita").value !== "" &&
-            document.getElementById("calcada-direita").value !== "Nenhum");
+          (document.getElementById("tipo-calcada-direita").value !== "" &&
+            document.getElementById("tipo-calcada-direita").value !== "Nenhum");
 
         // Destacar campos com erro se não houver proteção
         if (!hasLeftProtection) {
@@ -5223,7 +5224,7 @@ function validateApoios() {
           document
             .getElementById("guarda-rodas-esquerdo")
             .classList.add("error");
-          document.getElementById("calcada-esquerda").classList.add("error");
+          document.getElementById("tipo-calcada-esquerda").classList.add("error");
         } else {
           document
             .getElementById("tipo-barreira-esquerda")
@@ -5231,7 +5232,7 @@ function validateApoios() {
           document
             .getElementById("guarda-rodas-esquerdo")
             .classList.remove("error");
-          document.getElementById("calcada-esquerda").classList.remove("error");
+          document.getElementById("tipo-calcada-esquerda").classList.remove("error");
         }
 
         if (!hasRightProtection) {
@@ -5239,13 +5240,13 @@ function validateApoios() {
           document
             .getElementById("guarda-rodas-direito")
             .classList.add("error");
-          document.getElementById("calcada-direita").classList.add("error");
+          document.getElementById("tipo-calcada-direita").classList.add("error");
         } else {
           document.getElementById("tipo-barreira-direita").classList.remove("error");
           document
             .getElementById("guarda-rodas-direito")
             .classList.remove("error");
-          document.getElementById("calcada-direita").classList.remove("error");
+          document.getElementById("tipo-calcada-direita").classList.remove("error");
         }
 
         // Mostrar/ocultar mensagem de erro
@@ -5382,16 +5383,16 @@ function validateApoios() {
           "Elementos Complementares": [
             "TIPO BARREIRA ESQUERDA",
             "LARGURA BARREIRA ESQUERDA",
-            "BARREIRA DIREITA",
+            "TIPO BARREIRA DIREITA",
             "LARGURA BARREIRA DIREITA",
-            "CALCADA ESQUERDA",
+            "TIPO CALCADA ESQUERDA",
             "LARGURA CALCADA ESQUERDA",
-            "CALCADA DIREITA",
+            "TIPO CALCADA DIREITA",
             "LARGURA CALCADA DIREITA",
-            "GUARDA RODAS ESQUERDA",
-            "LARGURA GUARDA RODAS ESQUERDA",
-            "GUARDA RODAS DIREITA",
-            "LARGURA GUARDA RODAS DIREITA",
+            "GUARDA RODAS ESQUERDO",
+            "LARGURA GUARDA RODAS ESQUERDO",
+            "GUARDA RODAS DIREITO",
+            "LARGURA GUARDA RODAS DIREITO",
             "TIPO PAVIMENTO",
             "QTD BUZINOTES",
           ],
@@ -7024,8 +7025,8 @@ function loadWorkToForm(work) {
             "tipo-barreira-direita",
             "guarda-rodas-esquerdo",
             "guarda-rodas-direito",
-            "calcada-esquerda",
-            "calcada-direita",
+            "tipo-calcada-esquerda",
+            "tipo-calcada-direita",
           ];
 
           // Adicionar eventos apenas para elementos que existem
@@ -7266,9 +7267,9 @@ function getCsvColumns() {
         // Elementos Complementares
         "TIPO BARREIRA ESQUERDA",
         "LARGURA BARREIRA ESQUERDA",
-        "BARREIRA DIREITA",
+        "TIPO BARREIRA DIREITA",
         "LARGURA BARREIRA DIREITA",
-        "CALCADA ESQUERDA",
+        "TIPO CALCADA ESQUERDA",
         "LARGURA CALCADA ESQUERDA",
         "TIPO CALCADA DIREITA",
         "LARGURA CALCADA DIREITA",
@@ -7859,6 +7860,1243 @@ function normalizeDecimal(value) {
     
     return stringValue;
 }
+
+
+
+
+// Versão: 4.1
+
+/**
+ * Exporta todas as obras do IndexedDB para um arquivo JSON com estrutura hierárquica BridgeData
+ * Cada obra é convertida para o formato completo com BridgeProjectData, GeneralConfigData, etc.
+ */
+function exportToJSON() {
+    // Abrir com a versão atual do banco (não especificar versão força usar a existente)
+    const request = indexedDB.open("OAEDatabase");
+    
+    request.onerror = function() {
+        console.error("Erro ao abrir IndexedDB:", request.error);
+        alert("❌ Erro ao acessar o banco de dados: " + request.error);
+    };
+    
+    request.onsuccess = function(event) {
+        const db = event.target.result;
+        
+        console.log(`IndexedDB aberto com sucesso. Versão: ${db.version}`);
+        
+        if (!db.objectStoreNames.contains("obras")) {
+            alert("❌ Tabela 'obras' não encontrada no banco de dados!");
+            db.close();
+            return;
+        }
+        
+        const transaction = db.transaction(["obras"], "readonly");
+        const objectStore = transaction.objectStore("obras");
+        const getAllRequest = objectStore.getAll();
+        
+        getAllRequest.onsuccess = function() {
+            const obrasFlat = getAllRequest.result;
+            
+            if (!obrasFlat || obrasFlat.length === 0) {
+                alert("Nenhuma obra encontrada para exportar!");
+                db.close();
+                return;
+            }
+            
+            try {
+                const bridges = [];
+                let errorsCount = 0;
+                
+                // Converte cada obra flat para estrutura hierárquica BridgeData
+                // Converte cada obra flat para estrutura hierárquica BridgeData
+for (const obraFlat of obrasFlat) {
+    try {
+        const bridgeData = convertObraFlatToBridgeData(obraFlat);
+        bridges.push(bridgeData);
+                    } catch (conversionError) {
+                        errorsCount++;
+                        console.error(`Erro ao converter obra ${obraFlat.CODIGO}:`, conversionError);
+                        // Continua processando outras obras
+                    }
+                }
+                
+                if (bridges.length === 0) {
+                    alert("❌ Nenhuma obra pôde ser convertida para o formato JSON!");
+                    db.close();
+                    return;
+                }
+                
+                // Monta o JSON final com metadata
+                const exportData = {
+                    ExportDate: new Date().toISOString(),
+                    ExportVersion: "1.0",
+                    ExportSource: "OAEDatabase - IndexedDB",
+                    TotalBridges: bridges.length,
+                    ErrorsCount: errorsCount,
+                    Bridges: bridges
+                };
+                
+                // Gera o JSON formatado
+                const jsonString = JSON.stringify(exportData, null, 2);
+                
+                // Cria o blob e faz download
+                const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                
+                // Nome do arquivo com timestamp
+                const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+                link.href = url;
+                link.download = `bridges_export_${timestamp}.json`;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Libera o objeto URL
+                URL.revokeObjectURL(url);
+                
+                let message = `✅ ${bridges.length} obra(s) exportada(s) com sucesso para JSON hierárquico!`;
+                if (errorsCount > 0) {
+                    message += `\n\n⚠️ ${errorsCount} obra(s) com erro(s) na conversão (verifique o console).`;
+                }
+                alert(message);
+                
+            } catch (error) {
+                console.error("Erro ao gerar JSON:", error);
+                alert("❌ Erro ao gerar JSON: " + error.message);
+            }
+            
+            db.close();
+        };
+        
+        getAllRequest.onerror = function() {
+            console.error("Erro ao buscar obras:", getAllRequest.error);
+            alert("❌ Erro ao buscar obras do banco de dados!");
+            db.close();
+        };
+    };
+    
+    request.onupgradeneeded = function(event) {
+        // Este evento não deve ser disparado, mas caso seja, apenas ignora
+        console.warn("onupgradeneeded disparado inesperadamente durante exportação");
+    };
+}
+
+// Expor função globalmente
+window.exportToJSON = exportToJSON;
+// Versão: 1.0
+
+/**
+ * Converte uma obra flat do IndexedDB para estrutura hierárquica BridgeData
+ * @param {object} obra - Objeto flat com campos do IndexedDB (CODIGO, LOTE, etc.)
+ * @returns {object} Objeto BridgeData com hierarquia completa
+ */
+function convertObraFlatToBridgeData(obra) {
+    if (!obra) {
+        throw new Error("Obra não pode ser nula");
+    }
+
+    return {
+        BridgeProjectData: generateBridgeProjectDataFromObra(obra),
+        BridgeType: 0, // Padrão: 0 (pode ser configurado depois)
+        GeneralConfigData: generateGeneralConfigDataFromObra(obra),
+        BridgeTransitionData: generateBridgeTransitionDataFromObra(obra),
+        SuperstructureData: generateSuperstructureDataFromObra(obra),
+        BridgePierData: generateBridgePierDataFromObra(obra),
+        BridgeComplementaryData: generateBridgeComplementaryDataFromObra(obra)
+    };
+}
+
+
+
+
+/**
+ * Gera BridgeProjectData a partir de uma obra flat
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} BridgeProjectData
+ */
+// Versão: 2.0
+
+function generateBridgeProjectDataFromObra(obra) {
+    return {
+        Name: obra.NOME || "",
+        Id: 0,
+        Code: obra.CODIGO || "",
+        State: obra.UF || "",
+        Highway: obra.RODOVIA || "",
+        Km: parseFloat(obra.KM) || 0.0,
+        Date: obra.DATA || "",
+        Engineer: obra.ENGENHEIRO || "",
+        Technician: obra.TECNICO || ""
+    };
+}
+
+
+
+
+// Versão: 2.0
+
+
+
+
+// Versão: 2.2
+
+/**
+ * Gera GeneralConfigData a partir de uma obra flat
+ * Cria objeto Spans (BridgeSpanCollection) com tramos individuais
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} GeneralConfigData com estrutura BridgeSpanCollection
+ */
+function generateGeneralConfigDataFromObra(obra) {
+    const comprimento = parseFloat(obra.COMPRIMENTO) || 0.0;
+    const qtdTramos = parseInt(obra["QTD TRAMOS"]) || parseInt(obra.QTD_TRAMOS) || 1;
+    
+    console.log(`[GeneralConfig] Processando obra ${obra.CODIGO}:`);
+    console.log(`  - Comprimento total: ${comprimento}m`);
+    console.log(`  - Quantidade de tramos: ${qtdTramos}`);
+    
+    // Processa comprimentos dos tramos (formato: "10;9;11")
+    // CORREÇÃO: O campo no IndexedDB é "COMPRIMENTO TRAMOS" (com espaço)
+    const spanLengths = [];
+    const comprimentoTramosValue = obra["COMPRIMENTO TRAMOS"] || obra.COMPRIMENTO_TRAMOS;
+    
+    console.log(`  - COMPRIMENTO TRAMOS raw:`, comprimentoTramosValue);
+    
+    if (comprimentoTramosValue) {
+        const tramosStr = comprimentoTramosValue.toString().trim();
+        
+        if (tramosStr.length > 0) {
+            const tramosArray = tramosStr.split(';');
+            
+            tramosArray.forEach((t, index) => {
+                const trimmed = t.trim();
+                if (trimmed.length > 0) {
+                    const valor = parseFloat(trimmed);
+                    if (!isNaN(valor) && valor > 0) {
+                        spanLengths.push(valor);
+                        console.log(`  - Tramo ${index + 1}: ${valor}m`);
+                    } else {
+                        console.warn(`  - Tramo ${index + 1}: valor inválido "${trimmed}"`);
+                    }
+                }
+            });
+        }
+    }
+    
+    // Se não houver tramos definidos, distribui igualmente
+    if (spanLengths.length === 0) {
+        console.warn(`  ⚠️ Nenhum tramo definido, distribuindo ${comprimento}m em ${qtdTramos} tramos iguais`);
+        const spanLength = comprimento / qtdTramos;
+        for (let i = 0; i < qtdTramos; i++) {
+            spanLengths.push(spanLength);
+        }
+    }
+    
+    // Validar soma dos tramos
+    const somaTramos = spanLengths.reduce((sum, length) => sum + length, 0);
+    const diferenca = Math.abs(somaTramos - comprimento);
+    
+    console.log(`  - Soma dos tramos: ${somaTramos.toFixed(2)}m`);
+    console.log(`  - Diferença: ${diferenca.toFixed(4)}m`);
+    
+    if (diferenca > 0.01) {
+        console.warn(`  ⚠️ Soma dos tramos difere do comprimento total!`);
+    }
+
+    // Criar objeto BridgeSpanCollection compatível com C#
+    const bridgeSpanCollection = createBridgeSpanCollection(spanLengths, comprimento);
+    
+    console.log(`  ✓ BridgeSpanCollection criado com ${bridgeSpanCollection.Count} tramos`);
+
+    return {
+        Length: comprimento,
+        Width: parseFloat(obra.LARGURA) || 0.0,
+        Height: parseFloat(obra.ALTURA) || 0.0,
+        ExpansionJointLength: 0.020,
+        Spans: bridgeSpanCollection,
+        BridgeOption: createZSElementTypeFromValue(obra.BRIDGE_OPTION)
+    };
+}
+
+
+
+// Versão: 1.0 - DEBUG
+
+/**
+ * Função temporária para listar TODOS os campos de uma obra
+ * Remove depois de identificar os nomes corretos
+ */
+function debugObraFields(obra) {
+    console.log("=== TODOS OS CAMPOS DA OBRA ===");
+    for (const key in obra) {
+        if (obra.hasOwnProperty(key)) {
+            console.log(`${key}: ${typeof obra[key]} = ${obra[key]}`);
+        }
+    }
+    console.log("===============================");
+}
+
+
+/**
+ * Cria um objeto BridgeSpanCollection compatível com a classe C#
+ * @param {Array<number>} spanLengths - Array com comprimentos dos tramos
+ * @param {number} expectedTotalLength - Comprimento total esperado
+ * @returns {object} BridgeSpanCollection
+ */
+function createBridgeSpanCollection(spanLengths, expectedTotalLength) {
+    const spans = [];
+    
+    // Criar cada BridgeSpan individual
+    for (let i = 0; i < spanLengths.length; i++) {
+        const bridgeSpan = {
+            Index: i,
+            Length: spanLengths[i],
+            IsManuallyDefined: true,
+            IsLastSpan: (i === spanLengths.length - 1)
+        };
+        spans.push(bridgeSpan);
+    }
+    
+    // Calcular soma total dos tramos
+    const totalLength = spanLengths.reduce((sum, length) => sum + length, 0);
+    const lengthDifference = expectedTotalLength - totalLength;
+    const remainingLength = Math.max(0, lengthDifference);
+    
+    // Retornar BridgeSpanCollection
+    return {
+        ExpectedTotalLength: expectedTotalLength,
+        Count: spans.length,
+        TotalLength: totalLength,
+        RemainingLength: remainingLength,
+        LengthDifference: lengthDifference,
+        IsValid: Math.abs(lengthDifference) <= 0.01,
+        SpanLengths: spanLengths,
+        _spans: spans  // Lista interna de BridgeSpan
+    };
+}
+
+
+
+// Versão: 2.0
+
+/**
+ * Gera BridgeTransitionData a partir de uma obra flat
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} BridgeTransitionData
+ */
+function generateBridgeTransitionDataFromObra(obra) {
+    // CORREÇÃO: Usar nomes com ESPAÇO como no IndexedDB
+    const cortinaAltura = parseFloat(obra["CORTINA ALTURA"] || obra.CORTINA_ALTURA) || 1.50;
+    const tipoEncontro = obra["TIPO ENCONTRO"] || obra.TIPO_ENCONTRO || "";
+    const isSlabAbutment = (tipoEncontro.toUpperCase() === "ENCONTRO LAJE" || 
+                           tipoEncontro.toUpperCase() === "ENCONTRO DE LAJE");
+    
+    console.log(`[Transition] Cortina Altura: ${cortinaAltura}`);
+    console.log(`[Transition] Tipo Encontro: "${tipoEncontro}" → IsSlabAbutment: ${isSlabAbutment}`);
+    
+    return {
+        CurtainHeight: cortinaAltura,
+        BearingThickness: 0.05,
+        IsSlabAbutment: isSlabAbutment,
+        SlabAbutmentLength: parseFloat(obra["COMPRIMENTO ENCONTRO LAJE"] || obra.COMPRIMENTO_ENCONTRO_LAJE) || 0.0,
+        SlabAbutmentLeftOffset: parseFloat(obra["DESLOCAMENTO ESQUERDO ENCONTRO LAJE"] || obra.DESLOCAMENTO_ESQUERDO_ENCONTRO_LAJE) || 0.0,
+        SlabAbutmentRightOffset: parseFloat(obra["DESLOCAMENTO DIREITO ENCONTRO LAJE"] || obra.DESLOCAMENTO_DIREITO_ENCONTRO_LAJE) || 0.0,
+        ParallelWing: createZSElementTypeFromValue(obra["TIPO ALA PARALELA"] || obra.TIPO_ALA_PARALELA),
+        PerpendicularWing: createZSElementTypeFromValue(obra["TIPO ALA PERPENDICULAR"] || obra.TIPO_ALA_PERPENDICULAR),
+        WingLength: parseFloat(obra["COMPRIMENTO ALA"] || obra.COMPRIMENTO_ALA) || 0.0,
+        WingThickness: parseFloat(obra["ESPESSURA ALA"] || obra.ESPESSURA_ALA) || 0.0,
+        AbutmentType: createZSElementTypeFromValue(obra["TIPO ENCONTRO"] || obra.TIPO_ENCONTRO),
+        TransitionSlabType: createZSElementTypeFromValue(obra["LAJE TRANSICAO"] || obra.LAJE_TRANSICAO),
+        ReinforcedEarthWallType: createZSElementTypeFromValue(obra["TIPO TERRA ARMADA"] || obra.TIPO_TERRA_ARMADA)
+    };
+}
+
+
+
+// Versão: 1.0
+
+/**
+ * Gera SuperstructureData a partir de uma obra flat
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} BridgeSuperstructureData
+ */
+// Versão: 2.0
+
+function generateSuperstructureDataFromObra(obra) {
+    return {
+        LongarineHeight: parseFloat(obra["ALTURA LONGARINA"] || obra.ALTURA_LONGARINA) || 0.0,
+        LongarineThickness: parseFloat(obra["ESPESSURA LONGARINA"] || obra.ESPESSURA_LONGARINA) || 0.0,
+        NumberOfLongarines: parseInt(obra["QTD LONGARINAS"] || obra.QTD_LONGARINAS) || 2,
+        LongarineType: createZSElementTypeFromValue(obra["TIPO LONGARINA"] || obra.TIPO_LONGARINA),
+        TransversineHeight: parseFloat(obra["ALTURA TRANSVERSINA"] || obra.ALTURA_TRANSVERSINA) || 0.0,
+        TransversineThickness: parseFloat(obra["ESPESSURA TRANSVERSINA"] || obra.ESPESSURA_TRANSVERSINA) || 0.0,
+        NumberOfTransversines: parseInt(obra["QTD TRANSVERSINAS"] || obra.QTD_TRANSVERSINAS) || 3,
+        TransversineType: createZSElementTypeFromValue(obra["TIPO TRANSVERSINA"] || obra.TIPO_TRANSVERSINA),
+        SlabType: createZSElementTypeFromValue(obra["TIPO LAJE"] || obra.TIPO_LAJE),
+        SlabThickness: parseFloat(obra["ESPESSURA LAJE"] || obra.ESPESSURA_LAJE) || 0.0,
+        SlabStiffeningLongarineType: createZSElementTypeFromValue(obra["TIPO LONGARINA ENRIJECIMENTO"] || obra.TIPO_LONGARINA_ENRIJECIMENTO),
+        CornerAngleType: createZSElementTypeFromValue(obra["TIPO CANTONEIRA"] || obra.TIPO_CANTONEIRA),
+        LeftDisplacement: parseFloat(obra["DESLOCAMENTO ESQUERDO"] || obra.DESLOCAMENTO_ESQUERDO) || 0.0,
+        RightDisplacement: parseFloat(obra["DESLOCAMENTO DIREITO"] || obra.DESLOCAMENTO_DIREITO) || 0.0
+    };
+}
+
+
+
+// Versão: 1.0
+
+/**
+ * Gera BridgePierData a partir de uma obra flat
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} BridgePierData
+ */
+
+
+ // Versão: 2.0
+
+function generateBridgePierDataFromObra(obra) {
+    // Processa alturas dos apoios (formato: "1;1.1;1.2")
+    const pierHeights = [];
+    const alturaApoioValue = obra["ALTURA APOIO"] || obra.ALTURA_APOIO;
+    if (alturaApoioValue) {
+        const alturasStr = alturaApoioValue.toString();
+        const alturasArray = alturasStr.split(';');
+        alturasArray.forEach(a => {
+            const valor = parseFloat(a.trim());
+            if (!isNaN(valor)) {
+                pierHeights.push(valor);
+            }
+        });
+    }
+
+    // Processa larguras dos pilares (formato: "0.4;0.4")
+    const pillarWidths = [];
+    const larguraPilarValue = obra["LARGURA PILAR"] || obra.LARGURA_PILAR;
+    if (larguraPilarValue) {
+        const largurasStr = larguraPilarValue.toString();
+        const largurasArray = largurasStr.split(';');
+        largurasArray.forEach(l => {
+            const valor = parseFloat(l.trim());
+            if (!isNaN(valor)) {
+                pillarWidths.push(valor);
+            }
+        });
+    }
+
+    // Processa comprimentos dos pilares (formato: "2.2;2.2")
+    const pillarLengths = [];
+    const comprimentoPilaresValue = obra["COMPRIMENTO PILARES"] || obra.COMPRIMENTO_PILARES;
+    if (comprimentoPilaresValue) {
+        const comprimentosStr = comprimentoPilaresValue.toString();
+        const comprimentosArray = comprimentosStr.split(';');
+        comprimentosArray.forEach(c => {
+            const valor = parseFloat(c.trim());
+            if (!isNaN(valor)) {
+                pillarLengths.push(valor);
+            }
+        });
+    }
+
+    return {
+        PierConfigurations: {
+            PierHeights: pierHeights
+        },
+        NumberOfPillarsPerPier: parseInt(obra["QTD PILARES"] || obra.QTD_PILARES) || 1,
+        PillarType: createZSElementTypeFromValue(obra["TIPO PILAR"] || obra.TIPO_PILAR),
+        CrossbeamType: createZSElementTypeFromValue(obra["TIPO TRAVESSA"] || obra.TIPO_TRAVESSA),
+        FoundationType: createZSElementTypeFromValue(obra["TIPO BLOCO SAPATA"] || obra.TIPO_BLOCO_SAPATA),
+        BearingType: createZSElementTypeFromValue(obra["TIPO APARELHO APOIO"] || obra.TIPO_APARELHO_APOIO),
+        PillarBracingBeamType: createZSElementTypeFromValue(obra["TIPO CONTRAVENTAMENTO PILAR"] || obra.TIPO_CONTRAVENTAMENTO_PILAR),
+        ConnectionBeamType: createZSElementTypeFromValue(obra["TIPO VIGA LIGACAO"] || obra.TIPO_VIGA_LIGACAO),
+        PillarJacketType: createZSElementTypeFromValue(obra["TIPO ENCAMISAMENTO"] || obra.TIPO_ENCAMISAMENTO),
+        FoundationConnectionBeamType: createZSElementTypeFromValue(obra["TIPO LIGACAO FUNDACOES"] || obra.TIPO_LIGACAO_FUNDACOES),
+        PillarWidth: pillarWidths.length > 0 ? pillarWidths[0] : 0.0,
+        PillarLength: pillarLengths.length > 0 ? pillarLengths[0] : 0.0,
+        IsOffCenterPillar: (obra["PILAR DESCENTRALIZADO"] || obra.PILAR_DESCENTRALIZADO) === "Sim",
+        CrossbeamLength: parseFloat(obra["COMPRIMENTO TRAVESSA"] || obra.COMPRIMENTO_TRAVESSA) || 0.0,
+        CrossbeamHeight: parseFloat(obra["ALTURA TRAVESSA"] || obra.ALTURA_TRAVESSA) || 0.0,
+        FoundationHeight: parseFloat(obra["ALTURA BLOCO SAPATA"] || obra.ALTURA_BLOCO_SAPATA) || 0.0,
+        FoundationLength: parseFloat(obra["COMPRIMENTO BLOCO SAPATA"] || obra.COMPRIMENTO_BLOCO_SAPATA) || 0.0,
+        FoundationWidth: parseFloat(obra["LARGURA BLOCO SAPATA"] || obra.LARGURA_BLOCO_SAPATA) || 0.0,
+        PillarBracingBeamQuantity: parseInt(obra["QTD VIGAS CONTRAVENTAMENTO"] || obra.QTD_VIGAS_CONTRAVENTAMENTO) || 0,
+        PillarBracingBeamHeight: parseFloat(obra["ALTURA VIGA CONTRAVENTAMENTO"] || obra.ALTURA_VIGA_CONTRAVENTAMENTO) || 0.0,
+        PillarBracingBeamLength: parseFloat(obra["COMPRIMENTO VIGA CONTRAVENTAMENTO"] || obra.COMPRIMENTO_VIGA_CONTRAVENTAMENTO) || 0.0,
+        FoundationConnectionBeamHeight: parseFloat(obra["ALTURA VIGA LIGACAO FUNDACOES"] || obra.ALTURA_VIGA_LIGACAO_FUNDACOES) || 0.0,
+        FoundationConnectionBeamLength: parseFloat(obra["COMPRIMENTO VIGA LIGACAO FUNDACOES"] || obra.COMPRIMENTO_VIGA_LIGACAO_FUNDACOES) || 0.0,
+        PierHeights: pierHeights,
+        Height: pierHeights.length > 0 ? pierHeights.reduce((a, b) => a + b, 0) / pierHeights.length : 0.0
+    };
+}
+
+
+
+// Versão: 1.0
+
+/**
+ * Gera BridgeComplementaryData a partir de uma obra flat
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} BridgeComplementaryData
+ */
+// Versão: 2.0
+
+function generateBridgeComplementaryDataFromObra(obra) {
+    return {
+        LeftBarrierType: createZSElementTypeFromValue(obra["TIPO BARREIRA ESQUERDA"] || obra.TIPO_BARREIRA_ESQUERDA),
+        LeftBarrierWidth: parseFloat(obra["LARGURA BARREIRA ESQUERDA"] || obra.LARGURA_BARREIRA_ESQUERDA) || 0.0,
+        RightBarrierType: createZSElementTypeFromValue(obra["TIPO BARREIRA DIREITA"] || obra.TIPO_BARREIRA_DIREITA),
+        RightBarrierWidth: parseFloat(obra["LARGURA BARREIRA DIREITA"] || obra.LARGURA_BARREIRA_DIREITA) || 0.0,
+        LeftSidewalkType: createZSElementTypeFromValue(obra["TIPO CALCADA ESQUERDA"] || obra.TIPO_CALCADA_ESQUERDA),
+        LeftSidewalkWidth: parseFloat(obra["LARGURA CALCADA ESQUERDA"] || obra.LARGURA_CALCADA_ESQUERDA) || 0.0,
+        RightSidewalkType: createZSElementTypeFromValue(obra["TIPO CALCADA DIREITA"] || obra.TIPO_CALCADA_DIREITA),
+        RightSidewalkWidth: parseFloat(obra["LARGURA CALCADA DIREITA"] || obra.LARGURA_CALCADA_DIREITA) || 0.0,
+        LeftGuardRailType: createZSElementTypeFromValue(obra["GUARDA RODAS ESQUERDO"] || obra.GUARDA_RODAS_ESQUERDO),
+        LeftGuardRailWidth: parseFloat(obra["LARGURA GUARDA RODAS ESQUERDO"] || obra.LARGURA_GUARDA_RODAS_ESQUERDO) || 0.0,
+        RightGuardRail: createZSElementTypeFromValue(obra["GUARDA RODAS DIREITO"] || obra.GUARDA_RODAS_DIREITO),
+        RightGuardRailWidth: parseFloat(obra["LARGURA GUARDA RODAS DIREITO"] || obra.LARGURA_GUARDA_RODAS_DIREITO) || 0.0,
+        LeftGuardBodyType: createZSElementTypeFromValue(obra["GUARDA CORPO ESQUERDO"] || obra.GUARDA_CORPO_ESQUERDO),
+        LeftGuardBodyWidth: parseFloat(obra["LARGURA GUARDA CORPO ESQUERDO"] || obra.LARGURA_GUARDA_CORPO_ESQUERDO) || 0.0,
+        RightGuardBodyType: createZSElementTypeFromValue(obra["GUARDA CORPO DIREITO"] || obra.GUARDA_CORPO_DIREITO),
+        RightGuardBodyWidth: parseFloat(obra["LARGURA GUARDA CORPO DIREITO"] || obra.LARGURA_GUARDA_CORPO_DIREITO) || 0.0,
+        PavementType: createZSElementTypeFromValue(obra["TIPO PAVIMENTO"] || obra.TIPO_PAVIMENTO),
+        ExpansionJointType: createZSElementTypeFromValue(obra["TIPO JUNTA DILATACAO"] || obra.TIPO_JUNTA_DILATACAO),
+        CradleType: createZSElementTypeFromValue(obra["TIPO BERCO"] || obra.TIPO_BERCO),
+        NumberOfBuzinotes: parseInt(obra["QTD BUZINOTES"] || obra.QTD_BUZINOTES) || 0
+    };
+}
+
+
+/**
+ * Cria um objeto ZSElementType a partir de um valor do IndexedDB
+ * @param {string} fieldValue - Valor do campo (geralmente string)
+ * @returns {object|null} Objeto ZSElementType ou null se vazio
+ */
+function createZSElementTypeFromValue(fieldValue) {
+    if (!fieldValue || 
+        fieldValue === "" || 
+        fieldValue === "Selecione" || 
+        fieldValue === "Nenhum" ||
+        fieldValue === "NULL" ||
+        fieldValue === "null") {
+        return null;
+    }
+
+    return {
+        Name: fieldValue.toString(),
+        Id: 0,
+        Category: 0,
+        TypeMark: "",
+        FamilyName: "",
+        IsActive: true,
+        TypeComments: "",
+        IsSystemFamily: false,
+        CanBeTransferred: true
+    };
+}
+
+
+
+/**
+ * Exporta apenas as obras do IndexedDB como JSON
+ * Esta é a função correta para exportar obras
+ */
+async function exportWorksToJSON() {
+    try {
+        console.log("Iniciando exportação de obras do IndexedDB...");
+        showLoadingMessage("Buscando obras no banco de dados...");
+
+        // Abrir conexão com o banco
+        const db = await openDatabase();
+        
+        if (!db) {
+            hideLoadingMessage();
+            alert("❌ Erro ao acessar o banco de dados!");
+            return;
+        }
+
+        // Listar todos os object stores disponíveis
+        const storeNames = Array.from(db.objectStoreNames);
+        console.log("Object stores disponíveis:", storeNames);
+
+        if (storeNames.length === 0) {
+            hideLoadingMessage();
+            alert("⚠️ O banco de dados não possui tabelas (object stores).\n\nVerifique se as obras foram salvas corretamente.");
+            db.close();
+            return;
+        }
+
+        // Buscar dados de todos os object stores
+        const allWorks = [];
+        
+        for (const storeName of storeNames) {
+            try {
+                const transaction = db.transaction([storeName], "readonly");
+                const objectStore = transaction.objectStore(storeName);
+                const request = objectStore.getAll();
+
+                const data = await new Promise((resolve, reject) => {
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+
+                if (data && data.length > 0) {
+                    console.log(`✓ ${data.length} registro(s) encontrado(s) em '${storeName}'`);
+                    allWorks.push(...data);
+                }
+            } catch (err) {
+                console.warn(`Erro ao acessar '${storeName}':`, err);
+            }
+        }
+
+        db.close();
+
+        if (allWorks.length === 0) {
+            hideLoadingMessage();
+            alert("⚠️ Nenhuma obra encontrada no banco de dados!\n\nCadastre obras antes de exportar.");
+            return;
+        }
+
+        console.log(`Total de obras encontradas: ${allWorks.length}`);
+
+        // Converter obras para formato BridgeData
+        showLoadingMessage(`Convertendo ${allWorks.length} obra(s)...`);
+        
+        const bridgeDataArray = [];
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const work of allWorks) {
+            try {
+                const bridgeData = convertWorkToBridgeData(work);
+                bridgeDataArray.push(bridgeData);
+                successCount++;
+            } catch (error) {
+                console.error("Erro ao converter obra:", error, work);
+                errorCount++;
+            }
+        }
+
+        // Criar exportação final
+        const exportData = {
+            ExportDate: new Date().toISOString(),
+            ExportVersion: "1.2",
+            ExportSource: "IndexedDB",
+            TotalWorks: bridgeDataArray.length,
+            SuccessfulConversions: successCount,
+            FailedConversions: errorCount,
+            Works: bridgeDataArray
+        };
+
+        const jsonString = JSON.stringify(exportData, null, 2);
+
+        hideLoadingMessage();
+
+        // Mostrar modal com preview
+        showExportPreviewModal(exportData, jsonString);
+
+    } catch (error) {
+        console.error("Erro ao exportar obras:", error);
+        hideLoadingMessage();
+        alert("❌ Erro ao exportar obras:\n\n" + error.message);
+    }
+}
+
+/**
+ * Abre conexão com o banco de dados IndexedDB
+ * @returns {Promise<IDBDatabase>}
+ */
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open("PontesDB", 1);
+
+        request.onerror = () => {
+            console.error("Erro ao abrir banco:", request.error);
+            reject(request.error);
+        };
+
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+
+        request.onupgradeneeded = (event) => {
+            console.log("Banco necessita upgrade");
+            const db = event.target.result;
+            
+            // Criar object store se não existir
+            if (!db.objectStoreNames.contains("pontes")) {
+                db.createObjectStore("pontes", { keyPath: "CODIGO" });
+                console.log("Object store 'pontes' criado");
+            }
+        };
+    });
+}
+
+/**
+ * Mostra modal com preview da exportação
+ */
+function showExportPreviewModal(exportData, jsonString) {
+    const modal = document.createElement("div");
+    modal.className = "modal";
+    modal.style.display = "block";
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 900px; max-height: 85vh;">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2>📦 Exportação de Obras - JSON</h2>
+            <div style="margin: 20px 0; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                <p><strong>✅ Total de obras:</strong> ${exportData.TotalWorks}</p>
+                <p><strong>✓ Convertidas com sucesso:</strong> ${exportData.SuccessfulConversions}</p>
+                ${exportData.FailedConversions > 0 ? `<p style="color: #e74c3c;"><strong>⚠️ Falhas:</strong> ${exportData.FailedConversions}</p>` : ''}
+                <p><strong>📅 Data:</strong> ${new Date(exportData.ExportDate).toLocaleString('pt-BR')}</p>
+                <p><strong>📏 Tamanho:</strong> ${(new Blob([jsonString]).size / 1024).toFixed(2)} KB</p>
+            </div>
+            <h3>Preview do JSON (primeiras 50 linhas):</h3>
+            <pre id="json-preview" style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow: auto; max-height: 40vh; font-size: 12px;">${jsonString.split('\n').slice(0, 50).join('\n')}${jsonString.split('\n').length > 50 ? '\n\n... (mais ' + (jsonString.split('\n').length - 50) + ' linhas)' : ''}</pre>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="window.downloadCurrentExportJSON()">⬇️ Download JSON</button>
+                <button onclick="window.copyCurrentExportJSON()">📋 Copiar JSON</button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #95a5a6;">❌ Fechar</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Armazenar para download/cópia
+    window.currentExportJSON = jsonString;
+    window.currentExportFilename = `Obras_Export_${getTimestamp()}.json`;
+}
+
+/**
+ * Download do JSON
+ */
+window.downloadCurrentExportJSON = function() {
+    if (window.currentExportJSON && window.currentExportFilename) {
+        const blob = new Blob([window.currentExportJSON], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = window.currentExportFilename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        alert("✅ Download iniciado!");
+    }
+};
+
+/**
+ * Copia JSON para clipboard
+ */
+window.copyCurrentExportJSON = function() {
+    if (!window.currentExportJSON) {
+        alert("❌ Nenhum JSON disponível!");
+        return;
+    }
+
+    navigator.clipboard.writeText(window.currentExportJSON).then(() => {
+        alert("✅ JSON copiado para a área de transferência!");
+    }).catch(err => {
+        console.error("Erro ao copiar:", err);
+        alert("❌ Erro ao copiar JSON");
+    });
+};
+
+/**
+ * Função de diagnóstico do banco de dados
+ */
+async function diagnosticarBancoDados() {
+    console.log("=== DIAGNÓSTICO DO BANCO DE DADOS ===");
+    
+    try {
+        const db = await openDatabase();
+        
+        console.log("✓ Banco aberto com sucesso");
+        console.log("Nome:", db.name);
+        console.log("Versão:", db.version);
+        
+        const storeNames = Array.from(db.objectStoreNames);
+        console.log("Object Stores:", storeNames);
+        
+        if (storeNames.length === 0) {
+            console.warn("⚠️ Nenhum object store encontrado!");
+            db.close();
+            return { success: false, message: "Banco vazio" };
+        }
+
+        const results = {};
+        
+        for (const storeName of storeNames) {
+            try {
+                const transaction = db.transaction([storeName], "readonly");
+                const objectStore = transaction.objectStore(storeName);
+                const countRequest = objectStore.count();
+                
+                const count = await new Promise((resolve, reject) => {
+                    countRequest.onsuccess = () => resolve(countRequest.result);
+                    countRequest.onerror = () => reject(countRequest.error);
+                });
+                
+                results[storeName] = count;
+                console.log(`  - ${storeName}: ${count} registro(s)`);
+            } catch (err) {
+                console.error(`Erro ao contar '${storeName}':`, err);
+                results[storeName] = "ERRO";
+            }
+        }
+        
+        db.close();
+        
+        const totalRecords = Object.values(results).reduce((sum, val) => 
+            sum + (typeof val === 'number' ? val : 0), 0
+        );
+        
+        console.log(`\nTotal de registros: ${totalRecords}`);
+        
+        return { success: true, stores: results, total: totalRecords };
+        
+    } catch (error) {
+        console.error("❌ Erro no diagnóstico:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Helper para timestamp
+ */
+function getTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+}
+
+// Expor funções globalmente
+window.exportToJSON = exportToJSON;
+window.exportWorksToJSON = exportWorksToJSON;
+window.diagnosticarBancoDados = diagnosticarBancoDados;
+
+console.log("✅ Funções de exportação atualizadas!");
+console.log("💡 Use: diagnosticarBancoDados() para verificar o banco");
+console.log("💡 Use: exportWorksToJSON() para exportar obras");
+
+
+
+
+
+
+// Versão: 1.0
+// Função para gerar JSON do BridgeData compatível com a estrutura C#
+
+/**
+ * Função principal que gera o objeto BridgeData completo
+ * @returns {object} Objeto BridgeData no formato esperado pelo backend C#
+ */
+function generateBridgeDataJSON() {
+    try {
+        const bridgeData = {
+            BridgeProjectData: generateBridgeProjectData(),
+            GeneralConfigData: generateGeneralConfigData(),
+            BridgeTransitionData: generateBridgeTransitionData(),
+            SuperstructureData: generateSuperstructureData(),
+            BridgePierData: generateBridgePierData(),
+            BridgeComplementaryData: generateBridgeComplementaryData()
+        };
+
+        return bridgeData;
+    } catch (error) {
+        console.error("Erro ao gerar BridgeData JSON:", error);
+        throw error;
+    }
+}
+
+/**
+ * Gera o objeto BridgeProjectData
+ * Herda de BasicData (Name, Id)
+ */
+function generateBridgeProjectData() {
+    return {
+        Name: getFieldValue("nome") || "",
+        Id: 0,
+        Code: getFieldValue("codigo") || "",
+        State: getFieldValue("uf") || "",
+        Highway: getFieldValue("rodovia") || "",
+        Km: parseFloat(getFieldValue("km")) || 0.0,
+        Date: getFieldValue("data") || "",
+        Engineer: getFieldValue("engenheiro") || "",
+        Technician: getFieldValue("tecnico") || ""
+    };
+}
+
+/**
+ * Gera o objeto GeneralConfigData
+ */
+function generateGeneralConfigData() {
+    const comprimento = parseFloat(getFieldValue("comprimento")) || 0.0;
+    const qtdTramos = parseInt(getFieldValue("qtd-tramos")) || 1;
+    
+    // Coletar comprimentos individuais dos tramos
+    const spanLengths = [];
+    const tramosFields = document.querySelectorAll(".tramo-field");
+    tramosFields.forEach(field => {
+        const valor = parseFloat(field.value) || 0.0;
+        spanLengths.push(valor);
+    });
+
+    return {
+        Length: comprimento,
+        Width: parseFloat(getFieldValue("largura")) || 0.0,
+        Height: parseFloat(getFieldValue("altura")) || 0.0,
+        ExpansionJointLength: 0.020,
+        Spans: {
+            ExpectedTotalLength: comprimento,
+            SpanLengths: spanLengths
+        },
+        BridgeOption: createZSElementType(getFieldValue("bridge-option")),
+        BridgeLengthGaps: qtdTramos,
+        SpanLengths: spanLengths
+    };
+}
+
+/**
+ * Gera o objeto BridgeTransitionData
+ */
+function generateBridgeTransitionData() {
+    return {
+        CurtainHeight: parseFloat(getFieldValue("cortina-altura")) || 1.50,
+        BearingThickness: 0.05,
+        IsSlabAbutment: getFieldValue("tipo-encontro") ? true : false,
+        SlabAbutmentLength: parseFloat(getFieldValue("comprimento-encontro-laje")) || 0.0,
+        SlabAbutmentLeftOffset: parseFloat(getFieldValue("deslocamento-esquerdo-encontro-laje")) || 0.0,
+        SlabAbutmentRightOffset: parseFloat(getFieldValue("deslocamento-direito-encontro-laje")) || 0.0,
+        ParallelWing: createZSElementType(getFieldValue("tipo-ala-paralela")),
+        PerpendicularWing: createZSElementType(getFieldValue("tipo-ala-perpendicular")),
+        WingLength: parseFloat(getFieldValue("comprimento-ala")) || 0.0,
+        WingThickness: parseFloat(getFieldValue("espessura-ala")) || 0.0,
+        AbutmentType: createZSElementType(getFieldValue("tipo-encontro")),
+        TransitionSlabType: createZSElementType(getFieldValue("laje-transicao")),
+        ReinforcedEarthWallType: null
+    };
+}
+
+/**
+ * Gera o objeto SuperstructureData
+ */
+function generateSuperstructureData() {
+    return {
+        LongarineHeight: parseFloat(getFieldValue("altura-longarina")) || 0.0,
+        LongarineThickness: parseFloat(getFieldValue("espessura-longarina")) || 0.0,
+        NumberOfLongarines: parseInt(getFieldValue("qtd-longarinas")) || 2,
+        LongarineType: null,
+        TransversineHeight: parseFloat(getFieldValue("altura-longarina")) || 0.0,
+        TransversineThickness: parseFloat(getFieldValue("espessura-transversina")) || 0.0,
+        NumberOfTransversines: parseInt(getFieldValue("qtd-transversinas")) || 3,
+        TransversineType: null,
+        SlabType: null,
+        SlabThickness: parseFloat(getFieldValue("espessura-laje")) || 0.0,
+        SlabStiffeningLongarineType: null,
+        CornerAngleType: null,
+        LeftDisplacement: parseFloat(getFieldValue("deslocamento-esquerdo")) || 0.0,
+        RightDisplacement: parseFloat(getFieldValue("deslocamento-direito")) || 0.0
+    };
+}
+
+/**
+ * Gera o objeto BridgePierData
+ */
+function generateBridgePierData() {
+    const qtdTramos = parseInt(getFieldValue("qtd-tramos")) || 1;
+    const qtdPilares = Math.max(0, qtdTramos - 1);
+    
+    // Coletar alturas dos apoios
+    const pierHeights = [];
+    const alturasFields = document.querySelectorAll(".apoio-altura-field");
+    alturasFields.forEach(field => {
+        const altura = parseFloat(field.value) || 0.0;
+        pierHeights.push(altura);
+    });
+
+    // Coletar larguras dos pilares
+    const pillarWidths = [];
+    const largurasFields = document.querySelectorAll(".apoio-larg-field");
+    largurasFields.forEach(field => {
+        const largura = parseFloat(field.value) || 0.0;
+        pillarWidths.push(largura);
+    });
+
+    // Coletar comprimentos dos pilares
+    const pillarLengths = [];
+    const comprimentosFields = document.querySelectorAll(".apoio-comp-field");
+    comprimentosFields.forEach(field => {
+        const comprimento = parseFloat(field.value) || 0.0;
+        pillarLengths.push(comprimento);
+    });
+
+    return {
+        PierConfigurations: {
+            PierHeights: pierHeights
+        },
+        NumberOfPillarsPerPier: parseInt(getFieldValue("qtd-pilares")) || 1,
+        PillarType: null,
+        CrossbeamType: createZSElementType(getFieldValue("tipo-travessa")),
+        FoundationType: createZSElementType(getFieldValue("tipo-bloco-sapata")),
+        BearingType: createZSElementType(getFieldValue("tipo-aparelho-apoio")),
+        PillarBracingBeamType: createZSElementType(getFieldValue("tipo-contraventamento-pilar")),
+        ConnectionBeamType: null,
+        PillarJacketType: createZSElementType(getFieldValue("tipo-encamisamento")),
+        FoundationConnectionBeamType: createZSElementType(getFieldValue("tipo-ligacao-fundacoes")),
+        PillarWidth: pillarWidths.length > 0 ? pillarWidths[0] : 0.0,
+        PillarLength: pillarLengths.length > 0 ? pillarLengths[0] : 0.0,
+        IsOffCenterPillar: getFieldValue("pilar-descentralizado") === "Sim",
+        CrossbeamLength: 0.0,
+        CrossbeamHeight: parseFloat(getFieldValue("altura-travessa")) || 0.0,
+        FoundationHeight: parseFloat(getFieldValue("altura-bloco-sapata")) || 0.0,
+        FoundationLength: 0.0,
+        FoundationWidth: parseFloat(getFieldValue("largura-bloco-sapata")) || 0.0,
+        PillarBracingBeamQuantity: 0,
+        PillarBracingBeamHeight: 0.0,
+        PillarBracingBeamLength: 0.0,
+        FoundationConnectionBeamHeight: 0.0,
+        FoundationConnectionBeamLength: 0.0,
+        PierHeights: pierHeights,
+        Height: pierHeights.length > 0 ? pierHeights.reduce((a, b) => a + b, 0) / pierHeights.length : 0.0
+    };
+}
+
+/**
+ * Gera o objeto BridgeComplementaryData
+ */
+function generateBridgeComplementaryData() {
+    return {
+        LeftBarrierType: createZSElementType(getFieldValue("tipo-barreira-esquerda")),
+        LeftBarrierWidth: parseFloat(getFieldValue("largura-barreira-esquerda")) || 0.0,
+        RightBarrierType: createZSElementType(getFieldValue("tipo-barreira-direita")),
+        RightBarrierWidth: parseFloat(getFieldValue("largura-barreira-direita")) || 0.0,
+        LeftSidewalk: createZSElementType(getFieldValue("tipo-calcada-esquerda")),
+        LeftSidewalkWidth: parseFloat(getFieldValue("largura-calcada-esquerda")) || 0.0,
+        RightSidewalkType: createZSElementType(getFieldValue("tipo-calcada-direita")),
+        RightSidewalkWidth: parseFloat(getFieldValue("largura-calcada-direita")) || 0.0,
+        LeftGuardRailType: createZSElementType(getFieldValue("guarda-rodas-esquerdo")),
+        LeftGuardRailWidth: parseFloat(getFieldValue("largura-guarda-rodas-esquerdo")) || 0.0,
+        RightGuardRail: createZSElementType(getFieldValue("guarda-rodas-direito")),
+        RightGuardRailWidth: parseFloat(getFieldValue("largura-guarda-rodas-direito")) || 0.0,
+        LeftGuardBodyType: null,
+        LeftGuardBodyWidth: 0.0,
+        RightGuardBodyType: null,
+        RightGuardBodyWidth: 0.0,
+        PavementType: createZSElementType(getFieldValue("tipo-pavimento")),
+        ExpansionJointType: null,
+        CradleType: null,
+        NumberOfBuzinotes: parseInt(getFieldValue("qtd-buzinotes")) || 0
+    };
+}
+
+/**
+ * Cria um objeto ZSElementType a partir de um valor de campo
+ * @param {string} fieldValue - Valor do campo (geralmente de um select)
+ * @returns {object|null} Objeto ZSElementType ou null se vazio
+ */
+function createZSElementType(fieldValue) {
+    if (!fieldValue || fieldValue === "" || fieldValue === "Selecione" || fieldValue === "Nenhum") {
+        return null;
+    }
+
+    return {
+        Name: fieldValue,
+        Id: 0,
+        Category: 0,
+        TypeMark: "",
+        FamilyName: "",
+        IsActive: true,
+        TypeComments: "",
+        IsSystemFamily: false,
+        CanBeTransferred: true
+    };
+}
+
+/**
+ * Função auxiliar para obter valor de um campo do formulário
+ * @param {string} fieldId - ID do campo HTML
+ * @returns {string} Valor do campo ou string vazia
+ */
+function getFieldValue(fieldId) {
+    const element = document.getElementById(fieldId);
+    if (!element) {
+        return "";
+    }
+
+    if (element.type === "checkbox") {
+        return element.checked ? "TRUE" : "FALSE";
+    }
+
+    return element.value || "";
+}
+
+/**
+ * Função para exibir o JSON gerado em um modal ou área de texto
+ */
+function showBridgeDataJSON() {
+    try {
+        const bridgeData = generateBridgeDataJSON();
+        const jsonString = JSON.stringify(bridgeData, null, 2);
+
+        // Criar modal para exibir o JSON
+        const modal = document.createElement("div");
+        modal.className = "modal";
+        modal.style.display = "block";
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow: auto;">
+                <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                <h2>JSON BridgeData Gerado</h2>
+                <pre id="json-output" style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow: auto; max-height: 60vh;">${jsonString}</pre>
+                <div style="margin-top: 15px;">
+                    <button onclick="copyBridgeDataJSON()">Copiar JSON</button>
+                    <button onclick="downloadBridgeDataJSON()">Download JSON</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Adicionar o JSON ao elemento global para facilitar cópia
+        window.currentBridgeDataJSON = jsonString;
+
+    } catch (error) {
+        alert("Erro ao gerar JSON: " + error.message);
+        console.error(error);
+    }
+}
+
+/**
+ * Função para copiar o JSON para a área de transferência
+ */
+function copyBridgeDataJSON() {
+    const jsonString = window.currentBridgeDataJSON;
+    
+    if (!jsonString) {
+        alert("Nenhum JSON gerado ainda!");
+        return;
+    }
+
+    navigator.clipboard.writeText(jsonString).then(() => {
+        alert("JSON copiado para a área de transferência!");
+    }).catch(err => {
+        console.error("Erro ao copiar:", err);
+        
+        // Fallback para navegadores antigos
+        const textarea = document.createElement("textarea");
+        textarea.value = jsonString;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        alert("JSON copiado para a área de transferência!");
+    });
+}
+
+/**
+ * Função para fazer download do JSON como arquivo
+ */
+function downloadBridgeDataJSON() {
+    const jsonString = window.currentBridgeDataJSON;
+    
+    if (!jsonString) {
+        alert("Nenhum JSON gerado ainda!");
+        return;
+    }
+
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `BridgeData_${new Date().getTime()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Função para validar o JSON antes de gerar
+ * @returns {object} Objeto com resultado da validação
+ */
+function validateBridgeData() {
+    const errors = [];
+    const warnings = [];
+
+    // Validações obrigatórias
+    if (!getFieldValue("codigo")) {
+        errors.push("Código da obra é obrigatório");
+    }
+
+    if (!getFieldValue("lote")) {
+        errors.push("Lote é obrigatório");
+    }
+
+    const comprimento = parseFloat(getFieldValue("comprimento"));
+    if (!comprimento || comprimento <= 0) {
+        errors.push("Comprimento deve ser maior que zero");
+    }
+
+    const largura = parseFloat(getFieldValue("largura"));
+    if (!largura || largura <= 0) {
+        errors.push("Largura deve ser maior que zero");
+    }
+
+    const qtdTramos = parseInt(getFieldValue("qtd-tramos"));
+    if (!qtdTramos || qtdTramos <= 0) {
+        errors.push("Quantidade de tramos deve ser maior que zero");
+    }
+
+    // Validar soma dos tramos
+    const tramosFields = document.querySelectorAll(".tramo-field");
+    let somaTramos = 0;
+    tramosFields.forEach(field => {
+        somaTramos += parseFloat(field.value) || 0;
+    });
+
+    if (Math.abs(somaTramos - comprimento) > 0.01) {
+        warnings.push(`Soma dos tramos (${somaTramos.toFixed(2)}m) difere do comprimento total (${comprimento.toFixed(2)}m)`);
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors,
+        warnings: warnings
+    };
+}
+
+/**
+ * Função para gerar JSON com validação prévia
+ */
+function generateAndShowBridgeDataJSON() {
+    const validation = validateBridgeData();
+
+    if (!validation.isValid) {
+        alert("Erros encontrados:\n\n" + validation.errors.join("\n"));
+        return;
+    }
+
+    if (validation.warnings.length > 0) {
+        const continuar = confirm("Avisos encontrados:\n\n" + validation.warnings.join("\n") + "\n\nDeseja continuar?");
+        if (!continuar) {
+            return;
+        }
+    }
+
+    showBridgeDataJSON();
+}
+
+// Expor funções globalmente
+window.generateBridgeDataJSON = generateBridgeDataJSON;
+window.showBridgeDataJSON = showBridgeDataJSON;
+window.copyBridgeDataJSON = copyBridgeDataJSON;
+window.downloadBridgeDataJSON = downloadBridgeDataJSON;
+window.generateAndShowBridgeDataJSON = generateAndShowBridgeDataJSON;
+
 
 
 
