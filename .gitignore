@@ -1,0 +1,18 @@
+# Arquivos de ambiente com tokens sensíveis
+.env
+.env.*
+*.env
+
+# Ambiente virtual Python
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
