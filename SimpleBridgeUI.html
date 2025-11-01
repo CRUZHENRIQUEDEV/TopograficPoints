@@ -9,6 +9,21 @@
 
 
 
+      css.work-item .modelado-check {
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 30px;
+  margin-right: 8px;
+}
+
+.work-item .no-check {
+  display: inline-block;
+  width: 16px;
+  margin-right: 8px;
+}
+
+
+
       .export-btn {
   background: linear-gradient(45deg, #9b59b6, #8e44ad);
 }
@@ -6220,74 +6235,80 @@ function loadWorkToForm(work) {
 
 
 
+// Versão: 2.0
+// Função atualizada para mostrar check visual em obras modeladas
 
-      // Carregar lista de obras do banco de dados
-      function loadWorksList() {
-        try {
-          if (!db) {
-            console.warn("Banco de dados não está disponível.");
-            return;
+function loadWorksList() {
+  try {
+    if (!db) {
+      console.warn("Banco de dados não está disponível.");
+      return;
+    }
+
+    const worksList = document.getElementById("works-list");
+    worksList.innerHTML = '<div class="work-item">Carregando...</div>';
+
+    const transaction = db.transaction(["obras"], "readonly");
+    const objectStore = transaction.objectStore("obras");
+    const request = objectStore.getAll();
+
+    request.onsuccess = function (event) {
+      const works = event.target.result;
+
+      if (works.length === 0) {
+        worksList.innerHTML =
+          '<div class="work-item">Nenhuma obra cadastrada</div>';
+      } else {
+        worksList.innerHTML = "";
+
+        works.forEach((work) => {
+          const workItem = document.createElement("div");
+          workItem.className = "work-item";
+          if (work.CODIGO === currentWorkCode) {
+            workItem.classList.add("selected");
           }
+          workItem.setAttribute("data-code", work.CODIGO);
+          workItem.setAttribute("data-lote", work.LOTE || "");
 
-          const worksList = document.getElementById("works-list");
-          worksList.innerHTML = '<div class="work-item">Carregando...</div>';
+          // Verificar se a obra foi modelada
+          const isModelado = work.MODELADO === "TRUE" || work.MODELADO === true;
+          const checkIcon = isModelado 
+            ? '<span style="color: #27ae60; font-weight: bold; margin-right: 10px;">✅</span>' 
+            : '<span style="margin-right: 16px;"></span>'; // Espaço vazio para alinhar
 
-          const transaction = db.transaction(["obras"], "readonly");
-          const objectStore = transaction.objectStore("obras");
-          const request = objectStore.getAll();
-
-          request.onsuccess = function (event) {
-            const works = event.target.result;
-
-            if (works.length === 0) {
-              worksList.innerHTML =
-                '<div class="work-item">Nenhuma obra cadastrada</div>';
-            } else {
-              worksList.innerHTML = "";
-
-              works.forEach((work) => {
-                const workItem = document.createElement("div");
-                workItem.className = "work-item";
-                if (work.CODIGO === currentWorkCode) {
-                  workItem.classList.add("selected");
-                }
-                workItem.setAttribute("data-code", work.CODIGO);
-                workItem.setAttribute("data-lote", work.LOTE || "");
-
-                workItem.innerHTML = `
-            <span>${work.CODIGO} - Lote: ${work.LOTE || "N/A"} - ${
-                  work.NOME || "Sem nome"
-                }</span>
+          workItem.innerHTML = `
+            <span>${checkIcon}${work.CODIGO} - Lote: ${work.LOTE || "N/A"} - ${
+            work.NOME || "Sem nome"
+          }</span>
             <button type="button" class="delete-btn" onclick="deleteWork('${
               work.CODIGO
             }', event)">Excluir</button>
           `;
 
-                workItem.addEventListener("click", function (e) {
-                  if (!e.target.classList.contains("delete-btn")) {
-                    loadWork(work.CODIGO);
-                  }
-                });
-
-                worksList.appendChild(workItem);
-              });
+          workItem.addEventListener("click", function (e) {
+            if (!e.target.classList.contains("delete-btn")) {
+              loadWork(work.CODIGO);
             }
-          };
+          });
 
-          request.onerror = function (event) {
-            console.error(
-              "Erro ao carregar a lista de obras:",
-              event.target.error
-            );
-            worksList.innerHTML =
-              '<div class="work-item">Erro ao carregar obras</div>';
-          };
-        } catch (error) {
-          console.error("Erro ao carregar lista de obras:", error);
-          alert("Erro ao carregar lista de obras: " + error.message);
-        }
+          worksList.appendChild(workItem);
+        });
       }
+    };
 
+    request.onerror = function (event) {
+      console.error(
+        "Erro ao carregar a lista de obras:",
+        event.target.error
+      );
+      worksList.innerHTML =
+        '<div class="work-item">Erro ao carregar obras</div>';
+    };
+  } catch (error) {
+    console.error("Erro ao carregar lista de obras:", error);
+    alert("Erro ao carregar lista de obras: " + error.message);
+  }
+}
       // Filtrar obras por código e/ou lote
 
       function filterWorks() {
