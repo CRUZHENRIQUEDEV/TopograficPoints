@@ -1571,148 +1571,182 @@ P-04,LE FINAL DE PONTE,187495.294,0.023,8954445.442,0.023,102.310,0.049,RTX,0.9,
         else return "#f44336"; // Vermelho - muito alto
       }
 
-      function findPoints(data) {
-        debugLog("=== PROCURANDO PONTOS ===");
-        const points = {};
-        
-        data.forEach((row, index) => {
-          debugLog(`Processando linha ${index}: ${JSON.stringify(row)}`);
-          
-          const name = row.Name || row.Ponto || row.Code || row.CODE || row.Codigo || "";
-          const code = row.Code || row.CODE || row.Codigo || row.Name || row.Ponto || "";
+    
+      
 
-          debugLog(`Nome: ${name}, Código: ${code}`);
+      // Versão: 2.1 - Suporte expandido para variações de nomes de colunas
+function findPoints(data) {
+  debugLog("=== PROCURANDO PONTOS ===");
+  const points = {};
+  
+  data.forEach((row, index) => {
+    debugLog(`Processando linha ${index}: ${JSON.stringify(row)}`);
+    
+    // CORREÇÃO: Suporte expandido para variações de nome/código
+    const name = row.Name || row.name || row.Ponto || row.ponto || 
+                 row.Code || row.code || row.CODE || row.Codigo || row.codigo || "";
+    const code = row.Code || row.code || row.CODE || row.Codigo || row.codigo || 
+                 row.Name || row.name || row.Ponto || row.ponto || "";
 
-          // Verificar se é um ponto de estrutura (OAE ou PONTE)
-          const isStructurePoint = 
-            code.includes("LD_INICIO_OAE") ||
-            code.includes("LE_INICIO_OAE") ||
-            code.includes("LD_FINAL_OAE") ||
-            code.includes("LE_FINAL_OAE") ||
-            name.includes("LD_INICIO_OAE") ||
-            name.includes("LE_INICIO_OAE") ||
-            name.includes("LD_FINAL_OAE") ||
-            name.includes("LE_FINAL_OAE") ||
-            // Novos formatos com PONTE
-            code.includes("LD INICIO PONTE") ||
-            code.includes("LE INICIO PONTE") ||
-            code.includes("LD FINAL PONTE") ||
-            code.includes("LE FINAL PONTE") ||
-            code.includes("LD FINAL DE PONTE") ||
-            code.includes("LE FINAL DE PONTE") ||
-            name.includes("LD INICIO PONTE") ||
-            name.includes("LE INICIO PONTE") ||
-            name.includes("LD FINAL PONTE") ||
-            name.includes("LE FINAL PONTE") ||
-            name.includes("LD FINAL DE PONTE") ||
-            name.includes("LE FINAL DE PONTE");
+    debugLog(`Nome: ${name}, Código: ${code}`);
 
-          if (isStructurePoint) {
-            debugLog(`Ponto de estrutura encontrado: ${name || code}`);
-            
-            let xCoord, yCoord, elevation, lat, lng;
+    // Verificar se é um ponto de estrutura (OAE ou PONTE)
+    const isStructurePoint = 
+      code.includes("LD_INICIO_OAE") ||
+      code.includes("LE_INICIO_OAE") ||
+      code.includes("LD_FINAL_OAE") ||
+      code.includes("LE_FINAL_OAE") ||
+      name.includes("LD_INICIO_OAE") ||
+      name.includes("LE_INICIO_OAE") ||
+      name.includes("LD_FINAL_OAE") ||
+      name.includes("LE_FINAL_OAE") ||
+      // Novos formatos com PONTE
+      code.includes("LD INICIO PONTE") ||
+      code.includes("LE INICIO PONTE") ||
+      code.includes("LD FINAL PONTE") ||
+      code.includes("LE FINAL PONTE") ||
+      code.includes("LD FINAL DE PONTE") ||
+      code.includes("LE FINAL DE PONTE") ||
+      name.includes("LD INICIO PONTE") ||
+      name.includes("LE INICIO PONTE") ||
+      name.includes("LD FINAL PONTE") ||
+      name.includes("LE FINAL PONTE") ||
+      name.includes("LD FINAL DE PONTE") ||
+      name.includes("LE FINAL DE PONTE");
 
-            // CORREÇÃO: Detectar coordenadas geográficas primeiro - VERSÃO EXPANDIDA
-            if (row.LAT && row.LONG) {
-              lat = parseFloat(row.LAT);
-              lng = parseFloat(row.LONG);
-              xCoord = lng;
-              yCoord = lat;
-            } else if (row.Lat && row.Long) {
-              lat = parseFloat(row.Lat);
-              lng = parseFloat(row.Long);
-              xCoord = lng;
-              yCoord = lat;
-            } else if (row.LATITUDE && row.LONGITUDE) {
-              lat = parseFloat(row.LATITUDE);
-              lng = parseFloat(row.LONGITUDE);
-              xCoord = lng;
-              yCoord = lat;
-            } else if (row.Norte && row.Leste) {
-              xCoord = parseFloat(row.Leste);
-              yCoord = parseFloat(row.Norte);
-            } else if (row.Northing && row.Easting) {
-              xCoord = parseFloat(row.Easting);
-              yCoord = parseFloat(row.Northing);
-            } else if (row.x && row.y) {
-              xCoord = parseFloat(row.x);
-              yCoord = parseFloat(row.y);
-            } else if (row.X && row.Y) {
-              xCoord = parseFloat(row.X);
-              yCoord = parseFloat(row.Y);
-            } else if (row.Long || row.LONG) {
-              xCoord = parseFloat(row.Long || row.LONG);
-              yCoord = parseFloat(row.Lat || row.LAT);
-              lat = parseFloat(row.Lat || row.LAT);
-              lng = parseFloat(row.Long || row.LONG);
-            }
+    if (isStructurePoint) {
+      debugLog(`Ponto de estrutura encontrado: ${name || code}`);
+      
+      let xCoord, yCoord, elevation, lat, lng;
 
-            // Elevação - suporte ampliado para novos formatos
-            elevation = parseFloat(row.H_ORTHO) || 
-                       parseFloat(row.H_ORTO) || 
-                       parseFloat(row.H_GEO) ||  // ADICIONADO SUPORTE PARA H_GEO
-                       parseFloat(row.Elev) || 
-                       parseFloat(row.Elevation) || 
-                       parseFloat(row.Altura) || 
-                       parseFloat(row.Z) || 
-                       parseFloat(row.z) || 0;
-
-            debugLog(`Coordenadas: x=${xCoord}, y=${yCoord}, elevação=${elevation}`);
-
-            if (!isNaN(xCoord) && !isNaN(yCoord) && !isNaN(elevation)) {
-              // Normalizar nomes para compatibilidade
-              let normalizedCode = code || name;
-              
-              // Converter formatos de PONTE para OAE para compatibilidade
-              normalizedCode = normalizedCode
-                .replace("LD INICIO PONTE", "LD_INICIO_OAE")
-                .replace("LE INICIO PONTE", "LE_INICIO_OAE")
-                .replace("LD FINAL PONTE", "LD_FINAL_OAE")
-                .replace("LE FINAL PONTE", "LE_FINAL_OAE")
-                .replace("LD FINAL DE PONTE", "LD_FINAL_OAE")
-                .replace("LE FINAL DE PONTE", "LE_FINAL_OAE");
-
-              const pointData = {
-                x: xCoord,
-                y: yCoord,
-                elevation: elevation,
-                lat: lat || yCoord,
-                long: lng || xCoord,
-                longitude: lng || null,
-                easting: parseFloat(row.Leste || row.Easting) || xCoord,
-                northing: parseFloat(row.Norte || row.Northing) || yCoord,
-                name: normalizedCode,
-                code: normalizedCode,
-                originalName: name,
-                originalCode: code,
-                // CORREÇÃO: Detecção mais precisa do tipo de coordenada
-                coordType: (lat && lng && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) ? 'GEO' :
-                          ((row.Norte && row.Leste) || (row.Northing && row.Easting)) ? 'UTM' : 'PLANE'
-              };
-              
-              // Determinar zona SIRGAS
-              const sirgas = determineSirgas2000Zone(pointData);
-              if (sirgas) {
-                pointData.sirgasZone = sirgas;
-                debugLog(`Zona SIRGAS determinada: ${sirgas}S`);
-              }
-              
-              debugLog(`Ponto criado: ${JSON.stringify(pointData)}`);
-              debugLog(`Tipo de coordenada: ${pointData.coordType}`);
-              
-              if (normalizedCode) points[normalizedCode] = pointData;
-              if (code && code !== normalizedCode) points[code] = pointData;
-              if (name && name !== code && name !== normalizedCode) points[name] = pointData;
-            } else {
-              debugLog(`Erro: coordenadas ou elevação inválidas`);
-            }
-          }
-        });
-        
-        debugLog(`Total de pontos encontrados: ${Object.keys(points).length}`);
-        debugLog(`Pontos: ${Object.keys(points).join(', ')}`);
-        return points;
+      // CORREÇÃO: Detectar coordenadas geográficas com mais variações
+      if (row.LAT && row.LONG) {
+        lat = parseFloat(row.LAT);
+        lng = parseFloat(row.LONG);
+        xCoord = lng;
+        yCoord = lat;
+      } else if (row.Lat && row.Long) {
+        lat = parseFloat(row.Lat);
+        lng = parseFloat(row.Long);
+        xCoord = lng;
+        yCoord = lat;
+      } else if (row.lat && row.long) {
+        lat = parseFloat(row.lat);
+        lng = parseFloat(row.long);
+        xCoord = lng;
+        yCoord = lat;
+      } else if (row.LATITUDE && row.LONGITUDE) {
+        lat = parseFloat(row.LATITUDE);
+        lng = parseFloat(row.LONGITUDE);
+        xCoord = lng;
+        yCoord = lat;
+      } else if (row.Latitude && row.Longitude) {
+        lat = parseFloat(row.Latitude);
+        lng = parseFloat(row.Longitude);
+        xCoord = lng;
+        yCoord = lat;
+      } else if (row.latitude && row.longitude) {
+        lat = parseFloat(row.latitude);
+        lng = parseFloat(row.longitude);
+        xCoord = lng;
+        yCoord = lat;
+      } else if (row.Norte && row.Leste) {
+        xCoord = parseFloat(row.Leste);
+        yCoord = parseFloat(row.Norte);
+      } else if (row.norte && row.leste) {
+        xCoord = parseFloat(row.leste);
+        yCoord = parseFloat(row.norte);
+      } else if (row.Northing && row.Easting) {
+        xCoord = parseFloat(row.Easting);
+        yCoord = parseFloat(row.Northing);
+      } else if (row.northing && row.easting) {
+        xCoord = parseFloat(row.easting);
+        yCoord = parseFloat(row.northing);
+      } else if (row.x && row.y) {
+        xCoord = parseFloat(row.x);
+        yCoord = parseFloat(row.y);
+      } else if (row.X && row.Y) {
+        xCoord = parseFloat(row.X);
+        yCoord = parseFloat(row.Y);
+      } else if (row.Long || row.LONG || row.long) {
+        xCoord = parseFloat(row.Long || row.LONG || row.long);
+        yCoord = parseFloat(row.Lat || row.LAT || row.lat);
+        lat = parseFloat(row.Lat || row.LAT || row.lat);
+        lng = parseFloat(row.Long || row.LONG || row.long);
       }
+
+      // CORREÇÃO: Elevação com suporte expandido para variações
+      elevation = parseFloat(row.H_ORTHO) || 
+                 parseFloat(row.H_ORTO) || 
+                 parseFloat(row.H_GEO) ||
+                 parseFloat(row.h_ortho) ||
+                 parseFloat(row.h_orto) ||
+                 parseFloat(row.h_geo) ||
+                 parseFloat(row.Elev) || 
+                 parseFloat(row.elev) ||
+                 parseFloat(row.Elevation) || 
+                 parseFloat(row.elevation) ||
+                 parseFloat(row.Altura) || 
+                 parseFloat(row.altura) ||
+                 parseFloat(row.Z) || 
+                 parseFloat(row.z) || 0;
+
+      debugLog(`Coordenadas: x=${xCoord}, y=${yCoord}, elevação=${elevation}`);
+
+      if (!isNaN(xCoord) && !isNaN(yCoord) && !isNaN(elevation)) {
+        // Normalizar nomes para compatibilidade
+        let normalizedCode = code || name;
+        
+        // Converter formatos de PONTE para OAE para compatibilidade
+        normalizedCode = normalizedCode
+          .replace("LD INICIO PONTE", "LD_INICIO_OAE")
+          .replace("LE INICIO PONTE", "LE_INICIO_OAE")
+          .replace("LD FINAL PONTE", "LD_FINAL_OAE")
+          .replace("LE FINAL PONTE", "LE_FINAL_OAE")
+          .replace("LD FINAL DE PONTE", "LD_FINAL_OAE")
+          .replace("LE FINAL DE PONTE", "LE_FINAL_OAE");
+
+        const pointData = {
+          x: xCoord,
+          y: yCoord,
+          elevation: elevation,
+          lat: lat || yCoord,
+          long: lng || xCoord,
+          longitude: lng || null,
+          easting: parseFloat(row.Leste || row.leste || row.Easting || row.easting) || xCoord,
+          northing: parseFloat(row.Norte || row.norte || row.Northing || row.northing) || yCoord,
+          name: normalizedCode,
+          code: normalizedCode,
+          originalName: name,
+          originalCode: code,
+          // Detecção mais precisa do tipo de coordenada
+          coordType: (lat && lng && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) ? 'GEO' :
+                    ((row.Norte || row.norte || row.Leste || row.leste || row.Northing || row.northing || row.Easting || row.easting)) ? 'UTM' : 'PLANE'
+        };
+        
+        // Determinar zona SIRGAS
+        const sirgas = determineSirgas2000Zone(pointData);
+        if (sirgas) {
+          pointData.sirgasZone = sirgas;
+          debugLog(`Zona SIRGAS determinada: ${sirgas}S`);
+        }
+        
+        debugLog(`Ponto criado: ${JSON.stringify(pointData)}`);
+        debugLog(`Tipo de coordenada: ${pointData.coordType}`);
+        
+        if (normalizedCode) points[normalizedCode] = pointData;
+        if (code && code !== normalizedCode) points[code] = pointData;
+        if (name && name !== code && name !== normalizedCode) points[name] = pointData;
+      } else {
+        debugLog(`Erro: coordenadas ou elevação inválidas`);
+      }
+    }
+  });
+  
+  debugLog(`Total de pontos encontrados: ${Object.keys(points).length}`);
+  debugLog(`Pontos: ${Object.keys(points).join(', ')}`);
+  return points;
+}
 
       // Função para determinar se inclinações são problemáticas (com novos limites)
       function getInclinationStatus(inclination, isTransversal = false) {
