@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Relatório de Ponte</title>
+    <style>
+        /* Versão: 1.0 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+        
+        .input-area, .report-area {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        .vao-container {
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .vao-header {
+            background-color: #e5e5e5;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .vao-content {
+            padding: 15px;
+        }
+        
+        .regiao-container {
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+            padding-left: 10px;
+        }
+        
+        .error {
+            color: #c0392b;
+            background-color: #fadbd8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-area">
+            <h1>Gerador de Relatório de Ponte</h1>
+            <p>Cole os JSONs da ponte abaixo (em qualquer ordem):</p>
+            <textarea id="json-input" placeholder="Cole os JSONs aqui..."></textarea>
+            <button id="generate-btn">Gerar Relatório</button>
+            <div id="error-message" class="error hidden"></div>
+        </div>
+        
+        <div id="report-area" class="report-area hidden">
+            <h2>Relatório da Ponte</h2>
+            <div id="report-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Versão: 1.0
+        document.getElementById('generate-btn').addEventListener('click', generateReport);
+
+        function generateReport() {
+            try {
+                // Limpar mensagens de erro e relatório anterior
+                document.getElementById('error-message').classList.add('hidden');
+                document.getElementById('error-message').textContent = '';
+                document.getElementById('report-content').innerHTML = '';
+                
+                // Obter os dados de entrada
+                const inputText = document.getElementById('json-input').value.trim();
+                if (!inputText) {
+                    throw new Error('Por favor, insira os dados JSON.');
+                }
+                
+                // Identificar e processar os JSONs
+                const consolidatedData = processJsonInput(inputText);
+                
+                // Gerar o relatório com os dados consolidados
+                renderReport(consolidatedData);
+                
+                // Mostrar a área de relatório
+                document.getElementById('report-area').classList.remove('hidden');
+            } catch (error) {
+                document.getElementById('error-message').textContent = `Erro: ${error.message}`;
+                document.getElementById('error-message').classList.remove('hidden');
+                document.getElementById('report-area').classList.add('hidden');
+            }
+        }
+
+        function processJsonInput(inputText) {
+            // Inicializar objeto para armazenar os dados consolidados
+            const consolidatedData = {
+                ponteInfo: null,
+                caracteristicasFuncionais: [],
+                deficienciasFuncionais: [],
+                vaos: [],
+                elementosPorVaoRegiao: []
+            };
+            
+            // Tentar identificar JSONs individuais no texto de entrada
+            const jsonParts = extractJsonParts(inputText);
+            
+            // Processar cada parte JSON identificada
+            jsonParts.forEach(jsonStr => {
+                try {
+                    const data = JSON.parse(jsonStr);
+                    
+                    // Identificar o tipo de JSON e adicionar ao objeto consolidado
+                    if (isInfoPonte(data)) {
+                        consolidatedData.ponteInfo = data;
+                    } else if (isVaosList(data)) {
+                        consolidatedData.vaos = data;
+                    } else if (isElementosPorVaoRegiao(data)) {
+                        consolidatedData.elementosPorVaoRegiao = 
+                            mergeArrays(consolidatedData.elementosPorVaoRegiao, data);
+                    } else if (isCaracteristicasFuncionais(data)) {
+                        consolidatedData.caracteristicasFuncionais = 
+                            mergeArrays(consolidatedData.caracteristicasFuncionais, data);
+                    } else if (isDeficienciasFuncionais(data)) {
+                        consolidatedData.deficienciasFuncionais = 
+                            mergeArrays(consolidatedData.deficienciasFuncionais, data);
+                    }
+                } catch (error) {
+                    console.warn('Erro ao processar parte do JSON:', error);
+                }
+            });
+            
+            return consolidatedData;
+        }
+
+        function extractJsonParts(text) {
+            // Esta função tenta extrair objetos JSON válidos do texto
+            const jsonParts = [];
+            let bracketCount = 0;
+            let startIndex = -1;
+            
+            // Procurar por caracteres de início de JSON ({ ou [)
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                
+                if ((char === '{' || char === '[') && bracketCount === 0) {
+                    startIndex = i;
+                    bracketCount = 1;
+                } else if ((char === '{' || char === '[') && bracketCount > 0) {
+                    bracketCount++;
+                } else if ((char === '}' || char === ']') && bracketCount > 0) {
+                    bracketCount--;
+                    
+                    // Se fechamos todos os parênteses/colchetes, extraímos um JSON
+                    if (bracketCount === 0 && startIndex !== -1) {
+                        const jsonStr = text.substring(startIndex, i + 1);
+                        try {
+                            // Verificar se é um JSON válido
+                            JSON.parse(jsonStr);
+                            jsonParts.push(jsonStr);
+                        } catch (error) {
+                            console.warn('JSON inválido encontrado:', jsonStr);
+                        }
+                        
+                        startIndex = -1;
+                    }
+                }
+            }
+            
+            return jsonParts;
+        }
+
+        // Funções para identificar tipos de JSON
+        function isInfoPonte(data) {
+            // Verificar se é informação geral da ponte
+            return data && (data.identificacao || data.codigoSgo);
+        }
+
+        function isVaosList(data) {
+            // Verificar se é lista de vãos
+            return Array.isArray(data) && data.length > 0 && 
+                   data[0].numeroVao !== undefined && data[0].regioes !== undefined;
+        }
+
+        function isElementosPorVaoRegiao(data) {
+            // Verificar se é lista de elementos por vão/região
+            return Array.isArray(data) && data.length > 0 && 
+                   data[0].idVaoRegiao !== undefined && data[0].elementos !== undefined;
+        }
+
+        function isCaracteristicasFuncionais(data) {
+            // Verificar se é lista de características funcionais
+            return Array.isArray(data) && data.length > 0 && 
+                   data[0].codigo !== undefined && data[0].sigla !== undefined;
+        }
+
+        function isDeficienciasFuncionais(data) {
+            // Verificar se é lista de deficiências funcionais
+            return Array.isArray(data) && data.length > 0 && 
+                   data[0].codigo !== undefined && data[0].deficiencia !== undefined;
+        }
+
+        function mergeArrays(arr1, arr2) {
+            // Mesclar arrays, evitando duplicatas
+            const merged = [...arr1];
+            
+            for (const item of arr2) {
+                if (!merged.find(existingItem => 
+                    JSON.stringify(existingItem) === JSON.stringify(item))) {
+                    merged.push(item);
+                }
+            }
+            
+            return merged;
+        }
+
+        function renderReport(data) {
+            const reportContent = document.getElementById('report-content');
+            
+            // Verificar se há dados suficientes para gerar um relatório
+            if (!data.ponteInfo) {
+                reportContent.innerHTML = '<div class="error">Dados insuficientes para gerar um relatório. Por favor, certifique-se de incluir informações básicas da ponte.</div>';
+                return;
+            }
+            
+            // Seção 1: Informações Gerais da Ponte
+            reportContent.appendChild(renderPonteInfo(data.ponteInfo));
+            
+            // Seção 2: Características Funcionais
+            reportContent.appendChild(renderCaracteristicas(data.caracteristicasFuncionais));
+            
+            // Seção 3: Deficiências Funcionais
+            reportContent.appendChild(renderDeficiencias(data.deficienciasFuncionais));
+            
+            // Seção 4: Vãos e Elementos
+            reportContent.appendChild(renderVaosElementos(data.vaos, data.elementosPorVaoRegiao));
+        }
+
+        function renderPonteInfo(ponteInfo) {
+            const section = document.createElement('div');
+            section.className = 'section';
+            
+            section.innerHTML = `
+                <h3>1. Informações Gerais</h3>
+                <table>
+                    <tr>
+                        <th style="width: 30%;">Campo</th>
+                        <th>Valor</th>
+                    </tr>
+                    <tr>
+                        <td>Identificação</td>
+                        <td>${ponteInfo.identificacao || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Código SGO</td>
+                        <td>${ponteInfo.codigoSgo || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Localização</td>
+                        <td>
+                            BR-${ponteInfo.br?.nome || ponteInfo.br || '-'}, 
+                            Km ${ponteInfo.km || '-'}, 
+                            ${ponteInfo.municipio?.nome || '-'} - 
+                            ${ponteInfo.uf?.sigla || ponteInfo.uf || '-'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Coordenadas</td>
+                        <td>
+                            Latitude: ${ponteInfo.latitude || '-'}<br>
+                            Longitude: ${ponteInfo.longitude || '-'}<br>
+                            Altitude: ${ponteInfo.altitude || '-'} m
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Dimensões</td>
+                        <td>
+                            Comprimento: ${ponteInfo.comprimento || '-'} m<br>
+                            Largura: ${ponteInfo.largura || '-'} m
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Ano de Construção</td>
+                        <td>${ponteInfo.anoConstrucao || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Administradora</td>
+                        <td>${ponteInfo.administradora?.nomeFantasia || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Unidade Local</td>
+                        <td>${ponteInfo.unidadeLocal?.nome || '-'} (${ponteInfo.unidadeLocal?.sigla || '-'})</td>
+                    </tr>
+                </table>
+            `;
+            
+            return section;
+        }
+
+        function renderCaracteristicas(caracteristicas) {
+            const section = document.createElement('div');
+            section.className = 'section';
+            
+            let content = `
+                <h3>2. Características Funcionais</h3>
+            `;
+            
+            if (!caracteristicas || caracteristicas.length === 0) {
+                content += '<p>Nenhuma característica funcional registrada.</p>';
+            } else {
+                content += `
+                    <table>
+                        <tr>
+                            <th style="width: 20%;">Código</th>
+                            <th style="width: 60%;">Descrição</th>
+                            <th style="width: 20%;">Sigla</th>
+                        </tr>
+                `;
+                
+                caracteristicas.forEach(item => {
+                    content += `
+                        <tr>
+                            <td>${item.codigo || '-'}</td>
+                            <td>${item.descricao || '-'}</td>
+                            <td>${item.sigla || '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                content += '</table>';
+            }
+            
+            section.innerHTML = content;
+            return section;
+        }
+
+        function renderDeficiencias(deficiencias) {
+            const section = document.createElement('div');
+            section.className = 'section';
+            
+            let content = `
+                <h3>3. Deficiências Funcionais</h3>
+            `;
+            
+            if (!deficiencias || deficiencias.length === 0) {
+                content += '<p>Nenhuma deficiência funcional registrada.</p>';
+            } else {
+                content += `
+                    <table>
+                        <tr>
+                            <th style="width: 20%;">Código</th>
+                            <th style="width: 60%;">Deficiência</th>
+                            <th style="width: 20%;">Unidade de Medida</th>
+                        </tr>
+                `;
+                
+                deficiencias.forEach(item => {
+                    content += `
+                        <tr>
+                            <td>${item.codigo || '-'}</td>
+                            <td>${item.deficiencia || '-'}</td>
+                            <td>${item.unidadeMedida || '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                content += '</table>';
+            }
+            
+            section.innerHTML = content;
+            return section;
+        }
+
+        function renderVaosElementos(vaos, elementosPorVaoRegiao) {
+            const section = document.createElement('div');
+            section.className = 'section';
+            
+            let content = `
+                <h3>4. Vãos e Elementos</h3>
+            `;
+            
+            if (!vaos || vaos.length === 0) {
+                content += '<p>Nenhum vão registrado.</p>';
+                section.innerHTML = content;
+                return section;
+            }
+            
+            // Ordenar vãos por número
+            const vaosOrdenados = [...vaos].sort((a, b) => a.numeroVao - b.numeroVao);
+            
+            content += '<div class="vaos-container">';
+            
+            vaosOrdenados.forEach(vao => {
+                content += `
+                    <div class="vao-container">
+                        <div class="vao-header" onclick="toggleVao('vao-${vao.numeroVao}')">
+                            Vão ${vao.nomeVao} ${vao.vaoComplementar ? '(Complementar)' : ''}
+                        </div>
+                        <div class="vao-content" id="vao-${vao.numeroVao}">
+                `;
+                
+                // Listar regiões do vão
+                if (vao.regioes && vao.regioes.length > 0) {
+                    vao.regioes.forEach(regiao => {
+                        content += `
+                            <div class="regiao-container">
+                                <h4>Região: ${regiao.nome}</h4>
+                        `;
+                        
+                        // Procurar elementos para esta região do vão
+                        const elementosRegiao = elementosPorVaoRegiao.find(er => 
+                            er.numeroVao === vao.numeroVao && 
+                            er.numeroRegiao === regiao.codigo
+                        );
+                        
+                        if (elementosRegiao && elementosRegiao.elementos && elementosRegiao.elementos.length > 0) {
+                            content += `
+                                <table>
+                                    <tr>
+                                        <th style="width: 50%;">Elemento</th>
+                                        <th style="width: 20%;">Código</th>
+                                        <th style="width: 30%;">Quantidade</th>
+                                    </tr>
+                            `;
+                            
+                            elementosRegiao.elementos.forEach(elemento => {
+                                content += `
+                                    <tr>
+                                        <td>${elemento.elemento || '-'}</td>
+                                        <td>${elemento.codigoElemento || '-'}</td>
+                                        <td>${elemento.totalElementosIndividuais || '-'}</td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            content += '</table>';
+                        } else {
+                            content += '<p>Nenhum elemento registrado para esta região.</p>';
+                        }
+                        
+                        content += '</div>'; // Fim da regiao-container
+                    });
+                } else {
+                    content += '<p>Nenhuma região registrada para este vão.</p>';
+                }
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content += '</div>'; // Fim da vaos-container
+            
+            section.innerHTML = content;
+            return section;
+        }
+
+        // Função para expandir/colapsar vãos
+        function toggleVao(vaoId) {
+            const vaoContent = document.getElementById(vaoId);
+            if (vaoContent) {
+                vaoContent.style.display = vaoContent.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        // Tornar a função toggleVao disponível globalmente
+        window.toggleVao = toggleVao;
+    </script>
+</body>
+</html>
