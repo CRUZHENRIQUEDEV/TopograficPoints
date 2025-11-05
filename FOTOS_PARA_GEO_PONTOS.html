@@ -1918,104 +1918,112 @@ function processarDadosRodovias(dadosDNIT) {
         map.options.maxZoom = layer.options.maxZoom;
       }
 
-      // Plotar pontos no mapa
-      function plotPointsOnMap() {
-        if (!map || !markersLayer) return;
+    // Versão: 5.1
+// Plotar pontos no mapa
+function plotPointsOnMap() {
+  if (!map || !markersLayer) return;
 
-        debugLog('Plotando pontos no mapa');
-        markersLayer.clearLayers();
+  debugLog('Plotando pontos no mapa');
+  markersLayer.clearLayers();
 
-        const allPoints = combineAllPoints();
-        if (allPoints.length === 0) return;
+  const allPoints = combineAllPoints();
+  if (allPoints.length === 0) return;
 
-        let bounds = L.latLngBounds();
+  let bounds = L.latLngBounds();
 
-        allPoints.forEach((point, index) => {
-          const currentName = renamedFiles.get(point.filename) || point.filename;
-          const isRenamed = renamedFiles.has(point.filename);
-          const isImported = point.imported || false;
-          
-          // Criar ícone personalizado baseado na zona de drone ou se foi importado
-          let markerIcon;
-          if (isImported) {
-            markerIcon = L.divIcon({
-              className: 'custom-marker',
-              html: `<div style="background: #9b59b6; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📍</div>`,
-              iconSize: [25, 25],
-              iconAnchor: [12.5, 12.5]
-            });
-          } else if (droneZonesActive && point.droneZone) {
-            const zoneColor = point.droneZone.zona === 'prohibited' ? '#e74c3c' : 
-                             point.droneZone.zona === 'restricted' ? '#f39c12' : '#27ae60';
-            
-            markerIcon = L.divIcon({
-              className: 'custom-marker',
-              html: `<div style="background: ${zoneColor}; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📷</div>`,
-              iconSize: [25, 25],
-              iconAnchor: [12.5, 12.5]
-            });
-          } else {
-            markerIcon = new L.Icon.Default();
-          }
-          
-          const marker = L.marker([point.latitude, point.longitude], { icon: markerIcon });
-          
-          const popup = L.popup({
-            maxWidth: 280,
-            minWidth: 280
-          });
-          
-          if (isImported) {
-            popup.setContent(createImportedPopupContent(point, index));
-          } else {
-            popup.setContent(createPopupContent(point, index, currentName, isRenamed));
-          }
-          
-          marker.bindPopup(popup);
-          
-          // Event listener para quando o popup é aberto (só para pontos de imagem)
-          if (!isImported) {
-            marker.on('popupopen', function(e) {
-              setTimeout(() => {
-                consultarRodoviasParaPopup(point, index);
-              }, 100);
-            });
+  allPoints.forEach((point, index) => {
+    const currentName = renamedFiles.get(point.filename) || point.filename;
+    const isRenamed = renamedFiles.has(point.filename);
+    const isImported = point.imported || false;
+    
+    // Criar ícone personalizado baseado na zona de drone ou se foi importado
+    let markerIcon;
+    if (isImported) {
+      markerIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: #9b59b6; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📍</div>`,
+        iconSize: [25, 25],
+        iconAnchor: [12.5, 12.5]
+      });
+    } else if (droneZonesActive && point.droneZone) {
+      const zoneColor = point.droneZone.zona === 'prohibited' ? '#e74c3c' : 
+                       point.droneZone.zona === 'restricted' ? '#f39c12' : '#27ae60';
+      
+      markerIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: ${zoneColor}; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px;">📷</div>`,
+        iconSize: [25, 25],
+        iconAnchor: [12.5, 12.5]
+      });
+    } else if (isRenamed) {
+      // Usando um marcador roxo no estilo padrão do Leaflet para fotos renomeadas
+      markerIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: #9b59b6; width: 24px; height: 40px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 1px solid #FFF; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [24, 40],
+        iconAnchor: [12, 40]
+      });
+    } else {
+      markerIcon = new L.Icon.Default();
+    }
+    
+    const marker = L.marker([point.latitude, point.longitude], { icon: markerIcon });
+    
+    const popup = L.popup({
+      maxWidth: 280,
+      minWidth: 280
+    });
+    
+    if (isImported) {
+      popup.setContent(createImportedPopupContent(point, index));
+    } else {
+      popup.setContent(createPopupContent(point, index, currentName, isRenamed));
+    }
+    
+    marker.bindPopup(popup);
+    
+    // Event listener para quando o popup é aberto (só para pontos de imagem)
+    if (!isImported) {
+      marker.on('popupopen', function(e) {
+        setTimeout(() => {
+          consultarRodoviasParaPopup(point, index);
+        }, 100);
+      });
 
-            // Adicionar eventos de preview da imagem
-            marker.on('mouseover', function(e) {
-              if (!isPreviewOpen) {
-                previewTimeout = setTimeout(() => {
-                  showImagePreview(point, currentName, isRenamed);
-                }, 2000);
-              }
-            });
-
-            marker.on('mouseout', function(e) {
-              if (previewTimeout) {
-                clearTimeout(previewTimeout);
-                previewTimeout = null;
-              }
-            });
-          }
-
-          markersLayer.addLayer(marker);
-          bounds.extend([point.latitude, point.longitude]);
-        });
-
-        if (allPoints.length > 0) {
-          map.fitBounds(bounds, { padding: [20, 20] });
+      // Adicionar eventos de preview da imagem
+      marker.on('mouseover', function(e) {
+        if (!isPreviewOpen) {
+          previewTimeout = setTimeout(() => {
+            showImagePreview(point, currentName, isRenamed);
+          }, 2000);
         }
+      });
 
-        // Se zonas de drone estão ativas, recarregar
-        if (droneZonesActive) {
-          setTimeout(() => {
-            carregarZonasDrone();
-          }, 500);
+      marker.on('mouseout', function(e) {
+        if (previewTimeout) {
+          clearTimeout(previewTimeout);
+          previewTimeout = null;
         }
-        
-        debugLog(`Plotados ${allPoints.length} pontos no mapa`);
-      }
+      });
+    }
 
+    markersLayer.addLayer(marker);
+    bounds.extend([point.latitude, point.longitude]);
+  });
+
+  if (allPoints.length > 0) {
+    map.fitBounds(bounds, { padding: [20, 20] });
+  }
+
+  // Se zonas de drone estão ativas, recarregar
+  if (droneZonesActive) {
+    setTimeout(() => {
+      carregarZonasDrone();
+    }, 500);
+  }
+  
+  debugLog(`Plotados ${allPoints.length} pontos no mapa`);
+}
       // Criar conteúdo do popup para pontos importados (COMPACTO)
       function createImportedPopupContent(point, index) {
         let droneInfo = '';
@@ -2024,8 +2032,8 @@ function processarDadosRodovias(dadosDNIT) {
                           point.droneZone.zona === 'restricted' ? '⚠️' : '✅';
           
           droneInfo = `
-            <div style="margin-top: 6px; padding: 5px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 3px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
-              <div style="font-size: 10px; color: #495057;"><strong>${zoneIcon} ${point.droneZone.descricao}</strong></div>
+            <div style="margin-top: 3px; padding: 2px; background: rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.1); border-radius: 3px; border: 1px solid rgba(${point.droneZone.zona === 'prohibited' ? '231, 76, 60' : point.droneZone.zona === 'restricted' ? '241, 196, 15' : '46, 204, 113'}, 0.3);">
+              <div style="font-size: 7px; color: #495057;"><strong>${zoneIcon} ${point.droneZone.descricao}</strong></div>
               ${point.droneZone.aeroporto ? `<div style="font-size: 9px; color: #6c757d;">${point.droneZone.aeroporto.name} (${point.droneZone.distancia.toFixed(1)}km)</div>` : ''}
             </div>
           `;
