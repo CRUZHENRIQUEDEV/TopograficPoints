@@ -8281,10 +8281,16 @@ function generateSuperstructureDataFromObra(obra) {
  */
 
 
- // Versão: 2.0
+// Versão: 3.0 - CORRIGIDA para estrutura hierárquica com _piers
 
+/**
+ * Gera BridgePierData a partir de uma obra flat do IndexedDB
+ * Cria objetos PierConfiguration individuais para cada apoio
+ * @param {object} obra - Obra do IndexedDB
+ * @returns {object} BridgePierData com estrutura hierárquica
+ */
 function generateBridgePierDataFromObra(obra) {
-    // Processa alturas dos apoios (formato: "1;1.1;1.2")
+    // Processa alturas dos apoios (formato: "1.45;5.9;5.9;5.9;5.9;1.45")
     const pierHeights = [];
     const alturaApoioValue = obra["ALTURA APOIO"] || obra.ALTURA_APOIO;
     if (alturaApoioValue) {
@@ -8292,13 +8298,22 @@ function generateBridgePierDataFromObra(obra) {
         const alturasArray = alturasStr.split(';');
         alturasArray.forEach(a => {
             const valor = parseFloat(a.trim());
-            if (!isNaN(valor)) {
+            if (!isNaN(valor) && valor > 0) {
                 pierHeights.push(valor);
             }
         });
     }
 
-    // Processa larguras dos pilares (formato: "0.4;0.4")
+    // Se não há apoios, retorna estrutura vazia
+    if (pierHeights.length === 0) {
+        return {
+            PierConfigurations: {
+                _piers: []
+            }
+        };
+    }
+
+    // Processa larguras dos pilares (formato: "0.6;0.6;0.6;0.6;0.6;0.6")
     const pillarWidths = [];
     const larguraPilarValue = obra["LARGURA PILAR"] || obra.LARGURA_PILAR;
     if (larguraPilarValue) {
@@ -8312,7 +8327,7 @@ function generateBridgePierDataFromObra(obra) {
         });
     }
 
-    // Processa comprimentos dos pilares (formato: "2.2;2.2")
+    // Processa comprimentos dos pilares (formato: "0.6;0.6;0.6;0.6;0.6;0.6")
     const pillarLengths = [];
     const comprimentoPilaresValue = obra["COMPRIMENTO PILARES"] || obra.COMPRIMENTO_PILARES;
     if (comprimentoPilaresValue) {
@@ -8326,55 +8341,94 @@ function generateBridgePierDataFromObra(obra) {
         });
     }
 
+    // Dados comuns a todos os apoios (aplicados a cada PierConfiguration)
+    const numberOfPillars = parseInt(obra["QTD PILARES"] || obra.QTD_PILARES) || 2;
+    const isOffCenter = (obra["PILAR DESCENTRALIZADO"] || obra.PILAR_DESCENTRALIZADO) === "Sim";
+    
+    // Tipos de elementos (comuns a todos os apoios)
+    const pillarType = createZSElementTypeFromValue(obra["TIPO PILAR"] || obra.TIPO_PILAR);
+    const crossbeamType = createZSElementTypeFromValue(obra["TIPO TRAVESSA"] || obra.TIPO_TRAVESSA);
+    const crossbeamHeight = parseFloat(obra["ALTURA TRAVESSA"] || obra.ALTURA_TRAVESSA) || 0.0;
+    const crossbeamLength = parseFloat(obra["COMPRIMENTO TRAVESSA"] || obra.COMPRIMENTO_TRAVESSA) || 0.0;
+    const foundationType = createZSElementTypeFromValue(obra["TIPO BLOCO SAPATA"] || obra.TIPO_BLOCO_SAPATA);
+    const foundationHeight = parseFloat(obra["ALTURA BLOCO SAPATA"] || obra.ALTURA_BLOCO_SAPATA) || 0.0;
+    const foundationWidth = parseFloat(obra["LARGURA BLOCO SAPATA"] || obra.LARGURA_BLOCO_SAPATA) || 0.0;
+    const foundationLength = parseFloat(obra["COMPRIMENTO BLOCO SAPATA"] || obra.COMPRIMENTO_BLOCO_SAPATA) || 0.0;
+    const bearingType = createZSElementTypeFromValue(obra["TIPO APARELHO APOIO"] || obra.TIPO_APARELHO_APOIO);
+    const pillarBracingBeamType = createZSElementTypeFromValue(obra["TIPO CONTRAVENTAMENTO PILAR"] || obra.TIPO_CONTRAVENTAMENTO_PILAR);
+    const pillarBracingBeamQuantity = parseInt(obra["QTD VIGAS CONTRAVENTAMENTO"] || obra.QTD_VIGAS_CONTRAVENTAMENTO) || 0;
+    const pillarBracingBeamHeight = parseFloat(obra["ALTURA VIGA CONTRAVENTAMENTO"] || obra.ALTURA_VIGA_CONTRAVENTAMENTO) || 0.0;
+    const pillarBracingBeamLength = parseFloat(obra["COMPRIMENTO VIGA CONTRAVENTAMENTO"] || obra.COMPRIMENTO_VIGA_CONTRAVENTAMENTO) || 0.0;
+    const connectionBeamType = createZSElementTypeFromValue(obra["TIPO VIGA LIGACAO"] || obra.TIPO_VIGA_LIGACAO);
+    const pillarJacketType = createZSElementTypeFromValue(obra["TIPO ENCAMISAMENTO"] || obra.TIPO_ENCAMISAMENTO);
+    const foundationConnectionBeamType = createZSElementTypeFromValue(obra["TIPO LIGACAO FUNDACOES"] || obra.TIPO_LIGACAO_FUNDACOES);
+    const foundationConnectionBeamHeight = parseFloat(obra["ALTURA VIGA LIGACAO FUNDACOES"] || obra.ALTURA_VIGA_LIGACAO_FUNDACOES) || 0.0;
+    const foundationConnectionBeamLength = parseFloat(obra["COMPRIMENTO VIGA LIGACAO FUNDACOES"] || obra.COMPRIMENTO_VIGA_LIGACAO_FUNDACOES) || 0.0;
+
+    // Criar array de PierConfiguration (um objeto para cada apoio)
+    const piers = [];
+    for (let i = 0; i < pierHeights.length; i++) {
+        const pierConfig = {
+            Index: i,
+            Height: pierHeights[i],
+            IsManuallyDefined: true,
+            
+            // Configuração dos Pilares (pode variar por apoio)
+            NumberOfPillars: numberOfPillars,
+            PillarWidth: pillarWidths[i] || pillarWidths[0] || 0.7,
+            PillarLength: pillarLengths[i] || pillarLengths[0] || 0.7,
+            IsOffCenter: isOffCenter,
+            
+            // Tipos de Elementos (comuns a todos os apoios neste caso)
+            PillarType: pillarType,
+            CrossbeamType: crossbeamType,
+            CrossbeamHeight: crossbeamHeight,
+            CrossbeamLength: crossbeamLength,
+            FoundationType: foundationType,
+            FoundationHeight: foundationHeight,
+            FoundationWidth: foundationWidth,
+            FoundationLength: foundationLength,
+            BearingType: bearingType,
+            
+            // Vigas de Contraventamento
+            PillarBracingBeamType: pillarBracingBeamType,
+            PillarBracingBeamQuantity: pillarBracingBeamQuantity,
+            PillarBracingBeamHeight: pillarBracingBeamHeight,
+            PillarBracingBeamLength: pillarBracingBeamLength,
+            
+            // Outros Elementos
+            PillarJacketType: pillarJacketType,
+            ConnectionBeamType: connectionBeamType,
+            FoundationConnectionBeamType: foundationConnectionBeamType,
+            FoundationConnectionBeamHeight: foundationConnectionBeamHeight,
+            FoundationConnectionBeamLength: foundationConnectionBeamLength
+        };
+        
+        piers.push(pierConfig);
+    }
+
+    // Retorna estrutura compatível com PierConfigurationCollection
     return {
         PierConfigurations: {
-            PierHeights: pierHeights
-        },
-        NumberOfPillarsPerPier: parseInt(obra["QTD PILARES"] || obra.QTD_PILARES) || 1,
-        PillarType: createZSElementTypeFromValue(obra["TIPO PILAR"] || obra.TIPO_PILAR),
-        CrossbeamType: createZSElementTypeFromValue(obra["TIPO TRAVESSA"] || obra.TIPO_TRAVESSA),
-        FoundationType: createZSElementTypeFromValue(obra["TIPO BLOCO SAPATA"] || obra.TIPO_BLOCO_SAPATA),
-        BearingType: createZSElementTypeFromValue(obra["TIPO APARELHO APOIO"] || obra.TIPO_APARELHO_APOIO),
-        PillarBracingBeamType: createZSElementTypeFromValue(obra["TIPO CONTRAVENTAMENTO PILAR"] || obra.TIPO_CONTRAVENTAMENTO_PILAR),
-        ConnectionBeamType: createZSElementTypeFromValue(obra["TIPO VIGA LIGACAO"] || obra.TIPO_VIGA_LIGACAO),
-        PillarJacketType: createZSElementTypeFromValue(obra["TIPO ENCAMISAMENTO"] || obra.TIPO_ENCAMISAMENTO),
-        FoundationConnectionBeamType: createZSElementTypeFromValue(obra["TIPO LIGACAO FUNDACOES"] || obra.TIPO_LIGACAO_FUNDACOES),
-        PillarWidth: pillarWidths.length > 0 ? pillarWidths[0] : 0.0,
-        PillarLength: pillarLengths.length > 0 ? pillarLengths[0] : 0.0,
-        IsOffCenterPillar: (obra["PILAR DESCENTRALIZADO"] || obra.PILAR_DESCENTRALIZADO) === "Sim",
-        CrossbeamLength: parseFloat(obra["COMPRIMENTO TRAVESSA"] || obra.COMPRIMENTO_TRAVESSA) || 0.0,
-        CrossbeamHeight: parseFloat(obra["ALTURA TRAVESSA"] || obra.ALTURA_TRAVESSA) || 0.0,
-        FoundationHeight: parseFloat(obra["ALTURA BLOCO SAPATA"] || obra.ALTURA_BLOCO_SAPATA) || 0.0,
-        FoundationLength: parseFloat(obra["COMPRIMENTO BLOCO SAPATA"] || obra.COMPRIMENTO_BLOCO_SAPATA) || 0.0,
-        FoundationWidth: parseFloat(obra["LARGURA BLOCO SAPATA"] || obra.LARGURA_BLOCO_SAPATA) || 0.0,
-        PillarBracingBeamQuantity: parseInt(obra["QTD VIGAS CONTRAVENTAMENTO"] || obra.QTD_VIGAS_CONTRAVENTAMENTO) || 0,
-        PillarBracingBeamHeight: parseFloat(obra["ALTURA VIGA CONTRAVENTAMENTO"] || obra.ALTURA_VIGA_CONTRAVENTAMENTO) || 0.0,
-        PillarBracingBeamLength: parseFloat(obra["COMPRIMENTO VIGA CONTRAVENTAMENTO"] || obra.COMPRIMENTO_VIGA_CONTRAVENTAMENTO) || 0.0,
-        FoundationConnectionBeamHeight: parseFloat(obra["ALTURA VIGA LIGACAO FUNDACOES"] || obra.ALTURA_VIGA_LIGACAO_FUNDACOES) || 0.0,
-        FoundationConnectionBeamLength: parseFloat(obra["COMPRIMENTO VIGA LIGACAO FUNDACOES"] || obra.COMPRIMENTO_VIGA_LIGACAO_FUNDACOES) || 0.0,
-        PierHeights: pierHeights,
-        Height: pierHeights.length > 0 ? pierHeights.reduce((a, b) => a + b, 0) / pierHeights.length : 0.0
+            _piers: piers
+        }
     };
 }
 
-
-
-// Versão: 1.0
+// Versão: 2.1 - CORRIGIDA nomenclatura LeftSidewalkType
 
 /**
  * Gera BridgeComplementaryData a partir de uma obra flat
  * @param {object} obra - Obra do IndexedDB
  * @returns {object} BridgeComplementaryData
  */
-// Versão: 2.0
-
 function generateBridgeComplementaryDataFromObra(obra) {
     return {
         LeftBarrierType: createZSElementTypeFromValue(obra["TIPO BARREIRA ESQUERDA"] || obra.TIPO_BARREIRA_ESQUERDA),
         LeftBarrierWidth: parseFloat(obra["LARGURA BARREIRA ESQUERDA"] || obra.LARGURA_BARREIRA_ESQUERDA) || 0.0,
         RightBarrierType: createZSElementTypeFromValue(obra["TIPO BARREIRA DIREITA"] || obra.TIPO_BARREIRA_DIREITA),
         RightBarrierWidth: parseFloat(obra["LARGURA BARREIRA DIREITA"] || obra.LARGURA_BARREIRA_DIREITA) || 0.0,
-        LeftSidewalkType: createZSElementTypeFromValue(obra["TIPO CALCADA ESQUERDA"] || obra.TIPO_CALCADA_ESQUERDA),
+        LeftSidewalkType: createZSElementTypeFromValue(obra["TIPO CALCADA ESQUERDA"] || obra.TIPO_CALCADA_ESQUERDA), // ✅ MANTIDO Type
         LeftSidewalkWidth: parseFloat(obra["LARGURA CALCADA ESQUERDA"] || obra.LARGURA_CALCADA_ESQUERDA) || 0.0,
         RightSidewalkType: createZSElementTypeFromValue(obra["TIPO CALCADA DIREITA"] || obra.TIPO_CALCADA_DIREITA),
         RightSidewalkWidth: parseFloat(obra["LARGURA CALCADA DIREITA"] || obra.LARGURA_CALCADA_DIREITA) || 0.0,
@@ -8392,8 +8446,6 @@ function generateBridgeComplementaryDataFromObra(obra) {
         NumberOfBuzinotes: parseInt(obra["QTD BUZINOTES"] || obra.QTD_BUZINOTES) || 0
     };
 }
-
-
 /**
  * Cria um objeto ZSElementType a partir de um valor do IndexedDB
  * @param {string} fieldValue - Valor do campo (geralmente string)
@@ -8716,99 +8768,6 @@ console.log("💡 Use: exportWorksToJSON() para exportar obras");
 
 
 
-// Versão: 1.0
-// Função para gerar JSON do BridgeData compatível com a estrutura C#
-
-/**
- * Função principal que gera o objeto BridgeData completo
- * @returns {object} Objeto BridgeData no formato esperado pelo backend C#
- */
-function generateBridgeDataJSON() {
-    try {
-        const bridgeData = {
-            BridgeProjectData: generateBridgeProjectData(),
-            GeneralConfigData: generateGeneralConfigData(),
-            BridgeTransitionData: generateBridgeTransitionData(),
-            SuperstructureData: generateSuperstructureData(),
-            BridgePierData: generateBridgePierData(),
-            BridgeComplementaryData: generateBridgeComplementaryData()
-        };
-
-        return bridgeData;
-    } catch (error) {
-        console.error("Erro ao gerar BridgeData JSON:", error);
-        throw error;
-    }
-}
-
-/**
- * Gera o objeto BridgeProjectData
- * Herda de BasicData (Name, Id)
- */
-function generateBridgeProjectData() {
-    return {
-        Name: getFieldValue("nome") || "",
-        Id: 0,
-        Code: getFieldValue("codigo") || "",
-        State: getFieldValue("uf") || "",
-        Highway: getFieldValue("rodovia") || "",
-        Km: parseFloat(getFieldValue("km")) || 0.0,
-        Date: getFieldValue("data") || "",
-        Engineer: getFieldValue("engenheiro") || "",
-        Technician: getFieldValue("tecnico") || ""
-    };
-}
-
-/**
- * Gera o objeto GeneralConfigData
- */
-function generateGeneralConfigData() {
-    const comprimento = parseFloat(getFieldValue("comprimento")) || 0.0;
-    const qtdTramos = parseInt(getFieldValue("qtd-tramos")) || 1;
-    
-    // Coletar comprimentos individuais dos tramos
-    const spanLengths = [];
-    const tramosFields = document.querySelectorAll(".tramo-field");
-    tramosFields.forEach(field => {
-        const valor = parseFloat(field.value) || 0.0;
-        spanLengths.push(valor);
-    });
-
-    return {
-        Length: comprimento,
-        Width: parseFloat(getFieldValue("largura")) || 0.0,
-        Height: parseFloat(getFieldValue("altura")) || 0.0,
-        ExpansionJointLength: 0.020,
-        Spans: {
-            ExpectedTotalLength: comprimento,
-            SpanLengths: spanLengths
-        },
-        BridgeOption: createZSElementType(getFieldValue("bridge-option")),
-        BridgeLengthGaps: qtdTramos,
-        SpanLengths: spanLengths
-    };
-}
-
-/**
- * Gera o objeto BridgeTransitionData
- */
-function generateBridgeTransitionData() {
-    return {
-        CurtainHeight: parseFloat(getFieldValue("cortina-altura")) || 1.50,
-        BearingThickness: 0.05,
-        IsSlabAbutment: getFieldValue("tipo-encontro") ? true : false,
-        SlabAbutmentLength: parseFloat(getFieldValue("comprimento-encontro-laje")) || 0.0,
-        SlabAbutmentLeftOffset: parseFloat(getFieldValue("deslocamento-esquerdo-encontro-laje")) || 0.0,
-        SlabAbutmentRightOffset: parseFloat(getFieldValue("deslocamento-direito-encontro-laje")) || 0.0,
-        ParallelWing: createZSElementType(getFieldValue("tipo-ala-paralela")),
-        PerpendicularWing: createZSElementType(getFieldValue("tipo-ala-perpendicular")),
-        WingLength: parseFloat(getFieldValue("comprimento-ala")) || 0.0,
-        WingThickness: parseFloat(getFieldValue("espessura-ala")) || 0.0,
-        AbutmentType: createZSElementType(getFieldValue("tipo-encontro")),
-        TransitionSlabType: createZSElementType(getFieldValue("laje-transicao")),
-        ReinforcedEarthWallType: null
-    };
-}
 
 /**
  * Gera o objeto SuperstructureData
@@ -8832,95 +8791,9 @@ function generateSuperstructureData() {
     };
 }
 
-/**
- * Gera o objeto BridgePierData
- */
-function generateBridgePierData() {
-    const qtdTramos = parseInt(getFieldValue("qtd-tramos")) || 1;
-    const qtdPilares = Math.max(0, qtdTramos - 1);
-    
-    // Coletar alturas dos apoios
-    const pierHeights = [];
-    const alturasFields = document.querySelectorAll(".apoio-altura-field");
-    alturasFields.forEach(field => {
-        const altura = parseFloat(field.value) || 0.0;
-        pierHeights.push(altura);
-    });
 
-    // Coletar larguras dos pilares
-    const pillarWidths = [];
-    const largurasFields = document.querySelectorAll(".apoio-larg-field");
-    largurasFields.forEach(field => {
-        const largura = parseFloat(field.value) || 0.0;
-        pillarWidths.push(largura);
-    });
 
-    // Coletar comprimentos dos pilares
-    const pillarLengths = [];
-    const comprimentosFields = document.querySelectorAll(".apoio-comp-field");
-    comprimentosFields.forEach(field => {
-        const comprimento = parseFloat(field.value) || 0.0;
-        pillarLengths.push(comprimento);
-    });
 
-    return {
-        PierConfigurations: {
-            PierHeights: pierHeights
-        },
-        NumberOfPillarsPerPier: parseInt(getFieldValue("qtd-pilares")) || 1,
-        PillarType: null,
-        CrossbeamType: createZSElementType(getFieldValue("tipo-travessa")),
-        FoundationType: createZSElementType(getFieldValue("tipo-bloco-sapata")),
-        BearingType: createZSElementType(getFieldValue("tipo-aparelho-apoio")),
-        PillarBracingBeamType: createZSElementType(getFieldValue("tipo-contraventamento-pilar")),
-        ConnectionBeamType: null,
-        PillarJacketType: createZSElementType(getFieldValue("tipo-encamisamento")),
-        FoundationConnectionBeamType: createZSElementType(getFieldValue("tipo-ligacao-fundacoes")),
-        PillarWidth: pillarWidths.length > 0 ? pillarWidths[0] : 0.0,
-        PillarLength: pillarLengths.length > 0 ? pillarLengths[0] : 0.0,
-        IsOffCenterPillar: getFieldValue("pilar-descentralizado") === "Sim",
-        CrossbeamLength: 0.0,
-        CrossbeamHeight: parseFloat(getFieldValue("altura-travessa")) || 0.0,
-        FoundationHeight: parseFloat(getFieldValue("altura-bloco-sapata")) || 0.0,
-        FoundationLength: 0.0,
-        FoundationWidth: parseFloat(getFieldValue("largura-bloco-sapata")) || 0.0,
-        PillarBracingBeamQuantity: 0,
-        PillarBracingBeamHeight: 0.0,
-        PillarBracingBeamLength: 0.0,
-        FoundationConnectionBeamHeight: 0.0,
-        FoundationConnectionBeamLength: 0.0,
-        PierHeights: pierHeights,
-        Height: pierHeights.length > 0 ? pierHeights.reduce((a, b) => a + b, 0) / pierHeights.length : 0.0
-    };
-}
-
-/**
- * Gera o objeto BridgeComplementaryData
- */
-function generateBridgeComplementaryData() {
-    return {
-        LeftBarrierType: createZSElementType(getFieldValue("tipo-barreira-esquerda")),
-        LeftBarrierWidth: parseFloat(getFieldValue("largura-barreira-esquerda")) || 0.0,
-        RightBarrierType: createZSElementType(getFieldValue("tipo-barreira-direita")),
-        RightBarrierWidth: parseFloat(getFieldValue("largura-barreira-direita")) || 0.0,
-        LeftSidewalk: createZSElementType(getFieldValue("tipo-calcada-esquerda")),
-        LeftSidewalkWidth: parseFloat(getFieldValue("largura-calcada-esquerda")) || 0.0,
-        RightSidewalkType: createZSElementType(getFieldValue("tipo-calcada-direita")),
-        RightSidewalkWidth: parseFloat(getFieldValue("largura-calcada-direita")) || 0.0,
-        LeftGuardRailType: createZSElementType(getFieldValue("guarda-rodas-esquerdo")),
-        LeftGuardRailWidth: parseFloat(getFieldValue("largura-guarda-rodas-esquerdo")) || 0.0,
-        RightGuardRail: createZSElementType(getFieldValue("guarda-rodas-direito")),
-        RightGuardRailWidth: parseFloat(getFieldValue("largura-guarda-rodas-direito")) || 0.0,
-        LeftGuardBodyType: null,
-        LeftGuardBodyWidth: 0.0,
-        RightGuardBodyType: null,
-        RightGuardBodyWidth: 0.0,
-        PavementType: createZSElementType(getFieldValue("tipo-pavimento")),
-        ExpansionJointType: null,
-        CradleType: null,
-        NumberOfBuzinotes: parseInt(getFieldValue("qtd-buzinotes")) || 0
-    };
-}
 
 /**
  * Cria um objeto ZSElementType a partir de um valor de campo
