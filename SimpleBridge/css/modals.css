@@ -122,6 +122,39 @@
   animation: slideIn var(--transition-fast) ease-out;
 }
 
+.save-reminder {
+  background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 18px 25px;
+  box-shadow: 0 12px 25px rgba(230, 126, 34, 0.4);
+  border: 2px solid #f1c40f;
+  animation: slideInBounce 0.5s ease-out;
+}
+
+.save-reminder button:hover {
+  background: #229954 !important;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+@keyframes slideInBounce {
+  0% {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-15px);
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .loading-indicator {
   display: inline-block;
   width: 18px;

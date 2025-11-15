@@ -384,18 +384,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Lembretes de salvamento
-function startSaveReminders() {
-  saveReminderInterval = setInterval(function () {
-    const notification = document.getElementById("save-reminder");
-    if (notification) {
-      notification.style.display = "block";
-      setTimeout(function () {
-        notification.style.display = "none";
-      }, 5000);
-    }
-  }, 600000); // 10 minutos
-}
 
 // Sistema de abas
 function initTabSystem() {
@@ -430,10 +418,37 @@ function initTabSystem() {
   }
 }
 
+// Lembrete de salvamento
+function showSaveReminder() {
+  try {
+    const reminder = document.getElementById("save-reminder");
+    if (reminder) {
+      reminder.style.display = "block";
+      
+      // Ocultar o lembrete após 5 segundos
+      setTimeout(function () {
+        reminder.style.display = "none";
+      }, 5000);
+    }
+  } catch (error) {
+    console.error("Erro ao mostrar lembrete:", error);
+  }
+}
+
+function startSaveReminders() {
+  try {
+    // Mostrar lembrete a cada 5 minutos
+    saveReminderInterval = setInterval(showSaveReminder, 5 * 60 * 1000);
+  } catch (error) {
+    console.error("Erro ao iniciar lembretes:", error);
+  }
+}
+
 // Inicialização principal
 document.addEventListener("DOMContentLoaded", function () {
   initDB();
   initTabSystem();
+  startSaveReminders(); // Iniciar lembretes de salvamento
 });
 
 // Expor funções globalmente
@@ -445,5 +460,6 @@ window.deleteWork = deleteWork;
 window.createNewWork = createNewWork;
 window.clearDatabase = clearDatabase;
 window.filterWorks = filterWorks;
+window.showSaveReminder = showSaveReminder;
 window.startSaveReminders = startSaveReminders;
 window.initTabSystem = initTabSystem;

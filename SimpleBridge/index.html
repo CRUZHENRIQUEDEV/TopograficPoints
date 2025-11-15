@@ -15,8 +15,11 @@
   <body>
     <!-- Notificações -->
     <div id="notification" style="display: none;"></div>
-    <div id="save-reminder" class="notification" style="display: none;">
-      Lembre-se de salvar seu trabalho periodicamente!
+    <div id="save-reminder" class="notification save-reminder" style="display: none;">
+      💾 Lembrete: Salve seus dados para não perder o trabalho!
+      <button type="button" onclick="showSummaryBeforeSave()" style="margin-left: 10px; padding: 5px 15px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        Salvar Agora
+      </button>
     </div>
 
     <!-- Container Principal -->
