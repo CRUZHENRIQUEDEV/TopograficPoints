@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimpleBridge - Sistema de Cadastro de OAE</title>
+    
+    <!-- CSS Modular -->
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/forms.css" />
+    <link rel="stylesheet" href="css/modals.css" />
+    <link rel="stylesheet" href="css/pontes-modal.css" />
+  </head>
+  <body>
+    <!-- Notificações -->
+    <div id="notification" style="display: none;"></div>
+    <div id="save-reminder" class="notification" style="display: none;">
+      Lembre-se de salvar seu trabalho periodicamente!
+    </div>
+
+    <!-- Container Principal -->
+    <div class="container">
+      <!-- Cabeçalho -->
+      <header>
+        <h1>Cadastro de Obras de Arte Especiais</h1>
+      </header>
+
+      <!-- Painel de Gerenciamento de Obras -->
+      <div class="works-panel" id="works-panel">
+        <div class="filter-container">
+          <input
+            type="text"
+            id="filter-works"
+            placeholder="Filtrar por código..."
+            oninput="filterWorks()"
+          />
+          <input
+            type="text"
+            id="filter-lote"
+            placeholder="Filtrar por lote..."
+            oninput="filterWorks()"
+          />
+          <button onclick="loadWorksList()" title="Atualizar lista de obras">🔄</button>
+        </div>
+
+        <div class="actions">
+          <button class="add-btn" onclick="createNewWork()">
+            + Nova Obra
+          </button>
+          <button class="copy-btn" onclick="importMultipleWorks()">
+            Importar Obras para modelar
+          </button>
+          <button class="copy-btn" onclick="importPontesReferenceCSV()">
+            Importar CSV BASE DE DADOS
+          </button>
+          <button class="export-btn" onclick="exportAllWorks()">
+            Exportar obras para modelar
+          </button>
+          <button class="export-btn" onclick="exportToJSON()">
+            📄 Exportar JSON
+          </button>
+          <button class="delete-btn" onclick="clearDatabase()">
+            Limpar Banco de Dados
+          </button>
+        </div>
+
+        <div class="works-list" id="works-list">
+          <div class="work-item">Carregando obras...</div>
+        </div>
+      </div>
+
+      <!-- Sistema de Abas -->
+      <div class="tabs">
+        <div class="tab active" data-tab="info">INFORMAÇÕES</div>
+        <div class="tab" data-tab="configuracao">CONFIGURAÇÕES</div>
+        <div class="tab" data-tab="transicao">TRANSIÇÃO</div>
+        <div class="tab" data-tab="superestrutura">SUPERESTRUTURA</div>
+        <div class="tab" data-tab="apoio">APOIO</div>
+        <div class="tab" data-tab="complementares">COMPLEMENTARES</div>
+      </div>
+
+      <!-- Formulário Principal -->
+      <form id="oae-form">
+        <!-- Informações Gerais -->
+        <div class="tab-content active" id="info-content">
+          <h2>Informações Gerais da Obra</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="modelado">MODELADO:</label>
+              <input type="checkbox" id="modelado" name="MODELADO" />
+            </div>
+            <div class="form-group">
+              <label for="gps">GPS:</label>
+              <input type="checkbox" id="gps" name="GPS" />
+            </div>
+            <div class="form-group">
+              <label for="lote" class="required">LOTE:</label>
+              <input type="text" id="lote" name="LOTE" required />
+              <div class="error-message" id="lote-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="codigo" class="required">CODIGO:</label>
+              <div style="display: flex; gap: 5px">
+                <input
+                  type="text"
+                  id="codigo"
+                  name="CODIGO"
+                  required
+                  style="flex-grow: 1"
+                />
+                <button
+                  type="button"
+                  onclick="showSearchPontesModal()"
+                  title="Buscar ponte de referência"
+                >
+                  Buscar
+                </button>
+              </div>
+              <div class="error-message" id="codigo-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="fotos-superiores">FOTOS SUPERIORES</label>
+              <input
+                type="number"
+                id="fotos-superiores"
+                name="FOTOS SUPERIORES"
+                min="0"
+                step="1"
+              />
+            </div>
+            <div class="form-group">
+              <label for="fotos-inferiores">FOTOS INFERIORES</label>
+              <input
+                type="number"
+                id="fotos-inferiores"
+                name="FOTOS INFERIORES"
+                min="0"
+                step="1"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome">NOME</label>
+              <input type="text" id="nome" name="NOME" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="uf">UF:</label>
+              <input type="text" id="uf" name="UF" />
+            </div>
+
+            <div class="form-group">
+              <label for="rodovia">RODOVIA</label>
+              <input type="number" id="rodovia" name="RODOVIA" />
+            </div>
+            <div class="form-group">
+              <label for="km">KM:</label>
+              <input type="number" id="km" name="KM" step="0.01" min="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="data">DATA</label>
+              <input
+                type="text"
+                id="data"
+                name="DATA"
+                placeholder="dd/mm/aaaa"
+              />
+            </div>
+            <div class="form-group">
+              <label for="engenheiro">ENGENHEIRO</label>
+              <input type="text" id="engenheiro" name="ENGENHEIRO" />
+            </div>
+            <div class="form-group">
+              <label for="tecnico">TECNICO</label>
+              <input type="text" id="tecnico" name="TECNICO" />
+            </div>
+          </div>
+
+          <!-- Adicionar dentro da div com id="info-content" antes do fechamento -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="latitude">LATITUDE:</label>
+              <input
+                type="number"
+                id="latitude"
+                name="LATITUDE"
+                min="-90.99999999999"
+                max="99.999999999999"
+                step="0.000001"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="longitude">LONGITUDE:</label>
+              <input
+                type="number"
+                id="longitude"
+                min="-180.99999999999"
+                max="180.999999999999"
+                name="LONGITUDE"
+                step="0.000001"
+              />
+            </div>
+          </div>
+
+          <!-- <div id="info-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('info-custom-fields')"
+          >
+            + Adicionar Campo
+          </button> -->
+        </div>
+
+
+<!-- Configurações Gerais -->
+<div class="tab-content" id="configuracao-content">
+  <h2>CONFIGURAÇÕES GERAIS</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="comprimento" class="required">COMPRIMENTO</label>
+      <input
+        type="number"
+        id="comprimento"
+        name="COMPRIMENTO"
+        step="0.01"
+        min="0"
+        required
+      />
+    <div class="error-message" id="tramos-sum-error" style="display: none; margin-top: 10px;">
+  A soma dos tramos deve ser igual ao comprimento total
+</div>
+    </div>
+    <div class="form-group">
+      <label for="largura" class="required">LARGURA</label>
+      <input
+        type="number"
+        id="largura"
+        name="LARGURA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="largura-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="altura" class="required">ALTURA</label>
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <input
+          type="number"
+          id="altura"
+          name="ALTURA"
+          step="0.01"
+          min="0"
+          required
+          style="flex: 1;"
+        />
+        <button type="button" onclick="showHeightCalculator()" 
+                style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: all 0.3s ease;"
+                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                title="Abrir calculadora de alturas">
+          🧮 Calculadora
+        </button>
+      </div>
+      <div class="error-message" id="altura-error">
+        Este campo é obrigatório
+      </div>
+      <div class="error-message" id="altura-sum-error" style="display: none; margin-top: 10px;">
+        A soma da altura da longarina e do maior apoio deve ser igual à altura total
+        <button type="button" onclick="showHeightCalculator()" 
+                style="background: #3498db; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+          Abrir Calculadora
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="qtd-tramos" class="required">QTD TRAMOS</label>
+      <input
+        type="number" 
+        id="qtd-tramos" 
+        name="QTD TRAMOS"
+        min="1"
+        value="1" 
+        step= "1"
+        required
+        oninput="forceIntegerOnly(this)"
+        onchange="generateTramosFields()"
+      />
+      <div class="error-message" id="qtd-tramos-error">
+        Este campo é obrigatório e deve ser no mínimo 1
+      </div>
+    </div>
+  </div>
+
+  <div id="dynamic-tramos" class="dynamic-container">
+    <h3>COMPRIMENTO TRAMOS</h3>
+    <div id="tramos-fields" class="dynamic-fields">
+      <!-- Campos gerados dinamicamente para tramos -->
+    </div>
+    <div class="error-message" id="tramos-error">
+      Todos os tramos devem ter comprimento mínimo de 0.5m
+    </div>
+  </div>
+
+  <!-- <div id="config-custom-fields"></div>
+  <button
+    type="button"
+    class="add-btn"
+    onclick="showAddField('config-custom-fields')"
+  >
+    + Adicionar Campo
+  </button> -->
+</div>
+
+
+        <!-- Transição -->
+        <div class="tab-content" id="transicao-content">
+          <h2>ELEMENTOS DE TRANSIÇÃO</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cortina-altura" class="required"
+              >CORTINA ALTURA(TRANSIÇÃO)</label
+                >
+              <input
+                type="number"
+                id="cortina-altura"
+                name="CORTINA ALTURA"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="cortina-altura-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="tipo-ala-paralela">TIPO ALA PARALELA</label>
+              <select id="tipo-ala-paralela" name="TIPO ALA PARALELA">
+                <option value="">Selecione</option>
+                <option value="ALA DE CONCRETO ARMADO">
+                  ALA DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+              <div class="error-message" id="tipo-ala-paralela-error">
+                Este campo é obrigatório quando o encontro é Parede Frontal Portante
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="tipo-ala-perpendicular">TIPO ALA PERPENDICULAR</label>
+              <select id="tipo-ala-perpendicular" name="TIPO ALA PERPENDICULAR">
+                <option value="">Selecione</option>
+                <option value="ALA DE CONCRETO ARMADO">
+                  ALA DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+              <div class="error-message" id="tipo-ala-perpendicular-error">
+                Este campo é obrigatório quando o encontro é Parede Frontal Portante
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento-ala">COMPRIMENTO ALA</label>
+              <input
+                type="number"
+                id="comprimento-ala"
+                name="COMPRIMENTO ALA"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="comprimento-ala-error">
+                Este campo é obrigatório se alguma ala estiver selecionada
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="espessura-ala">ESPESSURA ALA</label>
+              <input
+                type="number"
+                id="espessura-ala"
+                name="ESPESSURA ALA"
+                step="0.01"
+                min="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="tipo-encontro">TIPO ENCONTRO</label>
+              <select id="tipo-encontro" name="TIPO ENCONTRO">
+                <option value="">Selecione</option>
+                <option value="Nenhum">Nenhum</option>
+                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">ENCONTRO - PAREDE FRONTAL PORTANTE</option>
+                <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
+                <option value="ENCONTRO DE ALVENARIA DE PEDRA">ENCONTRO DE ALVENARIA DE PEDRA</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="deslocamento-esquerdo-encontro-laje"
+                >DESLOCAMENTO ESQUERDO ENCONTRO LAJE</label
+              >
+              <input
+                type="number"
+                id="deslocamento-esquerdo-encontro-laje"
+                name="DESLOCAMENTO ESQUERDO ENCONTRO LAJE"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div class="form-group">
+              <label for="deslocamento-direito-encontro-laje"
+                >DESLOCAMENTO DIREITO ENCONTRO LAJE</label
+              >
+              <input
+                type="number"
+                id="deslocamento-direito-encontro-laje"
+                name="DESLOCAMENTO DIREITO ENCONTRO LAJE"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento-encontro-laje"
+                >COMPRIMENTO ENCONTRO LAJE</label
+              >
+              <input
+                type="number"
+                id="comprimento-encontro-laje"
+                name="COMPRIMENTO ENCONTRO LAJE"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div class="form-group">
+              <label for="laje-transicao">LAJE TRANSICAO</label>
+              <select id="laje-transicao" name="LAJE TRANSICAO">
+                <option value="">Selecione</option>
+                <option value="Nenhum">Nenhum</option>
+                <option value="LAJE TRANSICAO">LAJE TRANSICAO</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- <div id="transicao-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('transicao-custom-fields')"
+          >
+            + Adicionar Campo
+          </button> -->
+        </div>
+
+
+        <!-- Aba apoio -->
+<!-- Superestrutura -->
+<div class="tab-content" id="superestrutura-content">
+  <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="altura-longarina" class="required"
+        >ALTURA LONGARINA</label
+      >
+      <input
+        type="number"
+        id="altura-longarina"
+        name="ALTURA LONGARINA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="altura-longarina-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="deslocamento-esquerdo" class="required"
+        >DESLOCAMENTO ESQUERDO</label
+      >
+      <input
+        type="number"
+        id="deslocamento-esquerdo"
+        name="DESLOCAMENTO ESQUERDO"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="deslocamento-esquerdo-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="deslocamento-direito" class="required"
+        >DESLOCAMENTO DIREITO</label
+      >
+      <input
+        type="number"
+        id="deslocamento-direito"
+        name="DESLOCAMENTO DIREITO"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="deslocamento-direito-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="qtd-longarinas" class="required"
+        >QTD LONGARINAS</label
+      >
+      <input
+        type="number"
+        id="qtd-longarinas"
+        name="QTD LONGARINAS"
+        min="0"
+        step= "1"
+        oninput="forceIntegerOnly(this)"
+        required
+      />
+      <div class="error-message" id="qtd-longarinas-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
+      <input
+        type="number"
+        id="qtd-transversinas"
+        name="QTD TRANSVERSINAS"
+        min="0"
+        step="1"
+        oninput="forceIntegerOnly(this)"
+      />
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="espessura-longarina" class="required"
+        >ESPESSURA LONGARINA</label
+      >
+      <input
+        type="number"
+        id="espessura-longarina"
+        name="ESPESSURA LONGARINA"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="espessura-longarina-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="espessura-transversina">ESPESSURA TRANSVERSINA</label>
+      <input
+        type="number"
+        id="espessura-transversina"
+        name="ESPESSURA TRANSVERSINA"
+        step="0.01"
+        min="0"
+      />
+    </div>
+    <div class="form-group">
+      <label for="espessura-laje" class="required"
+        >ESPESSURA LAJE:</label
+      >
+      <input
+        type="number"
+        id="espessura-laje"
+        name="ESPESSURA LAJE"
+        step="0.01"
+        min="0"
+        required
+      />
+      <div class="error-message" id="espessura-laje-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+  </div>
+
+  <!-- <div id="superestrutura-custom-fields"></div>
+  <button
+    type="button"
+    class="add-btn"
+    onclick="showAddField('superestrutura-custom-fields')"
+  >
+    + Adicionar Campo
+  </button> -->
+</div>
+
+        <!-- Aba apoio -->
+        <div class="tab-content" id="apoio-content">
+          <h2>ELEMENTOS DE APOIO</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qtd-pilares" class="required">QTD PILARES</label>
+      <input
+        type="number"
+        id="qtd-pilares"
+        step= "1"
+        oninput="forceIntegerOnly(this)"
+        name="QTD PILARES"
+        min="0"
+        required
+      />
+              <div class="error-message" id="qtd-pilares-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="pilar-descentralizado">PILAR DESCENTRALIZADO</label>
+              <select id="pilar-descentralizado" name="PILAR DESCENTRALIZADO">
+                <option value="">Selecione</option>
+                <option value="Sim">Sim</option>
+                <option value="Não">Não</option>
+              </select>
+            </div>
+                        <div class="form-group">
+              <label for="tipo-aparelho-apoio">TIPO APARELHO APOIO</label>
+              <select id="tipo-aparelho-apoio" name="TIPO APARELHO APOIO">
+                <option value="">Selecione</option>
+        <option value="APARELHO DE APOIO DE NEOPRENE FRETADO"> APARELHO DE APOIO DE NEOPRENE FRETADO </option>
+        <option value="APARELHO DE APOIO ROLO METÁLICO"> APARELHO DE APOIO ROLO METÁLICO </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Campo hidden para quantidade de apoios (calculado automaticamente) -->
+          <input type="hidden" id="qtd-apoios" name="QTD APOIOS" value="0" />
+ 
+          <!-- Área de apoios com os três campos -->
+          <div id="dynamic-apoios" class="dynamic-container">
+            <h3>APOIOS</h3>
+    <div class="apoios-header">
+      <div class="apoio-column">APOIO</div>
+      <div class="apoio-column">ALT.</div>
+      <div class="apoio-column">COMP.</div>
+      <div class="apoio-column">LARG.</div>
+    </div>
+    <div id="apoios-fields" class="dynamic-fields">
+      <!-- Campos gerados dinamicamente para apoios -->
+    </div>
+            <div class="error-message" id="apoios-error">
+      Todos os campos de apoio precisam ser preenchidos
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-travessa">TIPO TRAVESSA</label>
+              <select id="tipo-travessa" name="TIPO TRAVESSA">
+                <option value="">Selecione</option>
+                <option value="TRAVESSA DE APOIO DE CONCRETO ARMADO">
+                  TRAVESSA DE APOIO DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="altura-travessa">ALTURA TRAVESSA</label>
+      <input
+        type="number"
+        id="altura-travessa"
+        name="ALTURA TRAVESSA"
+        step="0.01"
+        min="0"
+      />
+              <div class="error-message" id="altura-travessa-error">
+                Este campo é obrigatório se uma travessa estiver selecionada
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="tipo-encamisamento">TIPO ENCAMISAMENTO</label>
+              <select id="tipo-encamisamento" name="TIPO ENCAMISAMENTO">
+                <option value="">Selecione</option>
+                <option value="ENCAMISAMENTO DE PILAR">
+                  ENCAMISAMENTO DE PILAR
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-bloco-sapata">TIPO BLOCO SAPATA</label>
+              <select id="tipo-bloco-sapata" name="TIPO BLOCO SAPATA">
+                <option value="">Selecione</option>
+                <option value="BLOCO SAPATA DE CONCRETO ARMADO">
+                  BLOCO OU SAPATA DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="altura-bloco-sapata">ALTURA BLOCO SAPATA</label>
+      <input
+        type="number"
+        id="altura-bloco-sapata"
+        name="ALTURA BLOCO SAPATA"
+        step="0.01"
+        min="0"
+      />
+            </div>
+            <div class="form-group">
+              <label for="largura-bloco-sapata">LARGURA BLOCO SAPATA</label>
+      <input
+        type="number"
+        id="largura-bloco-sapata"
+        name="LARGURA BLOCO SAPATA"
+        step="0.01"
+        min="0"
+      />
+            </div>
+            <div class="form-group">
+              <label for="comprimento-bloco-sapata">COMPRIMENTO BLOCO SAPATA</label>
+      <input
+        type="number"
+        id="comprimento-bloco-sapata"
+        name="COMPRIMENTO BLOCO SAPATA"
+        step="0.01"
+        min="0"
+      />
+            </div>
+          </div>
+          
+          
+
+
+          <div class="form-row">
+            <div class="form-group">
+      <label for="tipo-contraventamento-pilar">TIPO CONTRAVENTAMENTO PILAR</label>
+      <select
+        id="tipo-contraventamento-pilar"
+        name="TIPO CONTRAVENTAMENTO PILAR"
+      >
+                <option value="">Selecione</option>
+        <option value="VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO">
+          VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
+                </option>
+        <option value="PAREDE DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO">
+          PAREDE DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tipo-ligacao-fundacoes">TIPO LIGACAO FUNDACOES</label>
+              <select
+                id="tipo-ligacao-fundacoes"
+                name="TIPO LIGACAO FUNDACOES"
+              >
+                <option value="">Selecione</option>
+                <option value="VIGA DE LIGAÇÃO DE FUNDAÇÕES DE CONCRETO ARMADO">
+                  VIGA DE LIGAÇÃO DE FUNDAÇÕES DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+          </div>
+   
+<!-- 
+          <div id="apoio-custom-fields"></div>
+          <button
+              type="button"
+              class="add-btn"
+              onclick="showAddField('apoio-custom-fields')"
+            >
+            + Adicionar Campo
+          </button> -->
+        </div>
+
+
+
+        <!-- Aba Complementar -->
+        <div class="tab-content" id="complementares-content">
+          <h2>ELEMENTOS COMPLEMENTARES</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-barreira-esquerda">TIPO BARREIRA ESQUERDA</label>
+              <select id="tipo-barreira-esquerda" name="TIPO BARREIRA ESQUERDA">
+                <option value="">Selecione</option>
+                <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">BARREIRA QUALQUER DE CONCRETO ARMADO</option>
+                <option value="BARREIRA COM GUARDA-CORPO">BARREIRA COM GUARDA-CORPO</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-barreira-esquerda">LARGURA BARREIRA ESQUERDA</label>
+              <input
+                type="number"
+                id="largura-barreira-esquerda"
+                name="LARGURA BARREIRA ESQUERDA"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-barreira-direita">TIPO BARREIRA DIREITA</label>
+              <select id="tipo-barreira-direita" name="TIPO BARREIRA DIREITA">
+                 <option value="">Selecione</option>
+                <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
+                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">BARREIRA QUALQUER DE CONCRETO ARMADO</option>
+                <option value="BARREIRA COM GUARDA-CORPO">BARREIRA COM GUARDA-CORPO</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-barreira-direita"
+                >LARGURA BARREIRA DIREITA:</label
+              >
+              <input
+                type="number"
+                id="largura-barreira-direita"
+                name="LARGURA BARREIRA DIREITA"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-calcada-esquerda">TIPO CALCADA ESQUERDA</label>
+              <select id="tipo-calcada-esquerda" name="TIPO CALCADA ESQUERDA">
+                <option value="">Selecione</option>
+                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
+                  CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-calcada-esquerda"
+                >LARGURA CALCADA ESQUERDA:</label
+              >
+              <input
+                type="number"
+                id="largura-calcada-esquerda"
+                name="LARGURA CALCADA ESQUERDA"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-calcada-direita">TIPO CALCADA DIREITA</label>
+              <select id="tipo-calcada-direita" name="TIPO CALCADA DIREITA">
+                <option value="">Selecione</option>
+                <option value="CALÇADA PARA PEDESTRES DE CONCRETO ARMADO">
+                  CALÇADA PARA PEDESTRES DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-calcada-direita"
+                >LARGURA CALCADA DIREITA</label
+              >
+              <input
+                type="number"
+                id="largura-calcada-direita"
+                name="LARGURA CALCADA DIREITA"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="guarda-rodas-esquerdo">GUARDA RODAS ESQUERDO</label>
+              <select id="guarda-rodas-esquerdo" name="GUARDA RODAS ESQUERDO">
+                <option value="">Selecione</option>
+                <option value="GUARDA-RODAS ANTIGO DO DNER">
+                  GUARDA-RODAS ANTIGO DO DNER
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-guarda-rodas-esquerdo"
+                >LARGURA GUARDA RODAS ESQUERDO</label
+              >
+              <input
+              id="largura-guarda-rodas-esquerdo"
+              type="number"
+                name="LARGURA GUARDA RODAS ESQUERDO"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="guarda-rodas-direito">GUARDA RODAS DIREITO</label>
+              <select id="guarda-rodas-direito" name="GUARDA RODAS DIREITO">
+                <option value="">Selecione</option>
+                <option value="GUARDA-RODAS ANTIGO DO DNER">
+                  GUARDA-RODAS ANTIGO DO DNER
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="largura-guarda-rodas-direito"
+                >LARGURA GUARDA RODAS DIREITO</label
+              >
+              <input
+                type="number"
+                id="largura-guarda-rodas-direito"
+                name="LARGURA GUARDA RODAS DIREITO"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pavimento" class="required">TIPO PAVIMENTO</label>
+              <select id="pavimento" name="TIPO PAVIMENTO" required>
+                <option value="">Selecione</option>
+                <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
+                <option value="PAVIMENTO DE CONCRETO">PAVIMENTO DE CONCRETO</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+              <div class="error-message" id="pavimento-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="qtd-buzinotes">QTD BUZINOTES</label>
+              <input
+                type="number"
+                id="qtd-buzinotes"
+                step= "1"
+                oninput="forceIntegerOnly(this)"
+                name="QTD BUZINOTES"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div
+            class="alert-message"
+            id="lateral-protection-error"
+            style="
+              display: none;
+              color: var(--danger);
+              background-color: rgba(231, 76, 60, 0.1);
+              padding: 10px;
+              border-radius: 4px;
+              margin: 10px 0;
+            "
+          >
+            <strong>Atenção:</strong> Toda obra deve ter pelo menos um tipo de
+            proteção lateral (barreira, guarda-rodas ou CALCADA) em AMBOS os
+            lados.
+          </div>
+
+          <!-- <div id="complementares-custom-fields"></div>
+          <button
+            type="button"
+            class="add-btn"
+            onclick="showAddField('complementares-custom-fields')"
+          >
+            + Adicionar Campo
+          </button> -->
+        </div>
+      
+        <!-- Botões de Ação -->
+        <div class="form-actions">
+          <button type="button" onclick="showSummaryBeforeSave()">
+            Salvar Obra
+          </button>
+          <button type="button" onclick="exportToCSV()">Exportar CSV</button>
+          <button type="button" onclick="clearForm()">Limpar Formulário</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal de Resumo -->
+    <div id="summary-modal" class="modal">
+      <div class="modal-content summary-modal">
+        <span class="close-modal" onclick="closeSummaryModal()">&times;</span>
+        <h2>Resumo da Obra</h2>
+        <div id="missing-fields-container" style="display: none;">
+          <h3>Campos Obrigatórios Faltando:</h3>
+          <ul id="missing-fields-list"></ul>
+        </div>
+        <div id="summary-content"></div>
+        <div class="actions">
+          <button id="confirm-save-btn" onclick="saveCurrentWork()">
+            Confirmar e Salvar
+          </button>
+          <button onclick="closeSummaryModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript Modular -->
+    <script src="js/utils.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/dynamic-fields.js"></script>
+    <script src="js/height-calculator.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/pontes.js"></script>
+    <script src="js/pontes-search.js"></script>
+    <script src="js/form-loader.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

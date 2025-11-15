@@ -13,7 +13,7 @@
   color: #27ae60;
   font-weight: bold;
   font-size: 30px;
-  margin-right: 8px;
+  margin-right: 8px; edi
 }
 
 .work-item .no-check {
@@ -8408,37 +8408,10 @@ function generateBridgePierDataFromObra(obra) {
     }
 
     // Retorna estrutura compatível com PierConfigurationCollection
-    // Inclui também as propriedades legadas para compatibilidade
     return {
         PierConfigurations: {
-            _piers: piers,
-            PierHeights: pierHeights  // Formato alternativo para deserialização
-        },
-        // Propriedades legadas (para compatibilidade com formato antigo)
-        NumberOfPillarsPerPier: numberOfPillars,
-        PillarType: pillarType,
-        CrossbeamType: crossbeamType,
-        FoundationType: foundationType,
-        BearingType: bearingType,
-        PillarBracingBeamType: pillarBracingBeamType,
-        ConnectionBeamType: connectionBeamType,
-        PillarJacketType: pillarJacketType,
-        FoundationConnectionBeamType: foundationConnectionBeamType,
-        PillarWidth: pillarWidths[0] || 0.8,
-        PillarLength: pillarLengths[0] || 0.8,
-        IsOffCenterPillar: isOffCenter,
-        CrossbeamLength: crossbeamLength,
-        CrossbeamHeight: crossbeamHeight,
-        FoundationHeight: foundationHeight,
-        FoundationLength: foundationLength,
-        FoundationWidth: foundationWidth,
-        PillarBracingBeamQuantity: pillarBracingBeamQuantity,
-        PillarBracingBeamHeight: pillarBracingBeamHeight,
-        PillarBracingBeamLength: pillarBracingBeamLength,
-        FoundationConnectionBeamHeight: foundationConnectionBeamHeight,
-        FoundationConnectionBeamLength: foundationConnectionBeamLength,
-        PierHeights: pierHeights,  // Array de alturas (formato legado)
-        Height: pierHeights.reduce((sum, h) => sum + h, 0) / pierHeights.length  // Altura média
+            _piers: piers
+        }
     };
 }
 
