@@ -520,24 +520,10 @@ function revealExportJsonButton() {
     
     // Adicionar animação de revelação
     exportJsonBtn.style.animation = "fadeInScale 0.5s ease-out";
-    
-
-    document.body.appendChild(notification);
-    
-    // Remover notificação após 3 segundos
-    setTimeout(() => {
-      notification.style.animation = "fadeOut 0.5s ease-out";
-      setTimeout(() => notification.remove(), 500);
-    }, 3000);
-    
-    // Opcional: ocultar novamente após usar ou depois de um tempo
-    // setTimeout(() => {
-    //   exportJsonBtn.classList.add("hidden-feature");
-    // }, 60000); // Ocultar após 1 minuto
   }
 }
 
-// Adicionar animações CSS dinamicamente
+// Adicionar animação CSS dinamicamente
 const style = document.createElement('style');
 style.textContent = `
   @keyframes fadeInScale {
@@ -551,27 +537,6 @@ style.textContent = `
     100% {
       opacity: 1;
       transform: scale(1);
-    }
-  }
-  
-  @keyframes slideInRight {
-    0% {
-      transform: translateX(400px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes fadeOut {
-    0% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-20px);
     }
   }
 `;
