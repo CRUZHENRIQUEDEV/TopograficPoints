@@ -49,6 +49,7 @@ window.requiredFields = {
   "espessura-ala": {
     type: "number",
     min: 0,
+    max: 1.5,
     required: function () {
       const alaParalelaField = document.getElementById("tipo-ala-paralela");
       const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
@@ -131,7 +132,7 @@ window.requiredFields = {
   },
   "altura-bloco-sapata": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
       return (
@@ -143,7 +144,7 @@ window.requiredFields = {
   },
   "largura-bloco-sapata": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
       return (
@@ -155,7 +156,7 @@ window.requiredFields = {
   },
   "comprimento-bloco-sapata": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
       return (
@@ -166,7 +167,62 @@ window.requiredFields = {
     },
   },
   pavimento: { type: "text", required: true },
+  "largura-barreira-esquerda": {
+    type: "number",
+    min: 0,
+    required: function () {
+      const tipoBarreiraField = document.getElementById("tipo-barreira-esquerda");
+      return tipoBarreiraField && tipoBarreiraField.value !== "" && tipoBarreiraField.value !== "Nenhum";
+    },
+  },
+  "largura-barreira-direita": {
+    type: "number",
+    min: 0,
+    required: function () {
+      const tipoBarreiraField = document.getElementById("tipo-barreira-direita");
+      return tipoBarreiraField && tipoBarreiraField.value !== "" && tipoBarreiraField.value !== "Nenhum";
+    },
+  },
+  "largura-guarda-rodas-esquerdo": {
+    type: "number",
+    min: 0,
+    required: function () {
+      const tipoGuardaRodasField = document.getElementById("guarda-rodas-esquerdo");
+      return tipoGuardaRodasField && tipoGuardaRodasField.value !== "" && tipoGuardaRodasField.value !== "Nenhum";
+    },
+  },
+  "largura-guarda-rodas-direito": {
+    type: "number",
+    min: 0,
+    required: function () {
+      const tipoGuardaRodasField = document.getElementById("guarda-rodas-direito");
+      return tipoGuardaRodasField && tipoGuardaRodasField.value !== "" && tipoGuardaRodasField.value !== "Nenhum";
+    },
+  },
+  "largura-calcada-esquerda": {
+    type: "number",
+    min: 0,
+    required: function () {
+      const tipoCalcadaField = document.getElementById("tipo-calcada-esquerda");
+      return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";
+    },
+  },
+  "largura-calcada-direita": {
+    type: "number",
+    min: 0,
+    required: function () {
+      const tipoCalcadaField = document.getElementById("tipo-calcada-direita");
+      return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";
+    },
+  },
 };
+
+// Log para debug: verificar se campos de bloco sapata estão registrados
+console.log("Campos de bloco sapata registrados:", {
+  "altura-bloco-sapata": !!requiredFields["altura-bloco-sapata"],
+  "largura-bloco-sapata": !!requiredFields["largura-bloco-sapata"],
+  "comprimento-bloco-sapata": !!requiredFields["comprimento-bloco-sapata"]
+});
 
 // Validar campo específico
 function validateField(fieldId) {
@@ -184,10 +240,26 @@ function validateField(fieldId) {
 
     if (isRequired) {
       if (config.type === "number") {
-        const value = parseFloat(field.value) || 0;
-        if (field.value === "" || (config.min !== null && value < config.min)) {
+        const value = parseFloat(field.value);
+        // Debug para campos de bloco sapata
+        if (fieldId.includes("bloco-sapata")) {
+          console.log(`Validando ${fieldId}: valor="${field.value}", parsed=${value}, min=${config.min}, isRequired=${isRequired}`);
+        }
+        
+        // Campo vazio ou valor menor que o mínimo
+        if (field.value === "" || isNaN(value) || (config.min !== null && value < config.min)) {
           field.classList.add("error");
           if (errorElement) errorElement.classList.add("visible");
+          return false;
+        }
+        
+        // Validar valor máximo
+        if (config.max !== undefined && value > config.max) {
+          field.classList.add("error");
+          if (errorElement) {
+            errorElement.textContent = `Valor máximo permitido: ${config.max}m`;
+            errorElement.classList.add("visible");
+          }
           return false;
         }
       } else if (config.type === "text") {
@@ -265,8 +337,10 @@ function validateApoios() {
 
   if (!valid && errorElement) {
     errorElement.textContent = `Campos obrigatórios vazios: ${emptyFields.join(", ")}`;
+    errorElement.classList.add("visible");
     errorElement.style.display = "block";
   } else if (errorElement) {
+    errorElement.classList.remove("visible");
     errorElement.style.display = "none";
   }
 
@@ -426,6 +500,46 @@ function validateMinimumHeight() {
   return true;
 }
 
+// Validar ALA: OU paralela OU perpendicular, não ambas
+function validateAlaExclusivity() {
+  const alaParalelaField = document.getElementById("tipo-ala-paralela");
+  const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
+  
+  if (!alaParalelaField || !alaPerpendicularField) return true;
+  
+  const hasParalela = alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum";
+  const hasPerpendicular = alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum";
+  
+  // Se ambas estiverem selecionadas, é erro
+  if (hasParalela && hasPerpendicular) {
+    alaParalelaField.classList.add("error");
+    alaPerpendicularField.classList.add("error");
+    return false;
+  }
+  
+  alaParalelaField.classList.remove("error");
+  alaPerpendicularField.classList.remove("error");
+  return true;
+}
+
+// Validar comprimento máximo do pilar (2m)
+function validatePilarMaxLength() {
+  const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
+  let valid = true;
+  
+  apoiosCompFields.forEach((field, index) => {
+    const valor = parseFloat(field.value) || 0;
+    if (valor > 2) {
+      field.classList.add("error");
+      valid = false;
+    } else {
+      field.classList.remove("error");
+    }
+  });
+  
+  return valid;
+}
+
 // Validar soma dos tramos
 function validateTramosSum() {
   const comprimento = parseFloat(document.getElementById("comprimento").value) || 0;
@@ -455,13 +569,17 @@ function validateForm() {
   let isValid = true;
   const missingFields = [];
 
+  console.log("=== Iniciando validação completa do formulário ===");
+  
   for (const fieldId in requiredFields) {
     const isFieldValid = validateField(fieldId);
     if (!isFieldValid) {
       isValid = false;
       const field = document.getElementById(fieldId);
       const label = document.querySelector(`label[for="${fieldId}"]`);
-      missingFields.push(label ? label.textContent.replace(":", "") : fieldId);
+      const fieldName = label ? label.textContent.replace(":", "") : fieldId;
+      missingFields.push(fieldName);
+      console.log(`❌ Campo inválido: ${fieldId} (${fieldName})`);
 
       const tabContent = field.closest(".tab-content");
       if (tabContent && !tabContent.classList.contains("active")) {
@@ -525,6 +643,21 @@ function validateForm() {
     missingFields.push("Ala obrigatória quando o encontro é Parede Frontal Portante ou Alvenaria de Pedra");
   }
 
+  const alaExclusivityValid = validateAlaExclusivity();
+  if (!alaExclusivityValid) {
+    isValid = false;
+    missingFields.push("Ala: Selecione APENAS uma opção (Paralela OU Perpendicular), não ambas");
+  }
+
+  const pilarMaxLengthValid = validatePilarMaxLength();
+  if (!pilarMaxLengthValid) {
+    isValid = false;
+    missingFields.push("Comprimento dos pilares não pode ser maior que 2m");
+  }
+
+  console.log(`=== Validação concluída: ${isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO'} ===`);
+  console.log(`Campos faltando (${missingFields.length}):`, missingFields);
+
   return { isValid, missingFields };
 }
 
@@ -534,6 +667,8 @@ window.validateTramos = validateTramos;
 window.validateApoios = validateApoios;
 window.validateLateralProtection = validateLateralProtection;
 window.validateAlaWithEncountro = validateAlaWithEncountro;
+window.validateAlaExclusivity = validateAlaExclusivity;
+window.validatePilarMaxLength = validatePilarMaxLength;
 window.validateMinimumWidth = validateMinimumWidth;
 window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;

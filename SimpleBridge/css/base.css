@@ -6,6 +6,12 @@
   box-sizing: border-box;
 }
 
+/* ===== FUNCIONALIDADES OCULTAS ===== */
+
+.hidden-feature {
+  display: none !important;
+}
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
@@ -121,6 +127,59 @@ h3 {
   padding: 20px;
   background: var(--bg-overlay-dark);
   backdrop-filter: blur(10px);
+}
+
+/* ===== CONTADOR DE OBRAS ===== */
+
+.works-counter {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 6px 8px;
+  margin: 8px 0;
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(41, 128, 185, 0.1));
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  backdrop-filter: blur(5px);
+}
+
+.counter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  transition: var(--transition-fast);
+}
+
+.counter-item:hover {
+  background: rgba(52, 152, 219, 0.2);
+  transform: translateY(-1px);
+}
+
+.counter-label {
+  font-size: 0.65rem;
+  color: var(--text-light-blue);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.counter-value {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.counter-value.modelado {
+  color: #27ae60;
+}
+
+.counter-value.pending {
+  color: #f39c12;
 }
 
 .works-list {

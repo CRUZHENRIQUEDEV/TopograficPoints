@@ -26,6 +26,7 @@ function closeSummaryModal() {
 
 // Mostrar resumo antes de salvar
 function showSummaryBeforeSave() {
+  console.log("=== ABRINDO MODAL DE RESUMO ===");
   const { isValid, missingFields } = validateForm();
   const summaryContent = document.getElementById("summary-content");
   const missingFieldsContainer = document.getElementById("missing-fields-container");
@@ -35,13 +36,28 @@ function showSummaryBeforeSave() {
   if (summaryContent) summaryContent.innerHTML = "";
   if (missingFieldsList) missingFieldsList.innerHTML = "";
 
+  // SEMPRE mostrar o resumo
+  const summaryHTML = generateSummaryByTabs();
+  if (summaryContent) summaryContent.innerHTML = summaryHTML;
+
   if (!isValid) {
+    console.error("❌ FORMULÁRIO INVÁLIDO - Botão de salvar será DESABILITADO");
+    
     if (missingFieldsContainer) missingFieldsContainer.style.display = "block";
-    if (confirmSaveBtn) confirmSaveBtn.style.display = "none";
+    
+    // DESABILITAR o botão ao invés de esconder
+    if (confirmSaveBtn) {
+      confirmSaveBtn.disabled = true;
+      confirmSaveBtn.style.opacity = "0.5";
+      confirmSaveBtn.style.cursor = "not-allowed";
+      confirmSaveBtn.title = "Corrija os erros antes de salvar";
+      confirmSaveBtn.textContent = "❌ Corrija os Erros Primeiro";
+    }
 
     missingFields.forEach((field) => {
       const li = document.createElement("li");
       li.className = "missing-field";
+      li.style.cssText = "color: #721c24; background: #f8d7da; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 4px solid #c82333;";
       
       // Se for erro de altura, adicionar botão da calculadora
       if (field.includes("Altura deve ser") && field.includes("Calculadora")) {
@@ -66,24 +82,18 @@ function showSummaryBeforeSave() {
       if (missingFieldsList) missingFieldsList.appendChild(li);
     });
   } else {
+    console.log("✅ FORMULÁRIO VÁLIDO - Botão de salvar HABILITADO");
+    
     if (missingFieldsContainer) missingFieldsContainer.style.display = "none";
-    if (confirmSaveBtn) confirmSaveBtn.style.display = "inline-block";
-
-    // Gerar resumo
-    const form = document.getElementById("oae-form");
-    const formData = new FormData(form);
-    let summaryHTML = "<h3>Resumo dos Dados</h3>";
-
-    for (let [key, value] of formData.entries()) {
-      if (value && !key.startsWith("tramo-") && !key.startsWith("apoio-")) {
-        summaryHTML += `<div class="summary-row">
-          <div class="summary-label">${key}:</div>
-          <div class="summary-value">${value}</div>
-        </div>`;
-      }
+    
+    // HABILITAR o botão
+    if (confirmSaveBtn) {
+      confirmSaveBtn.disabled = false;
+      confirmSaveBtn.style.opacity = "1";
+      confirmSaveBtn.style.cursor = "pointer";
+      confirmSaveBtn.title = "";
+      confirmSaveBtn.textContent = "✅ Confirmar e Salvar";
     }
-
-    if (summaryContent) summaryContent.innerHTML = summaryHTML;
   }
 
   const modal = document.getElementById("summary-modal");
@@ -108,9 +118,164 @@ function showCustomAlert(message) {
   document.body.appendChild(modal);
 }
 
+// Gerar resumo organizado por abas
+function generateSummaryByTabs() {
+  // Lista de campos obrigatórios (campos com class="required" no HTML)
+  const requiredFields = [
+    'LOTE', 'CODIGO',
+    'COMPRIMENTO', 'LARGURA', 'ALTURA', 'QTD TRAMOS',
+    'CORTINA ALTURA',
+    'ALTURA LONGARINA', 'DESLOCAMENTO ESQUERDO', 'DESLOCAMENTO DIREITO',
+    'QTD LONGARINAS', 'ESPESSURA LONGARINA', 'ESPESSURA LAJE',
+    'QTD PILARES',
+    'TIPO PAVIMENTO'
+  ];
+  
+  const tabs = [
+    { id: 'info', title: 'INFORMAÇÕES', fields: [
+      'MODELADO', 'GPS', 'LOTE', 'CODIGO', 'FOTOS SUPERIORES', 'FOTOS INFERIORES',
+      'NOME', 'UF', 'RODOVIA', 'KM', 'DATA', 'ENGENHEIRO', 'TECNICO', 'LATITUDE', 'LONGITUDE'
+    ]},
+    { id: 'configuracao', title: 'CONFIGURAÇÕES', fields: [
+      'COMPRIMENTO', 'LARGURA', 'ALTURA', 'QTD TRAMOS', 'COMPRIMENTO TRAMOS'
+    ]},
+    { id: 'transicao', title: 'TRANSIÇÃO', fields: [
+      'CORTINA ALTURA', 'TIPO ALA PARALELA', 'TIPO ALA PERPENDICULAR',
+      'COMPRIMENTO ALA', 'ESPESSURA ALA', 'TIPO ENCONTRO',
+      'DESLOCAMENTO ESQUERDO ENCONTRO LAJE', 'DESLOCAMENTO DIREITO ENCONTRO LAJE',
+      'COMPRIMENTO ENCONTRO LAJE', 'LAJE TRANSICAO'
+    ]},
+    { id: 'superestrutura', title: 'SUPERESTRUTURA', fields: [
+      'ALTURA LONGARINA', 'DESLOCAMENTO ESQUERDO', 'DESLOCAMENTO DIREITO',
+      'QTD LONGARINAS', 'QTD TRANSVERSINAS', 'ESPESSURA LONGARINA',
+      'ESPESSURA TRANSVERSINA', 'ESPESSURA LAJE', 'REFORCO VIGA', 'TIPO DE TRANSVERSINA'
+    ]},
+    { id: 'apoio', title: 'APOIO', fields: [
+      'QTD PILARES', 'PILAR DESCENTRALIZADO', 'TIPO APARELHO APOIO',
+      'ALTURA APOIO', 'LARGURA PILAR', 'COMPRIMENTO PILARES',
+      'TIPO TRAVESSA', 'ALTURA TRAVESSA', 'TIPO ENCAMISAMENTO',
+      'TIPO BLOCO SAPATA', 'ALTURA BLOCO SAPATA', 'LARGURA BLOCO SAPATA',
+      'COMPRIMENTO BLOCO SAPATA', 'TIPO CONTRAVENTAMENTO PILAR', 'TIPO LIGACAO FUNDACOES'
+    ]},
+    { id: 'complementares', title: 'COMPLEMENTARES', fields: [
+      'TIPO BARREIRA ESQUERDA', 'LARGURA BARREIRA ESQUERDA',
+      'TIPO BARREIRA DIREITA', 'LARGURA BARREIRA DIREITA',
+      'TIPO CALCADA ESQUERDA', 'LARGURA CALCADA ESQUERDA',
+      'TIPO CALCADA DIREITA', 'LARGURA CALCADA DIREITA',
+      'GUARDA RODAS ESQUERDO', 'LARGURA GUARDA RODAS ESQUERDO',
+      'GUARDA RODAS DIREITO', 'LARGURA GUARDA RODAS DIREITO',
+      'TIPO PAVIMENTO', 'QTD BUZINOTES'
+    ]}
+  ];
+
+  const form = document.getElementById("oae-form");
+  const formData = new FormData(form);
+  
+  // Criar mapa de valores do formulário
+  const formValues = {};
+  for (let [key, value] of formData.entries()) {
+    if (!key.startsWith("tramo-") && !key.startsWith("apoio-")) {
+      formValues[key] = value;
+    }
+  }
+
+  // Adicionar checkboxes
+  formValues['MODELADO'] = document.getElementById('modelado')?.checked ? 'Sim' : 'Não';
+  formValues['GPS'] = document.getElementById('gps')?.checked ? 'Sim' : 'Não';
+  formValues['REFORCO VIGA'] = document.getElementById('beam-reinforcement')?.checked ? 'Sim' : 'Não';
+
+  // Adicionar tramos
+  const tramosFields = document.querySelectorAll('.tramo-field');
+  if (tramosFields.length > 0) {
+    const tramosValues = Array.from(tramosFields).map(f => f.value || '0.50').join('; ');
+    formValues['COMPRIMENTO TRAMOS'] = tramosValues;
+  }
+
+  // Adicionar apoios
+  const apoiosAlturaFields = document.querySelectorAll('.apoio-altura-field');
+  const apoiosLargFields = document.querySelectorAll('.apoio-larg-field');
+  const apoiosCompFields = document.querySelectorAll('.apoio-comp-field');
+  
+  if (apoiosAlturaFields.length > 0) {
+    formValues['ALTURA APOIO'] = Array.from(apoiosAlturaFields).map(f => f.value || '0.00').join('; ');
+    formValues['LARGURA PILAR'] = Array.from(apoiosLargFields).map(f => f.value || '0.00').join('; ');
+    formValues['COMPRIMENTO PILARES'] = Array.from(apoiosCompFields).map(f => f.value || '0.00').join('; ');
+  }
+
+  // Debug: Log dos valores dos campos de bloco sapata
+  console.log("=== DEBUG MODAL - Campos de Bloco Sapata ===");
+  console.log("TIPO BLOCO SAPATA:", formValues['TIPO BLOCO SAPATA']);
+  console.log("ALTURA BLOCO SAPATA:", formValues['ALTURA BLOCO SAPATA']);
+  console.log("LARGURA BLOCO SAPATA:", formValues['LARGURA BLOCO SAPATA']);
+  console.log("COMPRIMENTO BLOCO SAPATA:", formValues['COMPRIMENTO BLOCO SAPATA']);
+  console.log("Todos os formValues:", formValues);
+
+  let summaryHTML = '<div class="summary-tabs-container">';
+
+  tabs.forEach(tab => {
+    // Contar campos preenchidos e vazios
+    let filledCount = 0;
+    let emptyCount = 0;
+    
+    tab.fields.forEach(field => {
+      const value = formValues[field];
+      if (value !== undefined && value !== null && value !== '') {
+        filledCount++;
+      } else {
+        emptyCount++;
+      }
+    });
+    
+    const totalFields = tab.fields.length;
+    const percentage = Math.round((filledCount / totalFields) * 100);
+    
+    summaryHTML += `<div class="summary-tab-section">`;
+    summaryHTML += `<h3 class="summary-tab-title">
+      ${tab.title} 
+      <span style="font-size: 0.85rem; font-weight: normal; color: #95a5a6;">
+        (${filledCount}/${totalFields} preenchidos - ${percentage}%)
+      </span>
+    </h3>`;
+    summaryHTML += `<div class="summary-fields">`;
+
+    tab.fields.forEach(field => {
+      const value = formValues[field];
+      const isEmpty = (value === undefined || value === null || value === '');
+      const isRequired = requiredFields.includes(field);
+      
+      // Definir classe e mensagem com base se é obrigatório ou não
+      let rowClass = 'summary-row';
+      let displayValue = value;
+      
+      if (isEmpty) {
+        if (isRequired) {
+          // Campo obrigatório vazio - VERMELHO (erro)
+          rowClass = 'summary-row summary-row-empty';
+          displayValue = '<span style="color: #e74c3c; font-style: italic;">⚠️ Obrigatório - Não preenchido</span>';
+        } else {
+          // Campo não obrigatório vazio - LARANJA (lembrete)
+          rowClass = 'summary-row summary-row-optional-empty';
+          displayValue = '<span style="color: #f39c12; font-style: italic;">💡 Não preenchido (opcional)</span>';
+        }
+      }
+      
+      summaryHTML += `<div class="${rowClass}">
+        <div class="summary-label">${field}:</div>
+        <div class="summary-value">${displayValue}</div>
+      </div>`;
+    });
+
+    summaryHTML += `</div></div>`;
+  });
+
+  summaryHTML += '</div>';
+  return summaryHTML;
+}
+
 // Expor funções globalmente
 window.closeModal = closeModal;
 window.closeImportModal = closeImportModal;
 window.closeSummaryModal = closeSummaryModal;
 window.showSummaryBeforeSave = showSummaryBeforeSave;
 window.showCustomAlert = showCustomAlert;
+window.generateSummaryByTabs = generateSummaryByTabs;

@@ -1,3 +1,4 @@
+// Versão: 1.1
 /* ===== FUNÇÃO PARA CARREGAR DADOS NO FORMULÁRIO ===== */
 
 // Função para carregar dados de uma obra no formulário
@@ -15,6 +16,13 @@ function loadWorkToForm(work) {
       document.getElementById("gps").checked = true;
     } else {
       document.getElementById("gps").checked = false;
+    }
+
+    // Processar REFORCO VIGA
+    if (work["REFORCO VIGA"] === "TRUE" || work["REFORCO VIGA"] === true) {
+      document.getElementById("beam-reinforcement").checked = true;
+    } else {
+      document.getElementById("beam-reinforcement").checked = false;
     }
 
     // Processar TRAMOS
@@ -64,6 +72,7 @@ function loadWorkToForm(work) {
       if (
         key !== "MODELADO" &&
         key !== "GPS" &&
+        key !== "REFORCO VIGA" &&
         key !== "COMPRIMENTO TRAMOS" &&
         key !== "ALTURA APOIO" &&
         key !== "LARGURA PILAR" &&
@@ -80,6 +89,13 @@ function loadWorkToForm(work) {
           }
         }
       }
+    }
+
+    // Atualizar visualização de campos obrigatórios condicionais
+    if (typeof updateBlocoSapataFieldsRequired === 'function') {
+      setTimeout(() => {
+        updateBlocoSapataFieldsRequired();
+      }, 100);
     }
 
     // Executar validação após carregar (se a função existir)

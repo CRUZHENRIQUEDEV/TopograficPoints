@@ -43,6 +43,8 @@
   background: transparent !important;
   color: #e3f2fd !important;
   border: 1px solid #bdc3c7;
+  max-width: 900px;
+  max-height: 85vh;
 }
 
 .summary-modal h2 {
@@ -63,16 +65,37 @@
 }
 
 #missing-fields-container {
-  color: #856404 !important;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  color: #721c24 !important;
+  background: #f8d7da;
+  border: 2px solid #f5c6cb;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
+}
+
+#missing-fields-container h3 {
+  color: #721c24 !important;
+  margin-top: 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
 #missing-fields-list {
-  color: #856404 !important;
+  color: #721c24 !important;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+#missing-fields-list li {
+  margin: 8px 0;
+}
+
+.missing-field {
+  color: #721c24 !important;
+  font-weight: 500;
 }
 
 .summary-section {
@@ -104,6 +127,86 @@
 .summary-value {
   flex: 0 0 60%;
   color: #e3f2fd !important;
+}
+
+/* ===== RESUMO POR ABAS ===== */
+
+.summary-tabs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summary-tab-section {
+  background: rgba(44, 62, 80, 0.3);
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid rgba(189, 195, 199, 0.3);
+}
+
+.summary-tab-title {
+  color: #64b5f6 !important;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #64b5f6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-tab-section .summary-row {
+  display: flex;
+  padding: 8px;
+  border-bottom: 1px solid rgba(189, 195, 199, 0.2);
+  transition: background 0.2s ease;
+}
+
+.summary-tab-section .summary-row:hover {
+  background: rgba(100, 181, 246, 0.1);
+}
+
+.summary-tab-section .summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row-empty {
+  background: rgba(231, 76, 60, 0.1) !important;
+  border-left: 3px solid #e74c3c;
+  padding-left: 12px !important;
+}
+
+.summary-row-empty:hover {
+  background: rgba(231, 76, 60, 0.15) !important;
+}
+
+/* Campo não obrigatório vazio - destaque laranja (lembrete) */
+.summary-row-optional-empty {
+  background: rgba(243, 156, 18, 0.08) !important;
+  border-left: 3px solid #f39c12;
+  padding-left: 12px !important;
+}
+
+.summary-row-optional-empty:hover {
+  background: rgba(243, 156, 18, 0.12) !important;
+}
+
+/* Botão de confirmar desabilitado */
+#confirm-save-btn:disabled {
+  background: #95a5a6 !important;
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+#confirm-save-btn:disabled:hover {
+  background: #95a5a6 !important;
+  transform: none !important;
 }
 
 /* ===== NOTIFICAÇÕES ===== */

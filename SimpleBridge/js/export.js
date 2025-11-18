@@ -293,7 +293,10 @@ function saveMultipleWorks(works) {
   };
 }
 
-// Exportar para JSON
+/**
+ * Exporta todas as obras do IndexedDB para um arquivo JSON com estrutura hierárquica BridgeData
+ * Cada obra é convertida para o formato completo com BridgeProjectData, GeneralConfigData, etc.
+ */
 function exportToJSON() {
   const request = indexedDB.open("OAEDatabase");
 
@@ -304,6 +307,8 @@ function exportToJSON() {
 
   request.onsuccess = function (event) {
     const database = event.target.result;
+
+    console.log(`IndexedDB aberto com sucesso. Versão: ${database.version}`);
 
     if (!database.objectStoreNames.contains("obras")) {
       alert("❌ Tabela 'obras' não encontrada no banco de dados!");
@@ -316,38 +321,89 @@ function exportToJSON() {
     const getAllRequest = objectStore.getAll();
 
     getAllRequest.onsuccess = function () {
-      const obras = getAllRequest.result;
+      const obrasFlat = getAllRequest.result;
 
-      if (!obras || obras.length === 0) {
+      if (!obrasFlat || obrasFlat.length === 0) {
         alert("Nenhuma obra encontrada para exportar!");
         database.close();
         return;
       }
 
-      const exportData = {
-        ExportDate: new Date().toISOString(),
-        ExportVersion: "1.0",
-        ExportSource: "OAEDatabase",
-        TotalWorks: obras.length,
-        Works: obras,
-      };
+      try {
+        const bridges = [];
+        let errorsCount = 0;
 
-      const jsonString = JSON.stringify(exportData, null, 2);
+        // Converte cada obra flat para estrutura hierárquica BridgeData
+        for (const obraFlat of obrasFlat) {
+          try {
+            const bridgeData = convertObraFlatToBridgeData(obraFlat);
+            bridges.push(bridgeData);
+          } catch (conversionError) {
+            errorsCount++;
+            console.error(`Erro ao converter obra ${obraFlat.CODIGO}:`, conversionError);
+            // Continua processando outras obras
+          }
+        }
 
-      const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+        if (bridges.length === 0) {
+          alert("❌ Nenhuma obra pôde ser convertida para o formato JSON!");
+          database.close();
+          return;
+        }
 
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-      link.href = url;
-      link.download = `obras_export_${timestamp}.json`;
+        // Monta o JSON final com metadata compatível com BridgeJsonExport.cs
+        const exportData = {
+          ExportDate: new Date().toISOString(),
+          ExportVersion: "1.0",
+          ExportSource: "OAEDatabase - IndexedDB",
+          TotalBridges: bridges.length,
+          ErrorsCount: errorsCount,
+          Bridges: bridges,
+        };
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+        // Função replacer para arredondar todos os números para 3 casas decimais
+        const numberReplacer = (key, value) => {
+          if (typeof value === 'number') {
+            // Trata valores muito pequenos como 0
+            if (Math.abs(value) < 1e-10) {
+              return 0;
+            }
+            // Arredonda para 3 casas decimais
+            return Math.round(value * 1000) / 1000;
+          }
+          return value;
+        };
 
-      alert(`✅ ${obras.length} obra(s) exportada(s) com sucesso para JSON!`);
+        // Gera o JSON formatado com arredondamento automático
+        const jsonString = JSON.stringify(exportData, numberReplacer, 2);
+
+        // Cria o blob e faz download
+        const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        // Nome do arquivo com timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+        link.href = url;
+        link.download = `bridges_export_${timestamp}.json`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Libera o objeto URL
+        URL.revokeObjectURL(url);
+
+        let message = `✅ ${bridges.length} obra(s) exportada(s) com sucesso para JSON hierárquico!`;
+        if (errorsCount > 0) {
+          message += `\n\n⚠️ ${errorsCount} obra(s) com erro(s) na conversão (verifique o console).`;
+        }
+        alert(message);
+      } catch (error) {
+        console.error("Erro ao gerar JSON:", error);
+        alert("❌ Erro ao gerar JSON: " + error.message);
+      }
+
       database.close();
     };
 
@@ -356,6 +412,11 @@ function exportToJSON() {
       alert("❌ Erro ao buscar obras do banco de dados!");
       database.close();
     };
+  };
+
+  request.onupgradeneeded = function (event) {
+    // Este evento não deve ser disparado, mas caso seja, apenas ignora
+    console.warn("onupgradeneeded disparado inesperadamente durante exportação");
   };
 }
 

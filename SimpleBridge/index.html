@@ -44,7 +44,7 @@
             placeholder="Filtrar por lote..."
             oninput="filterWorks()"
           />
-          <button onclick="loadWorksList()" title="Atualizar lista de obras">🔄</button>
+          <button onclick="loadWorksList(); trackRefreshClicks();" title="Atualizar lista de obras">🔄</button>
         </div>
 
         <div class="actions">
@@ -60,12 +60,28 @@
           <button class="export-btn" onclick="exportAllWorks()">
             Exportar obras para modelar
           </button>
-          <button class="export-btn" onclick="exportToJSON()">
+          <button class="export-btn hidden-feature" id="export-json-btn" onclick="exportToJSON()">
             📄 Exportar JSON
           </button>
           <button class="delete-btn" onclick="clearDatabase()">
             Limpar Banco de Dados
           </button>
+        </div>
+
+        <!-- Contador de Obras -->
+        <div class="works-counter" id="works-counter">
+          <div class="counter-item">
+            <span class="counter-label">Total de Obras:</span>
+            <span class="counter-value" id="total-works">0</span>
+          </div>
+          <div class="counter-item">
+            <span class="counter-label">Modeladas:</span>
+            <span class="counter-value modelado" id="modeled-works">0</span>
+          </div>
+          <div class="counter-item">
+            <span class="counter-label">Pendentes:</span>
+            <span class="counter-value pending" id="pending-works">0</span>
+          </div>
         </div>
 
         <div class="works-list" id="works-list">
@@ -405,7 +421,11 @@
                 name="ESPESSURA ALA"
                 step="0.01"
                 min="0"
+                max="1.5"
               />
+              <div class="error-message" id="espessura-ala-error">
+                Valor máximo permitido: 1.5m
+              </div>
             </div>
 
             <div class="form-group">
@@ -479,10 +499,11 @@
         </div>
 
 
-        <!-- Aba apoio -->
-<!-- Superestrutura -->
+
+        <!-- Superestrutura -->
 <div class="tab-content" id="superestrutura-content">
   <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
+
   <div class="form-row">
     <div class="form-group">
       <label for="altura-longarina" class="required"
@@ -533,6 +554,7 @@
       </div>
     </div>
   </div>
+  
   <div class="form-row">
     <div class="form-group">
       <label for="qtd-longarinas" class="required"
@@ -543,7 +565,7 @@
         id="qtd-longarinas"
         name="QTD LONGARINAS"
         min="0"
-        step= "1"
+        step="1"
         oninput="forceIntegerOnly(this)"
         required
       />
@@ -551,6 +573,7 @@
         Este campo é obrigatório
       </div>
     </div>
+    
     <div class="form-group">
       <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
       <input
@@ -562,7 +585,29 @@
         oninput="forceIntegerOnly(this)"
       />
     </div>
+    
+    <div class="form-group">
+      <label for="tipo-transversina">TIPO DE TRANSVERSINA</label>
+      <select id="tipo-transversina" name="TIPO DE TRANSVERSINA">
+        <option value="">Selecione</option>
+        <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
+        <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
+        <option value="Nenhum">Nenhum</option>
+      </select>
+    </div>
+    
+    <div class="form-group" style="padding-top: 28px;">
+      <label>
+        <input
+          type="checkbox"
+          id="beam-reinforcement"
+          name="REFORCO VIGA"
+        />
+        REFORÇO VIGA
+      </label>
+    </div>
   </div>
+  
   <div class="form-row">
     <div class="form-group">
       <label for="espessura-longarina" class="required"
@@ -617,6 +662,8 @@
     + Adicionar Campo
   </button> -->
 </div>
+
+
 
         <!-- Aba apoio -->
         <div class="tab-content" id="apoio-content">
@@ -732,6 +779,9 @@
         step="0.01"
         min="0"
       />
+              <div class="error-message" id="altura-bloco-sapata-error">
+                Este campo é obrigatório e deve ser maior que 0 quando um tipo de bloco/sapata está selecionado
+              </div>
             </div>
             <div class="form-group">
               <label for="largura-bloco-sapata">LARGURA BLOCO SAPATA</label>
@@ -742,6 +792,9 @@
         step="0.01"
         min="0"
       />
+              <div class="error-message" id="largura-bloco-sapata-error">
+                Este campo é obrigatório e deve ser maior que 0 quando um tipo de bloco/sapata está selecionado
+              </div>
             </div>
             <div class="form-group">
               <label for="comprimento-bloco-sapata">COMPRIMENTO BLOCO SAPATA</label>
@@ -752,6 +805,9 @@
         step="0.01"
         min="0"
       />
+              <div class="error-message" id="comprimento-bloco-sapata-error">
+                Este campo é obrigatório e deve ser maior que 0 quando um tipo de bloco/sapata está selecionado
+              </div>
             </div>
           </div>
           
@@ -826,6 +882,9 @@
                 step="0.01"
                 min="0"
               />
+              <div class="error-message" id="largura-barreira-esquerda-error">
+                Este campo é obrigatório quando um tipo de barreira está selecionado
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -850,6 +909,9 @@
                 step="0.01"
                 min="0"
               />
+              <div class="error-message" id="largura-barreira-direita-error">
+                Este campo é obrigatório quando um tipo de barreira está selecionado
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -874,6 +936,9 @@
                 step="0.01"
                 min="0"
               />
+              <div class="error-message" id="largura-calcada-esquerda-error">
+                Este campo é obrigatório quando um tipo de calçada está selecionado
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -898,6 +963,9 @@
                 step="0.01"
                 min="0"
               />
+              <div class="error-message" id="largura-calcada-direita-error">
+                Este campo é obrigatório quando um tipo de calçada está selecionado
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -922,6 +990,9 @@
                 step="0.01"
                 min="0"
               />
+              <div class="error-message" id="largura-guarda-rodas-esquerdo-error">
+                Este campo é obrigatório quando um tipo de guarda rodas está selecionado
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -946,6 +1017,9 @@
                 step="0.01"
                 min="0"
               />
+              <div class="error-message" id="largura-guarda-rodas-direito-error">
+                Este campo é obrigatório quando um tipo de guarda rodas está selecionado
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -1037,6 +1111,7 @@
     <script src="js/dynamic-fields.js"></script>
     <script src="js/height-calculator.js"></script>
     <script src="js/modals.js"></script>
+    <script src="js/bridge-data-converter.js"></script>
     <script src="js/export.js"></script>
     <script src="js/pontes.js"></script>
     <script src="js/pontes-search.js"></script>

@@ -63,6 +63,24 @@ function loadWorksList() {
   request.onsuccess = function (event) {
     const works = event.target.result;
 
+    // Calcular contadores
+    const totalWorks = works.length;
+    let modeledWorks = 0;
+    
+    if (totalWorks > 0) {
+      works.forEach((work) => {
+        const isModelado = work.MODELADO === "TRUE" || work.MODELADO === true;
+        if (isModelado) {
+          modeledWorks++;
+        }
+      });
+    }
+    
+    const pendingWorks = totalWorks - modeledWorks;
+    
+    // Atualizar contadores no DOM
+    updateWorksCounter(totalWorks, modeledWorks, pendingWorks);
+
     if (works.length === 0) {
       worksList.innerHTML = '<div class="work-item">Nenhuma obra cadastrada</div>';
       return;
@@ -110,11 +128,20 @@ function loadWorksList() {
 // Salvar obra atual
 function saveCurrentWork() {
   try {
-    const { isValid } = validateForm();
+    console.log("=== TENTANDO SALVAR OBRA ===");
+    const { isValid, missingFields } = validateForm();
+    
+    console.log(`Validação: ${isValid ? '✅ VÁLIDA' : '❌ INVÁLIDA'}`);
+    console.log(`Campos faltando: ${missingFields.length}`, missingFields);
+    
     if (!isValid) {
-      alert("Por favor, corrija os erros antes de salvar.");
+      console.error("❌ BLOQUEADO: Não é possível salvar com campos inválidos");
+      alert("❌ ERRO: Não é possível salvar!\n\nCampos obrigatórios faltando:\n" + missingFields.join("\n"));
+      closeSummaryModal();
       return;
     }
+    
+    console.log("✅ Validação passou, prosseguindo com salvamento...");
 
     const form = document.getElementById("oae-form");
     const formData = new FormData(form);
@@ -194,6 +221,11 @@ function loadWork(codigo) {
       if (!work) {
         alert("Obra não encontrada.");
         return;
+      }
+
+      // Limpar formulário antes de carregar nova obra para evitar dados de outras obras
+      if (typeof clearFormSilent === 'function') {
+        clearFormSilent();
       }
 
       loadWorkToForm(work);
@@ -444,6 +476,107 @@ function startSaveReminders() {
   }
 }
 
+// Atualizar contadores de obras
+function updateWorksCounter(total, modeled, pending) {
+  const totalElement = document.getElementById("total-works");
+  const modeledElement = document.getElementById("modeled-works");
+  const pendingElement = document.getElementById("pending-works");
+  
+  if (totalElement) totalElement.textContent = total;
+  if (modeledElement) modeledElement.textContent = modeled;
+  if (pendingElement) pendingElement.textContent = pending;
+}
+
+// ===== EASTER EGG: BOTÃO EXPORTAR JSON =====
+let refreshClickCount = 0;
+let refreshClickTimeout = null;
+
+function trackRefreshClicks() {
+  refreshClickCount++;
+  
+  // Resetar contador após 3 segundos de inatividade
+  if (refreshClickTimeout) {
+    clearTimeout(refreshClickTimeout);
+  }
+  
+  refreshClickTimeout = setTimeout(() => {
+    if (refreshClickCount < 5) {
+      refreshClickCount = 0;
+    }
+  }, 3000);
+  
+  // Revelar botão após 5 cliques
+  if (refreshClickCount >= 5) {
+    revealExportJsonButton();
+    refreshClickCount = 0; // Resetar contador
+  }
+}
+
+function revealExportJsonButton() {
+  const exportJsonBtn = document.getElementById("export-json-btn");
+  
+  if (exportJsonBtn && exportJsonBtn.classList.contains("hidden-feature")) {
+    exportJsonBtn.classList.remove("hidden-feature");
+    
+    // Adicionar animação de revelação
+    exportJsonBtn.style.animation = "fadeInScale 0.5s ease-out";
+    
+
+    document.body.appendChild(notification);
+    
+    // Remover notificação após 3 segundos
+    setTimeout(() => {
+      notification.style.animation = "fadeOut 0.5s ease-out";
+      setTimeout(() => notification.remove(), 500);
+    }, 3000);
+    
+    // Opcional: ocultar novamente após usar ou depois de um tempo
+    // setTimeout(() => {
+    //   exportJsonBtn.classList.add("hidden-feature");
+    // }, 60000); // Ocultar após 1 minuto
+  }
+}
+
+// Adicionar animações CSS dinamicamente
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeInScale {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes slideInRight {
+    0% {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+  }
+`;
+document.head.appendChild(style);
+
 // Inicialização principal
 document.addEventListener("DOMContentLoaded", function () {
   initDB();
@@ -454,6 +587,9 @@ document.addEventListener("DOMContentLoaded", function () {
 // Expor funções globalmente
 window.initDB = initDB;
 window.loadWorksList = loadWorksList;
+window.updateWorksCounter = updateWorksCounter;
+window.trackRefreshClicks = trackRefreshClicks;
+window.revealExportJsonButton = revealExportJsonButton;
 window.saveCurrentWork = saveCurrentWork;
 window.loadWork = loadWork;
 window.deleteWork = deleteWork;
