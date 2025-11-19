@@ -592,8 +592,10 @@
         <option value="">Selecione</option>
         <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
         <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
-        <option value="Nenhum">Nenhum</option>
       </select>
+      <div class="error-message" id="tipo-transversina-error">
+        Este campo é obrigatório quando há transversinas
+      </div>
     </div>
     
     <div class="form-group" style="padding-top: 28px;">
@@ -820,6 +822,7 @@
       <select
         id="tipo-contraventamento-pilar"
         name="TIPO CONTRAVENTAMENTO PILAR"
+        onchange="togglePillarBracingQuantityField()"
       >
                 <option value="">Selecione</option>
         <option value="VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO">
@@ -830,6 +833,20 @@
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
+            </div>
+            <div class="form-group" id="qtd-viga-contraventamento-group" style="display: none;">
+              <label for="qtd-viga-contraventamento-pilar" class="required">QTD VIGA CONTRAVENTAMENTO PILAR</label>
+              <input
+                type="number"
+                id="qtd-viga-contraventamento-pilar"
+                name="QTD VIGA CONTRAVENTAMENTO PILAR"
+                min="1"
+                step="1"
+                oninput="forceIntegerOnly(this)"
+              />
+              <div class="error-message" id="qtd-viga-contraventamento-pilar-error">
+                Este campo é obrigatório quando o tipo é Viga de Contraventamento
+              </div>
             </div>
             <div class="form-group">
               <label for="tipo-ligacao-fundacoes">TIPO LIGACAO FUNDACOES</label>

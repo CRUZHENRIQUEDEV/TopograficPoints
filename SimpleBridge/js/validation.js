@@ -89,6 +89,15 @@ window.requiredFields = {
   "deslocamento-direito": { type: "number", min: 0, required: true },
   "qtd-longarinas": { type: "number", min: 0, required: true },
   "espessura-longarina": { type: "number", min: 0, required: true },
+  "tipo-transversina": { 
+    type: "text", 
+    min: null, 
+    required: function () {
+      const qtdTransversinasField = document.getElementById("qtd-transversinas");
+      const qtdTransversinas = parseInt(qtdTransversinasField ? qtdTransversinasField.value : 0) || 0;
+      return qtdTransversinas > 0;
+    },
+  },
   "espessura-transversina": {
     type: "number",
     min: 0,
@@ -213,6 +222,15 @@ window.requiredFields = {
     required: function () {
       const tipoCalcadaField = document.getElementById("tipo-calcada-direita");
       return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";
+    },
+  },
+  "qtd-viga-contraventamento-pilar": {
+    type: "number",
+    min: 1,
+    required: function () {
+      const tipoContraventamentoField = document.getElementById("tipo-contraventamento-pilar");
+      return tipoContraventamentoField && 
+             tipoContraventamentoField.value === "VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO";
     },
   },
 };
@@ -661,6 +679,29 @@ function validateForm() {
   return { isValid, missingFields };
 }
 
+// Função para mostrar/ocultar campo de quantidade de viga de contraventamento
+function togglePillarBracingQuantityField() {
+  const tipoContraventamentoField = document.getElementById("tipo-contraventamento-pilar");
+  const qtdVigaGroup = document.getElementById("qtd-viga-contraventamento-group");
+  const qtdVigaField = document.getElementById("qtd-viga-contraventamento-pilar");
+  
+  if (!tipoContraventamentoField || !qtdVigaGroup || !qtdVigaField) return;
+  
+  const isVigaContraventamento = tipoContraventamentoField.value === "VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO";
+  
+  if (isVigaContraventamento) {
+    qtdVigaGroup.style.display = "";
+    qtdVigaField.setAttribute("required", "required");
+  } else {
+    qtdVigaGroup.style.display = "none";
+    qtdVigaField.removeAttribute("required");
+    qtdVigaField.value = "";
+    qtdVigaField.classList.remove("error");
+    const errorElement = document.getElementById("qtd-viga-contraventamento-pilar-error");
+    if (errorElement) errorElement.classList.remove("visible");
+  }
+}
+
 // Expor funções globalmente
 window.validateField = validateField;
 window.validateTramos = validateTramos;
@@ -673,3 +714,4 @@ window.validateMinimumWidth = validateMinimumWidth;
 window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;
 window.validateForm = validateForm;
+window.togglePillarBracingQuantityField = togglePillarBracingQuantityField;

@@ -221,7 +221,7 @@ function generateSuperstructureDataFromObra(obra) {
     TransversineHeight: roundTo3Decimals(parseFloat(obra["ALTURA TRANSVERSINA"] || obra.ALTURA_TRANSVERSINA) || 0.0),
     TransversineThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA TRANSVERSINA"] || obra.ESPESSURA_TRANSVERSINA) || 0.0),
     NumberOfTransversines: parseInt(obra["QTD TRANSVERSINAS"] || obra.QTD_TRANSVERSINAS) || 3,
-    TransversineType: createZSElementTypeFromValue(obra["TIPO TRANSVERSINA"] || obra.TIPO_TRANSVERSINA),
+    TransversineType: createZSElementTypeFromValue(obra["TIPO DE TRANSVERSINA"] || obra.TIPO_TRANSVERSINA),
     SlabType: createZSElementTypeFromValue(obra["TIPO LAJE"] || obra.TIPO_LAJE),
     SlabThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA LAJE"] || obra.ESPESSURA_LAJE) || 0.0),
     SlabStiffeningLongarineType: createZSElementTypeFromValue(
@@ -308,7 +308,7 @@ function generateBridgePierDataFromObra(obra) {
   const pillarBracingBeamType = createZSElementTypeFromValue(
     obra["TIPO CONTRAVENTAMENTO PILAR"] || obra.TIPO_CONTRAVENTAMENTO_PILAR
   );
-  const pillarBracingBeamQuantity = parseInt(obra["QTD VIGAS CONTRAVENTAMENTO"] || obra.QTD_VIGAS_CONTRAVENTAMENTO) || 0;
+  const pillarBracingBeamQuantity = parseInt(obra["QTD VIGA CONTRAVENTAMENTO PILAR"] || obra.QTD_VIGA_CONTRAVENTAMENTO_PILAR) || 0;
   const pillarBracingBeamHeight = roundTo3Decimals(parseFloat(obra["ALTURA VIGA CONTRAVENTAMENTO"] || obra.ALTURA_VIGA_CONTRAVENTAMENTO) || 0.0);
   const pillarBracingBeamLength =
     roundTo3Decimals(parseFloat(obra["COMPRIMENTO VIGA CONTRAVENTAMENTO"] || obra.COMPRIMENTO_VIGA_CONTRAVENTAMENTO) || 0.0);

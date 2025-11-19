@@ -98,6 +98,13 @@ function loadWorkToForm(work) {
       }, 100);
     }
 
+    // Atualizar visibilidade do campo de quantidade de viga de contraventamento
+    if (typeof togglePillarBracingQuantityField === 'function') {
+      setTimeout(() => {
+        togglePillarBracingQuantityField();
+      }, 100);
+    }
+
     // Executar validação após carregar (se a função existir)
     if (typeof validateForm === 'function') {
       setTimeout(() => {

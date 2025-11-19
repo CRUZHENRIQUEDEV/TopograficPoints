@@ -195,6 +195,35 @@ function updateBlocoSapataFieldsRequired() {
   });
 }
 
+// Atualizar visualização dos campos obrigatórios de transversina
+function updateTransversinaFieldsRequired() {
+  const qtdTransversinasField = document.getElementById("qtd-transversinas");
+  if (!qtdTransversinasField) return;
+
+  const qtdTransversinas = parseInt(qtdTransversinasField.value) || 0;
+  const hasTransversinas = qtdTransversinas > 0;
+
+  // Atualizar tipo de transversina
+  const tipoTransversinaLabel = document.querySelector('label[for="tipo-transversina"]');
+  if (tipoTransversinaLabel) {
+    if (hasTransversinas) {
+      tipoTransversinaLabel.classList.add("required");
+    } else {
+      tipoTransversinaLabel.classList.remove("required");
+    }
+  }
+
+  // Atualizar espessura de transversina
+  const espessuraTransversinaLabel = document.querySelector('label[for="espessura-transversina"]');
+  if (espessuraTransversinaLabel) {
+    if (hasTransversinas) {
+      espessuraTransversinaLabel.classList.add("required");
+    } else {
+      espessuraTransversinaLabel.classList.remove("required");
+    }
+  }
+}
+
 // Inicialização
 document.addEventListener("DOMContentLoaded", function () {
   const qtdTramosField = document.getElementById("qtd-tramos");
@@ -208,6 +237,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const qtdApoiosField = document.getElementById("qtd-apoios");
   if (qtdApoiosField) {
     qtdApoiosField.addEventListener("change", generateApoiosFields);
+  }
+
+  // Validar campos de transversina quando a quantidade for alterada
+  const qtdTransversinasField = document.getElementById("qtd-transversinas");
+  if (qtdTransversinasField) {
+    qtdTransversinasField.addEventListener("change", function() {
+      updateTransversinaFieldsRequired();
+      if (typeof validateField === 'function') {
+        validateField("tipo-transversina");
+        validateField("espessura-transversina");
+      }
+    });
+    qtdTransversinasField.addEventListener("input", function() {
+      updateTransversinaFieldsRequired();
+    });
+    // Executar ao carregar a página
+    updateTransversinaFieldsRequired();
   }
 
   // Validar campos de bloco sapata quando o tipo for alterado
@@ -517,3 +563,4 @@ window.validateTramosLength = validateTramosLength;
 window.validateHeights = validateHeights;
 window.validateDisplacements = validateDisplacements;
 window.updateBlocoSapataFieldsRequired = updateBlocoSapataFieldsRequired;
+window.updateTransversinaFieldsRequired = updateTransversinaFieldsRequired;
