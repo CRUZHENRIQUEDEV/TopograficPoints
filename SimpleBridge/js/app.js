@@ -154,6 +154,7 @@ function saveCurrentWork() {
     }
 
     workData["MODELADO"] = document.getElementById("modelado").checked ? "TRUE" : "FALSE";
+    workData["REFORCO VIGA"] = document.getElementById("beam-reinforcement").checked;
 
     // Tramos
     const tramosValues = [];

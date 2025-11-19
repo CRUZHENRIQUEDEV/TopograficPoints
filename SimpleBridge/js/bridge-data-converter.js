@@ -217,7 +217,7 @@ function generateSuperstructureDataFromObra(obra) {
     LongarineThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA LONGARINA"] || obra.ESPESSURA_LONGARINA) || 0.0),
     NumberOfLongarines: parseInt(obra["QTD LONGARINAS"] || obra.QTD_LONGARINAS) || 2,
     LongarineType: createZSElementTypeFromValue(obra["TIPO LONGARINA"] || obra.TIPO_LONGARINA),
-    BeamReinforcement: obra["REFORCO VIGA"] === true || obra["REFORCO VIGA"] === "true" || obra.REFORCO_VIGA === true,
+    BeamReinforcement: Boolean(obra["REFORCO VIGA"] || obra.REFORCO_VIGA),
     TransversineHeight: roundTo3Decimals(parseFloat(obra["ALTURA TRANSVERSINA"] || obra.ALTURA_TRANSVERSINA) || 0.0),
     TransversineThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA TRANSVERSINA"] || obra.ESPESSURA_TRANSVERSINA) || 0.0),
     NumberOfTransversines: parseInt(obra["QTD TRANSVERSINAS"] || obra.QTD_TRANSVERSINAS) || 3,
