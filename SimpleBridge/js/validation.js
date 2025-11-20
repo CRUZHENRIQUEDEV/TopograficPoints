@@ -235,12 +235,12 @@ window.requiredFields = {
   },
 };
 
-// Log para debug: verificar se campos de bloco sapata estão registrados
-console.log("Campos de bloco sapata registrados:", {
-  "altura-bloco-sapata": !!requiredFields["altura-bloco-sapata"],
-  "largura-bloco-sapata": !!requiredFields["largura-bloco-sapata"],
-  "comprimento-bloco-sapata": !!requiredFields["comprimento-bloco-sapata"]
-});
+// // Log para debug: verificar se campos de bloco sapata estão registrados
+// console.log("Campos de bloco sapata registrados:", {
+//   "altura-bloco-sapata": !!requiredFields["altura-bloco-sapata"],
+//   "largura-bloco-sapata": !!requiredFields["largura-bloco-sapata"],
+//   "comprimento-bloco-sapata": !!requiredFields["comprimento-bloco-sapata"]
+// });
 
 // Validar campo específico
 function validateField(fieldId) {

@@ -152,7 +152,7 @@ function exportAllWorks() {
 // Importar múltiplas obras
 function importMultipleWorks() {
   try {
-    console.log("Iniciando função importMultipleWorks...");
+    // console.log("Iniciando função importMultipleWorks...");
 
     const oldInput = document.getElementById("import-multiple-works-input");
     if (oldInput) {

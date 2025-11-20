@@ -37,7 +37,7 @@ function initDB() {
 
     request.onsuccess = function (event) {
       db = event.target.result;
-      console.log("Banco de dados inicializado com sucesso");
+      // console.log("Banco de dados inicializado com sucesso");
       loadWorksList();
       startSaveReminders();
     };
