@@ -60,7 +60,9 @@ function exportToCSV() {
           if (column === "CODIGO") {
             return `"${value}"`;
           }
-          return value && value.includes(",") ? `"${value}"` : value;
+          // Converter para string antes de verificar
+          const strValue = String(value);
+          return strValue && strValue.includes(",") ? `"${strValue}"` : strValue;
         })
         .join(",");
 
@@ -119,7 +121,9 @@ function exportAllWorks() {
           if (column === "CODIGO") {
             return `"${value}"`;
           }
-          return value && value.includes("\t") ? `"${value}"` : value;
+          // Converter para string antes de verificar
+          const strValue = String(value);
+          return strValue && strValue.includes("\t") ? `"${strValue}"` : strValue;
         });
         csvContent += row.join("\t") + "\n";
       });
