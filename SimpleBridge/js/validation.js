@@ -178,7 +178,7 @@ window.requiredFields = {
   pavimento: { type: "text", required: true },
   "largura-barreira-esquerda": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoBarreiraField = document.getElementById("tipo-barreira-esquerda");
       return tipoBarreiraField && tipoBarreiraField.value !== "" && tipoBarreiraField.value !== "Nenhum";
@@ -186,7 +186,7 @@ window.requiredFields = {
   },
   "largura-barreira-direita": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoBarreiraField = document.getElementById("tipo-barreira-direita");
       return tipoBarreiraField && tipoBarreiraField.value !== "" && tipoBarreiraField.value !== "Nenhum";
@@ -194,7 +194,7 @@ window.requiredFields = {
   },
   "largura-guarda-rodas-esquerdo": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoGuardaRodasField = document.getElementById("guarda-rodas-esquerdo");
       return tipoGuardaRodasField && tipoGuardaRodasField.value !== "" && tipoGuardaRodasField.value !== "Nenhum";
@@ -202,7 +202,7 @@ window.requiredFields = {
   },
   "largura-guarda-rodas-direito": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoGuardaRodasField = document.getElementById("guarda-rodas-direito");
       return tipoGuardaRodasField && tipoGuardaRodasField.value !== "" && tipoGuardaRodasField.value !== "Nenhum";
@@ -210,7 +210,7 @@ window.requiredFields = {
   },
   "largura-calcada-esquerda": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoCalcadaField = document.getElementById("tipo-calcada-esquerda");
       return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";
@@ -218,7 +218,7 @@ window.requiredFields = {
   },
   "largura-calcada-direita": {
     type: "number",
-    min: 0,
+    min: 0.01,
     required: function () {
       const tipoCalcadaField = document.getElementById("tipo-calcada-direita");
       return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";

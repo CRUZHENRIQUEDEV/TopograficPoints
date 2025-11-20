@@ -64,8 +64,13 @@
   color: #e3f2fd !important;
 }
 
-#missing-fields-container {
+/* Sobrescrever para os campos obrigatórios faltando */
+#missing-fields-container,
+#missing-fields-container * {
   color: #721c24 !important;
+}
+
+#missing-fields-container {
   background: #f8d7da;
   border: 2px solid #f5c6cb;
   padding: 15px;
@@ -75,7 +80,6 @@
 }
 
 #missing-fields-container h3 {
-  color: #721c24 !important;
   margin-top: 0;
   font-size: 1.1rem;
   font-weight: bold;
@@ -83,7 +87,6 @@
 }
 
 #missing-fields-list {
-  color: #721c24 !important;
   list-style: none;
   padding: 0;
   margin: 10px 0;
@@ -94,7 +97,6 @@
 }
 
 .missing-field {
-  color: #721c24 !important;
   font-weight: 500;
 }
 
