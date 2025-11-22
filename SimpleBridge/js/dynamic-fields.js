@@ -309,7 +309,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (alturaBlocoField) {
     alturaBlocoField.addEventListener("blur", function() {
-      console.log("Validando altura-bloco-sapata no blur");
       if (typeof validateField === 'function') {
         validateField("altura-bloco-sapata");
       }
@@ -326,7 +325,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (larguraBlocoField) {
     larguraBlocoField.addEventListener("blur", function() {
-      console.log("Validando largura-bloco-sapata no blur");
       if (typeof validateField === 'function') {
         validateField("largura-bloco-sapata");
       }
@@ -343,7 +341,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (comprimentoBlocoField) {
     comprimentoBlocoField.addEventListener("blur", function() {
-      console.log("⚠️ Validando COMPRIMENTO-BLOCO-SAPATA no blur, valor:", this.value);
       if (typeof validateField === 'function') {
         const result = validateField("comprimento-bloco-sapata");
         console.log("Resultado da validação:", result);

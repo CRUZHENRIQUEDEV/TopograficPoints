@@ -543,11 +543,46 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Controlar visibilidade dos campos de bloco sapata
+function initBlocoSapataVisibility() {
+  const tipoSelect = document.getElementById("tipo-bloco-sapata");
+  const alturaGroup = document.getElementById("altura-bloco-sapata-group");
+  const larguraGroup = document.getElementById("largura-bloco-sapata-group");
+  const comprimentoGroup = document.getElementById("comprimento-bloco-sapata-group");
+
+  if (!tipoSelect || !alturaGroup || !larguraGroup || !comprimentoGroup) {
+    return;
+  }
+
+  function toggleBlocoSapataFields() {
+    const selectedValue = tipoSelect.value;
+    const shouldShow = selectedValue === "BLOCO SAPATA DE CONCRETO ARMADO";
+    
+    alturaGroup.style.display = shouldShow ? "block" : "none";
+    larguraGroup.style.display = shouldShow ? "block" : "none";
+    comprimentoGroup.style.display = shouldShow ? "block" : "none";
+
+    // Limpar valores dos campos quando ocultados
+    if (!shouldShow) {
+      document.getElementById("altura-bloco-sapata").value = "";
+      document.getElementById("largura-bloco-sapata").value = "";
+      document.getElementById("comprimento-bloco-sapata").value = "";
+    }
+  }
+
+  // Aplicar visibilidade inicial
+  toggleBlocoSapataFields();
+
+  // Adicionar listener para mudanças no select
+  tipoSelect.addEventListener("change", toggleBlocoSapataFields);
+}
+
 // Inicialização principal
 document.addEventListener("DOMContentLoaded", function () {
   initDB();
   initTabSystem();
   startSaveReminders(); // Iniciar lembretes de salvamento
+  initBlocoSapataVisibility(); // Inicializar controle de visibilidade do bloco sapata
 });
 
 // Expor funções globalmente

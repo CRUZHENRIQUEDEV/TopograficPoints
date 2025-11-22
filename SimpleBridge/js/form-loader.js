@@ -112,7 +112,6 @@ function loadWorkToForm(work) {
       }, 200);
     }
 
-    console.log("Dados carregados no formulário com sucesso");
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);
     alert("Erro ao carregar dados no formulário: " + error.message);

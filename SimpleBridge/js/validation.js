@@ -261,7 +261,6 @@ function validateField(fieldId) {
         const value = parseFloat(field.value);
         // Debug para campos de bloco sapata
         if (fieldId.includes("bloco-sapata")) {
-          console.log(`Validando ${fieldId}: valor="${field.value}", parsed=${value}, min=${config.min}, isRequired=${isRequired}`);
         }
         
         // Campo vazio ou valor menor que o mínimo
@@ -587,7 +586,6 @@ function validateForm() {
   let isValid = true;
   const missingFields = [];
 
-  console.log("=== Iniciando validação completa do formulário ===");
   
   for (const fieldId in requiredFields) {
     const isFieldValid = validateField(fieldId);
@@ -673,7 +671,6 @@ function validateForm() {
     missingFields.push("Comprimento dos pilares não pode ser maior que 2m");
   }
 
-  console.log(`=== Validação concluída: ${isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO'} ===`);
   console.log(`Campos faltando (${missingFields.length}):`, missingFields);
 
   return { isValid, missingFields };
