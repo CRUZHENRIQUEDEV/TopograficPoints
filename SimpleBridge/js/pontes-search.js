@@ -145,7 +145,10 @@ function performPontesSearch() {
           <br>
           <small>📍 ${ponte.Uf || 'N/A'} | BR-${ponte.Br || 'N/A'} | KM ${ponte.Km || 'N/A'}</small>
         </span>
-        <button type="button" class="copy-btn" onclick="usePonteData('${ponte.Id}')">Usar</button>
+        <div style="display: flex; gap: 5px;">
+          ${ponte.Id ? `<button type="button" class="copy-btn" onclick="copyLink('${ponte.Id}')" title="Copiar link do (recomendado: faça login no primeiro)">🔗Link </button>` : ''}
+          <button type="button" class="copy-btn" onclick="usePonteData('${ponte.Id}')">Usar</button>
+        </div>
       `;
 
       resultsContainer.appendChild(ponteItem);
@@ -214,7 +217,8 @@ function showPonteDetailsModal(ponteId) {
           <div class="ponte-details-container">
             <div class="ponte-header">
               <strong>${ponte.CodigoSgo || ""} - ${ponte.Identificacao || ""}</strong>
-              <div>
+              <div style="display: flex; gap: 5px; align-items: center;">
+                ${ponte.Id ? `<button type="button" onclick="copyLink('${ponte.Id}')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;" title="Copiar link do para colar após login">� Copiar Link </button>` : ''}
                 <button type="button" onclick="toggleAllPonteFields(true)">Marcar Todos</button>
                 <button type="button" onclick="toggleAllPonteFields(false)">Desmarcar Todos</button>
               </div>
@@ -388,6 +392,22 @@ function copyToClipboard(text) {
     });
 }
 
+// Copiar link do para a área de transferência
+function copyLink(ponteId) {
+  const dnitUrl = `https://servicos.dnit.gov.br/sgplan/prd/sge/estrutura/detalhe/${ponteId}`;
+  
+  navigator.clipboard
+    .writeText(dnitUrl)
+    .then(() => {
+      // alert("✅ Link do copiado!\n\nDica: Faça login no site do  primeiro, depois cole o link na barra de endereços.");
+    })
+    .catch((err) => {
+      console.error("Erro ao copiar link: ", err);
+      // Fallback: mostrar o link em um prompt
+      prompt("Não foi possível copiar automaticamente. Copie o link abaixo:", dnitUrl);
+    });
+}
+
 // Expor funções globalmente
 window.searchPontesReference = searchPontesReference;
 window.showSearchPontesModal = showSearchPontesModal;
@@ -399,3 +419,4 @@ window.closePonteDetailsModal = closePonteDetailsModal;
 window.toggleAllPonteFields = toggleAllPonteFields;
 window.confirmImportPonte = confirmImportPonte;
 window.copyToClipboard = copyToClipboard;
+window.copyLink = copyLink;
