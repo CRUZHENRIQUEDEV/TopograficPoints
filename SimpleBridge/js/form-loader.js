@@ -112,6 +112,13 @@ function loadWorkToForm(work) {
       }, 200);
     }
 
+    // Atualizar link do Google Maps com as coordenadas carregadas
+    if (typeof updateGoogleMapsLink === 'function') {
+      setTimeout(() => {
+        updateGoogleMapsLink();
+      }, 200);
+    }
+
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);
     alert("Erro ao carregar dados no formulário: " + error.message);

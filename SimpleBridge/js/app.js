@@ -896,6 +896,44 @@ function initCalcadaGuardaRodasExclusion() {
   }
 }
 
+// Atualizar link do Google Maps baseado nas coordenadas
+function updateGoogleMapsLink() {
+  const latInput = document.getElementById("latitude");
+  const longInput = document.getElementById("longitude");
+  const mapsLink = document.getElementById("google-maps-link");
+
+  if (!latInput || !longInput || !mapsLink) return;
+
+  const lat = latInput.value;
+  const long = longInput.value;
+
+  if (lat && long && lat !== "" && long !== "") {
+    // Atualizar href e habilitar link
+    mapsLink.href = `https://www.google.com.br/maps?q=${lat},${long}`;
+    mapsLink.style.opacity = "1";
+    mapsLink.style.pointerEvents = "auto";
+  } else {
+    // Desabilitar link
+    mapsLink.href = "#";
+    mapsLink.style.opacity = "0.5";
+    mapsLink.style.pointerEvents = "none";
+  }
+}
+
+// Inicializar monitoramento de coordenadas para Google Maps
+function initGoogleMapsListener() {
+  const latInput = document.getElementById("latitude");
+  const longInput = document.getElementById("longitude");
+
+  if (latInput && longInput) {
+    latInput.addEventListener("input", updateGoogleMapsLink);
+    longInput.addEventListener("input", updateGoogleMapsLink);
+    
+    // Atualizar link inicial
+    updateGoogleMapsLink();
+  }
+}
+
 // Inicialização principal
 document.addEventListener("DOMContentLoaded", function () {
   initDB();
@@ -904,6 +942,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initBlocoSapataVisibility(); // Inicializar controle de visibilidade do bloco sapata
   initBarreiraGuardaRodasExclusion(); // Inicializar exclusão mútua entre barreiras e guarda rodas
   initCalcadaGuardaRodasExclusion(); // Inicializar exclusão mútua entre calçada e guarda rodas
+  initGoogleMapsListener(); // Inicializar monitoramento de coordenadas para Google Maps
 });
 
 // Expor funções globalmente
@@ -914,6 +953,8 @@ window.trackRefreshClicks = trackRefreshClicks;
 window.revealExportJsonButton = revealExportJsonButton;
 window.saveCurrentWork = saveCurrentWork;
 window.loadWork = loadWork;
+window.updateGoogleMapsLink = updateGoogleMapsLink;
+window.initGoogleMapsListener = initGoogleMapsListener;
 window.deleteWork = deleteWork;
 window.createNewWork = createNewWork;
 window.clearDatabase = clearDatabase;
