@@ -128,11 +128,11 @@ function loadWorksList() {
 // Salvar obra atual
 function saveCurrentWork() {
   try {
-    console.log("=== TENTANDO SALVAR OBRA ===");
+    // console.log("=== TENTANDO SALVAR OBRA ===");
     const { isValid, missingFields } = validateForm();
     
     console.log(`Validação: ${isValid ? '✅ VÁLIDA' : '❌ INVÁLIDA'}`);
-    console.log(`Campos faltando: ${missingFields.length}`, missingFields);
+    // console.log(`Campos faltando: ${missingFields.length}`, missingFields);
     
     if (!isValid) {
       console.error("❌ BLOQUEADO: Não é possível salvar com campos inválidos");

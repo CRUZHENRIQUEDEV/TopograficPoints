@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
   if (tipoBlocoSapataField) {
     tipoBlocoSapataField.addEventListener("change", function() {
-      console.log("🔄 Tipo de bloco sapata alterado para:", this.value);
+      // console.log("🔄 Tipo de bloco sapata alterado para:", this.value);
       // Atualizar visualização dos campos obrigatórios
       updateBlocoSapataFieldsRequired();
       

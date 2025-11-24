@@ -26,7 +26,7 @@ function closeSummaryModal() {
 
 // Mostrar resumo antes de salvar
 function showSummaryBeforeSave() {
-  console.log("=== ABRINDO MODAL DE RESUMO ===");
+  // console.log("=== ABRINDO MODAL DE RESUMO ===");
   const { isValid, missingFields } = validateForm();
   const summaryContent = document.getElementById("summary-content");
   const missingFieldsContainer = document.getElementById("missing-fields-container");
@@ -82,7 +82,7 @@ function showSummaryBeforeSave() {
       if (missingFieldsList) missingFieldsList.appendChild(li);
     });
   } else {
-    console.log("✅ FORMULÁRIO VÁLIDO - Botão de salvar HABILITADO");
+    // console.log("✅ FORMULÁRIO VÁLIDO - Botão de salvar HABILITADO");
     
     if (missingFieldsContainer) missingFieldsContainer.style.display = "none";
     

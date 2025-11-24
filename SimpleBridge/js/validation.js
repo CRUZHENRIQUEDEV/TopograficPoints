@@ -671,7 +671,7 @@ function validateForm() {
     missingFields.push("Comprimento dos pilares não pode ser maior que 2m");
   }
 
-  console.log(`Campos faltando (${missingFields.length}):`, missingFields);
+  // console.log(`Campos faltando (${missingFields.length}):`, missingFields);
 
   return { isValid, missingFields };
 }

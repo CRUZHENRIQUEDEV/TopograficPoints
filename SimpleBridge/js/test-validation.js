@@ -36,15 +36,15 @@ function testValidation() {
   const tipoField = document.getElementById("tipo-bloco-sapata");
   if (tipoField) {
     console.log("4. Tipo de bloco sapata:", tipoField.value);
-    console.log("   É obrigatório?", tipoField.value !== "" && tipoField.value !== "Nenhum");
+    // console.log("   É obrigatório?", tipoField.value !== "" && tipoField.value !== "Nenhum");
   }
   
   // 5. Testar validateForm
   if (typeof validateForm !== 'undefined') {
-    console.log("5. Executando validateForm()...");
+    // console.log("5. Executando validateForm()...");
     const result = validateForm();
-    console.log("   isValid:", result.isValid);
-    console.log("   missingFields:", result.missingFields);
+    // console.log("   isValid:", result.isValid);
+    // console.log("   missingFields:", result.missingFields);
   } else {
     console.log("5. ❌ validateForm não está definido!");
   }
