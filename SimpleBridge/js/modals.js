@@ -28,6 +28,7 @@ function closeSummaryModal() {
 function showSummaryBeforeSave() {
   // console.log("=== ABRINDO MODAL DE RESUMO ===");
   const { isValid, missingFields } = validateForm();
+  const warnings = typeof getWarnings === 'function' ? getWarnings() : [];
   const summaryContent = document.getElementById("summary-content");
   const missingFieldsContainer = document.getElementById("missing-fields-container");
   const missingFieldsList = document.getElementById("missing-fields-list");
@@ -36,8 +37,38 @@ function showSummaryBeforeSave() {
   if (summaryContent) summaryContent.innerHTML = "";
   if (missingFieldsList) missingFieldsList.innerHTML = "";
 
+  // Container de avisos (antes do resumo)
+  let warningsHTML = "";
+  if (warnings.length > 0) {
+    warningsHTML = '<div id="warnings-container" style="margin-bottom: 20px;">';
+    warningsHTML += '<h3 style="color: #d35400; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem;">⚠️ Avisos e Recomendações</h3>';
+    
+    warnings.forEach((warning) => {
+      const bgColor = warning.type === 'critical' ? '#fff5f5' : '#fffbf0';
+      const borderColor = warning.type === 'critical' ? '#c0392b' : '#d68910';
+      const textColor = warning.type === 'critical' ? '#5a1a1a' : '#6b4f0a';
+      
+      warningsHTML += `<div class="warning-message" style="
+        background-color: ${bgColor};
+        border-left: 5px solid ${borderColor};
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 6px;
+        color: ${textColor};
+        font-size: 0.95rem;
+        line-height: 1.6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      ">
+        ${warning.message}
+      </div>`;
+    });
+    
+    warningsHTML += '<p style="color: #555; font-size: 0.9rem; margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; border-left: 3px solid #95a5a6;"><em>💡 Estes são avisos informativos. Você pode salvar mesmo assim, mas recomendamos revisar os valores.</em></p>';
+    warningsHTML += '</div>';
+  }
+
   // SEMPRE mostrar o resumo
-  const summaryHTML = generateSummaryByTabs();
+  const summaryHTML = warningsHTML + generateSummaryByTabs();
   if (summaryContent) summaryContent.innerHTML = summaryHTML;
 
   if (!isValid) {
@@ -86,13 +117,19 @@ function showSummaryBeforeSave() {
     
     if (missingFieldsContainer) missingFieldsContainer.style.display = "none";
     
-    // HABILITAR o botão
+    // HABILITAR o botão (mesmo com avisos, pois avisos não bloqueiam)
     if (confirmSaveBtn) {
       confirmSaveBtn.disabled = false;
       confirmSaveBtn.style.opacity = "1";
       confirmSaveBtn.style.cursor = "pointer";
       confirmSaveBtn.title = "";
-      confirmSaveBtn.textContent = "✅ Confirmar e Salvar";
+      
+      // Mudar texto do botão se houver avisos
+      if (warnings.length > 0) {
+        confirmSaveBtn.textContent = "✅ Salvar Mesmo Assim";
+      } else {
+        confirmSaveBtn.textContent = "✅ Confirmar e Salvar";
+      }
     }
   }
 
