@@ -312,7 +312,7 @@ function exportToJSON() {
   request.onsuccess = function (event) {
     const database = event.target.result;
 
-    console.log(`IndexedDB aberto com sucesso. Versão: ${database.version}`);
+    // console.log(`IndexedDB aberto com sucesso. Versão: ${database.version}`);
 
     if (!database.objectStoreNames.contains("obras")) {
       alert("❌ Tabela 'obras' não encontrada no banco de dados!");

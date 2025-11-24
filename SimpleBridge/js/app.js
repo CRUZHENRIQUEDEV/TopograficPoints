@@ -141,7 +141,7 @@ function saveCurrentWork() {
       return;
     }
     
-    console.log("✅ Validação passou, prosseguindo com salvamento...");
+    // console.log("✅ Validação passou, prosseguindo com salvamento...");
 
     const form = document.getElementById("oae-form");
     const formData = new FormData(form);
@@ -907,16 +907,19 @@ function updateGoogleMapsLink() {
   const lat = latInput.value;
   const long = longInput.value;
 
-  if (lat && long && lat !== "" && long !== "") {
-    // Atualizar href e habilitar link
+  // Verificar se ambos os valores existem e não são strings vazias
+  // Aceita 0 como valor válido
+  const hasValidLat = lat !== null && lat !== undefined && lat !== "";
+  const hasValidLong = long !== null && long !== undefined && long !== "";
+
+  if (hasValidLat && hasValidLong) {
+    // Atualizar href e mostrar link
     mapsLink.href = `https://www.google.com.br/maps?q=${lat},${long}`;
-    mapsLink.style.opacity = "1";
-    mapsLink.style.pointerEvents = "auto";
+    mapsLink.style.display = "inline-block";
   } else {
-    // Desabilitar link
+    // Ocultar link
     mapsLink.href = "#";
-    mapsLink.style.opacity = "0.5";
-    mapsLink.style.pointerEvents = "none";
+    mapsLink.style.display = "none";
   }
 }
 

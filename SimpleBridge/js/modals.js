@@ -202,13 +202,13 @@ function generateSummaryByTabs() {
     formValues['COMPRIMENTO PILARES'] = Array.from(apoiosCompFields).map(f => f.value || '0.00').join('; ');
   }
 
-  // Debug: Log dos valores dos campos de bloco sapata
-  console.log("=== DEBUG MODAL - Campos de Bloco Sapata ===");
-  console.log("TIPO BLOCO SAPATA:", formValues['TIPO BLOCO SAPATA']);
-  console.log("ALTURA BLOCO SAPATA:", formValues['ALTURA BLOCO SAPATA']);
-  console.log("LARGURA BLOCO SAPATA:", formValues['LARGURA BLOCO SAPATA']);
-  console.log("COMPRIMENTO BLOCO SAPATA:", formValues['COMPRIMENTO BLOCO SAPATA']);
-  console.log("Todos os formValues:", formValues);
+  // // Debug: Log dos valores dos campos de bloco sapata
+  // console.log("=== DEBUG MODAL - Campos de Bloco Sapata ===");
+  // console.log("TIPO BLOCO SAPATA:", formValues['TIPO BLOCO SAPATA']);
+  // console.log("ALTURA BLOCO SAPATA:", formValues['ALTURA BLOCO SAPATA']);
+  // console.log("LARGURA BLOCO SAPATA:", formValues['LARGURA BLOCO SAPATA']);
+  // console.log("COMPRIMENTO BLOCO SAPATA:", formValues['COMPRIMENTO BLOCO SAPATA']);
+  // console.log("Todos os formValues:", formValues);
 
   let summaryHTML = '<div class="summary-tabs-container">';
 

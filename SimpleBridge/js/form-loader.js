@@ -113,11 +113,23 @@ function loadWorkToForm(work) {
     }
 
     // Atualizar link do Google Maps com as coordenadas carregadas
-    if (typeof updateGoogleMapsLink === 'function') {
-      setTimeout(() => {
+    // Disparar eventos de input para garantir que os listeners sejam acionados
+    setTimeout(() => {
+      const latInput = document.getElementById("latitude");
+      const longInput = document.getElementById("longitude");
+      
+      if (latInput && latInput.value) {
+        latInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (longInput && longInput.value) {
+        longInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      
+      // Chamada direta como backup
+      if (typeof updateGoogleMapsLink === 'function') {
         updateGoogleMapsLink();
-      }, 200);
-    }
+      }
+    }, 250);
 
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);

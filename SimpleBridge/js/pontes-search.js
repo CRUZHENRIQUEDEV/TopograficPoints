@@ -218,7 +218,7 @@ function showPonteDetailsModal(ponteId) {
             <div class="ponte-header">
               <strong>${ponte.CodigoSgo || ""} - ${ponte.Identificacao || ""}</strong>
               <div style="display: flex; gap: 5px; align-items: center;">
-                ${ponte.Id ? `<button type="button" onclick="copyLink('${ponte.Id}')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;" title="Copiar link do para colar após login">� Copiar Link </button>` : ''}
+                ${ponte.Id ? `<button type="button" onclick="copyLink('${ponte.Id}')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;" title="Copiar link do para colar após login">🔗 Copiar Link </button>` : ''}
                 <button type="button" onclick="toggleAllPonteFields(true)">Marcar Todos</button>
                 <button type="button" onclick="toggleAllPonteFields(false)">Desmarcar Todos</button>
               </div>
@@ -365,6 +365,24 @@ function confirmImportPonte(ponteId) {
       });
 
       alert(`✅ Dados da ponte importados com sucesso!\n\n${importedCount} campos foram preenchidos.`);
+      
+      // Atualizar o link do Google Maps se coordenadas foram importadas
+      setTimeout(() => {
+        const latInput = document.getElementById("latitude");
+        const longInput = document.getElementById("longitude");
+        
+        if (latInput && latInput.value) {
+          latInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (longInput && longInput.value) {
+          longInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        
+        if (typeof updateGoogleMapsLink === 'function') {
+          updateGoogleMapsLink();
+        }
+      }, 100);
+      
       closePonteDetailsModal();
       closeSearchPontesModal();
     };
