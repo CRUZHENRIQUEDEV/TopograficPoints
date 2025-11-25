@@ -105,6 +105,20 @@ function loadWorkToForm(work) {
       }, 100);
     }
 
+    // Atualizar campos de longarina (desbloquear se QTD LONGARINAS > 0)
+    if (typeof updateLongarinaFieldsRequired === 'function') {
+      setTimeout(() => {
+        updateLongarinaFieldsRequired();
+      }, 100);
+    }
+
+    // Atualizar campos de transversina
+    if (typeof updateTransversinaFieldsRequired === 'function') {
+      setTimeout(() => {
+        updateTransversinaFieldsRequired();
+      }, 100);
+    }
+
     // Executar validação após carregar (se a função existir)
     if (typeof validateForm === 'function') {
       setTimeout(() => {
