@@ -212,15 +212,27 @@ function generateBridgeTransitionDataFromObra(obra) {
  * @returns {object} BridgeSuperstructureData
  */
 function generateSuperstructureDataFromObra(obra) {
+  // Parse QTD LONGARINAS - aceitar 0 como valor válido
+  const qtdLongarinasValue = obra["QTD LONGARINAS"] ?? obra.QTD_LONGARINAS;
+  const qtdLongarinas = qtdLongarinasValue !== null && qtdLongarinasValue !== undefined && qtdLongarinasValue !== "" 
+    ? parseInt(qtdLongarinasValue) 
+    : 2;
+
+  // Parse QTD TRANSVERSINAS - aceitar 0 como valor válido
+  const qtdTransversinasValue = obra["QTD TRANSVERSINAS"] ?? obra.QTD_TRANSVERSINAS;
+  const qtdTransversinas = qtdTransversinasValue !== null && qtdTransversinasValue !== undefined && qtdTransversinasValue !== "" 
+    ? parseInt(qtdTransversinasValue) 
+    : 0; // Se vazio, salvar como 0 ao invés de 3
+
   return {
     LongarineHeight: roundTo3Decimals(parseFloat(obra["ALTURA LONGARINA"] || obra.ALTURA_LONGARINA) || 0.0),
     LongarineThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA LONGARINA"] || obra.ESPESSURA_LONGARINA) || 0.0),
-    NumberOfLongarines: parseInt(obra["QTD LONGARINAS"] || obra.QTD_LONGARINAS) || 2,
+    NumberOfLongarines: qtdLongarinas,
     LongarineType: createZSElementTypeFromValue(obra["TIPO LONGARINA"] || obra.TIPO_LONGARINA),
     BeamReinforcement: Boolean(obra["REFORCO VIGA"] || obra.REFORCO_VIGA),
     TransversineHeight: roundTo3Decimals(parseFloat(obra["ALTURA TRANSVERSINA"] || obra.ALTURA_TRANSVERSINA) || 0.0),
     TransversineThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA TRANSVERSINA"] || obra.ESPESSURA_TRANSVERSINA) || 0.0),
-    NumberOfTransversines: parseInt(obra["QTD TRANSVERSINAS"] || obra.QTD_TRANSVERSINAS) || 3,
+    NumberOfTransversines: qtdTransversinas,
     TransversineType: createZSElementTypeFromValue(obra["TIPO DE TRANSVERSINA"] || obra.TIPO_TRANSVERSINA),
     SlabType: createZSElementTypeFromValue(obra["TIPO LAJE"] || obra.TIPO_LAJE),
     SlabThickness: roundTo3Decimals(parseFloat(obra["ESPESSURA LAJE"] || obra.ESPESSURA_LAJE) || 0.0),

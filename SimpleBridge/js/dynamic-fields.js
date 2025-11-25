@@ -247,6 +247,49 @@ function updateLongarinaFieldsRequired() {
       beamReinforcementCheckbox.disabled = false;
     }
   }
+
+  // SE NÃO HÁ LONGARINAS, NÃO PODE HAVER TRANSVERSINAS
+  const qtdTransversinasField = document.getElementById("qtd-transversinas");
+  const tipoTransversinaField = document.getElementById("tipo-transversina");
+  const espessuraTransversinaField = document.getElementById("espessura-transversina");
+
+  if (!hasLongarinas) {
+    // Limpar e desabilitar QTD TRANSVERSINAS
+    if (qtdTransversinasField) {
+      qtdTransversinasField.value = "0";
+      qtdTransversinasField.disabled = true;
+      qtdTransversinasField.classList.remove("error");
+    }
+
+    // Limpar e desabilitar TIPO DE TRANSVERSINA
+    if (tipoTransversinaField) {
+      tipoTransversinaField.value = "";
+      tipoTransversinaField.disabled = true;
+      tipoTransversinaField.classList.remove("error");
+      const errorEl = document.getElementById("tipo-transversina-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    }
+
+    // Limpar e desabilitar ESPESSURA TRANSVERSINA
+    if (espessuraTransversinaField) {
+      espessuraTransversinaField.value = "";
+      espessuraTransversinaField.disabled = true;
+      espessuraTransversinaField.classList.remove("error");
+      const errorEl = document.getElementById("espessura-transversina-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    }
+  } else {
+    // Habilitar campos de transversina quando há longarinas
+    if (qtdTransversinasField) {
+      qtdTransversinasField.disabled = false;
+    }
+    if (tipoTransversinaField) {
+      tipoTransversinaField.disabled = false;
+    }
+    if (espessuraTransversinaField) {
+      espessuraTransversinaField.disabled = false;
+    }
+  }
 }
 
 // Atualizar visualização dos campos obrigatórios de transversina
