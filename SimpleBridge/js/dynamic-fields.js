@@ -195,6 +195,60 @@ function updateBlocoSapataFieldsRequired() {
   });
 }
 
+// Atualizar visualização dos campos obrigatórios de longarina
+function updateLongarinaFieldsRequired() {
+  const qtdLongarinasField = document.getElementById("qtd-longarinas");
+  if (!qtdLongarinasField) return;
+
+  const qtdLongarinas = parseInt(qtdLongarinasField.value) || 0;
+  const hasLongarinas = qtdLongarinas > 0;
+
+  // Atualizar altura longarina
+  const alturaLongarinaLabel = document.querySelector('label[for="altura-longarina"]');
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  if (alturaLongarinaField) {
+    if (hasLongarinas) {
+      alturaLongarinaField.disabled = false;
+      if (alturaLongarinaLabel) alturaLongarinaLabel.classList.add("required");
+    } else {
+      alturaLongarinaField.disabled = true;
+      alturaLongarinaField.value = ""; // Limpar o valor
+      if (alturaLongarinaLabel) alturaLongarinaLabel.classList.remove("required");
+      alturaLongarinaField.classList.remove("error");
+      const errorEl = document.getElementById("altura-longarina-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    }
+  }
+
+  // Atualizar espessura longarina
+  const espessuraLongarinaLabel = document.querySelector('label[for="espessura-longarina"]');
+  const espessuraLongarinaField = document.getElementById("espessura-longarina");
+  if (espessuraLongarinaField) {
+    if (hasLongarinas) {
+      espessuraLongarinaField.disabled = false;
+      if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.add("required");
+    } else {
+      espessuraLongarinaField.disabled = true;
+      espessuraLongarinaField.value = ""; // Limpar o valor
+      if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.remove("required");
+      espessuraLongarinaField.classList.remove("error");
+      const errorEl = document.getElementById("espessura-longarina-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    }
+  }
+
+  // Bloquear/desbloquear checkbox de reforço viga
+  const beamReinforcementCheckbox = document.getElementById("beam-reinforcement");
+  if (beamReinforcementCheckbox) {
+    if (!hasLongarinas) {
+      beamReinforcementCheckbox.checked = false;
+      beamReinforcementCheckbox.disabled = true;
+    } else {
+      beamReinforcementCheckbox.disabled = false;
+    }
+  }
+}
+
 // Atualizar visualização dos campos obrigatórios de transversina
 function updateTransversinaFieldsRequired() {
   const qtdTransversinasField = document.getElementById("qtd-transversinas");
@@ -237,6 +291,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const qtdApoiosField = document.getElementById("qtd-apoios");
   if (qtdApoiosField) {
     qtdApoiosField.addEventListener("change", generateApoiosFields);
+  }
+
+  // Validar campos de longarina quando a quantidade for alterada
+  const qtdLongarinasField = document.getElementById("qtd-longarinas");
+  if (qtdLongarinasField) {
+    qtdLongarinasField.addEventListener("change", function() {
+      updateLongarinaFieldsRequired();
+      if (typeof validateField === 'function') {
+        validateField("altura-longarina");
+        validateField("espessura-longarina");
+      }
+    });
+    qtdLongarinasField.addEventListener("input", function() {
+      updateLongarinaFieldsRequired();
+    });
+    // Executar ao carregar a página
+    updateLongarinaFieldsRequired();
   }
 
   // Validar campos de transversina quando a quantidade for alterada
@@ -549,6 +620,29 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Event listener para espessura laje - valida cortina-altura quando muda
+  const espessuraLajeField = document.getElementById("espessura-laje");
+  if (espessuraLajeField) {
+    espessuraLajeField.addEventListener("input", function() {
+      // Revalidar cortina-altura quando espessura laje mudar
+      const cortinaAlturaField = document.getElementById("cortina-altura");
+      if (cortinaAlturaField && cortinaAlturaField.value) {
+        if (typeof validateField === 'function') {
+          validateField("cortina-altura");
+        }
+      }
+    });
+    espessuraLajeField.addEventListener("blur", function() {
+      // Revalidar cortina-altura quando espessura laje mudar
+      const cortinaAlturaField = document.getElementById("cortina-altura");
+      if (cortinaAlturaField && cortinaAlturaField.value) {
+        if (typeof validateField === 'function') {
+          validateField("cortina-altura");
+        }
+      }
+    });
+  }
+
   // Gerar campos iniciais
   generateTramosFields();
 });
@@ -561,3 +655,4 @@ window.validateHeights = validateHeights;
 window.validateDisplacements = validateDisplacements;
 window.updateBlocoSapataFieldsRequired = updateBlocoSapataFieldsRequired;
 window.updateTransversinaFieldsRequired = updateTransversinaFieldsRequired;
+window.updateLongarinaFieldsRequired = updateLongarinaFieldsRequired;

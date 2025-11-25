@@ -386,11 +386,10 @@
                 id="cortina-altura"
                 name="CORTINA ALTURA"
                 step="0.01"
-                min="0"
                 required
               />
               <div class="error-message" id="cortina-altura-error">
-                Este campo é obrigatório
+                Este campo é obrigatório e deve ser no mínimo igual à ESPESSURA LAJE
               </div>
             </div>
             <div class="form-group">
@@ -526,6 +525,52 @@
 <div class="tab-content" id="superestrutura-content">
   <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
 
+  <!-- Primeira linha: Quantidade de longarinas, transversinas e tipo -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="qtd-longarinas" class="required"
+        >QTD LONGARINAS</label
+      >
+      <input
+        type="number"
+        id="qtd-longarinas"
+        name="QTD LONGARINAS"
+        min="0"
+        step="1"
+        oninput="forceIntegerOnly(this)"
+        required
+      />
+      <div class="error-message" id="qtd-longarinas-error">
+        Este campo é obrigatório
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
+      <input
+        type="number"
+        id="qtd-transversinas"
+        name="QTD TRANSVERSINAS"
+        min="0"
+        step="1"
+        oninput="forceIntegerOnly(this)"
+      />
+    </div>
+    
+    <div class="form-group">
+      <label for="tipo-transversina">TIPO DE TRANSVERSINA</label>
+      <select id="tipo-transversina" name="TIPO DE TRANSVERSINA">
+        <option value="">Selecione</option>
+        <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
+        <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
+      </select>
+      <div class="error-message" id="tipo-transversina-error">
+        Este campo é obrigatório quando há transversinas
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda linha: Altura longarina, deslocamentos e reforço viga -->
   <div class="form-row">
     <div class="form-group">
       <label for="altura-longarina" class="required"
@@ -575,50 +620,6 @@
         Este campo é obrigatório
       </div>
     </div>
-  </div>
-  
-  <div class="form-row">
-    <div class="form-group">
-      <label for="qtd-longarinas" class="required"
-        >QTD LONGARINAS</label
-      >
-      <input
-        type="number"
-        id="qtd-longarinas"
-        name="QTD LONGARINAS"
-        min="0"
-        step="1"
-        oninput="forceIntegerOnly(this)"
-        required
-      />
-      <div class="error-message" id="qtd-longarinas-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-    
-    <div class="form-group">
-      <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
-      <input
-        type="number"
-        id="qtd-transversinas"
-        name="QTD TRANSVERSINAS"
-        min="0"
-        step="1"
-        oninput="forceIntegerOnly(this)"
-      />
-    </div>
-    
-    <div class="form-group">
-      <label for="tipo-transversina">TIPO DE TRANSVERSINA</label>
-      <select id="tipo-transversina" name="TIPO DE TRANSVERSINA">
-        <option value="">Selecione</option>
-        <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
-        <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
-      </select>
-      <div class="error-message" id="tipo-transversina-error">
-        Este campo é obrigatório quando há transversinas
-      </div>
-    </div>
     
     <div class="form-group" style="padding-top: 28px;">
       <label>
@@ -632,6 +633,7 @@
     </div>
   </div>
   
+  <!-- Terceira linha: Espessuras -->
   <div class="form-row">
     <div class="form-group">
       <label for="espessura-longarina" class="required"

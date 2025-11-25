@@ -8,7 +8,14 @@ window.requiredFields = {
   largura: { type: "number", min: 0, required: true },
   altura: { type: "number", min: 0, required: true },
   "qtd-tramos": { type: "number", min: 1, required: true },
-  "cortina-altura": { type: "number", min: 0, required: true },
+  "cortina-altura": { 
+    type: "number", 
+    min: function() {
+      const espessuraLajeField = document.getElementById("espessura-laje");
+      return parseFloat(espessuraLajeField ? espessuraLajeField.value : 0) || 0;
+    }, 
+    required: true 
+  },
   "tipo-ala-paralela": {
     type: "text",
     required: function () {
@@ -84,11 +91,27 @@ window.requiredFields = {
       return encontroField && encontroField.value === "ENCONTRO LAJE";
     },
   },
-  "altura-longarina": { type: "number", min: 0, required: true },
+  "altura-longarina": { 
+    type: "number", 
+    min: 0, 
+    required: function () {
+      const qtdLongarinaField = document.getElementById("qtd-longarinas");
+      const qtdLongarinas = parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
+      return qtdLongarinas > 0;
+    }
+  },
   "deslocamento-esquerdo": { type: "number", min: 0, required: true },
   "deslocamento-direito": { type: "number", min: 0, required: true },
   "qtd-longarinas": { type: "number", min: 0, required: true },
-  "espessura-longarina": { type: "number", min: 0, required: true },
+  "espessura-longarina": { 
+    type: "number", 
+    min: 0, 
+    required: function () {
+      const qtdLongarinaField = document.getElementById("qtd-longarinas");
+      const qtdLongarinas = parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
+      return qtdLongarinas > 0;
+    }
+  },
   "tipo-transversina": { 
     type: "text", 
     min: null, 
@@ -263,10 +286,19 @@ function validateField(fieldId) {
         if (fieldId.includes("bloco-sapata")) {
         }
         
+        // Obter o valor mínimo (pode ser número ou função)
+        const minValue = typeof config.min === "function" ? config.min() : config.min;
+        
         // Campo vazio ou valor menor que o mínimo
-        if (field.value === "" || isNaN(value) || (config.min !== null && value < config.min)) {
+        if (field.value === "" || isNaN(value) || (minValue !== null && value < minValue)) {
           field.classList.add("error");
-          if (errorElement) errorElement.classList.add("visible");
+          if (errorElement) {
+            // Mensagem customizada para cortina-altura
+            if (fieldId === "cortina-altura" && minValue > 0) {
+              errorElement.textContent = `A altura mínima deve ser ${minValue.toFixed(2)}m (ESPESSURA LAJE)`;
+            }
+            errorElement.classList.add("visible");
+          }
           return false;
         }
         
@@ -461,6 +493,14 @@ function validateMinimumHeight() {
   const alturaLongarina = parseFloat(document.getElementById("altura-longarina").value) || 0;
   
   const errorElement = document.getElementById("altura-sum-error");
+  
+  // Se não há longarinas, não validar altura
+  const qtdLongarinasField = document.getElementById("qtd-longarinas");
+  const qtdLongarinas = parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
+  if (qtdLongarinas === 0) {
+    if (errorElement) errorElement.style.display = "none";
+    return true;
+  }
   
   if (alturaTotal === 0 || alturaLongarina === 0) {
     if (errorElement) errorElement.style.display = "none";
@@ -703,6 +743,13 @@ function togglePillarBracingQuantityField() {
 function checkLongarinaHeightWarning() {
   const tramosFields = document.querySelectorAll(".tramo-field");
   const alturaLongarinaField = document.getElementById("altura-longarina");
+  
+  // Se não há longarinas, não gerar aviso
+  const qtdLongarinasField = document.getElementById("qtd-longarinas");
+  const qtdLongarinas = parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
+  if (qtdLongarinas === 0) {
+    return null; // Sem longarinas, não validar
+  }
   
   if (!alturaLongarinaField || tramosFields.length === 0) {
     return null; // Sem dados para validar
