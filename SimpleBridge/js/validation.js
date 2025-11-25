@@ -699,6 +699,122 @@ function togglePillarBracingQuantityField() {
   }
 }
 
+// Validar altura da longarina em relação ao maior tramo (aviso, não impede salvamento)
+function checkLongarinaHeightWarning() {
+  const tramosFields = document.querySelectorAll(".tramo-field");
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  
+  if (!alturaLongarinaField || tramosFields.length === 0) {
+    return null; // Sem dados para validar
+  }
+  
+  const alturaLongarina = parseFloat(alturaLongarinaField.value) || 0;
+  
+  // Encontrar o maior tramo
+  let maiorTramo = 0;
+  tramosFields.forEach(field => {
+    const comprimento = parseFloat(field.value) || 0;
+    if (comprimento > maiorTramo) {
+      maiorTramo = comprimento;
+    }
+  });
+  
+  if (maiorTramo === 0 || alturaLongarina === 0) {
+    return null; // Sem dados para validar
+  }
+  
+  const percentualMinimo = 0.05; // 5%
+  const percentualReferencia = 0.10; // 10% - referência comum na prática
+  const alturaMinima = maiorTramo * percentualMinimo;
+  const alturaReferencia = maiorTramo * percentualReferencia;
+  
+  const percentualAtual = (alturaLongarina / maiorTramo) * 100;
+  
+  // Se a altura for menor que 5%, retorna aviso crítico
+  if (alturaLongarina < alturaMinima) {
+    return {
+      type: 'critical',
+      message: `⚠️ <strong>POSSÍVEL ERRO DE PREENCHIMENTO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) parece muito baixa em relação ao maior tramo (${maiorTramo.toFixed(2)}m).<br>
+                • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(1)}% do vão<br>
+                • <strong>Referência comum:</strong> Em torno de 10% do vão (${alturaReferencia.toFixed(2)}m)<br>
+                • <strong>Mínimo estrutural típico:</strong> ${alturaMinima.toFixed(2)}m (5% do vão)<br>
+                <strong>Verifique se a medição está correta antes de salvar.</strong>`
+    };
+  }
+  
+  // Se a altura for menor que 10% mas maior que 5%, retorna aviso moderado
+  if (alturaLongarina < alturaReferencia) {
+    return {
+      type: 'moderate',
+      message: `💡 <strong>VERIFICAÇÃO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) está abaixo do comum para o maior tramo (${maiorTramo.toFixed(2)}m).<br>
+                • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(1)}% do vão<br>
+                • <strong>Referência comum:</strong> Em torno de 10% do vão (${alturaReferencia.toFixed(2)}m)<br>
+                <strong>Confirme se a medição foi realizada corretamente.</strong>`
+    };
+  }
+  
+  return null; // Tudo OK
+}
+
+// Validar altura da cortina em relação à longarina quando há aparelho de apoio (aviso, não impede salvamento)
+function checkCortinaHeightWarning() {
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const tipoAparelhoApoioField = document.getElementById("tipo-aparelho-apoio");
+  const cortinaAlturaField = document.getElementById("cortina-altura");
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  
+  if (!tipoEncontroField || !tipoAparelhoApoioField || !cortinaAlturaField || !alturaLongarinaField) {
+    return null; // Campos não existem
+  }
+  
+  const tipoEncontro = tipoEncontroField.value;
+  const tipoAparelhoApoio = tipoAparelhoApoioField.value;
+  const cortinaAltura = parseFloat(cortinaAlturaField.value) || 0;
+  const alturaLongarina = parseFloat(alturaLongarinaField.value) || 0;
+  
+  // Verificar se tem parede frontal portante OU encontro laje
+  const temParedeFrontal = tipoEncontro === "ENCONTRO - PAREDE FRONTAL PORTANTE";
+  const temEncontroLaje = tipoEncontro === "ENCONTRO LAJE";
+  
+  // Verificar se tem aparelho de apoio
+  const temAparelhoApoio = tipoAparelhoApoio !== "" && tipoAparelhoApoio !== "Nenhum";
+  
+  // Se tem (parede frontal OU encontro laje) E tem aparelho de apoio
+  if ((temParedeFrontal || temEncontroLaje) && temAparelhoApoio) {
+    const alturaCortinaMinima = alturaLongarina + 0.05; // 5cm = 0.05m
+    
+    if (cortinaAltura < alturaCortinaMinima) {
+      return {
+        type: 'critical',
+        message: `⚠️ <strong>ATENÇÃO:</strong> Quando há ${tipoEncontro} com aparelho de apoio, a altura da cortina deve ter pelo menos 5cm a mais que a longarina.<br>
+                  • <strong>Altura da longarina:</strong> ${alturaLongarina.toFixed(2)}m<br>
+                  • <strong>Altura da cortina atual:</strong> ${cortinaAltura.toFixed(2)}m<br>
+                  • <strong>Altura mínima recomendada:</strong> ${alturaCortinaMinima.toFixed(2)}m<br>
+                  <strong>Deseja revisar a altura da cortina ou da longarina?</strong>`
+      };
+    }
+  }
+  
+  return null; // Tudo OK
+}
+
+// Obter todos os avisos (não bloqueadores)
+function getWarnings() {
+  const warnings = [];
+  
+  const longarinaWarning = checkLongarinaHeightWarning();
+  if (longarinaWarning) {
+    warnings.push(longarinaWarning);
+  }
+  
+  const cortinaWarning = checkCortinaHeightWarning();
+  if (cortinaWarning) {
+    warnings.push(cortinaWarning);
+  }
+  
+  return warnings;
+}
+
 // Expor funções globalmente
 window.validateField = validateField;
 window.validateTramos = validateTramos;
@@ -712,3 +828,6 @@ window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;
 window.validateForm = validateForm;
 window.togglePillarBracingQuantityField = togglePillarBracingQuantityField;
+window.checkLongarinaHeightWarning = checkLongarinaHeightWarning;
+window.checkCortinaHeightWarning = checkCortinaHeightWarning;
+window.getWarnings = getWarnings;

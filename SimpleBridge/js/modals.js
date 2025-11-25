@@ -309,6 +309,48 @@ function generateSummaryByTabs() {
   return summaryHTML;
 }
 
+// Função para fechar modal com tecla ESC
+function handleEscapeKey(event) {
+  if (event.key === 'Escape' || event.key === 'Esc') {
+    // Lista de modais em ordem de prioridade (último aberto fecha primeiro)
+    const modals = [
+      { id: 'height-calculator-modal', closeFunc: 'closeHeightCalculator' },
+      { id: 'ponte-details-modal', closeFunc: 'closePonteDetailsModal' },
+      { id: 'search-pontes-modal', closeFunc: 'closeSearchPontesModal' },
+      { id: 'summary-modal', closeFunc: 'closeSummaryModal' },
+      { id: 'import-modal', closeFunc: 'closeImportModal' },
+      { id: 'add-field-modal', closeFunc: 'closeModal' }
+    ];
+
+    // Procurar o primeiro modal visível e fechá-lo
+    for (const modal of modals) {
+      const element = document.getElementById(modal.id);
+      if (element && (element.style.display === 'block' || window.getComputedStyle(element).display === 'block')) {
+        // Chamar a função de fechamento correspondente se existir
+        if (typeof window[modal.closeFunc] === 'function') {
+          window[modal.closeFunc]();
+          event.preventDefault();
+          break;
+        }
+      }
+    }
+  }
+}
+
+// Adicionar listener para tecla ESC quando o documento estiver pronto
+document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('keydown', handleEscapeKey);
+});
+
+// Se o documento já estiver carregado, adicionar o listener imediatamente
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keydown', handleEscapeKey);
+  });
+} else {
+  document.addEventListener('keydown', handleEscapeKey);
+}
+
 // Expor funções globalmente
 window.closeModal = closeModal;
 window.closeImportModal = closeImportModal;
