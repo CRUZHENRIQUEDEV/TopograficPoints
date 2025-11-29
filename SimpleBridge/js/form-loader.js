@@ -98,6 +98,15 @@ function loadWorkToForm(work) {
       }, 100);
     }
 
+    // Disparar evento change no campo tipo-bloco-sapata para atualizar visibilidade
+    setTimeout(() => {
+      const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
+      if (tipoBlocoSapataField && tipoBlocoSapataField.value) {
+        // Disparar evento change para acionar os listeners registrados
+        tipoBlocoSapataField.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }, 50);
+
     // Atualizar visibilidade do campo de quantidade de viga de contraventamento
     if (typeof togglePillarBracingQuantityField === 'function') {
       setTimeout(() => {
