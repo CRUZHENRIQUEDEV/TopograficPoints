@@ -46,6 +46,11 @@ function generateTramosFields() {
     qtdApoiosField.value = qtdApoios;
     generateApoiosFields();
   }
+  
+  // Reinicializar handlers de erro para os novos campos
+  if (typeof initErrorHandlers === 'function') {
+    initErrorHandlers();
+  }
 }
 
 // Gerar campos de apoios
@@ -110,6 +115,11 @@ function generateApoiosFields() {
         });
       }
     });
+  }
+  
+  // Reinicializar handlers de erro para os novos campos
+  if (typeof initErrorHandlers === 'function') {
+    initErrorHandlers();
   }
 }
 
