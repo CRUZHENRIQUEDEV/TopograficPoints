@@ -134,9 +134,9 @@ h3 {
 .works-counter {
   display: flex;
   justify-content: space-around;
-  gap: 8px;
-  padding: 6px 8px;
-  margin: 8px 0;
+  gap: 6px;
+  padding: 4px 8px;
+  margin: 6px 0;
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(41, 128, 185, 0.1));
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
@@ -147,8 +147,8 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 4px 10px;
+  gap: 1px;
+  padding: 3px 8px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   transition: var(--transition-fast);
@@ -160,7 +160,7 @@ h3 {
 }
 
 .counter-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-light-blue);
   font-weight: 500;
   text-transform: uppercase;
@@ -168,7 +168,7 @@ h3 {
 }
 
 .counter-value {
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: bold;
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -187,21 +187,23 @@ h3 {
   overflow-y: auto;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  margin: 15px 0;
-  padding: 10px;
+  margin: 8px 0;
+  padding: 4px;
   background-color: var(--bg-overlay);
 }
 
 .work-item {
-  padding: 10px 15px;
-  margin-bottom: 8px;
+  padding: 4px 8px;
+  margin-bottom: 2px;
   border-bottom: 1px solid var(--border-light);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 6px;
+  border-radius: 3px;
   transition: var(--transition-fast);
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .work-item:hover {
@@ -217,14 +219,22 @@ h3 {
 .work-item .modelado-check {
   color: var(--color-success);
   font-weight: bold;
-  font-size: 30px;
-  margin-right: 8px;
+  font-size: 16px;
+  margin-right: 4px;
 }
 
 .work-item .no-check {
   display: inline-block;
-  width: 16px;
-  margin-right: 8px;
+  width: 10px;
+  margin-right: 4px;
+}
+
+.work-item .delete-btn {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  min-height: auto;
+  height: auto;
+  line-height: 1.2;
 }
 
 .filter-container {

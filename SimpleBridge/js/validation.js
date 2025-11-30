@@ -109,7 +109,8 @@ window.requiredFields = {
     required: function () {
       const qtdLongarinaField = document.getElementById("qtd-longarinas");
       const qtdLongarinas = parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
-      return qtdLongarinas > 0;
+      // Só é obrigatório quando há mais de 1 longarina (quando há 1, é seção caixão com cálculo automático)
+      return qtdLongarinas > 1;
     }
   },
   "tipo-transversina": { 
@@ -770,8 +771,11 @@ function checkLongarinaHeightWarning() {
     return null; // Sem dados para validar
   }
   
+  // Quando há apenas 1 longarina, será uma seção caixão protendida, ideal é 5%
+  // Quando há mais de 1 longarina, referência comum é 10%
+  const isSecaoCaixao = qtdLongarinas === 1;
   const percentualMinimo = 0.05; // 5%
-  const percentualReferencia = 0.10; // 10% - referência comum na prática
+  const percentualReferencia = isSecaoCaixao ? 0.05 : 0.10; // 5% para caixão, 10% para múltiplas longarinas
   const alturaMinima = maiorTramo * percentualMinimo;
   const alturaReferencia = maiorTramo * percentualReferencia;
   
@@ -779,18 +783,20 @@ function checkLongarinaHeightWarning() {
   
   // Se a altura for menor que 5%, retorna aviso crítico
   if (alturaLongarina < alturaMinima) {
+    const tipoSecao = isSecaoCaixao ? '(Seção Caixão Protendida)' : '';
     return {
       type: 'critical',
-      message: `⚠️ <strong>POSSÍVEL ERRO DE PREENCHIMENTO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) parece muito baixa em relação ao maior tramo (${maiorTramo.toFixed(2)}m).<br>
+      message: `⚠️ <strong>POSSÍVEL ERRO DE PREENCHIMENTO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) parece muito baixa em relação ao maior tramo (${maiorTramo.toFixed(2)}m). ${tipoSecao}<br>
                 • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(1)}% do vão<br>
-                • <strong>Referência comum:</strong> Em torno de 10% do vão (${alturaReferencia.toFixed(2)}m)<br>
+                • <strong>Referência comum:</strong> Em torno de ${(percentualReferencia * 100).toFixed(0)}% do vão (${alturaReferencia.toFixed(2)}m)<br>
                 • <strong>Mínimo estrutural típico:</strong> ${alturaMinima.toFixed(2)}m (5% do vão)<br>
                 <strong>Verifique se a medição está correta antes de salvar.</strong>`
     };
   }
   
-  // Se a altura for menor que 10% mas maior que 5%, retorna aviso moderado
-  if (alturaLongarina < alturaReferencia) {
+  // Se a altura for menor que a referência mas maior que 5%, retorna aviso moderado
+  // Para seção caixão (1 longarina), a referência é 5%, então este aviso não aparecerá
+  if (alturaLongarina < alturaReferencia && !isSecaoCaixao) {
     return {
       type: 'moderate',
       message: `💡 <strong>VERIFICAÇÃO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) está abaixo do comum para o maior tramo (${maiorTramo.toFixed(2)}m).<br>

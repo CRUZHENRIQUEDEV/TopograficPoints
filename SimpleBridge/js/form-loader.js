@@ -128,6 +128,13 @@ function loadWorkToForm(work) {
       }, 100);
     }
 
+    // Atualizar exclusividades de elementos complementares (guarda rodas, barreiras, calçadas)
+    if (typeof manageComplementaryElements === 'function') {
+      setTimeout(() => {
+        manageComplementaryElements();
+      }, 150);
+    }
+
     // Executar validação após carregar (se a função existir)
     if (typeof validateForm === 'function') {
       setTimeout(() => {

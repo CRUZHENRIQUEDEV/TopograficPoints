@@ -51,6 +51,7 @@ function generateTramosFields() {
 // Gerar campos de apoios
 function generateApoiosFields() {
   const qtdApoios = parseInt(document.getElementById("qtd-apoios").value) || 0;
+  const qtdPilares = parseInt(document.getElementById("qtd-pilares")?.value) || 0;
   const container = document.getElementById("apoios-fields");
 
   if (!container) return;
@@ -60,6 +61,9 @@ function generateApoiosFields() {
   if (qtdApoios === 0) {
     return;
   }
+
+  // Se há apenas 1 pilar, será um pilar parede com largura calculada automaticamente
+  const isPilarParede = qtdPilares === 1;
 
   for (let i = 1; i <= qtdApoios; i++) {
     const apoioRow = document.createElement("div");
@@ -76,8 +80,11 @@ function generateApoiosFields() {
                step="0.01" min="0" placeholder="0.00" required />
       </div>
       <div class="apoio-field-wrapper">
-        <input type="number" class="apoio-larg-field" name="apoio-larg-${i}" 
-               step="0.01" min="0" placeholder="0.00" required />
+        <input type="${isPilarParede ? 'text' : 'number'}" class="apoio-larg-field" name="apoio-larg-${i}" 
+               step="0.01" min="0" placeholder="${isPilarParede ? 'Cálculo automático' : '0.00'}" 
+               ${isPilarParede ? 'disabled readonly' : 'required'} 
+               value="${isPilarParede ? 'Cálculo automático' : ''}" 
+               style="${isPilarParede ? 'background-color: #f0f0f0; cursor: not-allowed;' : ''}" />
       </div>
     `;
 
@@ -224,10 +231,20 @@ function updateLongarinaFieldsRequired() {
   const espessuraLongarinaLabel = document.querySelector('label[for="espessura-longarina"]');
   const espessuraLongarinaField = document.getElementById("espessura-longarina");
   if (espessuraLongarinaField) {
-    if (hasLongarinas) {
+    // Se há apenas 1 longarina, bloquear o campo (será uma seção caixão protendida com cálculo automático)
+    if (qtdLongarinas === 1) {
+      espessuraLongarinaField.disabled = true;
+      espessuraLongarinaField.value = ""; // Limpar o valor
+      if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.remove("required");
+      espessuraLongarinaField.classList.remove("error");
+      const errorEl = document.getElementById("espessura-longarina-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    } else if (hasLongarinas) {
+      // Se há mais de 1 longarina, habilitar o campo
       espessuraLongarinaField.disabled = false;
       if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.add("required");
     } else {
+      // Se não há longarinas, bloquear e limpar
       espessuraLongarinaField.disabled = true;
       espessuraLongarinaField.value = ""; // Limpar o valor
       if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.remove("required");
@@ -321,6 +338,111 @@ function updateTransversinaFieldsRequired() {
   }
 }
 
+// Função para gerenciar exclusividades de elementos complementares
+function manageComplementaryElements() {
+  // Lado ESQUERDO
+  const guardaRodasEsq = document.getElementById("guarda-rodas-esquerdo");
+  const tipoBarreiraEsq = document.getElementById("tipo-barreira-esquerda");
+  const larguraBarreiraEsq = document.getElementById("largura-barreira-esquerda");
+  const tipoCalcadaEsq = document.getElementById("tipo-calcada-esquerda");
+  const larguraCalcadaEsq = document.getElementById("largura-calcada-esquerda");
+
+  // Lado DIREITO
+  const guardaRodasDir = document.getElementById("guarda-rodas-direito");
+  const tipoBarreiraDir = document.getElementById("tipo-barreira-direita");
+  const larguraBarreiraDir = document.getElementById("largura-barreira-direita");
+  const tipoCalcadaDir = document.getElementById("tipo-calcada-direita");
+  const larguraCalcadaDir = document.getElementById("largura-calcada-direita");
+
+  // Verificar se há guarda rodas ESQUERDO
+  const hasGuardaRodasEsq = guardaRodasEsq && guardaRodasEsq.value !== "" && guardaRodasEsq.value !== "Nenhum";
+  if (hasGuardaRodasEsq) {
+    // Bloquear barreira e calçada do lado esquerdo
+    if (tipoBarreiraEsq) {
+      tipoBarreiraEsq.value = "Nenhum";
+      tipoBarreiraEsq.disabled = true;
+      tipoBarreiraEsq.style.opacity = "0.5";
+    }
+    if (larguraBarreiraEsq) {
+      larguraBarreiraEsq.value = "";
+      larguraBarreiraEsq.disabled = true;
+      larguraBarreiraEsq.style.opacity = "0.5";
+    }
+    if (tipoCalcadaEsq) {
+      tipoCalcadaEsq.value = "Nenhum";
+      tipoCalcadaEsq.disabled = true;
+      tipoCalcadaEsq.style.opacity = "0.5";
+    }
+    if (larguraCalcadaEsq) {
+      larguraCalcadaEsq.value = "";
+      larguraCalcadaEsq.disabled = true;
+      larguraCalcadaEsq.style.opacity = "0.5";
+    }
+  } else {
+    // Liberar barreira e calçada do lado esquerdo
+    if (tipoBarreiraEsq) {
+      tipoBarreiraEsq.disabled = false;
+      tipoBarreiraEsq.style.opacity = "";
+    }
+    if (larguraBarreiraEsq) {
+      larguraBarreiraEsq.disabled = false;
+      larguraBarreiraEsq.style.opacity = "";
+    }
+    if (tipoCalcadaEsq) {
+      tipoCalcadaEsq.disabled = false;
+      tipoCalcadaEsq.style.opacity = "";
+    }
+    if (larguraCalcadaEsq) {
+      larguraCalcadaEsq.disabled = false;
+      larguraCalcadaEsq.style.opacity = "";
+    }
+  }
+
+  // Verificar se há guarda rodas DIREITO
+  const hasGuardaRodasDir = guardaRodasDir && guardaRodasDir.value !== "" && guardaRodasDir.value !== "Nenhum";
+  if (hasGuardaRodasDir) {
+    // Bloquear barreira e calçada do lado direito
+    if (tipoBarreiraDir) {
+      tipoBarreiraDir.value = "Nenhum";
+      tipoBarreiraDir.disabled = true;
+      tipoBarreiraDir.style.opacity = "0.5";
+    }
+    if (larguraBarreiraDir) {
+      larguraBarreiraDir.value = "";
+      larguraBarreiraDir.disabled = true;
+      larguraBarreiraDir.style.opacity = "0.5";
+    }
+    if (tipoCalcadaDir) {
+      tipoCalcadaDir.value = "Nenhum";
+      tipoCalcadaDir.disabled = true;
+      tipoCalcadaDir.style.opacity = "0.5";
+    }
+    if (larguraCalcadaDir) {
+      larguraCalcadaDir.value = "";
+      larguraCalcadaDir.disabled = true;
+      larguraCalcadaDir.style.opacity = "0.5";
+    }
+  } else {
+    // Liberar barreira e calçada do lado direito
+    if (tipoBarreiraDir) {
+      tipoBarreiraDir.disabled = false;
+      tipoBarreiraDir.style.opacity = "";
+    }
+    if (larguraBarreiraDir) {
+      larguraBarreiraDir.disabled = false;
+      larguraBarreiraDir.style.opacity = "";
+    }
+    if (tipoCalcadaDir) {
+      tipoCalcadaDir.disabled = false;
+      tipoCalcadaDir.style.opacity = "";
+    }
+    if (larguraCalcadaDir) {
+      larguraCalcadaDir.disabled = false;
+      larguraCalcadaDir.style.opacity = "";
+    }
+  }
+}
+
 // Inicialização
 document.addEventListener("DOMContentLoaded", function () {
   const qtdTramosField = document.getElementById("qtd-tramos");
@@ -334,6 +456,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const qtdApoiosField = document.getElementById("qtd-apoios");
   if (qtdApoiosField) {
     qtdApoiosField.addEventListener("change", generateApoiosFields);
+  }
+
+  // Regenerar campos de apoios quando a quantidade de pilares mudar (para bloquear largura se pilar parede)
+  const qtdPilaresField = document.getElementById("qtd-pilares");
+  if (qtdPilaresField) {
+    qtdPilaresField.addEventListener("change", generateApoiosFields);
+    qtdPilaresField.addEventListener("input", generateApoiosFields);
   }
 
   // Validar campos de longarina quando a quantidade for alterada
@@ -557,6 +686,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const label = document.querySelector('label[for="largura-guarda-rodas-esquerdo"]');
         if (label) label.classList.remove("required");
       }
+      // Gerenciar exclusividades de elementos complementares
+      manageComplementaryElements();
       if (typeof validateField === 'function') {
         validateField("largura-guarda-rodas-esquerdo");
       }
@@ -577,6 +708,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const label = document.querySelector('label[for="largura-guarda-rodas-direito"]');
         if (label) label.classList.remove("required");
       }
+      // Gerenciar exclusividades de elementos complementares
+      manageComplementaryElements();
       if (typeof validateField === 'function') {
         validateField("largura-guarda-rodas-direito");
       }
@@ -699,3 +832,4 @@ window.validateDisplacements = validateDisplacements;
 window.updateBlocoSapataFieldsRequired = updateBlocoSapataFieldsRequired;
 window.updateTransversinaFieldsRequired = updateTransversinaFieldsRequired;
 window.updateLongarinaFieldsRequired = updateLongarinaFieldsRequired;
+window.manageComplementaryElements = manageComplementaryElements;
