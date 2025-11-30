@@ -8,6 +8,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -153,8 +154,7 @@
                 key: 'valores',
                 modelagem: 100,
                 detalhamento: 100,
-                gestao: 100,
-                terceiro: 100
+                gestao: 100
               });
             };
             request.onerror = () => reject(request.error);
@@ -176,7 +176,7 @@
         // ============ Componente Principal ============
         const ControleObras = () => {
           const [obras, setObras] = useState([]);
-          const [config, setConfig] = useState({ modelagem: 100, detalhamento: 100, gestao: 100, terceiro: 100 });
+          const [config, setConfig] = useState({ modelagem: 100, detalhamento: 100, gestao: 100 });
           const [valoresPorPessoa, setValoresPorPessoa] = useState({});
           const [filtros, setFiltros] = useState({ lote: '', pessoa: '', tarefa: '', status: '' });
           const [showConfig, setShowConfig] = useState(false);
@@ -185,6 +185,8 @@
           const [showEditObra, setShowEditObra] = useState(false);
           const [showGerenciarPessoas, setShowGerenciarPessoas] = useState(false);
           const [showImport, setShowImport] = useState(false);
+          const [showProdutividade, setShowProdutividade] = useState(false);
+          const [filtroGrafico, setFiltroGrafico] = useState({ pessoa: '' });
           const [duplicates, setDuplicates] = useState([]);
           const [pendingImport, setPendingImport] = useState([]);
           const [pessoasCadastradas, setPessoasCadastradas] = useState([]);
@@ -500,6 +502,58 @@
           const totalGeral = resumo.reduce((acc, r) => acc + r.total, 0);
           const resumoPorLote = calcularResumoPorLote();
 
+          // Calcular produtividade por LOTE (cada lote é um período/mês)
+          const calcularProdutividadePorLote = () => {
+            const produtividadePorLote = {};
+            
+            obras.forEach(obra => {
+              const lote = obra.lote || 'Sem Lote';
+              
+              // Processar cada tipo de tarefa
+              const tarefas = [
+                { pessoa: obra.respModelagem, tipo: 'modelagem' },
+                { pessoa: obra.respDetalhamento, tipo: 'detalhamento' },
+                { pessoa: obra.respGestao, tipo: 'gestao' }
+              ];
+              
+              tarefas.forEach(({ pessoa, tipo }) => {
+                if (!pessoa) return;
+                
+                const chave = `${pessoa}|${lote}`;
+                if (!produtividadePorLote[chave]) {
+                  produtividadePorLote[chave] = {
+                    pessoa,
+                    lote,
+                    modelagem: 0,
+                    detalhamento: 0,
+                    gestao: 0,
+                    valorModelagem: 0,
+                    valorDetalhamento: 0,
+                    valorGestao: 0
+                  };
+                }
+                
+                produtividadePorLote[chave][tipo]++;
+                const valor = getValorPorPessoa(pessoa, tipo);
+                produtividadePorLote[chave][`valor${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`] += valor;
+              });
+            });
+            
+            // Converter para array e ordenar
+            const resultado = Object.values(produtividadePorLote).map(item => ({
+              ...item,
+              total: item.modelagem + item.detalhamento + item.gestao,
+              valorTotal: item.valorModelagem + item.valorDetalhamento + item.valorGestao
+            })).sort((a, b) => {
+              if (a.pessoa !== b.pessoa) return a.pessoa.localeCompare(b.pessoa);
+              return a.lote.localeCompare(b.lote);
+            });
+            
+            return resultado;
+          };
+
+          const produtividadePorLote = calcularProdutividadePorLote();
+
           // Obter valores únicos para filtros
           const lotes = [...new Set(obras.map(o => o.lote).filter(Boolean))].sort();
           const pessoas = [...new Set([...obras.flatMap(o => [o.respModelagem, o.respDetalhamento, o.respGestao]).filter(Boolean), ...pessoasCadastradas])].sort();
@@ -734,6 +788,12 @@
                         🔧 Gerenciar Pessoas
                       </button>
                       <button
+                        onClick={() => setShowProdutividade(true)}
+                        className="bg-gradient-to-r from-success-light to-success hover:from-success hover:to-success-light text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        📈 Produtividade
+                      </button>
+                      <button
                         onClick={limparBancoDados}
                         className="bg-gradient-to-r from-danger to-danger-dark hover:from-danger-dark hover:to-danger text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
                       >
@@ -746,7 +806,7 @@
                   {showConfig && (
                     <div className="glass-light rounded-xl p-4 mb-6 animate-slide-up">
                       <h2 className="text-xl font-semibold mb-3 text-light-blue">⚙️ Valores por Tarefa</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-1 text-light-blue">Modelagem Simplificada (R$)</label>
                           <input
@@ -771,15 +831,6 @@
                             type="number"
                             value={config.gestao}
                             onChange={(e) => setConfig({...config, gestao: parseFloat(e.target.value) || 0})}
-                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-light-blue">Terceiro (R$)</label>
-                          <input
-                            type="number"
-                            value={config.terceiro}
-                            onChange={(e) => setConfig({...config, terceiro: parseFloat(e.target.value) || 0})}
                             className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
                           />
                         </div>
@@ -1398,6 +1449,399 @@
                   </div>
                 </div>
               )}
+
+              {/* Modal de Produtividade */}
+              {showProdutividade && (
+                <ProdutividadeModal 
+                  produtividadePorLote={produtividadePorLote}
+                  pessoas={pessoas}
+                  lotes={lotes}
+                  filtroGrafico={filtroGrafico}
+                  setFiltroGrafico={setFiltroGrafico}
+                  setShowProdutividade={setShowProdutividade}
+                  formatarValor={formatarValor}
+                />
+              )}
+
+            </div>
+          );
+        };
+
+        // Componente ProdutividadeModal - usa LOTE e mostra análises por tipo de tarefa
+        const ProdutividadeModal = ({ produtividadePorLote, pessoas, lotes, filtroGrafico, setFiltroGrafico, setShowProdutividade, formatarValor }) => {
+          const chartRefModelagem = useRef(null);
+          const chartRefDetalhamento = useRef(null);
+          const chartRefGestao = useRef(null);
+          const chartRefValores = useRef(null);
+          const chartInstanceModelagem = useRef(null);
+          const chartInstanceDetalhamento = useRef(null);
+          const chartInstanceGestao = useRef(null);
+          const chartInstanceValores = useRef(null);
+
+          const dadosFiltrados = filtroGrafico.pessoa 
+            ? produtividadePorLote.filter(d => d.pessoa === filtroGrafico.pessoa)
+            : produtividadePorLote;
+
+          const dadosPorPessoa = {};
+          dadosFiltrados.forEach(item => {
+            if (!dadosPorPessoa[item.pessoa]) dadosPorPessoa[item.pessoa] = [];
+            dadosPorPessoa[item.pessoa].push(item);
+          });
+
+          const coresPessoas = {
+            'Henrique da Cruz Silva': { bg: 'rgba(52, 152, 219, 0.6)', border: 'rgb(52, 152, 219)' },
+            'Teógenes Caio': { bg: 'rgba(155, 89, 182, 0.6)', border: 'rgb(155, 89, 182)' },
+          };
+          const coresDefault = [
+            { bg: 'rgba(39, 174, 96, 0.6)', border: 'rgb(39, 174, 96)' },
+            { bg: 'rgba(243, 156, 18, 0.6)', border: 'rgb(243, 156, 18)' },
+            { bg: 'rgba(231, 76, 60, 0.6)', border: 'rgb(231, 76, 60)' },
+          ];
+
+          const getCorPessoa = (pessoa, index) => {
+            return coresPessoas[pessoa] || coresDefault[index % coresDefault.length];
+          };
+
+          useEffect(() => {
+            if (!dadosFiltrados.length) return;
+
+            if (chartInstanceModelagem.current) chartInstanceModelagem.current.destroy();
+            if (chartInstanceDetalhamento.current) chartInstanceDetalhamento.current.destroy();
+            if (chartInstanceGestao.current) chartInstanceGestao.current.destroy();
+            if (chartInstanceValores.current) chartInstanceValores.current.destroy();
+
+            const lotesUnicos = [...new Set(dadosFiltrados.map(d => d.lote))].sort();
+
+            // Gráfico de Modelagens
+            if (chartRefModelagem.current) {
+              const ctx = chartRefModelagem.current.getContext('2d');
+              chartInstanceModelagem.current = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: lotesUnicos,
+                  datasets: Object.entries(dadosPorPessoa).map(([pessoa, dados], index) => {
+                    const cor = getCorPessoa(pessoa, index);
+                    return {
+                      label: pessoa,
+                      data: lotesUnicos.map(lote => dados.find(d => d.lote === lote)?.modelagem || 0),
+                      backgroundColor: cor.bg,
+                      borderColor: cor.border,
+                      borderWidth: 2
+                    };
+                  })
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: true, labels: { color: '#fff', font: { size: 12 } } },
+                    title: { display: true, text: '🔧 Modelagens por Lote', color: '#27ae60', font: { size: 16, weight: 'bold' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} modelagens` } }
+                  },
+                  scales: {
+                    y: { beginAtZero: true, ticks: { color: '#fff', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                    x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                  }
+                }
+              });
+            }
+
+            // Gráfico de Detalhamentos
+            if (chartRefDetalhamento.current) {
+              const ctx = chartRefDetalhamento.current.getContext('2d');
+              chartInstanceDetalhamento.current = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: lotesUnicos,
+                  datasets: Object.entries(dadosPorPessoa).map(([pessoa, dados], index) => {
+                    const cor = getCorPessoa(pessoa, index);
+                    return {
+                      label: pessoa,
+                      data: lotesUnicos.map(lote => dados.find(d => d.lote === lote)?.detalhamento || 0),
+                      backgroundColor: cor.bg,
+                      borderColor: cor.border,
+                      borderWidth: 2
+                    };
+                  })
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: true, labels: { color: '#fff', font: { size: 12 } } },
+                    title: { display: true, text: '📐 Detalhamentos por Lote', color: '#f39c12', font: { size: 16, weight: 'bold' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} detalhamentos` } }
+                  },
+                  scales: {
+                    y: { beginAtZero: true, ticks: { color: '#fff', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                    x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                  }
+                }
+              });
+            }
+
+            // Gráfico de Gestão
+            if (chartRefGestao.current) {
+              const ctx = chartRefGestao.current.getContext('2d');
+              chartInstanceGestao.current = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: lotesUnicos,
+                  datasets: Object.entries(dadosPorPessoa).map(([pessoa, dados], index) => {
+                    const cor = getCorPessoa(pessoa, index);
+                    return {
+                      label: pessoa,
+                      data: lotesUnicos.map(lote => dados.find(d => d.lote === lote)?.gestao || 0),
+                      backgroundColor: cor.bg,
+                      borderColor: cor.border,
+                      borderWidth: 2
+                    };
+                  })
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: true, labels: { color: '#fff', font: { size: 12 } } },
+                    title: { display: true, text: '📋 Gestão por Lote', color: '#9b59b6', font: { size: 16, weight: 'bold' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} gestões` } }
+                  },
+                  scales: {
+                    y: { beginAtZero: true, ticks: { color: '#fff', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                    x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                  }
+                }
+              });
+            }
+
+            // Gráfico de Valores
+            if (chartRefValores.current) {
+              const ctx = chartRefValores.current.getContext('2d');
+              chartInstanceValores.current = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: lotesUnicos,
+                  datasets: Object.entries(dadosPorPessoa).map(([pessoa, dados], index) => {
+                    const cor = getCorPessoa(pessoa, index);
+                    return {
+                      label: pessoa,
+                      data: lotesUnicos.map(lote => dados.find(d => d.lote === lote)?.valorTotal || 0),
+                      backgroundColor: cor.bg,
+                      borderColor: cor.border,
+                      borderWidth: 2
+                    };
+                  })
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: true, labels: { color: '#fff', font: { size: 12 } } },
+                    title: { display: true, text: '💰 Receita por Lote', color: '#2ecc71', font: { size: 16, weight: 'bold' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: R$ ${ctx.parsed.y.toFixed(2)}` } }
+                  },
+                  scales: {
+                    y: { beginAtZero: true, ticks: { color: '#fff', callback: (v) => 'R$ ' + v.toFixed(0) }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                    x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                  }
+                }
+              });
+            }
+
+            return () => {
+              if (chartInstanceModelagem.current) chartInstanceModelagem.current.destroy();
+              if (chartInstanceDetalhamento.current) chartInstanceDetalhamento.current.destroy();
+              if (chartInstanceGestao.current) chartInstanceGestao.current.destroy();
+              if (chartInstanceValores.current) chartInstanceValores.current.destroy();
+            };
+          }, [dadosFiltrados, filtroGrafico]);
+
+          // Calcular variações detalhadas por tipo de tarefa
+          const calcularVariacoes = () => {
+            const variacoes = {};
+            Object.entries(dadosPorPessoa).forEach(([pessoa, dados]) => {
+              if (dados.length < 2) return;
+              const dadosOrdenados = [...dados].sort((a, b) => a.lote.localeCompare(b.lote));
+              const penultimo = dadosOrdenados[dadosOrdenados.length - 2];
+              const ultimo = dadosOrdenados[dadosOrdenados.length - 1];
+              
+              const calcVariacao = (anterior, atual) => anterior > 0 ? ((atual - anterior) / anterior * 100).toFixed(1) : (atual > 0 ? 100 : 0);
+              
+              variacoes[pessoa] = {
+                ultimoLote: ultimo.lote,
+                total: {
+                  atual: ultimo.total,
+                  anterior: penultimo.total,
+                  variacao: calcVariacao(penultimo.total, ultimo.total),
+                  diferenca: ultimo.total - penultimo.total
+                },
+                modelagem: {
+                  atual: ultimo.modelagem,
+                  anterior: penultimo.modelagem,
+                  variacao: calcVariacao(penultimo.modelagem, ultimo.modelagem),
+                  diferenca: ultimo.modelagem - penultimo.modelagem
+                },
+                detalhamento: {
+                  atual: ultimo.detalhamento,
+                  anterior: penultimo.detalhamento,
+                  variacao: calcVariacao(penultimo.detalhamento, ultimo.detalhamento),
+                  diferenca: ultimo.detalhamento - penultimo.detalhamento
+                },
+                gestao: {
+                  atual: ultimo.gestao,
+                  anterior: penultimo.gestao,
+                  variacao: calcVariacao(penultimo.gestao, ultimo.gestao),
+                  diferenca: ultimo.gestao - penultimo.gestao
+                },
+                valorTotal: ultimo.valorTotal
+              };
+            });
+            return variacoes;
+          };
+
+          const variacoes = calcularVariacoes();
+
+          return (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slide-up overflow-y-auto">
+              <div className="glass-effect rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-y-auto p-6 border border-success/40 my-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-bold text-success-light">📈 Análise de Produtividade por Lote</h2>
+                  <button onClick={() => setShowProdutividade(false)} className="text-white hover:text-danger text-3xl font-bold transition">✕</button>
+                </div>
+
+                <div className="glass-light rounded-xl p-4 mb-6">
+                  <label className="block text-sm font-medium mb-2 text-light-blue">Filtrar por Pessoa</label>
+                  <select value={filtroGrafico.pessoa} onChange={(e) => setFiltroGrafico({...filtroGrafico, pessoa: e.target.value})} className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none">
+                    <option value="">Todas as Pessoas</option>
+                    {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+
+                {/* Cards de Análise por Pessoa com Breakdown por Tipo */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                  {Object.entries(variacoes).map(([pessoa, dados]) => (
+                    <div key={pessoa} className="glass-effect rounded-xl p-5 border border-primary-blue/30">
+                      <h3 className="font-bold text-xl text-light-blue mb-4 flex items-center gap-2">
+                        👤 {pessoa}
+                        <span className="text-xs text-gray-400 font-normal">({dados.ultimoLote})</span>
+                      </h3>
+                      
+                      {/* Resumo Total */}
+                      <div className="bg-dark-primary/50 rounded-lg p-3 mb-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-xs text-gray-400">Total de Obras</p>
+                            <p className="text-2xl font-bold text-white">{dados.total.atual}</p>
+                            <p className="text-xs text-gray-400">Anterior: {dados.total.anterior}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-3xl font-bold ${parseFloat(dados.total.variacao) >= 0 ? 'text-success' : 'text-danger'}`}>
+                              {parseFloat(dados.total.variacao) >= 0 ? '↑' : '↓'} {Math.abs(dados.total.variacao)}%
+                            </p>
+                            <p className="text-xs text-gray-300">
+                              {dados.total.diferenca > 0 ? '+' : ''}{dados.total.diferenca} obras
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Breakdown por Tipo */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Modelagem */}
+                        <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-2">
+                          <p className="text-xs text-green-400 font-semibold mb-1">🔧 Modelagem</p>
+                          <p className="text-lg font-bold text-white">{dados.modelagem.atual}</p>
+                          <p className="text-xs text-gray-400">Ant: {dados.modelagem.anterior}</p>
+                          <p className={`text-sm font-semibold mt-1 ${parseFloat(dados.modelagem.variacao) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {parseFloat(dados.modelagem.variacao) >= 0 ? '↑' : '↓'}{Math.abs(dados.modelagem.variacao)}%
+                          </p>
+                        </div>
+
+                        {/* Detalhamento */}
+                        <div className="bg-orange-900/20 border border-orange-600/30 rounded-lg p-2">
+                          <p className="text-xs text-orange-400 font-semibold mb-1">📐 Detalhamento</p>
+                          <p className="text-lg font-bold text-white">{dados.detalhamento.atual}</p>
+                          <p className="text-xs text-gray-400">Ant: {dados.detalhamento.anterior}</p>
+                          <p className={`text-sm font-semibold mt-1 ${parseFloat(dados.detalhamento.variacao) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {parseFloat(dados.detalhamento.variacao) >= 0 ? '↑' : '↓'}{Math.abs(dados.detalhamento.variacao)}%
+                          </p>
+                        </div>
+
+                        {/* Gestão */}
+                        <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-2">
+                          <p className="text-xs text-purple-400 font-semibold mb-1">📋 Gestão</p>
+                          <p className="text-lg font-bold text-white">{dados.gestao.atual}</p>
+                          <p className="text-xs text-gray-400">Ant: {dados.gestao.anterior}</p>
+                          <p className={`text-sm font-semibold mt-1 ${parseFloat(dados.gestao.variacao) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {parseFloat(dados.gestao.variacao) >= 0 ? '↑' : '↓'}{Math.abs(dados.gestao.variacao)}%
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Valor Total */}
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-400">💰 Receita Total:</span>
+                          <span className="text-lg font-bold text-success-light">R$ {formatarValor(dados.valorTotal)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {dadosFiltrados.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <div className="text-4xl mb-2">📊</div>
+                    <p>Nenhum dado de produtividade encontrado.</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Gráficos por Tipo de Tarefa */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                      <div className="glass-effect rounded-xl p-4 h-80"><canvas ref={chartRefModelagem}></canvas></div>
+                      <div className="glass-effect rounded-xl p-4 h-80"><canvas ref={chartRefDetalhamento}></canvas></div>
+                      <div className="glass-effect rounded-xl p-4 h-80"><canvas ref={chartRefGestao}></canvas></div>
+                    </div>
+                    
+                    {/* Gráfico de Receita */}
+                    <div className="glass-effect rounded-xl p-4 h-80 mb-6"><canvas ref={chartRefValores}></canvas></div>
+                    <div className="glass-light rounded-xl p-4">
+                      <h3 className="text-lg font-semibold mb-3 text-warning">📋 Detalhamento por Lote</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-dark-primary/50 text-gray-300">
+                              <th className="p-2 text-left font-semibold">Pessoa</th>
+                              <th className="p-2 text-left font-semibold">Lote</th>
+                              <th className="p-2 text-center font-semibold">Modelagem</th>
+                              <th className="p-2 text-center font-semibold">Detalhamento</th>
+                              <th className="p-2 text-center font-semibold">Gestão</th>
+                              <th className="p-2 text-center font-semibold">Total Obras</th>
+                              <th className="p-2 text-right font-semibold">Valor Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dadosFiltrados.map((item, idx) => (
+                              <tr key={idx} className="border-b border-gray-700/30 hover:bg-primary-blue/10 transition">
+                                <td className="p-2 text-light-blue font-semibold">{item.pessoa}</td>
+                                <td className="p-2 text-warning font-semibold">{item.lote}</td>
+                                <td className="p-2 text-center text-gray-300">{item.modelagem}</td>
+                                <td className="p-2 text-center text-gray-300">{item.detalhamento}</td>
+                                <td className="p-2 text-center text-gray-300">{item.gestao}</td>
+                                <td className="p-2 text-center text-white font-bold">{item.total}</td>
+                                <td className="p-2 text-right text-success-light font-bold">R$ {formatarValor(item.valorTotal)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )}
+                <div className="flex gap-3 mt-6">
+                  <button onClick={() => setShowProdutividade(false)} className="flex-1 bg-gradient-to-r from-primary-blue to-primary-blue-dark hover:from-primary-blue-dark hover:to-primary-blue text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg">✅ Fechar</button>
+                </div>
+              </div>
             </div>
           );
         };
