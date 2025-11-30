@@ -55,6 +55,10 @@ function loadWorkToForm(work) {
       const larguras = work["LARGURA PILAR"] ? work["LARGURA PILAR"].split(";") : [];
       const comprimentos = work["COMPRIMENTO PILARES"] ? work["COMPRIMENTO PILARES"].split(";") : [];
 
+      // Verificar se é pilar parede (QTD PILARES = 1)
+      const qtdPilares = parseInt(work["QTD PILARES"]) || 0;
+      const isPilarParede = qtdPilares === 1;
+
       // Aguardar um pouco para os campos serem gerados
       setTimeout(() => {
         const apoiosAlturaFields = document.querySelectorAll(".apoio-altura-field");
@@ -62,8 +66,15 @@ function loadWorkToForm(work) {
         const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
 
         for (let i = 0; i < apoiosAlturaFields.length; i++) {
+          // Preencher altura
           if (i < alturas.length) apoiosAlturaFields[i].value = alturas[i];
-          if (i < larguras.length) apoiosLargFields[i].value = larguras[i];
+          
+          // LARGURA: Não preencher se for pilar parede (deixar bloqueado com "Cálculo automático")
+          if (!isPilarParede && i < larguras.length) {
+            apoiosLargFields[i].value = larguras[i];
+          }
+          
+          // Preencher comprimento
           if (i < comprimentos.length) apoiosCompFields[i].value = comprimentos[i];
         }
       }, 100);
@@ -128,6 +139,34 @@ function loadWorkToForm(work) {
       setTimeout(() => {
         updateTransversinaFieldsRequired();
       }, 100);
+    }
+
+    // Regenerar campos de apoio para garantir que largura fique bloqueada se for pilar parede
+    if (typeof generateApoiosFields === 'function') {
+      setTimeout(() => {
+        generateApoiosFields();
+        
+        // Recarregar valores após regenerar os campos
+        if (work["ALTURA APOIO"] || work["LARGURA PILAR"] || work["COMPRIMENTO PILARES"]) {
+          const alturas = work["ALTURA APOIO"] ? work["ALTURA APOIO"].split(";") : [];
+          const larguras = work["LARGURA PILAR"] ? work["LARGURA PILAR"].split(";") : [];
+          const comprimentos = work["COMPRIMENTO PILARES"] ? work["COMPRIMENTO PILARES"].split(";") : [];
+          const qtdPilares = parseInt(work["QTD PILARES"]) || 0;
+          const isPilarParede = qtdPilares === 1;
+
+          setTimeout(() => {
+            const apoiosAlturaFields = document.querySelectorAll(".apoio-altura-field");
+            const apoiosLargFields = document.querySelectorAll(".apoio-larg-field");
+            const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
+
+            for (let i = 0; i < apoiosAlturaFields.length; i++) {
+              if (i < alturas.length) apoiosAlturaFields[i].value = alturas[i];
+              if (!isPilarParede && i < larguras.length) apoiosLargFields[i].value = larguras[i];
+              if (i < comprimentos.length) apoiosCompFields[i].value = comprimentos[i];
+            }
+          }, 50);
+        }
+      }, 120);
     }
 
     // Atualizar exclusividades de elementos complementares (guarda rodas, barreiras, calçadas)
