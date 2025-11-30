@@ -835,8 +835,10 @@ function checkCortinaHeightWarning() {
   // Se tem (parede frontal OU encontro laje) E tem aparelho de apoio
   if ((temParedeFrontal || temEncontroLaje) && temAparelhoApoio) {
     const alturaCortinaMinima = alturaLongarina + 0.05; // 5cm = 0.05m
+    const diferenca = alturaCortinaMinima - cortinaAltura;
     
-    if (cortinaAltura < alturaCortinaMinima) {
+    // Usar tolerância de 1mm para evitar problemas de precisão de ponto flutuante
+    if (diferenca > 0.001) {
       return {
         type: 'critical',
         message: `⚠️ <strong>ATENÇÃO:</strong> Quando há ${tipoEncontro} com aparelho de apoio, a altura da cortina deve ter pelo menos 5cm a mais que a longarina.<br>
