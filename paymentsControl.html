@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Obras e Pagamentos - Notion</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-primary': '#2c3e50',
+                        'dark-secondary': '#34495e',
+                        'primary-blue': '#3498db',
+                        'primary-blue-dark': '#2980b9',
+                        'light-blue': '#64b5f6',
+                        'success': '#27ae60',
+                        'success-light': '#2ecc71',
+                        'danger': '#e74c3c',
+                        'danger-dark': '#c0392b',
+                        'warning': '#f39c12',
+                        'warning-light': '#f1c40f',
+                        'purple': '#9b59b6',
+                        'purple-light': '#af7ac5'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(44, 62, 80, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-light {
+            background: rgba(52, 152, 219, 0.15);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slide-up {
+            animation: slideInUp 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ============ IndexedDB Manager ============
+        const DB_NAME = 'ObrasDB';
+        const DB_VERSION = 1;
+
+        const initDB = () => {
+          return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            
+            request.onupgradeneeded = (event) => {
+              const db = event.target.result;
+              
+              // Store de obras com CODIGO como chave primária
+              if (!db.objectStoreNames.contains('obras')) {
+                const obrasStore = db.createObjectStore('obras', { keyPath: 'codigo' });
+                obrasStore.createIndex('lote', 'lote', { unique: false });
+                obrasStore.createIndex('status', 'status', { unique: false });
+              }
+              
+              // Store de configurações
+              if (!db.objectStoreNames.contains('config')) {
+                db.createObjectStore('config', { keyPath: 'key' });
+              }
+            };
+          });
+        };
+
+        const saveObra = async (obra) => {
+          const db = await initDB();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['obras'], 'readwrite');
+            const store = transaction.objectStore('obras');
+            const request = store.put(obra);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+        };
+
+        const getAllObras = async () => {
+          const db = await initDB();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['obras'], 'readonly');
+            const store = transaction.objectStore('obras');
+            const request = store.getAll();
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+        };
+
+        const deleteObra = async (codigo) => {
+          const db = await initDB();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['obras'], 'readwrite');
+            const store = transaction.objectStore('obras');
+            const request = store.delete(codigo);
+            
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          });
+        };
+
+        const getConfig = async () => {
+          const db = await initDB();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['config'], 'readonly');
+            const store = transaction.objectStore('config');
+            const request = store.get('valores');
+            
+            request.onsuccess = () => {
+              resolve(request.result || {
+                key: 'valores',
+                modelagem: 100,
+                detalhamento: 100,
+                gestao: 100,
+                terceiro: 100
+              });
+            };
+            request.onerror = () => reject(request.error);
+          });
+        };
+
+        const saveConfig = async (config) => {
+          const db = await initDB();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['config'], 'readwrite');
+            const store = transaction.objectStore('config');
+            const request = store.put(config);
+            
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          });
+        };
+
+        // ============ Componente Principal ============
+        const ControleObras = () => {
+          const [obras, setObras] = useState([]);
+          const [config, setConfig] = useState({ modelagem: 100, detalhamento: 100, gestao: 100, terceiro: 100 });
+          const [valoresPorPessoa, setValoresPorPessoa] = useState({});
+          const [filtros, setFiltros] = useState({ lote: '', pessoa: '', tarefa: '', status: '' });
+          const [showConfig, setShowConfig] = useState(false);
+          const [showValoresPessoa, setShowValoresPessoa] = useState(false);
+          const [showAddObra, setShowAddObra] = useState(false);
+          const [showEditObra, setShowEditObra] = useState(false);
+          const [showGerenciarPessoas, setShowGerenciarPessoas] = useState(false);
+          const [showImport, setShowImport] = useState(false);
+          const [duplicates, setDuplicates] = useState([]);
+          const [pendingImport, setPendingImport] = useState([]);
+          const [pessoasCadastradas, setPessoasCadastradas] = useState([]);
+          const [novaPessoa, setNovaPessoa] = useState('');
+          const [novaObra, setNovaObra] = useState({
+            codigo: '',
+            lote: '',
+            nome: '',
+            status: '',
+            respModelagem: 'Henrique da Cruz Silva',
+            respDetalhamento: '',
+            respGestao: 'Teógenes Caio',
+            terceiro: ''
+          });
+          const [obraEditando, setObraEditando] = useState(null);
+          const fileInputRef = useRef(null);
+
+          // Carregar dados do IndexedDB ao iniciar
+          useEffect(() => {
+            loadData();
+          }, []);
+
+          const loadData = async () => {
+            try {
+              const obrasData = await getAllObras();
+              const configData = await getConfig();
+              setObras(obrasData);
+              setConfig(configData);
+              
+              // Carregar valores por pessoa se existir
+              const db = await initDB();
+              const transaction = db.transaction(['config'], 'readonly');
+              const store = transaction.objectStore('config');
+              const request = store.get('valoresPorPessoa');
+              request.onsuccess = () => {
+                if (request.result) {
+                  setValoresPorPessoa(request.result.valores || {});
+                }
+              };
+            } catch (error) {
+              console.error('Erro ao carregar dados:', error);
+            }
+          };
+
+          // Parser de CSV do Notion (detecta automaticamente vírgula ou TAB)
+          const parseNotionCSV = (text) => {
+            const lines = text.trim().split('\n');
+            if (lines.length === 0) return [];
+            
+            // Detectar separador (TAB ou vírgula)
+            const firstLine = lines[0];
+            const delimiter = firstLine.includes('\t') ? '\t' : ',';
+            
+            const headers = firstLine.split(delimiter);
+            
+            const obras = [];
+            for (let i = 1; i < lines.length; i++) {
+              const values = lines[i].split(delimiter);
+              if (values.length < 2) continue; // Pular linhas vazias
+              
+              const obra = {};
+              headers.forEach((header, index) => {
+                obra[header.trim()] = values[index] ? values[index].trim() : '';
+              });
+              
+              // Mapear campos do Notion para estrutura interna
+              const terceiro = obra['Resp. Terceiro'] || obra['Terceiro'] || obra['terceiro'] || '';
+              const respDetalhamento = obra['Resp. Detalhamento'] || obra['Resp. Detalhamento Pessoa'] || obra['respDetalhamento'] || '';
+              const respGestao = obra['Resp. Gestão'] || obra['respGestao'] || 'Teógenes Caio';
+              
+              // Se terceiro existir, ele substitui no DETALHAMENTO (não na gestão!)
+              const detalhamentoFinal = terceiro || respDetalhamento;
+              
+              const obraProcessada = {
+                codigo: obra['CODIGO'] || obra['codigo'] || '',
+                lote: obra['LOTE'] || obra['LOTE.'] || obra['lote'] || '',
+                nome: obra['NOME'] || obra['nome'] || '',
+                status: obra['Status'] || obra['status'] || '',
+                respModelagem: obra['Resp. Mod. simplificada'] || obra['respModelagem'] || 'Henrique da Cruz Silva',
+                respDetalhamento: detalhamentoFinal,
+                respGestao: respGestao,
+                terceiro: terceiro,
+                inicio: obra['Início'] || obra['inicio'] || '',
+                fim: obra['Fim'] || obra['fim'] || '',
+                criadoEm: obra['Criado em'] || obra['criadoEm'] || '',
+                qtdTramos: obra['QTD TRAMOS'] || obra['qtdTramos'] || '',
+                pendencias: obra['PENDÊNCIAS'] || obra['pendencias'] || '',
+                onedrive: obra['Onedrive'] || obra['onedrive'] || '',
+                vincular: obra['Vincular c/ base preenchida'] || obra['vincular'] || ''
+              };
+              
+              if (obraProcessada.codigo) {
+                obras.push(obraProcessada);
+              }
+            }
+            
+            return obras;
+          };
+
+          // Importar CSV
+          const handleImportCSV = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+              try {
+                const text = e.target.result;
+                const novasObras = parseNotionCSV(text);
+                
+                // Verificar duplicatas
+                const obrasExistentes = await getAllObras();
+                const codigosExistentes = new Set(obrasExistentes.map(o => o.codigo));
+                
+                const duplicadas = novasObras.filter(o => codigosExistentes.has(o.codigo));
+                const novas = novasObras.filter(o => !codigosExistentes.has(o.codigo));
+                
+                if (duplicadas.length > 0) {
+                  setDuplicates(duplicadas);
+                  setPendingImport(novas);
+                  setShowImport(true);
+                } else {
+                  // Sem duplicatas, importar tudo
+                  await importarObras(novasObras);
+                }
+              } catch (error) {
+                console.error('Erro ao importar CSV:', error);
+                alert('Erro ao importar arquivo CSV. Verifique o formato.');
+              }
+            };
+            reader.readAsText(file, 'UTF-8');
+          };
+
+          const importarObras = async (obras) => {
+            try {
+              for (const obra of obras) {
+                await saveObra(obra);
+              }
+              await loadData();
+              alert(`${obras.length} obra(s) importada(s) com sucesso!`);
+              setShowImport(false);
+              setDuplicates([]);
+              setPendingImport([]);
+            } catch (error) {
+              console.error('Erro ao salvar obras:', error);
+              alert('Erro ao salvar obras.');
+            }
+          };
+
+          const handleOverwrite = async () => {
+            await importarObras([...duplicates, ...pendingImport]);
+          };
+
+          const handleSkipDuplicates = async () => {
+            await importarObras(pendingImport);
+          };
+
+          // Filtrar obras
+          const obrasFiltradas = obras.filter(obra => {
+            if (filtros.lote && obra.lote !== filtros.lote) return false;
+            if (filtros.status && obra.status !== filtros.status) return false;
+            
+            if (filtros.pessoa) {
+              const temPessoa = obra.respModelagem === filtros.pessoa ||
+                               obra.respDetalhamento === filtros.pessoa ||
+                               obra.respGestao === filtros.pessoa;
+              if (!temPessoa) return false;
+            }
+            
+            if (filtros.tarefa) {
+              if (filtros.tarefa === 'modelagem' && !obra.respModelagem) return false;
+              if (filtros.tarefa === 'detalhamento' && !obra.respDetalhamento) return false;
+              if (filtros.tarefa === 'gestao' && !obra.respGestao) return false;
+            }
+            
+            return true;
+          });
+
+          // Formatar valor em Real Brasileiro
+          const formatarValor = (valor) => {
+            return valor.toLocaleString('pt-BR', { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+            });
+          };
+
+          // Obter valor por pessoa (usa customizado ou padrão) - retorna número
+          const getValorPorPessoa = (pessoa, tipo) => {
+            if (valoresPorPessoa[pessoa] && valoresPorPessoa[pessoa][tipo] !== undefined) {
+              return valoresPorPessoa[pessoa][tipo];
+            }
+            return config[tipo];
+          };
+
+          // Calcular resumo por pessoa
+          const calcularResumo = () => {
+            const pessoas = {};
+            
+            obras.forEach(obra => {
+              // Modelagem
+              if (obra.respModelagem) {
+                if (!pessoas[obra.respModelagem]) {
+                  pessoas[obra.respModelagem] = { modelagem: 0, detalhamento: 0, gestao: 0 };
+                }
+                pessoas[obra.respModelagem].modelagem++;
+              }
+              
+              // Detalhamento
+              if (obra.respDetalhamento) {
+                if (!pessoas[obra.respDetalhamento]) {
+                  pessoas[obra.respDetalhamento] = { modelagem: 0, detalhamento: 0, gestao: 0 };
+                }
+                pessoas[obra.respDetalhamento].detalhamento++;
+              }
+              
+              // Gestão
+              if (obra.respGestao) {
+                if (!pessoas[obra.respGestao]) {
+                  pessoas[obra.respGestao] = { modelagem: 0, detalhamento: 0, gestao: 0 };
+                }
+                pessoas[obra.respGestao].gestao++;
+              }
+            });
+            
+            return Object.entries(pessoas).map(([nome, qtds]) => {
+              const valorModelagem = qtds.modelagem * getValorPorPessoa(nome, 'modelagem');
+              const valorDetalhamento = qtds.detalhamento * getValorPorPessoa(nome, 'detalhamento');
+              const valorGestao = qtds.gestao * getValorPorPessoa(nome, 'gestao');
+              
+              return {
+                nome,
+                modelagem: qtds.modelagem,
+                detalhamento: qtds.detalhamento,
+                gestao: qtds.gestao,
+                valorModelagem,
+                valorDetalhamento,
+                valorGestao,
+                total: valorModelagem + valorDetalhamento + valorGestao
+              };
+            });
+          };
+
+          // Calcular resumo por pessoa e por lote
+          const calcularResumoPorLote = () => {
+            const resultado = {};
+            
+            obrasFiltradas.forEach(obra => {
+              // Modelagem
+              if (obra.respModelagem && obra.lote) {
+                const chave = `${obra.respModelagem}|${obra.lote}`;
+                if (!resultado[chave]) {
+                  resultado[chave] = {
+                    pessoa: obra.respModelagem,
+                    lote: obra.lote,
+                    modelagem: 0,
+                    detalhamento: 0,
+                    gestao: 0
+                  };
+                }
+                resultado[chave].modelagem++;
+              }
+              
+              // Detalhamento
+              if (obra.respDetalhamento && obra.lote) {
+                const chave = `${obra.respDetalhamento}|${obra.lote}`;
+                if (!resultado[chave]) {
+                  resultado[chave] = {
+                    pessoa: obra.respDetalhamento,
+                    lote: obra.lote,
+                    modelagem: 0,
+                    detalhamento: 0,
+                    gestao: 0
+                  };
+                }
+                resultado[chave].detalhamento++;
+              }
+              
+              // Gestão
+              if (obra.respGestao && obra.lote) {
+                const chave = `${obra.respGestao}|${obra.lote}`;
+                if (!resultado[chave]) {
+                  resultado[chave] = {
+                    pessoa: obra.respGestao,
+                    lote: obra.lote,
+                    modelagem: 0,
+                    detalhamento: 0,
+                    gestao: 0
+                  };
+                }
+                resultado[chave].gestao++;
+              }
+            });
+            
+            return Object.values(resultado).map(item => {
+              const valorModelagem = item.modelagem * getValorPorPessoa(item.pessoa, 'modelagem');
+              const valorDetalhamento = item.detalhamento * getValorPorPessoa(item.pessoa, 'detalhamento');
+              const valorGestao = item.gestao * getValorPorPessoa(item.pessoa, 'gestao');
+              
+              return {
+                ...item,
+                valorModelagem,
+                valorDetalhamento,
+                valorGestao,
+                total: valorModelagem + valorDetalhamento + valorGestao
+              };
+            }).sort((a, b) => {
+              if (a.pessoa !== b.pessoa) return a.pessoa.localeCompare(b.pessoa);
+              return a.lote.localeCompare(b.lote);
+            });
+          };
+
+          const resumo = calcularResumo();
+          const totalGeral = resumo.reduce((acc, r) => acc + r.total, 0);
+          const resumoPorLote = calcularResumoPorLote();
+
+          // Obter valores únicos para filtros
+          const lotes = [...new Set(obras.map(o => o.lote).filter(Boolean))].sort();
+          const pessoas = [...new Set([...obras.flatMap(o => [o.respModelagem, o.respDetalhamento, o.respGestao]).filter(Boolean), ...pessoasCadastradas])].sort();
+          const statusList = [...new Set(obras.map(o => o.status).filter(Boolean))].sort();
+
+          const salvarConfig = async () => {
+            try {
+              await saveConfig({ key: 'valores', ...config });
+              alert('Configuração salva com sucesso!');
+              setShowConfig(false);
+              await loadData();
+            } catch (error) {
+              console.error('Erro ao salvar configuração:', error);
+              alert('Erro ao salvar configuração.');
+            }
+          };
+
+          const removerObra = async (codigo) => {
+            if (confirm(`Deseja realmente remover a obra ${codigo}?`)) {
+              try {
+                await deleteObra(codigo);
+                await loadData();
+              } catch (error) {
+                console.error('Erro ao remover obra:', error);
+                alert('Erro ao remover obra.');
+              }
+            }
+          };
+
+          // Adicionar obra manual
+          const adicionarObraManual = async () => {
+            if (!novaObra.codigo) {
+              alert('Código é obrigatório!');
+              return;
+            }
+            
+            try {
+              await saveObra(novaObra);
+              await loadData();
+              setNovaObra({
+                codigo: '',
+                lote: '',
+                nome: '',
+                status: '',
+                respModelagem: 'Henrique da Cruz Silva',
+                respDetalhamento: '',
+                respGestao: 'Teógenes Caio',
+                terceiro: ''
+              });
+              setShowAddObra(false);
+              alert('Obra adicionada com sucesso!');
+            } catch (error) {
+              console.error('Erro ao adicionar obra:', error);
+              alert('Erro ao adicionar obra.');
+            }
+          };
+
+          // Editar obra
+          const abrirEditarObra = (obra) => {
+            setObraEditando({...obra});
+            setShowEditObra(true);
+          };
+
+          const salvarEdicaoObra = async () => {
+            if (!obraEditando.codigo) {
+              alert('Código é obrigatório!');
+              return;
+            }
+            
+            try {
+              await saveObra(obraEditando);
+              await loadData();
+              setShowEditObra(false);
+              setObraEditando(null);
+              alert('Obra atualizada com sucesso!');
+            } catch (error) {
+              console.error('Erro ao editar obra:', error);
+              alert('Erro ao editar obra.');
+            }
+          };
+
+          // Gerenciar pessoas
+          const adicionarPessoa = async () => {
+            if (!novaPessoa.trim()) {
+              alert('Digite o nome da pessoa!');
+              return;
+            }
+            
+            if (pessoas.includes(novaPessoa.trim())) {
+              alert('Esta pessoa já existe!');
+              return;
+            }
+            
+            setPessoasCadastradas([...pessoasCadastradas, novaPessoa.trim()]);
+            setNovaPessoa('');
+            alert('Pessoa adicionada! Agora você pode atribuir obras a ela.');
+          };
+
+          const removerPessoa = (nome) => {
+            if (confirm(`Remover ${nome} da lista?`)) {
+              setPessoasCadastradas(pessoasCadastradas.filter(p => p !== nome));
+            }
+          };
+
+          // Salvar valores por pessoa
+          const salvarValoresPessoa = async () => {
+            try {
+              const db = await initDB();
+              const transaction = db.transaction(['config'], 'readwrite');
+              const store = transaction.objectStore('config');
+              await store.put({ key: 'valoresPorPessoa', valores: valoresPorPessoa });
+              alert('Valores por pessoa salvos com sucesso!');
+              setShowValoresPessoa(false);
+              await loadData();
+            } catch (error) {
+              console.error('Erro ao salvar valores por pessoa:', error);
+              alert('Erro ao salvar valores.');
+            }
+          };
+
+          // Exportar CSV completo com valores calculados
+          const exportarCSVCompleto = () => {
+            const headers = 'CODIGO\tLOTE\tNOME\tSTATUS\tRESP_MODELAGEM\tVALOR_MODELAGEM\tRESP_DETALHAMENTO\tVALOR_DETALHAMENTO\tRESP_GESTAO\tVALOR_GESTAO\tVALOR_TOTAL\tINICIO\tFIM\tCRIADO_EM\tQTD_TRAMOS\tPENDENCIAS\n';
+            const rows = obrasFiltradas.map(o => {
+              const valMod = getValorPorPessoa(o.respModelagem, 'modelagem');
+              const valDet = getValorPorPessoa(o.respDetalhamento, 'detalhamento');
+              const valGest = getValorPorPessoa(o.respGestao, 'gestao');
+              const valorTotal = valMod + valDet + valGest;
+              
+              return `${o.codigo}\t${o.lote}\t${o.nome}\t${o.status}\t${o.respModelagem}\t${valMod}\t${o.respDetalhamento}\t${valDet}\t${o.respGestao}\t${valGest}\t${valorTotal}\t${o.inicio || ''}\t${o.fim || ''}\t${o.criadoEm || ''}\t${o.qtdTramos || ''}\t${o.pendencias || ''}`;
+            }).join('\n');
+            
+            const csv = '\ufeff' + headers + rows;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `obras_completas_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+          };
+
+          const exportarCSV = () => {
+            const headers = 'CODIGO\tLOTE\tNOME\tSTATUS\tRESP_MODELAGEM\tRESP_DETALHAMENTO\tRESP_GESTAO\tVALOR_TOTAL\n';
+            const rows = obrasFiltradas.map(o => {
+              const valorTotal = getValorPorPessoa(o.respModelagem, 'modelagem') + getValorPorPessoa(o.respDetalhamento, 'detalhamento') + getValorPorPessoa(o.respGestao, 'gestao');
+              return `${o.codigo}\t${o.lote}\t${o.nome}\t${o.status}\t${o.respModelagem}\t${o.respDetalhamento}\t${o.respGestao}\t${valorTotal}`;
+            }).join('\n');
+            
+            const csv = '\ufeff' + headers + rows;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `obras_filtradas_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+          };
+
+          // Limpar banco de dados
+          const limparBancoDados = async () => {
+            if (confirm('⚠️ ATENÇÃO! Isso vai remover TODAS as obras e configurações do banco de dados. Tem certeza?')) {
+              if (confirm('Última confirmação: Realmente deseja apagar tudo?')) {
+                try {
+                  const db = await initDB();
+                  const transaction = db.transaction(['obras', 'config'], 'readwrite');
+                  await transaction.objectStore('obras').clear();
+                  await transaction.objectStore('config').clear();
+                  await loadData();
+                  alert('✅ Banco de dados limpo com sucesso!');
+                } catch (error) {
+                  console.error('Erro ao limpar banco:', error);
+                  alert('Erro ao limpar banco de dados.');
+                }
+              }
+            }
+          };
+
+          return (
+            <div className="min-h-screen p-4 md:p-8">
+              <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="glass-effect rounded-2xl shadow-2xl p-6 mb-6 animate-slide-up">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-light-blue bg-clip-text text-transparent">
+                      💰 Controle de Obras - Notion
+                    </h1>
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".csv,.txt"
+                        onChange={handleImportCSV}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => setShowAddObra(true)}
+                        className="bg-gradient-to-r from-primary-blue to-primary-blue-dark hover:from-primary-blue-dark hover:to-primary-blue text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        ➕ Adicionar Obra
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current.click()}
+                        className="bg-gradient-to-r from-success to-success-light hover:from-success-light hover:to-success text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        📥 Importar CSV
+                      </button>
+                      <button
+                        onClick={exportarCSVCompleto}
+                        className="bg-gradient-to-r from-warning to-warning-light hover:from-warning-light hover:to-warning text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        📦 Exportar Completo
+                      </button>
+                      <button
+                        onClick={() => setShowConfig(!showConfig)}
+                        className="bg-gradient-to-r from-purple to-purple-light hover:from-purple-light hover:to-purple text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        ⚙️ Config
+                      </button>
+                      <button
+                        onClick={() => setShowValoresPessoa(true)}
+                        className="bg-gradient-to-r from-purple-light to-purple hover:from-purple hover:to-purple-light text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        👥 Valores/Pessoa
+                      </button>
+                      <button
+                        onClick={() => setShowGerenciarPessoas(true)}
+                        className="bg-gradient-to-r from-light-blue to-primary-blue hover:from-primary-blue hover:to-light-blue text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        🔧 Gerenciar Pessoas
+                      </button>
+                      <button
+                        onClick={limparBancoDados}
+                        className="bg-gradient-to-r from-danger to-danger-dark hover:from-danger-dark hover:to-danger text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        🗑️ Limpar Banco
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Configurações */}
+                  {showConfig && (
+                    <div className="glass-light rounded-xl p-4 mb-6 animate-slide-up">
+                      <h2 className="text-xl font-semibold mb-3 text-light-blue">⚙️ Valores por Tarefa</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Modelagem Simplificada (R$)</label>
+                          <input
+                            type="number"
+                            value={config.modelagem}
+                            onChange={(e) => setConfig({...config, modelagem: parseFloat(e.target.value) || 0})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Detalhamento (R$)</label>
+                          <input
+                            type="number"
+                            value={config.detalhamento}
+                            onChange={(e) => setConfig({...config, detalhamento: parseFloat(e.target.value) || 0})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Gestão (R$)</label>
+                          <input
+                            type="number"
+                            value={config.gestao}
+                            onChange={(e) => setConfig({...config, gestao: parseFloat(e.target.value) || 0})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Terceiro (R$)</label>
+                          <input
+                            type="number"
+                            value={config.terceiro}
+                            onChange={(e) => setConfig({...config, terceiro: parseFloat(e.target.value) || 0})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        onClick={salvarConfig}
+                        className="mt-4 bg-gradient-to-r from-primary-blue to-primary-blue-dark hover:from-primary-blue-dark hover:to-primary-blue text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        💾 Salvar Configuração
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Resumo Financeiro */}
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-3 text-light-blue">📊 Resumo por Pessoa</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                      {resumo.map(r => (
+                        <div key={r.nome} className="glass-effect rounded-xl p-4 text-white shadow-xl border border-primary-blue/30 hover:border-primary-blue transition-all transform hover:-translate-y-1">
+                          <h3 className="font-semibold mb-2 text-lg bg-gradient-to-r from-light-blue to-white bg-clip-text text-transparent">{r.nome}</h3>
+                          <div className="text-sm space-y-2 text-gray-300">
+                            <div className="flex justify-between"><span>Modelagens:</span><span className="text-success font-semibold">{r.modelagem} (R$ {formatarValor(r.valorModelagem)})</span></div>
+                            <div className="flex justify-between"><span>Detalhamentos:</span><span className="text-warning font-semibold">{r.detalhamento} (R$ {formatarValor(r.valorDetalhamento)})</span></div>
+                            <div className="flex justify-between"><span>Gestão:</span><span className="text-purple-light font-semibold">{r.gestao} (R$ {formatarValor(r.valorGestao)})</span></div>
+                          </div>
+                          <div className="text-2xl font-bold mt-4 pt-3 border-t border-white/20 text-center bg-gradient-to-r from-success-light to-success bg-clip-text text-transparent">
+                            R$ {formatarValor(r.total)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="glass-effect rounded-xl p-6 text-white text-center shadow-2xl border border-success/50 mb-6">
+                      <h2 className="text-xl font-semibold mb-2">💰 Total Geral do Projeto</h2>
+                      <div className="text-4xl font-bold bg-gradient-to-r from-success-light to-success bg-clip-text text-transparent">R$ {formatarValor(totalGeral)}</div>
+                      <div className="text-sm mt-2 text-gray-300">{obras.length} obras registradas</div>
+                    </div>
+
+                    {/* Resumo por Pessoa e Lote */}
+                    {resumoPorLote.length > 0 && (
+                      <div className="glass-light rounded-xl p-4">
+                        <h3 className="text-lg font-semibold mb-3 text-warning">📍 Pagamentos por Pessoa e Lote</h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-dark-primary/50 text-gray-300">
+                                <th className="p-2 text-left font-semibold">Pessoa</th>
+                                <th className="p-2 text-left font-semibold">Lote</th>
+                                <th className="p-2 text-center font-semibold">Modelagem</th>
+                                <th className="p-2 text-center font-semibold">Detalhamento</th>
+                                <th className="p-2 text-center font-semibold">Gestão</th>
+                                <th className="p-2 text-right font-semibold">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {resumoPorLote.map((item, idx) => (
+                                <tr key={idx} className="border-b border-gray-700/30 hover:bg-primary-blue/10 transition">
+                                  <td className="p-2 text-light-blue font-semibold">{item.pessoa}</td>
+                                  <td className="p-2 text-warning font-semibold">{item.lote}</td>
+                                  <td className="p-2 text-center text-gray-300">{item.modelagem > 0 ? `${item.modelagem} (R$ ${formatarValor(item.valorModelagem)})` : '-'}</td>
+                                  <td className="p-2 text-center text-gray-300">{item.detalhamento > 0 ? `${item.detalhamento} (R$ ${formatarValor(item.valorDetalhamento)})` : '-'}</td>
+                                  <td className="p-2 text-center text-gray-300">{item.gestao > 0 ? `${item.gestao} (R$ ${formatarValor(item.valorGestao)})` : '-'}</td>
+                                  <td className="p-2 text-right text-success-light font-bold">R$ {formatarValor(item.total)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Filtros */}
+                  <div className="glass-light rounded-xl p-4 mb-6">
+                    <h2 className="text-xl font-semibold mb-3 text-light-blue">🔍 Filtros</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <select
+                        value={filtros.lote}
+                        onChange={(e) => setFiltros({...filtros, lote: e.target.value})}
+                        className="px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                      >
+                        <option value="">Todos os Lotes</option>
+                        {lotes.map(lote => (
+                          <option key={lote} value={lote}>{lote}</option>
+                        ))}
+                      </select>
+                      
+                      <select
+                        value={filtros.pessoa}
+                        onChange={(e) => setFiltros({...filtros, pessoa: e.target.value})}
+                        className="px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                      >
+                        <option value="">Todas as Pessoas</option>
+                        {pessoas.map(pessoa => (
+                          <option key={pessoa} value={pessoa}>{pessoa}</option>
+                        ))}
+                      </select>
+                      
+                      <select
+                        value={filtros.tarefa}
+                        onChange={(e) => setFiltros({...filtros, tarefa: e.target.value})}
+                        className="px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                      >
+                        <option value="">Todas as Tarefas</option>
+                        <option value="modelagem">Modelagem</option>
+                        <option value="detalhamento">Detalhamento</option>
+                        <option value="gestao">Gestão</option>
+                      </select>
+                      
+                      <select
+                        value={filtros.status}
+                        onChange={(e) => setFiltros({...filtros, status: e.target.value})}
+                        className="px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30 transition"
+                      >
+                        <option value="">Todos os Status</option>
+                        {statusList.map(status => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => setFiltros({ lote: '', pessoa: '', tarefa: '', status: '' })}
+                        className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        🔄 Limpar Filtros
+                      </button>
+                      <button
+                        onClick={exportarCSV}
+                        className="bg-gradient-to-r from-success to-success-light hover:from-success-light hover:to-success text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg text-sm"
+                      >
+                        📊 Exportar Filtrado
+                      </button>
+                      <div className="flex-1 text-right text-sm text-gray-300 pt-2">
+                        Mostrando {obrasFiltradas.length} de {obras.length} obras
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tabela de Obras */}
+                  <div className="overflow-x-auto rounded-xl">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-dark-primary to-dark-secondary text-white">
+                          <th className="p-3 text-left font-semibold">Código</th>
+                          <th className="p-3 text-left font-semibold">Lote</th>
+                          <th className="p-3 text-left font-semibold">Nome</th>
+                          <th className="p-3 text-left font-semibold">Status</th>
+                          <th className="p-3 text-left font-semibold">Modelagem</th>
+                          <th className="p-3 text-left font-semibold">Detalhamento</th>
+                          <th className="p-3 text-left font-semibold">Gestão</th>
+                          <th className="p-3 text-center font-semibold">Valor</th>
+                          <th className="p-3 text-center font-semibold">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-dark-secondary/50">
+                        {obrasFiltradas.map((obra) => {
+                          const valorTotal = getValorPorPessoa(obra.respModelagem, 'modelagem') + getValorPorPessoa(obra.respDetalhamento, 'detalhamento') + getValorPorPessoa(obra.respGestao, 'gestao');
+                          return (
+                            <tr key={obra.codigo} className="border-b border-gray-700/50 hover:bg-primary-blue/10 transition">
+                              <td className="p-3 font-mono font-semibold text-light-blue">{obra.codigo}</td>
+                              <td className="p-3 text-gray-300">{obra.lote}</td>
+                              <td className="p-3 text-xs text-gray-300">{obra.nome}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                  obra.status === 'PAG. FEITO' ? 'bg-success/20 text-success border border-success/40' : 'bg-warning/20 text-warning border border-warning/40'
+                                }`}>
+                                  {obra.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-xs text-gray-300">{obra.respModelagem}</td>
+                              <td className="p-3 text-xs text-gray-300">{obra.respDetalhamento}</td>
+                              <td className="p-3 text-xs text-gray-300">{obra.respGestao}</td>
+                              <td className="p-3 text-center font-bold text-success-light">R$ {formatarValor(valorTotal)}</td>
+                              <td className="p-3 text-center">
+                                <div className="flex gap-1 justify-center">
+                                  <button
+                                    onClick={() => abrirEditarObra(obra)}
+                                    className="bg-gradient-to-r from-primary-blue to-primary-blue-dark hover:from-primary-blue-dark hover:to-primary-blue text-white px-3 py-1 rounded-lg transition-all transform hover:-translate-y-0.5 shadow-md text-xs"
+                                  >
+                                    ✏️
+                                  </button>
+                                  <button
+                                    onClick={() => removerObra(obra.codigo)}
+                                    className="bg-gradient-to-r from-danger to-danger-dark hover:from-danger-dark hover:to-danger text-white px-3 py-1 rounded-lg transition-all transform hover:-translate-y-0.5 shadow-md text-xs"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    
+                    {obrasFiltradas.length === 0 && (
+                      <div className="text-center py-12 text-gray-400 bg-dark-secondary/30 rounded-b-xl">
+                        <div className="text-4xl mb-2">📄</div>
+                        <p>Nenhuma obra encontrada. Importe um CSV do Notion para começar.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal de Importação com Duplicatas */}
+              {showImport && duplicates.length > 0 && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slide-up">
+                  <div className="glass-effect rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 border border-warning/40">
+                    <h2 className="text-2xl font-bold mb-4 text-warning">⚠️ Obras Duplicadas Encontradas</h2>
+                    <p className="mb-4 text-gray-300">
+                      Encontramos <span className="text-warning font-bold">{duplicates.length}</span> obra(s) que já existem no banco de dados.
+                    </p>
+                    
+                    <div className="glass-light rounded-lg p-4 mb-4 max-h-60 overflow-y-auto border border-primary-blue/30">
+                      <ul className="space-y-2 text-sm">
+                        {duplicates.map(obra => (
+                          <li key={obra.codigo} className="font-mono text-gray-300 flex items-center gap-2">
+                            <span className="text-warning">•</span>
+                            <span className="text-light-blue font-semibold">{obra.codigo}</span>
+                            <span className="text-gray-400">-</span>
+                            <span>{obra.nome}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <p className="mb-6 text-gray-300">
+                      Além disso, <span className="text-success font-bold">{pendingImport.length}</span> obra(s) nova(s) serão importadas.
+                    </p>
+                    
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleOverwrite}
+                        className="flex-1 bg-gradient-to-r from-warning to-warning-light hover:from-warning-light hover:to-warning text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        🔄 Sobrescrever Tudo
+                      </button>
+                      <button
+                        onClick={handleSkipDuplicates}
+                        className="flex-1 bg-gradient-to-r from-primary-blue to-primary-blue-dark hover:from-primary-blue-dark hover:to-primary-blue text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        ➡️ Pular Duplicadas
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowImport(false);
+                          setDuplicates([]);
+                          setPendingImport([]);
+                        }}
+                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        ❌ Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Adicionar Obra */}
+              {showAddObra && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slide-up">
+                  <div className="glass-effect rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-primary-blue/40">
+                    <h2 className="text-2xl font-bold mb-4 text-primary-blue">➕ Adicionar Obra Manual</h2>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Código *</label>
+                          <input
+                            type="text"
+                            value={novaObra.codigo}
+                            onChange={(e) => setNovaObra({...novaObra, codigo: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                            placeholder="Ex: 40021"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Lote</label>
+                          <input
+                            type="text"
+                            value={novaObra.lote}
+                            onChange={(e) => setNovaObra({...novaObra, lote: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                            placeholder="Ex: 3"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-light-blue">Nome</label>
+                        <input
+                          type="text"
+                          value={novaObra.nome}
+                          onChange={(e) => setNovaObra({...novaObra, nome: e.target.value})}
+                          className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          placeholder="Nome da obra"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Status</label>
+                          <select
+                            value={novaObra.status}
+                            onChange={(e) => setNovaObra({...novaObra, status: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {statusList.map(status => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Resp. Modelagem</label>
+                          <select
+                            value={novaObra.respModelagem}
+                            onChange={(e) => setNovaObra({...novaObra, respModelagem: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Resp. Detalhamento</label>
+                          <select
+                            value={novaObra.respDetalhamento}
+                            onChange={(e) => setNovaObra({...novaObra, respDetalhamento: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Resp. Gestão</label>
+                          <select
+                            value={novaObra.respGestao}
+                            onChange={(e) => setNovaObra({...novaObra, respGestao: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-light-blue">Terceiro (apenas visualização)</label>
+                        <input
+                          type="text"
+                          value={novaObra.terceiro || ''}
+                          disabled
+                          className="w-full px-3 py-2 bg-dark-secondary/50 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed"
+                          placeholder="Nenhum terceiro"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">💡 Se houver terceiro no CSV, ele substituirá o responsável pelo Detalhamento</p>
+                      </div>
+                      <div className="flex gap-3 mt-6">
+                        <button
+                          onClick={adicionarObraManual}
+                          className="flex-1 bg-gradient-to-r from-success to-success-light hover:from-success-light hover:to-success text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                        >
+                          ✅ Adicionar
+                        </button>
+                        <button
+                          onClick={() => setShowAddObra(false)}
+                          className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                        >
+                          ❌ Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Valores por Pessoa */}
+              {showValoresPessoa && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slide-up">
+                  <div className="glass-effect rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto p-6 border border-purple/40">
+                    <h2 className="text-2xl font-bold mb-4 text-purple-light">👥 Valores Customizados por Pessoa</h2>
+                    <p className="text-sm text-gray-300 mb-4">Configure valores específicos para cada pessoa. Se não configurado, usa o valor padrão.</p>
+                    <div className="space-y-4">
+                      {pessoas.map(pessoa => (
+                        <div key={pessoa} className="glass-light rounded-lg p-4 border border-primary-blue/20">
+                          <h3 className="font-semibold text-light-blue mb-3">{pessoa}</h3>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Modelagem (R$)</label>
+                              <input
+                                type="number"
+                                value={valoresPorPessoa[pessoa]?.modelagem ?? ''}
+                                onChange={(e) => setValoresPorPessoa({
+                                  ...valoresPorPessoa,
+                                  [pessoa]: {
+                                    ...valoresPorPessoa[pessoa],
+                                    modelagem: parseFloat(e.target.value) || undefined
+                                  }
+                                })}
+                                placeholder={`Padrão: ${config.modelagem}`}
+                                className="w-full px-2 py-1.5 bg-dark-secondary border border-primary-blue/30 rounded text-white text-sm focus:border-primary-blue focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Detalhamento (R$)</label>
+                              <input
+                                type="number"
+                                value={valoresPorPessoa[pessoa]?.detalhamento ?? ''}
+                                onChange={(e) => setValoresPorPessoa({
+                                  ...valoresPorPessoa,
+                                  [pessoa]: {
+                                    ...valoresPorPessoa[pessoa],
+                                    detalhamento: parseFloat(e.target.value) || undefined
+                                  }
+                                })}
+                                placeholder={`Padrão: ${config.detalhamento}`}
+                                className="w-full px-2 py-1.5 bg-dark-secondary border border-primary-blue/30 rounded text-white text-sm focus:border-primary-blue focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Gestão (R$)</label>
+                              <input
+                                type="number"
+                                value={valoresPorPessoa[pessoa]?.gestao ?? ''}
+                                onChange={(e) => setValoresPorPessoa({
+                                  ...valoresPorPessoa,
+                                  [pessoa]: {
+                                    ...valoresPorPessoa[pessoa],
+                                    gestao: parseFloat(e.target.value) || undefined
+                                  }
+                                })}
+                                placeholder={`Padrão: ${config.gestao}`}
+                                className="w-full px-2 py-1.5 bg-dark-secondary border border-primary-blue/30 rounded text-white text-sm focus:border-primary-blue focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={salvarValoresPessoa}
+                        className="flex-1 bg-gradient-to-r from-purple to-purple-light hover:from-purple-light hover:to-purple text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        💾 Salvar Valores
+                      </button>
+                      <button
+                        onClick={() => setShowValoresPessoa(false)}
+                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        ❌ Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Editar Obra */}
+              {showEditObra && obraEditando && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slide-up">
+                  <div className="glass-effect rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 border border-warning/40">
+                    <h2 className="text-2xl font-bold mb-4 text-warning">✏️ Editar Obra</h2>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Código *</label>
+                          <input type="text" value={obraEditando.codigo} disabled className="w-full px-3 py-2 bg-dark-secondary/50 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Lote</label>
+                          <input type="text" value={obraEditando.lote} onChange={(e) => setObraEditando({...obraEditando, lote: e.target.value})} className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-light-blue">Nome</label>
+                        <input type="text" value={obraEditando.nome} onChange={(e) => setObraEditando({...obraEditando, nome: e.target.value})} className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Status</label>
+                          <select
+                            value={obraEditando.status}
+                            onChange={(e) => setObraEditando({...obraEditando, status: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {statusList.map(status => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Resp. Modelagem</label>
+                          <select
+                            value={obraEditando.respModelagem}
+                            onChange={(e) => setObraEditando({...obraEditando, respModelagem: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Resp. Detalhamento</label>
+                          <select
+                            value={obraEditando.respDetalhamento}
+                            onChange={(e) => setObraEditando({...obraEditando, respDetalhamento: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-light-blue">Resp. Gestão</label>
+                          <select
+                            value={obraEditando.respGestao}
+                            onChange={(e) => setObraEditando({...obraEditando, respGestao: e.target.value})}
+                            className="w-full px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/30"
+                          >
+                            <option value="">Selecione...</option>
+                            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-light-blue">Terceiro (apenas visualização)</label>
+                        <input
+                          type="text"
+                          value={obraEditando.terceiro || ''}
+                          disabled
+                          className="w-full px-3 py-2 bg-dark-secondary/50 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed"
+                          placeholder="Nenhum terceiro"
+                        />
+                        {obraEditando.terceiro && (
+                          <p className="text-xs text-warning mt-1">⚠️ Este terceiro substituiu o responsável pelo Detalhamento durante a importação</p>
+                        )}
+                        {!obraEditando.terceiro && (
+                          <p className="text-xs text-gray-400 mt-1">💡 Nenhum terceiro foi importado para esta obra</p>
+                        )}
+                      </div>
+                      <div className="flex gap-3 mt-6">
+                        <button onClick={salvarEdicaoObra} className="flex-1 bg-gradient-to-r from-warning to-warning-light hover:from-warning-light hover:to-warning text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"> Salvar Alterações</button>
+                        <button onClick={() => { setShowEditObra(false); setObraEditando(null); }} className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"> Cancelar</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Gerenciar Pessoas */}
+              {showGerenciarPessoas && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-slide-up">
+                  <div className="glass-effect rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 border border-light-blue/40">
+                    <h2 className="text-2xl font-bold mb-4 text-light-blue">🔧 Gerenciar Pessoas</h2>
+                    <p className="text-sm text-gray-300 mb-4">Adicione novas pessoas para atribuir a obras. As pessoas do CSV são adicionadas automaticamente.</p>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2 text-light-blue">Adicionar Nova Pessoa</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={novaPessoa}
+                          onChange={(e) => setNovaPessoa(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && adicionarPessoa()}
+                          className="flex-1 px-3 py-2 bg-dark-secondary border border-primary-blue/30 rounded-lg text-white focus:border-primary-blue focus:outline-none"
+                          placeholder="Nome da pessoa..."
+                        />
+                        <button
+                          onClick={adicionarPessoa}
+                          className="bg-gradient-to-r from-success to-success-light hover:from-success-light hover:to-success text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                        >
+                          ➕ Adicionar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="glass-light rounded-lg p-4 mb-4 max-h-96 overflow-y-auto">
+                      <h3 className="font-semibold mb-3 text-warning">👥 Pessoas Cadastradas ({pessoas.length})</h3>
+                      <div className="space-y-2">
+                        {pessoas.length === 0 ? (
+                          <p className="text-gray-400 text-sm">Nenhuma pessoa cadastrada ainda.</p>
+                        ) : (
+                          pessoas.map(pessoa => (
+                            <div key={pessoa} className="flex items-center justify-between bg-dark-secondary/50 p-2 rounded-lg border border-primary-blue/20">
+                              <span className="text-white">{pessoa}</span>
+                              {pessoasCadastradas.includes(pessoa) && (
+                                <button
+                                  onClick={() => removerPessoa(pessoa)}
+                                  className="text-danger hover:text-danger-dark text-sm"
+                                >
+                                  🗑️ Remover
+                                </button>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowGerenciarPessoas(false)}
+                        className="flex-1 bg-gradient-to-r from-primary-blue to-primary-blue-dark hover:from-primary-blue-dark hover:to-primary-blue text-white px-4 py-2 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg"
+                      >
+                        ✅ Fechar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ControleObras />, document.getElementById('root'));
+    </script>
+</body>
+</html>
