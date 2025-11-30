@@ -49,6 +49,14 @@ function exportToCSV() {
     });
     data["ALTURA APOIO"] = apoiosValues.join(";");
 
+    // ========== CORREÇÃO AUTOMÁTICA ==========
+    // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
+    const qtdLongarinas = parseInt(data["QTD LONGARINAS"]) || 0;
+    if (qtdLongarinas === 1) {
+      data["ESPESSURA LONGARINA"] = "1";
+    }
+    // ==========================================
+
     // Construir CSV
     const csvContent =
       csvColumns.join(",") +
@@ -115,6 +123,20 @@ function exportAllWorks() {
 
       let csvContent = csvColumns.join("\t") + "\n";
 
+      // Coletar códigos de todas as obras para o nome do arquivo
+      const allCodes = works.map(work => work.CODIGO || "").filter(code => code !== "");
+      const codesString = allCodes.join(",");
+
+      // ========== CORREÇÃO AUTOMÁTICA PARA OBRAS ANTIGAS ==========
+      // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
+      works.forEach((work) => {
+        const qtdLongarinas = parseInt(work["QTD LONGARINAS"]) || 0;
+        if (qtdLongarinas === 1) {
+          work["ESPESSURA LONGARINA"] = "1";
+        }
+      });
+      // =============================================================
+
       works.forEach((work) => {
         const row = csvColumns.map((column) => {
           const value = work[column] || "";
@@ -132,7 +154,7 @@ function exportAllWorks() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `Todas_OAEs_${new Date().toISOString().split("T")[0]}.csv`);
+      link.setAttribute("download", `${codesString}.csv`);
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
@@ -270,6 +292,16 @@ function saveMultipleWorks(works) {
   const objectStore = transaction.objectStore("obras");
   let saved = 0;
   let errors = 0;
+
+  // ========== CORREÇÃO AUTOMÁTICA PARA OBRAS ANTIGAS ==========
+  // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
+  works.forEach((work) => {
+    const qtdLongarinas = parseInt(work["QTD LONGARINAS"]) || 0;
+    if (qtdLongarinas === 1) {
+      work["ESPESSURA LONGARINA"] = "1";
+    }
+  });
+  // =============================================================
 
   works.forEach((work) => {
     try {

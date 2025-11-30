@@ -354,6 +354,7 @@ function manageComplementaryElements() {
   const guardaRodasEsq = document.getElementById("guarda-rodas-esquerdo");
   const tipoBarreiraEsq = document.getElementById("tipo-barreira-esquerda");
   const larguraBarreiraEsq = document.getElementById("largura-barreira-esquerda");
+  const larguraGuardaRodasEsq = document.getElementById("largura-guarda-rodas-esquerdo");
   const tipoCalcadaEsq = document.getElementById("tipo-calcada-esquerda");
   const larguraCalcadaEsq = document.getElementById("largura-calcada-esquerda");
 
@@ -361,94 +362,193 @@ function manageComplementaryElements() {
   const guardaRodasDir = document.getElementById("guarda-rodas-direito");
   const tipoBarreiraDir = document.getElementById("tipo-barreira-direita");
   const larguraBarreiraDir = document.getElementById("largura-barreira-direita");
+  const larguraGuardaRodasDir = document.getElementById("largura-guarda-rodas-direito");
   const tipoCalcadaDir = document.getElementById("tipo-calcada-direita");
   const larguraCalcadaDir = document.getElementById("largura-calcada-direita");
 
+  // ========== LADO ESQUERDO ==========
+  
   // Verificar se há guarda rodas ESQUERDO
   const hasGuardaRodasEsq = guardaRodasEsq && guardaRodasEsq.value !== "" && guardaRodasEsq.value !== "Nenhum";
+  
+  // Verificar se há barreira ESQUERDA
+  const hasBarreiraEsq = tipoBarreiraEsq && tipoBarreiraEsq.value !== "" && tipoBarreiraEsq.value !== "Nenhum";
+  
   if (hasGuardaRodasEsq) {
-    // Bloquear barreira e calçada do lado esquerdo
+    // GUARDA RODAS só pode sozinho - bloqueia BARREIRA e CALÇADA
     if (tipoBarreiraEsq) {
       tipoBarreiraEsq.value = "Nenhum";
-      tipoBarreiraEsq.disabled = true;
+      tipoBarreiraEsq.setAttribute('data-locked', 'true');
       tipoBarreiraEsq.style.opacity = "0.5";
+      tipoBarreiraEsq.style.pointerEvents = "none";
     }
     if (larguraBarreiraEsq) {
       larguraBarreiraEsq.value = "";
-      larguraBarreiraEsq.disabled = true;
+      larguraBarreiraEsq.setAttribute('readonly', true);
       larguraBarreiraEsq.style.opacity = "0.5";
+      larguraBarreiraEsq.style.pointerEvents = "none";
     }
     if (tipoCalcadaEsq) {
       tipoCalcadaEsq.value = "Nenhum";
-      tipoCalcadaEsq.disabled = true;
+      tipoCalcadaEsq.setAttribute('data-locked', 'true');
       tipoCalcadaEsq.style.opacity = "0.5";
+      tipoCalcadaEsq.style.pointerEvents = "none";
     }
     if (larguraCalcadaEsq) {
       larguraCalcadaEsq.value = "";
-      larguraCalcadaEsq.disabled = true;
+      larguraCalcadaEsq.setAttribute('readonly', true);
       larguraCalcadaEsq.style.opacity = "0.5";
+      larguraCalcadaEsq.style.pointerEvents = "none";
     }
-  } else {
-    // Liberar barreira e calçada do lado esquerdo
-    if (tipoBarreiraEsq) {
-      tipoBarreiraEsq.disabled = false;
-      tipoBarreiraEsq.style.opacity = "";
+  } else if (hasBarreiraEsq) {
+    // BARREIRA bloqueia apenas GUARDA RODAS (CALÇADA pode coexistir)
+    if (guardaRodasEsq) {
+      guardaRodasEsq.value = "Nenhum";
+      guardaRodasEsq.setAttribute('data-locked', 'true');
+      guardaRodasEsq.style.opacity = "0.5";
+      guardaRodasEsq.style.pointerEvents = "none";
     }
-    if (larguraBarreiraEsq) {
-      larguraBarreiraEsq.disabled = false;
-      larguraBarreiraEsq.style.opacity = "";
+    if (larguraGuardaRodasEsq) {
+      larguraGuardaRodasEsq.value = "";
+      larguraGuardaRodasEsq.setAttribute('readonly', true);
+      larguraGuardaRodasEsq.style.opacity = "0.5";
+      larguraGuardaRodasEsq.style.pointerEvents = "none";
     }
+    // CALÇADA permanece livre quando há BARREIRA
     if (tipoCalcadaEsq) {
-      tipoCalcadaEsq.disabled = false;
+      tipoCalcadaEsq.removeAttribute('data-locked');
       tipoCalcadaEsq.style.opacity = "";
+      tipoCalcadaEsq.style.pointerEvents = "";
     }
     if (larguraCalcadaEsq) {
-      larguraCalcadaEsq.disabled = false;
+      larguraCalcadaEsq.removeAttribute('readonly');
       larguraCalcadaEsq.style.opacity = "";
+      larguraCalcadaEsq.style.pointerEvents = "";
+    }
+  } else {
+    // Nenhum elemento selecionado - liberar todos os campos
+    if (tipoBarreiraEsq) {
+      tipoBarreiraEsq.removeAttribute('data-locked');
+      tipoBarreiraEsq.style.opacity = "";
+      tipoBarreiraEsq.style.pointerEvents = "";
+    }
+    if (larguraBarreiraEsq) {
+      larguraBarreiraEsq.removeAttribute('readonly');
+      larguraBarreiraEsq.style.opacity = "";
+      larguraBarreiraEsq.style.pointerEvents = "";
+    }
+    if (guardaRodasEsq) {
+      guardaRodasEsq.removeAttribute('data-locked');
+      guardaRodasEsq.style.opacity = "";
+      guardaRodasEsq.style.pointerEvents = "";
+    }
+    if (larguraGuardaRodasEsq) {
+      larguraGuardaRodasEsq.removeAttribute('readonly');
+      larguraGuardaRodasEsq.style.opacity = "";
+      larguraGuardaRodasEsq.style.pointerEvents = "";
+    }
+    if (tipoCalcadaEsq) {
+      tipoCalcadaEsq.removeAttribute('data-locked');
+      tipoCalcadaEsq.style.opacity = "";
+      tipoCalcadaEsq.style.pointerEvents = "";
+    }
+    if (larguraCalcadaEsq) {
+      larguraCalcadaEsq.removeAttribute('readonly');
+      larguraCalcadaEsq.style.opacity = "";
+      larguraCalcadaEsq.style.pointerEvents = "";
     }
   }
 
+  // ========== LADO DIREITO ==========
+  
   // Verificar se há guarda rodas DIREITO
   const hasGuardaRodasDir = guardaRodasDir && guardaRodasDir.value !== "" && guardaRodasDir.value !== "Nenhum";
+  
+  // Verificar se há barreira DIREITA
+  const hasBarreiraDir = tipoBarreiraDir && tipoBarreiraDir.value !== "" && tipoBarreiraDir.value !== "Nenhum";
+  
   if (hasGuardaRodasDir) {
-    // Bloquear barreira e calçada do lado direito
+    // GUARDA RODAS só pode sozinho - bloqueia BARREIRA e CALÇADA
     if (tipoBarreiraDir) {
       tipoBarreiraDir.value = "Nenhum";
-      tipoBarreiraDir.disabled = true;
+      tipoBarreiraDir.setAttribute('data-locked', 'true');
       tipoBarreiraDir.style.opacity = "0.5";
+      tipoBarreiraDir.style.pointerEvents = "none";
     }
     if (larguraBarreiraDir) {
       larguraBarreiraDir.value = "";
-      larguraBarreiraDir.disabled = true;
+      larguraBarreiraDir.setAttribute('readonly', true);
       larguraBarreiraDir.style.opacity = "0.5";
+      larguraBarreiraDir.style.pointerEvents = "none";
     }
     if (tipoCalcadaDir) {
       tipoCalcadaDir.value = "Nenhum";
-      tipoCalcadaDir.disabled = true;
+      tipoCalcadaDir.setAttribute('data-locked', 'true');
       tipoCalcadaDir.style.opacity = "0.5";
+      tipoCalcadaDir.style.pointerEvents = "none";
     }
     if (larguraCalcadaDir) {
       larguraCalcadaDir.value = "";
-      larguraCalcadaDir.disabled = true;
+      larguraCalcadaDir.setAttribute('readonly', true);
       larguraCalcadaDir.style.opacity = "0.5";
+      larguraCalcadaDir.style.pointerEvents = "none";
     }
-  } else {
-    // Liberar barreira e calçada do lado direito
-    if (tipoBarreiraDir) {
-      tipoBarreiraDir.disabled = false;
-      tipoBarreiraDir.style.opacity = "";
+  } else if (hasBarreiraDir) {
+    // BARREIRA bloqueia apenas GUARDA RODAS (CALÇADA pode coexistir)
+    if (guardaRodasDir) {
+      guardaRodasDir.value = "Nenhum";
+      guardaRodasDir.setAttribute('data-locked', 'true');
+      guardaRodasDir.style.opacity = "0.5";
+      guardaRodasDir.style.pointerEvents = "none";
     }
-    if (larguraBarreiraDir) {
-      larguraBarreiraDir.disabled = false;
-      larguraBarreiraDir.style.opacity = "";
+    if (larguraGuardaRodasDir) {
+      larguraGuardaRodasDir.value = "";
+      larguraGuardaRodasDir.setAttribute('readonly', true);
+      larguraGuardaRodasDir.style.opacity = "0.5";
+      larguraGuardaRodasDir.style.pointerEvents = "none";
     }
+    // CALÇADA permanece livre quando há BARREIRA
     if (tipoCalcadaDir) {
-      tipoCalcadaDir.disabled = false;
+      tipoCalcadaDir.removeAttribute('data-locked');
       tipoCalcadaDir.style.opacity = "";
+      tipoCalcadaDir.style.pointerEvents = "";
     }
     if (larguraCalcadaDir) {
-      larguraCalcadaDir.disabled = false;
+      larguraCalcadaDir.removeAttribute('readonly');
       larguraCalcadaDir.style.opacity = "";
+      larguraCalcadaDir.style.pointerEvents = "";
+    }
+  } else {
+    // Nenhum elemento selecionado - liberar todos os campos
+    if (tipoBarreiraDir) {
+      tipoBarreiraDir.removeAttribute('data-locked');
+      tipoBarreiraDir.style.opacity = "";
+      tipoBarreiraDir.style.pointerEvents = "";
+    }
+    if (larguraBarreiraDir) {
+      larguraBarreiraDir.removeAttribute('readonly');
+      larguraBarreiraDir.style.opacity = "";
+      larguraBarreiraDir.style.pointerEvents = "";
+    }
+    if (guardaRodasDir) {
+      guardaRodasDir.removeAttribute('data-locked');
+      guardaRodasDir.style.opacity = "";
+      guardaRodasDir.style.pointerEvents = "";
+    }
+    if (larguraGuardaRodasDir) {
+      larguraGuardaRodasDir.removeAttribute('readonly');
+      larguraGuardaRodasDir.style.opacity = "";
+      larguraGuardaRodasDir.style.pointerEvents = "";
+    }
+    if (tipoCalcadaDir) {
+      tipoCalcadaDir.removeAttribute('data-locked');
+      tipoCalcadaDir.style.opacity = "";
+      tipoCalcadaDir.style.pointerEvents = "";
+    }
+    if (larguraCalcadaDir) {
+      larguraCalcadaDir.removeAttribute('readonly');
+      larguraCalcadaDir.style.opacity = "";
+      larguraCalcadaDir.style.pointerEvents = "";
     }
   }
 }
@@ -654,6 +754,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const label = document.querySelector('label[for="largura-barreira-esquerda"]');
         if (label) label.classList.remove("required");
       }
+      // Gerenciar exclusividades de elementos complementares
+      manageComplementaryElements();
       if (typeof validateField === 'function') {
         validateField("largura-barreira-esquerda");
       }
@@ -676,6 +778,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const label = document.querySelector('label[for="largura-barreira-direita"]');
         if (label) label.classList.remove("required");
       }
+      // Gerenciar exclusividades de elementos complementares
+      manageComplementaryElements();
       if (typeof validateField === 'function') {
         validateField("largura-barreira-direita");
       }

@@ -4,17 +4,19 @@
 // Função para carregar dados de uma obra no formulário
 function loadWorkToForm(work) {
   try {
+    // ========== CORREÇÃO AUTOMÁTICA DE OBRAS ANTIGAS ==========
+    // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
+    const qtdLongarinas = parseInt(work["QTD LONGARINAS"]) || 0;
+    if (qtdLongarinas === 1) {
+      work["ESPESSURA LONGARINA"] = "1";
+    }
+    // ===========================================================
+
     // Processar campo MODELADO
     if (work["MODELADO"] === "TRUE" || work["MODELADO"] === true) {
       document.getElementById("modelado").checked = true;
     } else {
       document.getElementById("modelado").checked = false;
-    }
-
-    // Processar GPS
-    if (work["GPS"] === "TRUE" || work["GPS"] === true) {
-      document.getElementById("gps").checked = true;
-    } else {
       document.getElementById("gps").checked = false;
     }
 

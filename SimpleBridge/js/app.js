@@ -184,6 +184,14 @@ function saveCurrentWork() {
     workData["LARGURA PILAR"] = apoiosLarguras.join(";");
     workData["COMPRIMENTO PILARES"] = apoiosComprimentos.join(";");
 
+    // ========== CORREÇÃO AUTOMÁTICA ==========
+    // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
+    const qtdLongarinas = parseInt(workData["QTD LONGARINAS"]) || 0;
+    if (qtdLongarinas === 1) {
+      workData["ESPESSURA LONGARINA"] = "1";
+    }
+    // ==========================================
+
     const transaction = db.transaction(["obras"], "readwrite");
     const objectStore = transaction.objectStore("obras");
     const request = objectStore.put(workData);
