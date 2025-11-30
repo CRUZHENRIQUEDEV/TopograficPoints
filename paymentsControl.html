@@ -925,6 +925,7 @@
                     <table className="w-full border-collapse text-sm">
                       <thead>
                         <tr className="bg-gradient-to-r from-dark-primary to-dark-secondary text-white">
+                          <th className="p-3 text-center font-semibold w-16">#</th>
                           <th className="p-3 text-left font-semibold">Código</th>
                           <th className="p-3 text-left font-semibold">Lote</th>
                           <th className="p-3 text-left font-semibold">Nome</th>
@@ -937,10 +938,11 @@
                         </tr>
                       </thead>
                       <tbody className="bg-dark-secondary/50">
-                        {obrasFiltradas.map((obra) => {
+                        {obrasFiltradas.map((obra, index) => {
                           const valorTotal = getValorPorPessoa(obra.respModelagem, 'modelagem') + getValorPorPessoa(obra.respDetalhamento, 'detalhamento') + getValorPorPessoa(obra.respGestao, 'gestao');
                           return (
                             <tr key={obra.codigo} className="border-b border-gray-700/50 hover:bg-primary-blue/10 transition">
+                              <td className="p-3 text-center font-semibold text-gray-400">{index + 1}</td>
                               <td className="p-3 font-mono font-semibold text-light-blue">{obra.codigo}</td>
                               <td className="p-3 text-gray-300">{obra.lote}</td>
                               <td className="p-3 text-xs text-gray-300">{obra.nome}</td>
