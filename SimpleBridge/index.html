@@ -538,6 +538,7 @@
         min="0"
         step="1"
         oninput="forceIntegerOnly(this)"
+        onchange="handleLongarinaChange()"
         required
       />
       <div class="error-message" id="qtd-longarinas-error">
@@ -566,6 +567,7 @@
         <option value="">Selecione</option>
         <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
         <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
+        <option value="Nenhum">Nenhum</option>
       </select>
       <div class="error-message" id="tipo-transversina-error">
         Este campo é obrigatório quando há transversinas

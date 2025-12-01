@@ -275,12 +275,12 @@ function updateLongarinaFieldsRequired() {
     }
   }
 
-  // SE NÃO HÁ LONGARINAS, NÃO PODE HAVER TRANSVERSINAS
+  // SE NÃO HÁ LONGARINAS OU HÁ APENAS 1 LONGARINA (SEÇÃO CAIXÃO), NÃO PODE HAVER TRANSVERSINAS
   const qtdTransversinasField = document.getElementById("qtd-transversinas");
   const tipoTransversinaField = document.getElementById("tipo-transversina");
   const espessuraTransversinaField = document.getElementById("espessura-transversina");
 
-  if (!hasLongarinas) {
+  if (!hasLongarinas || qtdLongarinas === 1) {
     // Limpar e desabilitar QTD TRANSVERSINAS
     if (qtdTransversinasField) {
       qtdTransversinasField.value = "0";
@@ -288,9 +288,9 @@ function updateLongarinaFieldsRequired() {
       qtdTransversinasField.classList.remove("error");
     }
 
-    // Limpar e desabilitar TIPO DE TRANSVERSINA
+    // Setar como "Nenhum" e desabilitar TIPO DE TRANSVERSINA
     if (tipoTransversinaField) {
-      tipoTransversinaField.value = "";
+      tipoTransversinaField.value = "Nenhum";
       tipoTransversinaField.disabled = true;
       tipoTransversinaField.classList.remove("error");
       const errorEl = document.getElementById("tipo-transversina-error");
@@ -306,7 +306,7 @@ function updateLongarinaFieldsRequired() {
       if (errorEl) errorEl.classList.remove("visible");
     }
   } else {
-    // Habilitar campos de transversina quando há longarinas
+    // Habilitar campos de transversina quando há mais de 1 longarina
     if (qtdTransversinasField) {
       qtdTransversinasField.disabled = false;
     }
@@ -317,6 +317,11 @@ function updateLongarinaFieldsRequired() {
       espessuraTransversinaField.disabled = false;
     }
   }
+}
+
+// Função chamada quando a quantidade de longarinas muda
+function handleLongarinaChange() {
+  updateLongarinaFieldsRequired();
 }
 
 // Atualizar visualização dos campos obrigatórios de transversina

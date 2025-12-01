@@ -7,10 +7,7 @@ Sistema modularizado para cadastro e gerenciamento de Obras de Arte Especiais (p
 ```
 SimpleBridge/
 ├── index.html                   # Arquivo HTML principal (limpo, sem CSS/JS inline)
-├── SimpleBridgeUI.html          # Arquivo original (backup)
-├── SimpleBridgeUI.BACKUP.html   # Backup automático
 ├── README.md                    # Este arquivo
-│
 ├── css/                         # Arquivos CSS modularizados
 │   ├── variables.css            # Variáveis CSS (cores, espaçamentos, etc)
 │   ├── base.css                 # Estilos base (layout, abas, containers)
