@@ -103,8 +103,13 @@ function loadWorksList() {
         ? '<span class="modelado-check">✅</span>' 
         : '<span class="no-check"></span>';
 
+      // Formatar LOTE para exibição
+      const loteFormatado = work.LOTE && typeof formatLote === 'function' 
+        ? formatLote(work.LOTE) 
+        : (work.LOTE || "N/A");
+
       workItem.innerHTML = `
-        <span>${checkIcon}${work.CODIGO} - Lote: ${work.LOTE || "N/A"} - ${work.NOME || "Sem nome"}</span>
+        <span>${checkIcon}${work.CODIGO} - Lote: ${loteFormatado} - ${work.NOME || "Sem nome"}</span>
         <button type="button" class="delete-btn" onclick="deleteWork('${work.CODIGO}', event)">Excluir</button>
       `;
 
@@ -155,6 +160,12 @@ function saveCurrentWork() {
 
     workData["MODELADO"] = document.getElementById("modelado").checked ? "TRUE" : "FALSE";
     workData["REFORCO VIGA"] = document.getElementById("beam-reinforcement").checked;
+
+    
+    // Formatar LOTE antes de salvar
+    if (workData["LOTE"] && typeof formatLote === 'function') {
+      workData["LOTE"] = formatLote(workData["LOTE"]);
+    }
 
     // Tramos
     const tramosValues = [];
@@ -394,8 +405,13 @@ function filterWorks() {
       workItem.className = "work-item";
       const modeladoIcon = work.MODELADO === "TRUE" ? '<span class="modelado-check">✓</span>' : '<span class="no-check"></span>';
 
+      // Formatar LOTE para exibição
+      const loteFormatado = work.LOTE && typeof formatLote === 'function' 
+        ? formatLote(work.LOTE) 
+        : (work.LOTE || "N/A");
+
       workItem.innerHTML = `
-        <span>${modeladoIcon}${work.CODIGO} - Lote: ${work.LOTE || "N/A"}</span>
+        <span>${modeladoIcon}${work.CODIGO} - Lote: ${loteFormatado}</span>
         <div>
           <button class="copy-btn" onclick="loadWork('${work.CODIGO}')">Editar</button>
           <button class="delete-btn" onclick="deleteWork('${work.CODIGO}')">Excluir</button>
@@ -945,6 +961,81 @@ function initGoogleMapsListener() {
   }
 }
 
+// Inicializar formatação automática do campo LOTE
+function initLoteFormatting() {
+  const loteField = document.getElementById("lote");
+  
+  if (loteField) {
+    loteField.addEventListener("blur", function() {
+      if (this.value && typeof formatLote === 'function') {
+        this.value = formatLote(this.value);
+      }
+    });
+  }
+}
+
+// Inicializar listener no campo comprimento para atualizar soma dos tramos
+function initComprimentoListener() {
+  const comprimentoField = document.getElementById("comprimento");
+  
+  if (comprimentoField) {
+    comprimentoField.addEventListener("input", function() {
+      if (typeof updateTramosSum === 'function') {
+        updateTramosSum();
+      }
+    });
+    
+    comprimentoField.addEventListener("blur", function() {
+      if (typeof updateTramosSum === 'function') {
+        updateTramosSum();
+      }
+    });
+  }
+}
+
+// Inicializar validação de altura-travessa em tempo real
+function initAlturaTravessaValidation() {
+  const alturaTravessaField = document.getElementById("altura-travessa");
+  const tipoTravessaField = document.getElementById("tipo-travessa");
+  const infoMessage = document.getElementById("altura-travessa-info");
+  
+  // Controlar visibilidade da mensagem informativa
+  function toggleTravessaInfoMessage() {
+    if (!tipoTravessaField || !infoMessage) return;
+    
+    const hasTravessa = tipoTravessaField.value !== "" && tipoTravessaField.value !== "Nenhum";
+    infoMessage.style.display = hasTravessa ? "block" : "none";
+  }
+  
+  // Adicionar listener ao select de tipo-travessa
+  if (tipoTravessaField) {
+    tipoTravessaField.addEventListener("change", function() {
+      toggleTravessaInfoMessage();
+      if (typeof validateField === 'function') {
+        validateField("altura-travessa");
+      }
+    });
+    
+    // Aplicar estado inicial
+    toggleTravessaInfoMessage();
+  }
+  
+  // Validação em tempo real no campo altura-travessa
+  if (alturaTravessaField) {
+    alturaTravessaField.addEventListener("input", function() {
+      if (typeof validateField === 'function') {
+        validateField("altura-travessa");
+      }
+    });
+    
+    alturaTravessaField.addEventListener("blur", function() {
+      if (typeof validateField === 'function') {
+        validateField("altura-travessa");
+      }
+    });
+  }
+}
+
 // Inicialização principal
 document.addEventListener("DOMContentLoaded", function () {
   initDB();
@@ -954,6 +1045,9 @@ document.addEventListener("DOMContentLoaded", function () {
   initBarreiraGuardaRodasExclusion(); // Inicializar exclusão mútua entre barreiras e guarda rodas
   initCalcadaGuardaRodasExclusion(); // Inicializar exclusão mútua entre calçada e guarda rodas
   initGoogleMapsListener(); // Inicializar monitoramento de coordenadas para Google Maps
+  initAlturaTravessaValidation(); // Inicializar validação de altura-travessa em tempo real
+  initLoteFormatting(); // Inicializar formatação automática do campo LOTE
+  initComprimentoListener(); // Inicializar listener de comprimento para soma dos tramos
 });
 
 // Expor funções globalmente
@@ -966,6 +1060,9 @@ window.saveCurrentWork = saveCurrentWork;
 window.loadWork = loadWork;
 window.updateGoogleMapsLink = updateGoogleMapsLink;
 window.initGoogleMapsListener = initGoogleMapsListener;
+window.initAlturaTravessaValidation = initAlturaTravessaValidation;
+window.initLoteFormatting = initLoteFormatting;
+window.initComprimentoListener = initComprimentoListener;
 window.deleteWork = deleteWork;
 window.createNewWork = createNewWork;
 window.clearDatabase = clearDatabase;

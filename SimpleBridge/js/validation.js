@@ -154,6 +154,26 @@ window.requiredFields = {
   "altura-travessa": {
     type: "number",
     min: 0,
+    max: function() {
+      // Altura máxima da travessa = MENOR altura de apoio - 0.10m
+      // (para garantir que não ultrapasse nenhum apoio)
+      const apoioAlturaFields = document.querySelectorAll(".apoio-altura-field");
+      if (apoioAlturaFields.length === 0) return null; // Sem limite se não há apoios
+      
+      let menorApoio = Infinity;
+      apoioAlturaFields.forEach(field => {
+        const altura = parseFloat(field.value) || 0;
+        if (altura > 0 && altura < menorApoio) {
+          menorApoio = altura;
+        }
+      });
+      
+      // Se não há apoios válidos, não há limite
+      if (menorApoio === Infinity || menorApoio === 0) return null;
+      
+      // Altura máxima = menor apoio - 10cm
+      return menorApoio - 0.10;
+    },
     required: function () {
       const tipoTravessaField = document.getElementById("tipo-travessa");
       return (
@@ -304,10 +324,17 @@ function validateField(fieldId) {
         }
         
         // Validar valor máximo
-        if (config.max !== undefined && value > config.max) {
+        const maxValue = typeof config.max === "function" ? config.max() : config.max;
+        if (maxValue !== undefined && maxValue !== null && value > maxValue) {
           field.classList.add("error");
           if (errorElement) {
-            errorElement.textContent = `Valor máximo permitido: ${config.max}m`;
+            // Mensagem customizada para altura-travessa
+            if (fieldId === "altura-travessa") {
+              const menorApoio = maxValue + 0.10; // Recupera o menor apoio
+              errorElement.textContent = `A altura máxima da travessa é ${maxValue.toFixed(2)}m (Menor Apoio ${menorApoio.toFixed(2)}m - 0.10m)`;
+            } else {
+              errorElement.textContent = `Valor máximo permitido: ${maxValue.toFixed(2)}m`;
+            }
             errorElement.classList.add("visible");
           }
           return false;

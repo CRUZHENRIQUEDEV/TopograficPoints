@@ -98,7 +98,12 @@ function loadWorkToForm(work) {
           } else if (field.type === "number") {
             field.value = value || "";
           } else {
-            field.value = value || "";
+            // Aplicar formatação especial para LOTE
+            if (key === "LOTE" && value && typeof formatLote === 'function') {
+              field.value = formatLote(value);
+            } else {
+              field.value = value || "";
+            }
           }
         }
       }
@@ -178,30 +183,38 @@ function loadWorkToForm(work) {
 
     // Executar validação após carregar (se a função existir)
     if (typeof validateForm === 'function') {
-      setTimeout(() => {
-        validateForm();
-      }, 200);
+      validateForm();
     }
 
     // Atualizar link do Google Maps com as coordenadas carregadas
     // Disparar eventos de input para garantir que os listeners sejam acionados
-    setTimeout(() => {
-      const latInput = document.getElementById("latitude");
-      const longInput = document.getElementById("longitude");
-      
-      if (latInput && latInput.value) {
-        latInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      if (longInput && longInput.value) {
-        longInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      
-      // Chamada direta como backup
-      if (typeof updateGoogleMapsLink === 'function') {
-        updateGoogleMapsLink();
-      }
-    }, 250);
-
+    const latInput = document.getElementById("latitude");
+    const longInput = document.getElementById("longitude");
+    
+    if (latInput && latInput.value) {
+      latInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (longInput && longInput.value) {
+      longInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // Chamada direta como backup
+    if (typeof updateGoogleMapsLink === 'function') {
+      updateGoogleMapsLink();
+    }
+    
+    // Atualizar visibilidade da mensagem informativa de altura-travessa
+    const tipoTravessaField = document.getElementById("tipo-travessa");
+    const infoMessage = document.getElementById("altura-travessa-info");
+    if (tipoTravessaField && infoMessage) {
+      const hasTravessa = tipoTravessaField.value !== "" && tipoTravessaField.value !== "Nenhum";
+      infoMessage.style.display = hasTravessa ? "block" : "none";
+    }
+    
+    // Atualizar soma dos tramos
+    if (typeof updateTramosSum === 'function') {
+      updateTramosSum();
+    }
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);
     alert("Erro ao carregar dados no formulário: " + error.message);

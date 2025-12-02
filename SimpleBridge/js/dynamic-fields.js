@@ -33,6 +33,19 @@ function generateTramosFields() {
     input.value = "0.50";
     input.required = true;
 
+    // Adicionar listeners para atualizar soma em tempo real
+    input.addEventListener("input", function() {
+      if (typeof updateTramosSum === 'function') {
+        updateTramosSum();
+      }
+    });
+    
+    input.addEventListener("blur", function() {
+      if (typeof updateTramosSum === 'function') {
+        updateTramosSum();
+      }
+    });
+
     fieldDiv.appendChild(label);
     fieldDiv.appendChild(input);
     container.appendChild(fieldDiv);
@@ -50,6 +63,11 @@ function generateTramosFields() {
   // Reinicializar handlers de erro para os novos campos
   if (typeof initErrorHandlers === 'function') {
     initErrorHandlers();
+  }
+  
+  // Atualizar a soma dos tramos
+  if (typeof updateTramosSum === 'function') {
+    setTimeout(() => updateTramosSum(), 100);
   }
 }
 
@@ -105,6 +123,10 @@ function generateApoiosFields() {
         field.addEventListener("blur", function() {
           if (typeof validateApoios === 'function') {
             validateApoios();
+          }
+          // Validar também a altura da travessa quando a altura dos apoios mudar
+          if (field.classList.contains("apoio-altura-field") && typeof validateField === 'function') {
+            validateField("altura-travessa");
           }
         });
         field.addEventListener("input", function() {

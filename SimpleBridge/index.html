@@ -282,6 +282,9 @@
         min="0"
         required
       />
+      <div id="tramos-sum-display" style="margin-top: 8px; padding: 6px 10px; border-radius: 4px; font-size: 13px; font-weight: 500; display: none;">
+        <span id="tramos-sum-label">Soma dos tramos:</span> <span id="tramos-sum-value">0.00m</span>
+      </div>
     <div class="error-message" id="tramos-sum-error" style="display: none; margin-top: 10px;">
   A soma dos tramos deve ser igual ao comprimento total
 </div>
@@ -778,7 +781,10 @@
         min="0"
       />
               <div class="error-message" id="altura-travessa-error">
-                Este campo é obrigatório se uma travessa estiver selecionada
+                Este campo é obrigatório se uma travessa estiver selecionada. A altura máxima é: Menor Apoio - 0.10m
+              </div>
+              <div id="altura-travessa-info" style="display: none; margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #f39c12; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #856404;">
+                <strong>⚠️ Atenção:</strong> A altura da travessa <strong>não pode ser igual ou maior</strong> que qualquer apoio. <strong>Altura máxima = Menor Apoio - 10cm</strong>
               </div>
             </div>
             <div class="form-group">
