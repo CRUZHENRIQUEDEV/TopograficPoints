@@ -560,13 +560,15 @@
         name="QTD TRANSVERSINAS"
         min="0"
         step="1"
+        value="0"
+        disabled
         oninput="forceIntegerOnly(this)"
       />
     </div>
     
     <div class="form-group">
       <label for="tipo-transversina">TIPO DE TRANSVERSINA</label>
-      <select id="tipo-transversina" name="TIPO DE TRANSVERSINA">
+      <select id="tipo-transversina" name="TIPO DE TRANSVERSINA" disabled>
         <option value="">Selecione</option>
         <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
         <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
@@ -667,6 +669,7 @@
         name="ESPESSURA TRANSVERSINA"
         step="0.01"
         min="0"
+        disabled
       />
     </div>
     <div class="form-group">

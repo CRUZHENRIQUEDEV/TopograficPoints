@@ -69,6 +69,117 @@ function generateTramosFields() {
   if (typeof updateTramosSum === 'function') {
     setTimeout(() => updateTramosSum(), 100);
   }
+  
+  // Gerenciar bloqueios quando qtd tramos = 1
+  handleSingleTramoRestrictions(qtdTramos);
+}
+
+// Função para gerenciar bloqueios quando a quantidade de tramos = 1
+function handleSingleTramoRestrictions(qtdTramos) {
+  const isSingleTramo = qtdTramos === 1;
+  
+  // 1. CAMPO QTD PILARES
+  const qtdPilaresField = document.getElementById("qtd-pilares");
+  if (qtdPilaresField) {
+    if (isSingleTramo) {
+      qtdPilaresField.value = "0";
+      qtdPilaresField.disabled = true;
+      qtdPilaresField.classList.remove("error");
+      const errorEl = document.getElementById("qtd-pilares-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    } else {
+      qtdPilaresField.disabled = false;
+    }
+  }
+  
+  // 2. CAMPO PILAR DESCENTRALIZADO
+  const pilarDescentralizadoField = document.getElementById("pilar-descentralizado");
+  if (pilarDescentralizadoField) {
+    if (isSingleTramo) {
+      pilarDescentralizadoField.value = "";
+      pilarDescentralizadoField.disabled = true;
+      pilarDescentralizadoField.classList.remove("error");
+    } else {
+      pilarDescentralizadoField.disabled = false;
+    }
+  }
+  
+  // 3. TIPO TRAVESSA
+  const tipoTravessaField = document.getElementById("tipo-travessa");
+  if (tipoTravessaField) {
+    if (isSingleTramo) {
+      tipoTravessaField.value = "Nenhum";
+      tipoTravessaField.disabled = true;
+      tipoTravessaField.classList.remove("error");
+      const errorEl = document.getElementById("tipo-travessa-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    } else {
+      tipoTravessaField.disabled = false;
+    }
+  }
+  
+  // 4. ALTURA TRAVESSA
+  const alturaTravessaField = document.getElementById("altura-travessa");
+  if (alturaTravessaField) {
+    if (isSingleTramo) {
+      alturaTravessaField.value = "";
+      alturaTravessaField.disabled = true;
+      alturaTravessaField.classList.remove("error");
+      const errorEl = document.getElementById("altura-travessa-error");
+      if (errorEl) errorEl.classList.remove("visible");
+      const infoEl = document.getElementById("altura-travessa-info");
+      if (infoEl) infoEl.style.display = "none";
+    } else {
+      alturaTravessaField.disabled = false;
+    }
+  }
+  
+  // 5. TIPO ENCAMISAMENTO
+  const tipoEncamisamentoField = document.getElementById("tipo-encamisamento");
+  if (tipoEncamisamentoField) {
+    if (isSingleTramo) {
+      tipoEncamisamentoField.value = "Nenhum";
+      tipoEncamisamentoField.disabled = true;
+      tipoEncamisamentoField.classList.remove("error");
+    } else {
+      tipoEncamisamentoField.disabled = false;
+    }
+  }
+  
+  // 6. TIPO CONTRAVENTAMENTO PILAR
+  const tipoContraventamentoField = document.getElementById("tipo-contraventamento-pilar");
+  if (tipoContraventamentoField) {
+    if (isSingleTramo) {
+      tipoContraventamentoField.value = "Nenhum";
+      tipoContraventamentoField.disabled = true;
+      tipoContraventamentoField.classList.remove("error");
+      const errorEl = document.getElementById("tipo-contraventamento-pilar-error");
+      if (errorEl) errorEl.classList.remove("visible");
+      
+      // Também esconder campo de quantidade de viga contraventamento
+      const qtdVigaGroup = document.getElementById("qtd-viga-contraventamento-group");
+      if (qtdVigaGroup) qtdVigaGroup.style.display = "none";
+      const qtdVigaField = document.getElementById("qtd-viga-contraventamento-pilar");
+      if (qtdVigaField) {
+        qtdVigaField.value = "";
+        qtdVigaField.classList.remove("error");
+      }
+    } else {
+      tipoContraventamentoField.disabled = false;
+    }
+  }
+  
+  // 7. LIMPAR MENSAGENS DE ERRO DOS APOIOS
+  const apoiosErrorElement = document.getElementById("apoios-error");
+  if (apoiosErrorElement && isSingleTramo) {
+    apoiosErrorElement.classList.remove("visible");
+    apoiosErrorElement.style.display = "none";
+  }
+  
+  // Forçar regeneração dos apoios se necessário
+  if (isSingleTramo) {
+    generateApoiosFields();
+  }
 }
 
 // Gerar campos de apoios
@@ -96,15 +207,15 @@ function generateApoiosFields() {
       <div class="apoio-label">Apoio ${i}</div>
       <div class="apoio-field-wrapper">
         <input type="number" class="apoio-altura-field" name="apoio-altura-${i}" 
-               step="0.01" min="0" placeholder="0.00" required />
+               step="0.01" min="0.1" placeholder="0.00" required />
       </div>
       <div class="apoio-field-wrapper">
         <input type="number" class="apoio-comp-field" name="apoio-comp-${i}" 
-               step="0.01" min="0" placeholder="0.00" required />
+               step="0.01" min="0.1" placeholder="0.00" required />
       </div>
       <div class="apoio-field-wrapper">
         <input type="${isPilarParede ? 'text' : 'number'}" class="apoio-larg-field" name="apoio-larg-${i}" 
-               step="0.01" min="0" placeholder="${isPilarParede ? 'Cálculo automático' : '0.00'}" 
+               step="0.01" min="0.1" placeholder="${isPilarParede ? 'Cálculo automático' : '0.00'}" 
                ${isPilarParede ? 'disabled readonly' : 'required'} 
                value="${isPilarParede ? 'Cálculo automático' : ''}" 
                style="${isPilarParede ? 'background-color: #f0f0f0; cursor: not-allowed;' : ''}" />
@@ -328,16 +439,13 @@ function updateLongarinaFieldsRequired() {
       if (errorEl) errorEl.classList.remove("visible");
     }
   } else {
-    // Habilitar campos de transversina quando há mais de 1 longarina
+    // Habilitar apenas QTD TRANSVERSINAS quando há mais de 1 longarina
     if (qtdTransversinasField) {
       qtdTransversinasField.disabled = false;
     }
-    if (tipoTransversinaField) {
-      tipoTransversinaField.disabled = false;
-    }
-    if (espessuraTransversinaField) {
-      espessuraTransversinaField.disabled = false;
-    }
+    // Deixar que updateTransversinaFieldsRequired() controle TIPO e ESPESSURA
+    // baseado na quantidade de transversinas
+    updateTransversinaFieldsRequired();
   }
 }
 
@@ -356,6 +464,8 @@ function updateTransversinaFieldsRequired() {
 
   // Atualizar tipo de transversina
   const tipoTransversinaLabel = document.querySelector('label[for="tipo-transversina"]');
+  const tipoTransversinaField = document.getElementById("tipo-transversina");
+  
   if (tipoTransversinaLabel) {
     if (hasTransversinas) {
       tipoTransversinaLabel.classList.add("required");
@@ -363,14 +473,42 @@ function updateTransversinaFieldsRequired() {
       tipoTransversinaLabel.classList.remove("required");
     }
   }
+  
+  // Bloquear/desbloquear campo de tipo
+  if (tipoTransversinaField) {
+    if (hasTransversinas) {
+      tipoTransversinaField.disabled = false;
+    } else {
+      tipoTransversinaField.disabled = true;
+      tipoTransversinaField.value = "";
+      tipoTransversinaField.classList.remove("error");
+      const errorEl = document.getElementById("tipo-transversina-error");
+      if (errorEl) errorEl.classList.remove("visible");
+    }
+  }
 
   // Atualizar espessura de transversina
   const espessuraTransversinaLabel = document.querySelector('label[for="espessura-transversina"]');
+  const espessuraTransversinaField = document.getElementById("espessura-transversina");
+  
   if (espessuraTransversinaLabel) {
     if (hasTransversinas) {
       espessuraTransversinaLabel.classList.add("required");
     } else {
       espessuraTransversinaLabel.classList.remove("required");
+    }
+  }
+  
+  // Bloquear/desbloquear campo de espessura
+  if (espessuraTransversinaField) {
+    if (hasTransversinas) {
+      espessuraTransversinaField.disabled = false;
+    } else {
+      espessuraTransversinaField.disabled = true;
+      espessuraTransversinaField.value = "";
+      espessuraTransversinaField.classList.remove("error");
+      const errorEl = document.getElementById("espessura-transversina-error");
+      if (errorEl) errorEl.classList.remove("visible");
     }
   }
 }
@@ -615,8 +753,10 @@ document.addEventListener("DOMContentLoaded", function () {
     qtdLongarinasField.addEventListener("input", function() {
       updateLongarinaFieldsRequired();
     });
-    // Executar ao carregar a página
-    updateLongarinaFieldsRequired();
+    // Executar ao carregar a página (com timeout para garantir que DOM está pronto)
+    setTimeout(() => {
+      updateLongarinaFieldsRequired();
+    }, 100);
   }
 
   // Validar campos de transversina quando a quantidade for alterada
@@ -632,8 +772,10 @@ document.addEventListener("DOMContentLoaded", function () {
     qtdTransversinasField.addEventListener("input", function() {
       updateTransversinaFieldsRequired();
     });
-    // Executar ao carregar a página
-    updateTransversinaFieldsRequired();
+    // Executar ao carregar a página (com timeout para garantir que DOM está pronto)
+    setTimeout(() => {
+      updateTransversinaFieldsRequired();
+    }, 100);
   }
 
   // Validar campos de bloco sapata quando o tipo for alterado

@@ -391,23 +391,23 @@ function validateApoios() {
     if (compField) compField.classList.remove("error");
     if (largField) largField.classList.remove("error");
 
-    const alturaVazia = !alturaField || !alturaField.value.trim() || parseFloat(alturaField.value) === 0;
-    const compVazio = !compField || !compField.value.trim() || parseFloat(compField.value) === 0;
-    const largVazio = !largField || !largField.value.trim() || parseFloat(largField.value) === 0;
+    const alturaVazia = !alturaField || !alturaField.value.trim() || parseFloat(alturaField.value) < 0.1;
+    const compVazio = !compField || !compField.value.trim() || parseFloat(compField.value) < 0.1;
+    const largVazio = !largField || !largField.value.trim() || parseFloat(largField.value) < 0.1;
 
     if (alturaVazia || compVazio || largVazio) {
       valid = false;
       if (alturaVazia && alturaField) {
         alturaField.classList.add("error");
-        emptyFields.push(`Apoio ${index + 1} - Altura`);
+        emptyFields.push(`Apoio ${index + 1} - Altura (mín. 0.1m)`);
       }
       if (compVazio && compField) {
         compField.classList.add("error");
-        emptyFields.push(`Apoio ${index + 1} - Comprimento`);
+        emptyFields.push(`Apoio ${index + 1} - Comprimento (mín. 0.1m)`);
       }
       if (largVazio && largField) {
         largField.classList.add("error");
-        emptyFields.push(`Apoio ${index + 1} - Largura`);
+        emptyFields.push(`Apoio ${index + 1} - Largura (mín. 0.1m)`);
       }
     }
   });

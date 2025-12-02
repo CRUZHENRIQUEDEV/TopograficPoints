@@ -215,6 +215,14 @@ function loadWorkToForm(work) {
     if (typeof updateTramosSum === 'function') {
       updateTramosSum();
     }
+    
+    // Aplicar restrições de single tramo se necessário
+    if (typeof handleSingleTramoRestrictions === 'function') {
+      const qtdTramos = parseInt(work["QTD TRAMOS"]) || 1;
+      setTimeout(() => {
+        handleSingleTramoRestrictions(qtdTramos);
+      }, 150);
+    }
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);
     alert("Erro ao carregar dados no formulário: " + error.message);
