@@ -42,8 +42,24 @@ function loadWorkToForm(work) {
         // Aguardar um pouco para os campos serem gerados
         setTimeout(() => {
           const tramosFields = document.querySelectorAll(".tramo-field");
+          
+          // Limpar erros dos campos antes de preencher
+          tramosFields.forEach(field => {
+            field.classList.remove('error');
+          });
+          const tramosError = document.getElementById('tramos-error');
+          if (tramosError) {
+            tramosError.classList.remove('visible');
+          }
+          
+          // Preencher valores
           for (let i = 0; i < tramosFields.length && i < tramos.length; i++) {
             tramosFields[i].value = tramos[i];
+          }
+          
+          // Atualizar soma dos tramos APÓS preencher os valores
+          if (typeof updateTramosSum === 'function') {
+            setTimeout(() => updateTramosSum(), 50);
           }
         }, 100);
       }
@@ -181,9 +197,11 @@ function loadWorkToForm(work) {
       }, 150);
     }
 
-    // Executar validação após carregar (se a função existir)
+    // Executar validação após carregar (aguardar campos serem preenchidos)
     if (typeof validateForm === 'function') {
-      validateForm();
+      setTimeout(() => {
+        validateForm();
+      }, 250);
     }
 
     // Atualizar link do Google Maps com as coordenadas carregadas
@@ -211,9 +229,9 @@ function loadWorkToForm(work) {
       infoMessage.style.display = hasTravessa ? "block" : "none";
     }
     
-    // Atualizar soma dos tramos
+    // Atualizar soma dos tramos (com delay para garantir que todos os campos foram preenchidos)
     if (typeof updateTramosSum === 'function') {
-      updateTramosSum();
+      setTimeout(() => updateTramosSum(), 200);
     }
     
     // Aplicar restrições de single tramo se necessário

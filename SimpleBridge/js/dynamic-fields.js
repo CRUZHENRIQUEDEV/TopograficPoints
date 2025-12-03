@@ -30,7 +30,7 @@ function generateTramosFields() {
     input.min = "0.5";
     input.step = "0.01";
     input.placeholder = "0.50";
-    input.value = "0.50";
+    // Não definir valor padrão para evitar conflito ao carregar obras
     input.required = true;
 
     // Adicionar listeners para atualizar soma em tempo real
@@ -65,13 +65,16 @@ function generateTramosFields() {
     initErrorHandlers();
   }
   
-  // Atualizar a soma dos tramos
-  if (typeof updateTramosSum === 'function') {
-    setTimeout(() => updateTramosSum(), 100);
-  }
+  // Nota: updateTramosSum() será chamado manualmente após preencher valores
+  // Não chamar aqui para evitar calcular com campos vazios ao carregar obra
   
   // Gerenciar bloqueios quando qtd tramos = 1
   handleSingleTramoRestrictions(qtdTramos);
+  
+  // Se houver apenas 1 tramo, auto-preencher com o comprimento total
+  if (qtdTramos === 1) {
+    autoFillSingleTramo();
+  }
 }
 
 // Função para gerenciar bloqueios quando a quantidade de tramos = 1
@@ -179,6 +182,26 @@ function handleSingleTramoRestrictions(qtdTramos) {
   // Forçar regeneração dos apoios se necessário
   if (isSingleTramo) {
     generateApoiosFields();
+  }
+}
+
+// Função para auto-preencher tramo quando há apenas 1
+function autoFillSingleTramo() {
+  const comprimentoField = document.getElementById("comprimento");
+  const tramoField = document.querySelector(".tramo-field");
+  
+  if (!comprimentoField || !tramoField) return;
+  
+  const comprimentoValue = parseFloat(comprimentoField.value);
+  
+  // Se há comprimento definido e o tramo está vazio, preencher automaticamente
+  if (comprimentoValue > 0 && !tramoField.value) {
+    tramoField.value = comprimentoValue.toFixed(2);
+    
+    // Atualizar soma dos tramos
+    if (typeof updateTramosSum === 'function') {
+      updateTramosSum();
+    }
   }
 }
 
@@ -722,9 +745,32 @@ function manageComplementaryElements() {
 document.addEventListener("DOMContentLoaded", function () {
   const qtdTramosField = document.getElementById("qtd-tramos");
   if (qtdTramosField) {
-    qtdTramosField.addEventListener("change", generateTramosFields);
+    qtdTramosField.addEventListener("change", function() {
+      generateTramosFields();
+      // Atualizar soma após gerar campos (em nova obra ou mudança manual)
+      if (typeof updateTramosSum === 'function') {
+        setTimeout(() => updateTramosSum(), 150);
+      }
+    });
     qtdTramosField.addEventListener("input", function () {
       this.value = Math.floor(this.value);
+    });
+  }
+
+  // Listener no campo COMPRIMENTO para auto-preencher quando QTD TRAMOS = 1
+  const comprimentoField = document.getElementById("comprimento");
+  if (comprimentoField) {
+    comprimentoField.addEventListener("input", function() {
+      const qtdTramos = parseInt(qtdTramosField?.value) || 1;
+      if (qtdTramos === 1) {
+        const tramoField = document.querySelector(".tramo-field");
+        if (tramoField && this.value) {
+          tramoField.value = parseFloat(this.value).toFixed(2);
+          if (typeof updateTramosSum === 'function') {
+            updateTramosSum();
+          }
+        }
+      }
     });
   }
 
@@ -1116,3 +1162,4 @@ window.updateBlocoSapataFieldsRequired = updateBlocoSapataFieldsRequired;
 window.updateTransversinaFieldsRequired = updateTransversinaFieldsRequired;
 window.updateLongarinaFieldsRequired = updateLongarinaFieldsRequired;
 window.manageComplementaryElements = manageComplementaryElements;
+window.autoFillSingleTramo = autoFillSingleTramo;
