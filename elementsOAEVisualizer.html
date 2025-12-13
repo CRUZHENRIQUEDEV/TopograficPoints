@@ -1,4 +1,4 @@
-<!-- Version: 3.3 -->
+<!-- Version: 3.6 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -258,6 +258,12 @@
             border-width: 2px;
         }
 
+        .element-group.fixed-order {
+            background: rgba(155, 89, 182, 0.2);
+            border-color: #9b59b6;
+            border-width: 2px;
+        }
+
         .order-controls {
             display: flex;
             gap: 8px;
@@ -272,6 +278,19 @@
             font-size: 12px;
             color: #bdc3c7;
             font-weight: 600;
+        }
+
+        .fixed-order-badge {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
         }
 
         .element-header {
@@ -560,6 +579,46 @@
         let orderHistory = [];
         let historyIndex = -1;
         let hasIDColumn = false;
+
+        // Dicionário de ordenação customizada para tipos específicos (usando nomes EXATOS do CSV)
+        const customDimensionOrder = {
+            'REFORÇO PILAR - ENCAMISAMENTO DE PILAR': ['COMPRIMENTO_X', 'LARGURA_Z', 'ESPESSURA_Z', 'ALTURA_Y'],
+            'REVESTIMENTO DE TALUDE EM CONCRETO': ['LARGURA_X', 'ESPESSURA_Z', 'ALTURA_Z']
+        };
+
+        // Verifica se um tipo tem ordenação customizada fixa
+        function hasCustomOrder(typeName) {
+            return customDimensionOrder.hasOwnProperty(typeName);
+        }
+
+        // Retorna as dimensões na ordem correta (customizada ou original)
+        function getOrderedDimensions(typeName, dimensions) {
+            // Se não tem ordem customizada, retorna como está
+            if (!hasCustomOrder(typeName)) {
+                return dimensions;
+            }
+
+            // Aplica a ordem customizada
+            const customOrder = customDimensionOrder[typeName];
+            const orderedDimensions = [];
+            
+            // Primeiro, adiciona as dimensões na ordem customizada
+            customOrder.forEach(dimensionName => {
+                const found = dimensions.find(dim => dim.name === dimensionName);
+                if (found) {
+                    orderedDimensions.push(found);
+                }
+            });
+            
+            // Depois, adiciona qualquer dimensão que não estava na ordem customizada (caso existam extras)
+            dimensions.forEach(dim => {
+                if (!customOrder.includes(dim.name)) {
+                    orderedDimensions.push(dim);
+                }
+            });
+            
+            return orderedDimensions;
+        }
 
         // Carrega arquivo via input
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -926,6 +985,7 @@
                         });
                         
                         const elementKey = `${span}_${group}_${typeName}`;
+                        const isFixedOrder = hasCustomOrder(typeName);
                         
                         // Cria grupo de elementos
                         const elementGroup = document.createElement('div');
@@ -935,6 +995,9 @@
                         }
                         if (typesWithChangedOrder.has(typeName)) {
                             elementGroup.classList.add('order-changed');
+                        }
+                        if (isFixedOrder) {
+                            elementGroup.classList.add('fixed-order');
                         }
 
                         // Header do elemento
@@ -948,49 +1011,63 @@
                             <span class="element-counter">Qty: ${elements.length}</span>
                         `;
                         
-                        // Controles de ordem
-                        const orderControls = document.createElement('div');
-                        orderControls.className = 'order-controls';
-                        
-                        const orderLabel = document.createElement('span');
-                        orderLabel.textContent = 'Dimension Order:';
-                        orderControls.appendChild(orderLabel);
-                        
-                        let referenceDimensions = [...elements[0].dimensions];
-                        if (orderByType[typeName]) {
-                            const newOrder = [];
-                            orderByType[typeName].forEach(index => {
-                                if (elements[0].dimensions[index]) {
-                                    newOrder.push(elements[0].dimensions[index]);
-                                }
+                        // Controles de ordem (apenas para tipos sem ordem fixa)
+                        if (!isFixedOrder) {
+                            const orderControls = document.createElement('div');
+                            orderControls.className = 'order-controls';
+                            
+                            const orderLabel = document.createElement('span');
+                            orderLabel.textContent = 'Dimension Order:';
+                            orderControls.appendChild(orderLabel);
+                            
+                            let referenceDimensions = [...elements[0].dimensions];
+                            if (orderByType[typeName]) {
+                                const newOrder = [];
+                                orderByType[typeName].forEach(index => {
+                                    if (elements[0].dimensions[index]) {
+                                        newOrder.push(elements[0].dimensions[index]);
+                                    }
+                                });
+                                referenceDimensions = newOrder;
+                            }
+                            
+                            referenceDimensions.forEach((dim, idx) => {
+                                const btnMoveLeft = document.createElement('button');
+                                btnMoveLeft.className = 'btn-arrow';
+                                btnMoveLeft.innerHTML = '←';
+                                btnMoveLeft.disabled = idx === 0;
+                                btnMoveLeft.title = `Move ${dim.name} left`;
+                                btnMoveLeft.onclick = () => moveDimension(span, group, typeName, 0, idx, -1);
+                                
+                                const labelDim = document.createElement('span');
+                                labelDim.textContent = dim.name;
+                                labelDim.style.fontSize = '10px';
+                                labelDim.style.color = '#ecf0f1';
+                                
+                                const btnMoveRight = document.createElement('button');
+                                btnMoveRight.className = 'btn-arrow';
+                                btnMoveRight.innerHTML = '→';
+                                btnMoveRight.disabled = idx === referenceDimensions.length - 1;
+                                btnMoveRight.title = `Move ${dim.name} right`;
+                                btnMoveRight.onclick = () => moveDimension(span, group, typeName, 0, idx, 1);
+                                
+                                orderControls.appendChild(btnMoveLeft);
+                                orderControls.appendChild(labelDim);
+                                orderControls.appendChild(btnMoveRight);
                             });
-                            referenceDimensions = newOrder;
+                            
+                            elementHeader.appendChild(elementName);
+                            elementHeader.appendChild(orderControls);
+                        } else {
+                            // Badge de ordem fixa
+                            const fixedBadge = document.createElement('div');
+                            fixedBadge.className = 'fixed-order-badge';
+                            fixedBadge.innerHTML = '🔒 Fixed Order';
+                            fixedBadge.title = 'This element type has a predefined dimension order';
+                            
+                            elementHeader.appendChild(elementName);
+                            elementHeader.appendChild(fixedBadge);
                         }
-                        
-                        referenceDimensions.forEach((dim, idx) => {
-                            const btnMoveLeft = document.createElement('button');
-                            btnMoveLeft.className = 'btn-arrow';
-                            btnMoveLeft.innerHTML = '←';
-                            btnMoveLeft.disabled = idx === 0;
-                            btnMoveLeft.title = `Move ${dim.name} left`;
-                            btnMoveLeft.onclick = () => moveDimension(span, group, typeName, 0, idx, -1);
-                            
-                            const labelDim = document.createElement('span');
-                            labelDim.textContent = dim.name;
-                            labelDim.style.fontSize = '10px';
-                            labelDim.style.color = '#ecf0f1';
-                            
-                            const btnMoveRight = document.createElement('button');
-                            btnMoveRight.className = 'btn-arrow';
-                            btnMoveRight.innerHTML = '→';
-                            btnMoveRight.disabled = idx === referenceDimensions.length - 1;
-                            btnMoveRight.title = `Move ${dim.name} right`;
-                            btnMoveRight.onclick = () => moveDimension(span, group, typeName, 0, idx, 1);
-                            
-                            orderControls.appendChild(btnMoveLeft);
-                            orderControls.appendChild(labelDim);
-                            orderControls.appendChild(btnMoveRight);
-                        });
                         
                         // Botão copy
                         const btnCopy = document.createElement('button');
@@ -999,10 +1076,8 @@
                             btnCopy.classList.add('copied');
                         }
                         btnCopy.innerHTML = copiedState[elementKey] ? '✓ Copied' : 'Copy Dimensions';
-                        btnCopy.onclick = () => copyDimensions(elements, elementKey, btnCopy, elementGroup);
+                        btnCopy.onclick = () => copyDimensions(elements, typeName, elementKey, btnCopy, elementGroup);
                         
-                        elementHeader.appendChild(elementName);
-                        elementHeader.appendChild(orderControls);
                         elementHeader.appendChild(btnCopy);
                         
                         // Lista de itens
@@ -1045,12 +1120,17 @@
                             
                             elementItem.appendChild(infoDiv);
                             
-                            // Dimensões
+                            // Dimensões com ordem customizada aplicada
                             const dimensionsDiv = document.createElement('div');
                             dimensionsDiv.className = 'item-dimensions';
                             
                             let sortedDimensions = [...item.dimensions];
-                            if (orderByType[typeName]) {
+                            
+                            // Aplica ordem customizada se existir
+                            if (isFixedOrder) {
+                                sortedDimensions = getOrderedDimensions(typeName, sortedDimensions);
+                            } else if (orderByType[typeName]) {
+                                // Aplica ordem manual se existir
                                 const newOrder = [];
                                 orderByType[typeName].forEach(index => {
                                     if (sortedDimensions[index]) {
@@ -1060,7 +1140,7 @@
                                 sortedDimensions = newOrder;
                             }
                             
-                            sortedDimensions.forEach((dim) => {
+                            sortedDimensions.forEach((dim, dimDisplayIndex) => {
                                 const wrapper = document.createElement('div');
                                 wrapper.className = 'dimension-wrapper';
                                 
@@ -1103,8 +1183,14 @@
             showToast('Data processed successfully!');
         }
 
-        // Move dimensão
+        // Move dimensão (não funciona para tipos com ordem fixa)
         function moveDimension(span, group, typeName, itemIndex, dimIndex, direction) {
+            // Bloqueia movimento para tipos com ordem fixa
+            if (hasCustomOrder(typeName)) {
+                showToast('Cannot reorder dimensions for this element type (fixed order)', 'error');
+                return;
+            }
+            
             const newIndex = dimIndex + direction;
             
             const referenceItem = globalData[span][group][typeName][itemIndex];
@@ -1276,10 +1362,15 @@
             input.addEventListener('blur', save);
         }
 
-        // Copia dimensões
-        function copyDimensions(elements, key, btnElement, groupElement) {
+        // Copia dimensões (aplica ordem customizada se existir)
+        function copyDimensions(elements, typeName, key, btnElement, groupElement) {
             const lines = elements.map(item => {
-                return item.dimensions.map(d => d.value).join('\t');
+                // Aplica a ordem customizada antes de copiar
+                const orderedDims = hasCustomOrder(typeName) 
+                    ? getOrderedDimensions(typeName, item.dimensions)
+                    : item.dimensions;
+                
+                return orderedDims.map(d => d.value).join('\t');
             });
             const allDimensions = lines.join('\n');
             
