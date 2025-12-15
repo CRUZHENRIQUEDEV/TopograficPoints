@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- Versão: 2.1 -->
+  <!-- Versão: 2.2 -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Análise de Zonas de Drone para Pontes</title>
@@ -203,7 +203,7 @@
 
     .filter-controls {
       display: grid;
-      grid-template-columns: 1fr 1fr auto auto;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
       gap: 1rem;
       align-items: end;
     }
@@ -457,6 +457,80 @@
       display: none;
     }
 
+    /* Estilos para checkboxes de filtro */
+    .checkbox-container {
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      margin: 4px 0;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+
+    .checkbox-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #3498db;
+    }
+
+    .checkbox-item label {
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .checkbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .checkbox-header-title {
+      font-weight: 600;
+      color: #64b5f6;
+      font-size: 0.95rem;
+    }
+
+    .checkbox-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .checkbox-action-btn {
+      background: none;
+      border: none;
+      color: #3498db;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .checkbox-action-btn:hover {
+      background: rgba(52, 152, 219, 0.2);
+      color: #64b5f6;
+    }
+
     /* Responsividade para filtros */
     @media (max-width: 768px) {
       .filter-controls {
@@ -482,7 +556,11 @@
           <h4>🚫 ZONA DE APROXIMAÇÃO/DECOLAGEM (ZAD)</h4>
           <div class="distance">0 a 9 km</div>
           <p><strong>Distância do aeroporto/heliponto:</strong> 0 a 9 quilômetros</p>
-          <p><strong>Base Legal:</strong> ICA 100-40/2023 - Item 2.1.72 (Zona de Aproximação ou Decolagem)</p>
+          <p><strong>Base Legal:</strong> ICA 100-40/2023 - <strong>Item 2.1.57</strong> (versão 2020) ou <strong>Item 2.1.69</strong> (versão 2023)</p>
+          <p style="font-size: 0.85rem; font-style: italic; margin-top: 8px;">
+            "Para fins de entendimento do constante desta Instrução, considera-se Zona de Aproximação ou de Decolagem 
+            a área compreendida entre a cabeceira da pista até a distância de 9 km (nove quilômetros)."
+          </p>
           <p><strong>Restrição:</strong> Voo de drone <strong>REQUER MÚLTIPLAS AUTORIZAÇÕES</strong>:</p>
           <ul style="margin-left: 20px; margin-top: 8px;">
             <li>Administrador do Aeródromo</li>
@@ -509,17 +587,17 @@
 
       <p style="margin-top: 1.5rem;"><strong>📖 Base Legal:</strong></p>
       <ul>
-        <li><strong>ICA 100-40/2023</strong> - Aeronaves não Tripuladas e o Acesso ao Espaço Aéreo Brasileiro (DECEA)</li>
+        <li><strong>ICA 100-40/2023</strong> - Item 2.1.69 (versão 2023) ou Item 2.1.57 (versão 2020) - Aeronaves não Tripuladas e o Acesso ao Espaço Aéreo Brasileiro (DECEA)</li>
         <li><strong>RBAC-E nº 94/2017</strong> - Regulamento Brasileiro de Aviação Civil Especial (ANAC)</li>
         <li><strong>ICA 100-12</strong> - Regras do Ar (DECEA)</li>
         <li><strong>Lei 7.565/1986</strong> - Código Brasileiro de Aeronáutica</li>
       </ul>
 
       <p style="margin-top: 1rem; font-size: 0.9rem; color: rgba(255, 255, 255, 0.8);">
-        <strong>⚠️ Importante:</strong> Esta ferramenta fornece análise preliminar baseada nas distâncias da ICA 100-40. 
-        As regras completas são mais complexas e variam conforme altura de voo, tipo de aeródromo e tipo de operação. 
-        Para operações reais com drones, sempre consulte o <strong>SARPAS (Sistema de Solicitação de Acesso de RPAS)</strong> 
-        do DECEA e a ANAC para obter autorizações específicas.
+        <strong>⚠️ Importante:</strong> A ICA 100-40 especifica que a ZAD possui "distância variável em relação à cabeceira 
+        e em função da altura do voo". Os 9km são o parâmetro geral, mas distâncias exatas podem variar conforme altura, 
+        tipo de aeródromo e procedimentos específicos. Para operações reais com drones, sempre consulte o 
+        <strong>SARPAS (Sistema de Solicitação de Acesso de RPAS)</strong> do DECEA e a ANAC para obter autorizações específicas.
       </p>
     </div>
 
@@ -605,10 +683,50 @@
           </div>
           
           <div class="filter-group">
-            <label for="filterUF">Estado (UF)</label>
-            <select id="filterUF" onchange="aplicarFiltros()">
-              <option value="">Todos os estados</option>
-            </select>
+            <label>Região do Brasil</label>
+            <div class="checkbox-container" id="regiaoContainer">
+              <div class="checkbox-header">
+                <span class="checkbox-header-title">Selecione as regiões</span>
+                <div class="checkbox-actions">
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosRegiao(true)">Todos</button>
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosRegiao(false)">Limpar</button>
+                </div>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-norte" value="Norte" onchange="aplicarFiltros()">
+                <label for="regiao-norte">Norte</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-nordeste" value="Nordeste" onchange="aplicarFiltros()">
+                <label for="regiao-nordeste">Nordeste</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-centro-oeste" value="Centro-Oeste" onchange="aplicarFiltros()">
+                <label for="regiao-centro-oeste">Centro-Oeste</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-sudeste" value="Sudeste" onchange="aplicarFiltros()">
+                <label for="regiao-sudeste">Sudeste</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-sul" value="Sul" onchange="aplicarFiltros()">
+                <label for="regiao-sul">Sul</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Estado (UF)</label>
+            <div class="checkbox-container" id="ufContainer">
+              <div class="checkbox-header">
+                <span class="checkbox-header-title">Selecione os estados</span>
+                <div class="checkbox-actions">
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosUF(true)">Todos</button>
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosUF(false)">Limpar</button>
+                </div>
+              </div>
+              <div id="ufCheckboxList"></div>
+            </div>
           </div>
 
           <div class="filter-group">
@@ -620,8 +738,8 @@
             </select>
           </div>
           
-          <button class="btn-clear" onclick="limparFiltros()">
-            🗑️ Limpar
+          <button class="btn-clear" onclick="limparFiltros()" style="align-self: end;">
+            🗑️ Limpar Tudo
           </button>
         </div>
         
@@ -663,7 +781,7 @@
   </div>
 
   <script>
-    // Versão: 2.1
+    // Versão: 2.2
     
     // Variáveis globais
     let pontesData = [];
@@ -672,6 +790,21 @@
     let debugMessages = [];
     let formatoCSV = null; // 'tipo1' ou 'tipo2'
     let separadorCSV = ','; // Detectado automaticamente
+
+    // Mapeamento de UF para Região
+    const ufParaRegiao = {
+      // Norte
+      'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
+      // Nordeste
+      'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste', 
+      'PE': 'Nordeste', 'PI': 'Nordeste', 'RN': 'Nordeste', 'SE': 'Nordeste',
+      // Centro-Oeste
+      'DF': 'Centro-Oeste', 'GO': 'Centro-Oeste', 'MT': 'Centro-Oeste', 'MS': 'Centro-Oeste',
+      // Sudeste
+      'ES': 'Sudeste', 'MG': 'Sudeste', 'RJ': 'Sudeste', 'SP': 'Sudeste',
+      // Sul
+      'PR': 'Sul', 'RS': 'Sul', 'SC': 'Sul'
+    };
 
     // Função para adicionar mensagens de debug
     function addDebugLog(message, type = 'info') {
@@ -1218,8 +1351,8 @@
         row.insertCell(10).textContent = resultado.aeroportoProximo || 'N/A';
       });
 
-      // Popular dropdown de UFs
-      popularDropdownUFs();
+      // Popular checkboxes de UFs
+      popularCheckboxesUF();
 
       // Mostrar seções
       document.getElementById('statsSection').style.display = 'block';
@@ -1234,27 +1367,62 @@
       }, 1000);
     }
 
-    // Popular dropdown de UFs com valores únicos
-    function popularDropdownUFs() {
+    // Popular checkboxes de UFs com valores únicos
+    function popularCheckboxesUF() {
       const ufsUnicas = [...new Set(resultadosAnalise.map(r => r.uf).filter(uf => uf))].sort();
-      const selectUF = document.getElementById('filterUF');
+      const container = document.getElementById('ufCheckboxList');
       
-      // Limpar options existentes (exceto o primeiro)
-      selectUF.innerHTML = '<option value="">Todos os estados</option>';
+      // Limpar checkboxes existentes
+      container.innerHTML = '';
       
       ufsUnicas.forEach(uf => {
-        const option = document.createElement('option');
-        option.value = uf;
-        option.textContent = uf;
-        selectUF.appendChild(option);
+        const div = document.createElement('div');
+        div.className = 'checkbox-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `uf-${uf}`;
+        checkbox.value = uf;
+        checkbox.onchange = aplicarFiltros;
+        
+        const label = document.createElement('label');
+        label.htmlFor = `uf-${uf}`;
+        label.textContent = uf;
+        
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        container.appendChild(div);
       });
+    }
+
+    // Selecionar/Desselecionar todas as regiões
+    function selecionarTodosRegiao(selecionar) {
+      const checkboxes = document.querySelectorAll('#regiaoContainer input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = selecionar);
+      aplicarFiltros();
+    }
+
+    // Selecionar/Desselecionar todos os UFs
+    function selecionarTodosUF(selecionar) {
+      const checkboxes = document.querySelectorAll('#ufCheckboxList input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = selecionar);
+      aplicarFiltros();
     }
 
     // Aplicar filtros
     function aplicarFiltros() {
       const filterCodigo = document.getElementById('filterCodigo').value.toLowerCase().trim();
-      const filterUF = document.getElementById('filterUF').value;
       const filterZona = document.getElementById('filterZona').value;
+      
+      // Obter regiões selecionadas
+      const regioesSelecionadas = Array.from(
+        document.querySelectorAll('#regiaoContainer input[type="checkbox"]:checked')
+      ).map(cb => cb.value);
+      
+      // Obter UFs selecionadas
+      const ufsSelecionadas = Array.from(
+        document.querySelectorAll('#ufCheckboxList input[type="checkbox"]:checked')
+      ).map(cb => cb.value);
       
       const tbody = document.getElementById('resultsBody');
       const rows = tbody.getElementsByTagName('tr');
@@ -1267,10 +1435,19 @@
         
         // Verificar se passa nos filtros
         const codigoMatch = !filterCodigo || codigo.includes(filterCodigo);
-        const ufMatch = !filterUF || uf === filterUF;
+        
+        // Filtro de região
+        const regiaoMatch = regioesSelecionadas.length === 0 || 
+                           regioesSelecionadas.includes(ufParaRegiao[uf]);
+        
+        // Filtro de UF
+        const ufMatch = ufsSelecionadas.length === 0 || 
+                       ufsSelecionadas.includes(uf);
+        
+        // Filtro de zona
         const zonaMatch = !filterZona || zona === filterZona;
         
-        if (codigoMatch && ufMatch && zonaMatch) {
+        if (codigoMatch && regiaoMatch && ufMatch && zonaMatch) {
           row.classList.remove('hidden');
           visibleCount++;
         } else {
@@ -1308,8 +1485,14 @@
     // Limpar filtros
     function limparFiltros() {
       document.getElementById('filterCodigo').value = '';
-      document.getElementById('filterUF').value = '';
       document.getElementById('filterZona').value = '';
+      
+      // Desmarcar todas as regiões
+      document.querySelectorAll('#regiaoContainer input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
+      // Desmarcar todas as UFs
+      document.querySelectorAll('#ufCheckboxList input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
       aplicarFiltros();
     }
 
