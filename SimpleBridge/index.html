@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SimpleBridge - Sistema de Cadastro de OAE</title>
-    
+
     <!-- CSS Modular -->
     <link rel="stylesheet" href="css/variables.css" />
     <link rel="stylesheet" href="css/base.css" />
@@ -14,10 +14,27 @@
   </head>
   <body>
     <!-- Notificações -->
-    <div id="notification" style="display: none;"></div>
-    <div id="save-reminder" class="notification save-reminder" style="display: none;">
+    <div id="notification" style="display: none"></div>
+    <div
+      id="save-reminder"
+      class="notification save-reminder"
+      style="display: none"
+    >
       💾 Lembrete: Salve seus dados para não perder o trabalho!
-      <button type="button" onclick="showSummaryBeforeSave()" style="margin-left: 10px; padding: 5px 15px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+      <button
+        type="button"
+        onclick="showSummaryBeforeSave()"
+        style="
+          margin-left: 10px;
+          padding: 5px 15px;
+          background: #27ae60;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: bold;
+        "
+      >
         Salvar Agora
       </button>
     </div>
@@ -27,11 +44,25 @@
       <!-- Cabeçalho -->
       <header>
         <h1>Cadastro de Obras de Arte Especiais</h1>
-        <a href="https://nebulous-fox-aa1.notion.site/Manual-do-Usu-rio-SimpleBridge-2b34334d8dee806ba701e17f98180568" 
-           target="_blank" 
-           style="display: inline-block; margin-top: 10px; padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+        <a
+          href="https://nebulous-fox-aa1.notion.site/Manual-do-Usu-rio-SimpleBridge-2b34334d8dee806ba701e17f98180568"
+          target="_blank"
+          style="
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+          "
+          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+        >
           📖 Manual do Usuário
         </a>
       </header>
@@ -51,13 +82,16 @@
             placeholder="Filtrar por lote..."
             oninput="filterWorks()"
           />
-          <button onclick="loadWorksList(); trackRefreshClicks();" title="Atualizar lista de obras">🔄</button>
+          <button
+            onclick="loadWorksList(); trackRefreshClicks();"
+            title="Atualizar lista de obras"
+          >
+            🔄
+          </button>
         </div>
 
         <div class="actions">
-          <button class="add-btn" onclick="createNewWork()">
-            + Nova Obra
-          </button>
+          <button class="add-btn" onclick="createNewWork()">+ Nova Obra</button>
           <button class="copy-btn" onclick="importMultipleWorks()">
             Importar Obras para modelar
           </button>
@@ -67,7 +101,11 @@
           <button class="export-btn" onclick="exportAllWorks()">
             Exportar obras para modelar
           </button>
-          <button class="export-btn hidden-feature" id="export-json-btn" onclick="exportToJSON()">
+          <button
+            class="export-btn hidden-feature"
+            id="export-json-btn"
+            onclick="exportToJSON()"
+          >
             📄 Exportar JSON
           </button>
           <button class="delete-btn" onclick="clearDatabase()">
@@ -245,13 +283,25 @@
           <!-- Link para Google Maps -->
           <div class="form-row">
             <div class="form-group">
-              <a 
-                id="google-maps-link" 
-                href="#" 
-                target="_blank" 
-                style="display: none; padding: 10px 20px; background: #5a6c7d; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;"
+              <a
+                id="google-maps-link"
+                href="#"
+                target="_blank"
+                style="
+                  display: none;
+                  padding: 10px 20px;
+                  background: #5a6c7d;
+                  color: white;
+                  text-decoration: none;
+                  border-radius: 8px;
+                  font-weight: 600;
+                  font-size: 14px;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                  transition: all 0.3s ease;
+                "
                 onmouseover="this.style.background='#4a5c6d'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
-                onmouseout="this.style.background='#5a6c7d'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                onmouseout="this.style.background='#5a6c7d'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
+              >
                 📍 Ver no Google Maps
               </a>
             </div>
@@ -267,105 +317,148 @@
           </button> -->
         </div>
 
+        <!-- Configurações Gerais -->
+        <div class="tab-content" id="configuracao-content">
+          <h2>CONFIGURAÇÕES GERAIS</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="comprimento" class="required">COMPRIMENTO</label>
+              <input
+                type="number"
+                id="comprimento"
+                name="COMPRIMENTO"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div
+                id="tramos-sum-display"
+                style="
+                  margin-top: 8px;
+                  padding: 6px 10px;
+                  border-radius: 4px;
+                  font-size: 13px;
+                  font-weight: 500;
+                  display: none;
+                "
+              >
+                <span id="tramos-sum-label">Soma dos tramos:</span>
+                <span id="tramos-sum-value">0.00m</span>
+              </div>
+              <div
+                class="error-message"
+                id="tramos-sum-error"
+                style="display: none; margin-top: 10px"
+              >
+                A soma dos tramos deve ser igual ao comprimento total
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="largura" class="required">LARGURA</label>
+              <input
+                type="number"
+                id="largura"
+                name="LARGURA"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="largura-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="altura" class="required">ALTURA</label>
+              <div style="display: flex; gap: 10px; align-items: flex-start">
+                <input
+                  type="number"
+                  id="altura"
+                  name="ALTURA"
+                  step="0.01"
+                  min="0"
+                  required
+                  style="flex: 1"
+                />
+                <button
+                  type="button"
+                  onclick="showHeightCalculator()"
+                  style="
+                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    transition: all 0.3s ease;
+                  "
+                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)';"
+                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                  title="Abrir calculadora de alturas"
+                >
+                  🧮 Calculadora
+                </button>
+              </div>
+              <div class="error-message" id="altura-error">
+                Este campo é obrigatório
+              </div>
+              <div
+                class="error-message"
+                id="altura-sum-error"
+                style="display: none; margin-top: 10px"
+              >
+                A soma da altura da longarina e do maior apoio deve ser igual à
+                altura total
+                <button
+                  type="button"
+                  onclick="showHeightCalculator()"
+                  style="
+                    background: #3498db;
+                    color: white;
+                    border: none;
+                    padding: 3px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin-left: 10px;
+                  "
+                >
+                  Abrir Calculadora
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qtd-tramos" class="required">QTD TRAMOS</label>
+              <input
+                type="number"
+                id="qtd-tramos"
+                name="QTD TRAMOS"
+                min="1"
+                value="1"
+                step="1"
+                required
+                oninput="forceIntegerOnly(this)"
+                onchange="generateTramosFields()"
+              />
+              <div class="error-message" id="qtd-tramos-error">
+                Este campo é obrigatório e deve ser no mínimo 1
+              </div>
+            </div>
+          </div>
 
-<!-- Configurações Gerais -->
-<div class="tab-content" id="configuracao-content">
-  <h2>CONFIGURAÇÕES GERAIS</h2>
-  <div class="form-row">
-    <div class="form-group">
-      <label for="comprimento" class="required">COMPRIMENTO</label>
-      <input
-        type="number"
-        id="comprimento"
-        name="COMPRIMENTO"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div id="tramos-sum-display" style="margin-top: 8px; padding: 6px 10px; border-radius: 4px; font-size: 13px; font-weight: 500; display: none;">
-        <span id="tramos-sum-label">Soma dos tramos:</span> <span id="tramos-sum-value">0.00m</span>
-      </div>
-    <div class="error-message" id="tramos-sum-error" style="display: none; margin-top: 10px;">
-  A soma dos tramos deve ser igual ao comprimento total
-</div>
-    </div>
-    <div class="form-group">
-      <label for="largura" class="required">LARGURA</label>
-      <input
-        type="number"
-        id="largura"
-        name="LARGURA"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div class="error-message" id="largura-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="altura" class="required">ALTURA</label>
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <input
-          type="number"
-          id="altura"
-          name="ALTURA"
-          step="0.01"
-          min="0"
-          required
-          style="flex: 1;"
-        />
-        <button type="button" onclick="showHeightCalculator()" 
-                style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: all 0.3s ease;"
-                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)';"
-                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
-                title="Abrir calculadora de alturas">
-          🧮 Calculadora
-        </button>
-      </div>
-      <div class="error-message" id="altura-error">
-        Este campo é obrigatório
-      </div>
-      <div class="error-message" id="altura-sum-error" style="display: none; margin-top: 10px;">
-        A soma da altura da longarina e do maior apoio deve ser igual à altura total
-        <button type="button" onclick="showHeightCalculator()" 
-                style="background: #3498db; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; margin-left: 10px;">
-          Abrir Calculadora
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label for="qtd-tramos" class="required">QTD TRAMOS</label>
-      <input
-        type="number" 
-        id="qtd-tramos" 
-        name="QTD TRAMOS"
-        min="1"
-        value="1" 
-        step= "1"
-        required
-        oninput="forceIntegerOnly(this)"
-        onchange="generateTramosFields()"
-      />
-      <div class="error-message" id="qtd-tramos-error">
-        Este campo é obrigatório e deve ser no mínimo 1
-      </div>
-    </div>
-  </div>
+          <div id="dynamic-tramos" class="dynamic-container">
+            <h3>COMPRIMENTO TRAMOS</h3>
+            <div id="tramos-fields" class="dynamic-fields">
+              <!-- Campos gerados dinamicamente para tramos -->
+            </div>
+            <div class="error-message" id="tramos-error">
+              Todos os tramos devem ter comprimento mínimo de 0.5m
+            </div>
+          </div>
 
-  <div id="dynamic-tramos" class="dynamic-container">
-    <h3>COMPRIMENTO TRAMOS</h3>
-    <div id="tramos-fields" class="dynamic-fields">
-      <!-- Campos gerados dinamicamente para tramos -->
-    </div>
-    <div class="error-message" id="tramos-error">
-      Todos os tramos devem ter comprimento mínimo de 0.5m
-    </div>
-  </div>
-
-  <!-- <div id="config-custom-fields"></div>
+          <!-- <div id="config-custom-fields"></div>
   <button
     type="button"
     class="add-btn"
@@ -373,8 +466,7 @@
   >
     + Adicionar Campo
   </button> -->
-</div>
-
+        </div>
 
         <!-- Transição -->
         <div class="tab-content" id="transicao-content">
@@ -382,8 +474,8 @@
           <div class="form-row">
             <div class="form-group">
               <label for="cortina-altura" class="required"
-              >CORTINA ALTURA(TRANSIÇÃO)</label
-                >
+                >CORTINA ALTURA(TRANSIÇÃO)</label
+              >
               <input
                 type="number"
                 id="cortina-altura"
@@ -392,7 +484,8 @@
                 required
               />
               <div class="error-message" id="cortina-altura-error">
-                Este campo é obrigatório e deve ser no mínimo igual à ESPESSURA LAJE
+                Este campo é obrigatório e deve ser no mínimo igual à ESPESSURA
+                LAJE
               </div>
             </div>
             <div class="form-group">
@@ -405,7 +498,8 @@
                 <option value="Nenhum">Nenhum</option>
               </select>
               <div class="error-message" id="tipo-ala-paralela-error">
-                Este campo é obrigatório quando o encontro é Parede Frontal Portante
+                Este campo é obrigatório quando o encontro é Parede Frontal
+                Portante
               </div>
             </div>
             <div class="form-group">
@@ -418,7 +512,8 @@
                 <option value="Nenhum">Nenhum</option>
               </select>
               <div class="error-message" id="tipo-ala-perpendicular-error">
-                Este campo é obrigatório quando o encontro é Parede Frontal Portante
+                Este campo é obrigatório quando o encontro é Parede Frontal
+                Portante
               </div>
             </div>
           </div>
@@ -457,9 +552,14 @@
               <select id="tipo-encontro" name="TIPO ENCONTRO">
                 <option value="">Selecione</option>
                 <option value="Nenhum">Nenhum</option>
-                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">ENCONTRO - PAREDE FRONTAL PORTANTE</option>
+                <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">
+                  ENCONTRO - PAREDE FRONTAL PORTANTE
+                </option>
                 <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
-                <option value="ENCONTRO DE ALVENARIA DE PEDRA">ENCONTRO DE ALVENARIA DE PEDRA</option>
+                <option value="ENCONTRO DE ALVENARIA DE PEDRA">
+                  ENCONTRO DE ALVENARIA DE PEDRA
+                </option>
+                <option value="APOIO">APOIO</option>
               </select>
             </div>
           </div>
@@ -522,175 +622,207 @@
           </button> -->
         </div>
 
-
-
         <!-- Superestrutura -->
-<div class="tab-content" id="superestrutura-content">
-  <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
+        <div class="tab-content" id="superestrutura-content">
+          <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
 
-  <!-- Primeira linha: Quantidade de longarinas, transversinas e tipo -->
-  <div class="form-row">
-    <div class="form-group">
-      <label for="qtd-longarinas" class="required"
-        >QTD LONGARINAS</label
-      >
-      <input
-        type="number"
-        id="qtd-longarinas"
-        name="QTD LONGARINAS"
-        min="0"
-        step="1"
-        oninput="forceIntegerOnly(this)"
-        onchange="handleLongarinaChange()"
-        required
-      />
-      <div class="error-message" id="qtd-longarinas-error">
-        Este campo é obrigatório
-      </div>
-      <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-        <strong>ℹ️ Nota:</strong> Quando a quantidade de longarinas = 1, será adicionado à obra uma <strong>seção caixão protendida</strong>
-      </div>
-    </div>
-    
-    <div class="form-group">
-      <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
-      <input
-        type="number"
-        id="qtd-transversinas"
-        name="QTD TRANSVERSINAS"
-        min="0"
-        step="1"
-        value="0"
-        disabled
-        oninput="forceIntegerOnly(this)"
-      />
-    </div>
-    
-    <div class="form-group">
-      <label for="tipo-transversina">TIPO DE TRANSVERSINA</label>
-      <select id="tipo-transversina" name="TIPO DE TRANSVERSINA" disabled>
-        <option value="">Selecione</option>
-        <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">TRANSVERSINA PORTANTE DE CONCRETO ARMADO</option>
-        <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO</option>
-        <option value="Nenhum">Nenhum</option>
-      </select>
-      <div class="error-message" id="tipo-transversina-error">
-        Este campo é obrigatório quando há transversinas
-      </div>
-    </div>
-  </div>
+          <!-- Primeira linha: Quantidade de longarinas, transversinas e tipo -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qtd-longarinas" class="required"
+                >QTD LONGARINAS</label
+              >
+              <input
+                type="number"
+                id="qtd-longarinas"
+                name="QTD LONGARINAS"
+                min="0"
+                step="1"
+                oninput="forceIntegerOnly(this)"
+                onchange="handleLongarinaChange()"
+                required
+              />
+              <div class="error-message" id="qtd-longarinas-error">
+                Este campo é obrigatório
+              </div>
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Quando a quantidade de longarinas = 1,
+                será adicionado à obra uma
+                <strong>seção caixão protendida</strong>
+              </div>
+            </div>
 
-  <!-- Segunda linha: Altura longarina, deslocamentos e reforço viga -->
-  <div class="form-row">
-    <div class="form-group">
-      <label for="altura-longarina" class="required"
-        >ALTURA LONGARINA</label
-      >
-      <input
-        type="number"
-        id="altura-longarina"
-        name="ALTURA LONGARINA"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div class="error-message" id="altura-longarina-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="deslocamento-esquerdo" class="required"
-        >DESLOCAMENTO ESQUERDO</label
-      >
-      <input
-        type="number"
-        id="deslocamento-esquerdo"
-        name="DESLOCAMENTO ESQUERDO"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div class="error-message" id="deslocamento-esquerdo-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="deslocamento-direito" class="required"
-        >DESLOCAMENTO DIREITO</label
-      >
-      <input
-        type="number"
-        id="deslocamento-direito"
-        name="DESLOCAMENTO DIREITO"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div class="error-message" id="deslocamento-direito-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-    
-    <div class="form-group" style="padding-top: 28px;">
-      <label>
-        <input
-          type="checkbox"
-          id="beam-reinforcement"
-          name="REFORCO VIGA"
-        />
-        REFORÇO VIGA
-      </label>
-    </div>
-  </div>
-  
-  <!-- Terceira linha: Espessuras -->
-  <div class="form-row">
-    <div class="form-group">
-      <label for="espessura-longarina" class="required"
-        >ESPESSURA LONGARINA</label
-      >
-      <input
-        type="number"
-        id="espessura-longarina"
-        name="ESPESSURA LONGARINA"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div class="error-message" id="espessura-longarina-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="espessura-transversina">ESPESSURA TRANSVERSINA</label>
-      <input
-        type="number"
-        id="espessura-transversina"
-        name="ESPESSURA TRANSVERSINA"
-        step="0.01"
-        min="0"
-        disabled
-      />
-    </div>
-    <div class="form-group">
-      <label for="espessura-laje" class="required"
-        >ESPESSURA LAJE:</label
-      >
-      <input
-        type="number"
-        id="espessura-laje"
-        name="ESPESSURA LAJE"
-        step="0.01"
-        min="0"
-        required
-      />
-      <div class="error-message" id="espessura-laje-error">
-        Este campo é obrigatório
-      </div>
-    </div>
-  </div>
+            <div class="form-group">
+              <label for="qtd-transversinas">QTD TRANSVERSINAS</label>
+              <input
+                type="number"
+                id="qtd-transversinas"
+                name="QTD TRANSVERSINAS"
+                min="0"
+                step="1"
+                value="0"
+                disabled
+                oninput="forceIntegerOnly(this)"
+              />
+            </div>
 
-  <!-- <div id="superestrutura-custom-fields"></div>
+            <div class="form-group">
+              <label for="tipo-transversina">TIPO DE TRANSVERSINA</label>
+              <select
+                id="tipo-transversina"
+                name="TIPO DE TRANSVERSINA"
+                disabled
+              >
+                <option value="">Selecione</option>
+                <option value="TRANSVERSINA PORTANTE DE CONCRETO ARMADO">
+                  TRANSVERSINA PORTANTE DE CONCRETO ARMADO
+                </option>
+                <option value="TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO">
+                  TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+              <div class="error-message" id="tipo-transversina-error">
+                Este campo é obrigatório quando há transversinas
+              </div>
+            </div>
+          </div>
+
+          <!-- Segunda linha: Altura longarina, deslocamentos e reforço viga -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="altura-longarina" class="required"
+                >ALTURA LONGARINA</label
+              >
+              <input
+                type="number"
+                id="altura-longarina"
+                name="ALTURA LONGARINA"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="altura-longarina-error">
+                Este campo é obrigatório
+              </div>
+              <div
+                class="error-message"
+                id="altura-longarina-apoio-error"
+                style="
+                  display: none;
+                  margin-top: 10px;
+                  background-color: rgba(231, 76, 60, 0.1);
+                  padding: 12px;
+                  border-left: 4px solid #e74c3c;
+                  border-radius: 4px;
+                  line-height: 1.5;
+                "
+              ></div>
+            </div>
+            <div class="form-group">
+              <label for="deslocamento-esquerdo" class="required"
+                >DESLOCAMENTO ESQUERDO</label
+              >
+              <input
+                type="number"
+                id="deslocamento-esquerdo"
+                name="DESLOCAMENTO ESQUERDO"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="deslocamento-esquerdo-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="deslocamento-direito" class="required"
+                >DESLOCAMENTO DIREITO</label
+              >
+              <input
+                type="number"
+                id="deslocamento-direito"
+                name="DESLOCAMENTO DIREITO"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="deslocamento-direito-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+
+            <div class="form-group" style="padding-top: 28px">
+              <label>
+                <input
+                  type="checkbox"
+                  id="beam-reinforcement"
+                  name="REFORCO VIGA"
+                />
+                REFORÇO VIGA
+              </label>
+            </div>
+          </div>
+
+          <!-- Terceira linha: Espessuras -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="espessura-longarina" class="required"
+                >ESPESSURA LONGARINA</label
+              >
+              <input
+                type="number"
+                id="espessura-longarina"
+                name="ESPESSURA LONGARINA"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="espessura-longarina-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="espessura-transversina">ESPESSURA TRANSVERSINA</label>
+              <input
+                type="number"
+                id="espessura-transversina"
+                name="ESPESSURA TRANSVERSINA"
+                step="0.01"
+                min="0"
+                disabled
+              />
+            </div>
+            <div class="form-group">
+              <label for="espessura-laje" class="required"
+                >ESPESSURA LAJE:</label
+              >
+              <input
+                type="number"
+                id="espessura-laje"
+                name="ESPESSURA LAJE"
+                step="0.01"
+                min="0"
+                required
+              />
+              <div class="error-message" id="espessura-laje-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+          </div>
+
+          <!-- <div id="superestrutura-custom-fields"></div>
   <button
     type="button"
     class="add-btn"
@@ -698,9 +830,7 @@
   >
     + Adicionar Campo
   </button> -->
-</div>
-
-
+        </div>
 
         <!-- Aba apoio -->
         <div class="tab-content" id="apoio-content">
@@ -708,20 +838,34 @@
           <div class="form-row">
             <div class="form-group">
               <label for="qtd-pilares" class="required">QTD PILARES</label>
-      <input
-        type="number"
-        id="qtd-pilares"
-        step= "1"
-        oninput="forceIntegerOnly(this)"
-        name="QTD PILARES"
-        min="0"
-        required
-      />
+              <input
+                type="number"
+                id="qtd-pilares"
+                step="1"
+                oninput="forceIntegerOnly(this)"
+                name="QTD PILARES"
+                min="0"
+                required
+              />
               <div class="error-message" id="qtd-pilares-error">
                 Este campo é obrigatório
               </div>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Quando a quantidade de pilares = 1, será adicionado um <strong>pilar parede de concreto armado</strong> e a largura do pilar será calculada automaticamente
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Quando a quantidade de pilares = 1,
+                será adicionado um
+                <strong>pilar parede de concreto armado</strong> e a largura do
+                pilar será calculada automaticamente
               </div>
             </div>
             <div class="form-group">
@@ -732,12 +876,16 @@
                 <option value="Não">Não</option>
               </select>
             </div>
-                        <div class="form-group">
+            <div class="form-group">
               <label for="tipo-aparelho-apoio">TIPO APARELHO APOIO</label>
               <select id="tipo-aparelho-apoio" name="TIPO APARELHO APOIO">
                 <option value="">Selecione</option>
-        <option value="APARELHO DE APOIO DE NEOPRENE FRETADO"> APARELHO DE APOIO DE NEOPRENE FRETADO </option>
-        <option value="APARELHO DE APOIO ROLO METÁLICO"> APARELHO DE APOIO ROLO METÁLICO </option>
+                <option value="APARELHO DE APOIO DE NEOPRENE FRETADO">
+                  APARELHO DE APOIO DE NEOPRENE FRETADO
+                </option>
+                <option value="APARELHO DE APOIO ROLO METÁLICO">
+                  APARELHO DE APOIO ROLO METÁLICO
+                </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
             </div>
@@ -745,21 +893,21 @@
 
           <!-- Campo hidden para quantidade de apoios (calculado automaticamente) -->
           <input type="hidden" id="qtd-apoios" name="QTD APOIOS" value="0" />
- 
+
           <!-- Área de apoios com os três campos -->
           <div id="dynamic-apoios" class="dynamic-container">
             <h3>APOIOS</h3>
-    <div class="apoios-header">
-      <div class="apoio-column">APOIO</div>
-      <div class="apoio-column">ALT.</div>
-      <div class="apoio-column">COMP.</div>
-      <div class="apoio-column">LARG.</div>
-    </div>
-    <div id="apoios-fields" class="dynamic-fields">
-      <!-- Campos gerados dinamicamente para apoios -->
-    </div>
+            <div class="apoios-header">
+              <div class="apoio-column">APOIO</div>
+              <div class="apoio-column">ALT.</div>
+              <div class="apoio-column">COMP.</div>
+              <div class="apoio-column">LARG.</div>
+            </div>
+            <div id="apoios-fields" class="dynamic-fields">
+              <!-- Campos gerados dinamicamente para apoios -->
+            </div>
             <div class="error-message" id="apoios-error">
-      Todos os campos de apoio precisam ser preenchidos
+              Todos os campos de apoio precisam ser preenchidos
             </div>
           </div>
 
@@ -776,18 +924,34 @@
             </div>
             <div class="form-group">
               <label for="altura-travessa">ALTURA TRAVESSA</label>
-      <input
-        type="number"
-        id="altura-travessa"
-        name="ALTURA TRAVESSA"
-        step="0.01"
-        min="0"
-      />
+              <input
+                type="number"
+                id="altura-travessa"
+                name="ALTURA TRAVESSA"
+                step="0.01"
+                min="0"
+              />
               <div class="error-message" id="altura-travessa-error">
-                Este campo é obrigatório se uma travessa estiver selecionada. A altura máxima é: Menor Apoio - 0.10m
+                Este campo é obrigatório se uma travessa estiver selecionada. A
+                altura máxima é: Menor Apoio - 0.10m
               </div>
-              <div id="altura-travessa-info" style="display: none; margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #f39c12; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #856404;">
-                <strong>⚠️ Atenção:</strong> A altura da travessa <strong>não pode ser igual ou maior</strong> que qualquer apoio. <strong>Altura máxima = Menor Apoio - 10cm</strong>
+              <div
+                id="altura-travessa-info"
+                style="
+                  display: none;
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                  border-left: 4px solid #f39c12;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #856404;
+                "
+              >
+                <strong>⚠️ Atenção:</strong> A altura da travessa
+                <strong>não pode ser igual ou maior</strong> que qualquer apoio.
+                <strong>Altura máxima = Menor Apoio - 10cm</strong>
               </div>
             </div>
             <div class="form-group">
@@ -801,7 +965,36 @@
               </select>
             </div>
           </div>
-  
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-apoio-transicao">BERÇO/PILARETE</label>
+              <select id="tipo-apoio-transicao" name="TIPO APOIO TRANSICAO">
+                <option value="">Selecione</option>
+                <option value="BERÇO/PILARETE">
+                  BERÇO, ELEMENTO OU PILARETE DE NIVELAMENTO
+                </option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Este campo é selecionado
+                automaticamente quando há <strong>APOIO na transição</strong>.
+                Pode ser usado independentemente com TRAVESSA.
+              </div>
+            </div>
+          </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="tipo-bloco-sapata">TIPO BLOCO SAPATA</label>
@@ -815,68 +1008,82 @@
             </div>
             <div class="form-group" id="altura-bloco-sapata-group">
               <label for="altura-bloco-sapata">ALTURA BLOCO SAPATA</label>
-      <input
-        type="number"
-        id="altura-bloco-sapata"
-        name="ALTURA BLOCO SAPATA"
-        step="0.01"
-        min="0"
-      />
+              <input
+                type="number"
+                id="altura-bloco-sapata"
+                name="ALTURA BLOCO SAPATA"
+                step="0.01"
+                min="0"
+              />
               <div class="error-message" id="altura-bloco-sapata-error">
-                Este campo é obrigatório e deve ser maior que 0 quando um tipo de bloco/sapata está selecionado
+                Este campo é obrigatório e deve ser maior que 0 quando um tipo
+                de bloco/sapata está selecionado
               </div>
             </div>
             <div class="form-group" id="largura-bloco-sapata-group">
               <label for="largura-bloco-sapata">LARGURA BLOCO SAPATA</label>
-      <input
-        type="number"
-        id="largura-bloco-sapata"
-        name="LARGURA BLOCO SAPATA"
-        step="0.01"
-        min="0"
-      />
+              <input
+                type="number"
+                id="largura-bloco-sapata"
+                name="LARGURA BLOCO SAPATA"
+                step="0.01"
+                min="0"
+              />
               <div class="error-message" id="largura-bloco-sapata-error">
-                Este campo é obrigatório e deve ser maior que 0 quando um tipo de bloco/sapata está selecionado
+                Este campo é obrigatório e deve ser maior que 0 quando um tipo
+                de bloco/sapata está selecionado
               </div>
             </div>
             <div class="form-group" id="comprimento-bloco-sapata-group">
-              <label for="comprimento-bloco-sapata">COMPRIMENTO BLOCO SAPATA</label>
-      <input
-        type="number"
-        id="comprimento-bloco-sapata"
-        name="COMPRIMENTO BLOCO SAPATA"
-        step="0.01"
-        min="0"
-      />
+              <label for="comprimento-bloco-sapata"
+                >COMPRIMENTO BLOCO SAPATA</label
+              >
+              <input
+                type="number"
+                id="comprimento-bloco-sapata"
+                name="COMPRIMENTO BLOCO SAPATA"
+                step="0.01"
+                min="0"
+              />
               <div class="error-message" id="comprimento-bloco-sapata-error">
-                Este campo é obrigatório e deve ser maior que 0 quando um tipo de bloco/sapata está selecionado
+                Este campo é obrigatório e deve ser maior que 0 quando um tipo
+                de bloco/sapata está selecionado
               </div>
             </div>
           </div>
-          
-          
-
 
           <div class="form-row">
             <div class="form-group">
-      <label for="tipo-contraventamento-pilar">TIPO CONTRAVENTAMENTO PILAR</label>
-      <select
-        id="tipo-contraventamento-pilar"
-        name="TIPO CONTRAVENTAMENTO PILAR"
-        onchange="togglePillarBracingQuantityField()"
-      >
+              <label for="tipo-contraventamento-pilar"
+                >TIPO CONTRAVENTAMENTO PILAR</label
+              >
+              <select
+                id="tipo-contraventamento-pilar"
+                name="TIPO CONTRAVENTAMENTO PILAR"
+                onchange="togglePillarBracingQuantityField()"
+              >
                 <option value="">Selecione</option>
-        <option value="VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO">
-          VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
+                <option
+                  value="VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO"
+                >
+                  VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
                 </option>
-        <option value="PAREDE DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO">
-          PAREDE DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
+                <option
+                  value="PAREDE DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO"
+                >
+                  PAREDE DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
             </div>
-            <div class="form-group" id="qtd-viga-contraventamento-group" style="display: none;">
-              <label for="qtd-viga-contraventamento-pilar" class="required">QTD VIGA CONTRAVENTAMENTO PILAR</label>
+            <div
+              class="form-group"
+              id="qtd-viga-contraventamento-group"
+              style="display: none"
+            >
+              <label for="qtd-viga-contraventamento-pilar" class="required"
+                >QTD VIGA CONTRAVENTAMENTO PILAR</label
+              >
               <input
                 type="number"
                 id="qtd-viga-contraventamento-pilar"
@@ -885,16 +1092,17 @@
                 step="1"
                 oninput="forceIntegerOnly(this)"
               />
-              <div class="error-message" id="qtd-viga-contraventamento-pilar-error">
-                Este campo é obrigatório quando o tipo é Viga de Contraventamento
+              <div
+                class="error-message"
+                id="qtd-viga-contraventamento-pilar-error"
+              >
+                Este campo é obrigatório quando o tipo é Viga de
+                Contraventamento
               </div>
             </div>
             <div class="form-group">
               <label for="tipo-ligacao-fundacoes">TIPO LIGACAO FUNDACOES</label>
-              <select
-                id="tipo-ligacao-fundacoes"
-                name="TIPO LIGACAO FUNDACOES"
-              >
+              <select id="tipo-ligacao-fundacoes" name="TIPO LIGACAO FUNDACOES">
                 <option value="">Selecione</option>
                 <option value="VIGA DE LIGAÇÃO DE FUNDAÇÕES DE CONCRETO ARMADO">
                   VIGA DE LIGAÇÃO DE FUNDAÇÕES DE CONCRETO ARMADO
@@ -903,8 +1111,8 @@
               </select>
             </div>
           </div>
-   
-<!-- 
+
+          <!-- 
           <div id="apoio-custom-fields"></div>
           <button
               type="button"
@@ -915,8 +1123,6 @@
           </button> -->
         </div>
 
-
-
         <!-- Aba Complementar -->
         <div class="tab-content" id="complementares-content">
           <h2>ELEMENTOS COMPLEMENTARES</h2>
@@ -926,16 +1132,36 @@
               <select id="tipo-barreira-esquerda" name="TIPO BARREIRA ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
-                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">BARREIRA QUALQUER DE CONCRETO ARMADO</option>
-                <option value="BARREIRA COM GUARDA-CORPO">BARREIRA COM GUARDA-CORPO</option>
+                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">
+                  BARREIRA QUALQUER DE CONCRETO ARMADO
+                </option>
+                <option value="BARREIRA COM GUARDA-CORPO">
+                  BARREIRA COM GUARDA-CORPO
+                </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Barreira <strong>não pode coexistir com guarda rodas</strong>, mas <strong>pode ter calçada</strong>. Guarda rodas será definido como "Nenhum"
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Barreira
+                <strong>não pode coexistir com guarda rodas</strong>, mas
+                <strong>pode ter calçada</strong>. Guarda rodas será definido
+                como "Nenhum"
               </div>
             </div>
             <div class="form-group">
-              <label for="largura-barreira-esquerda">LARGURA BARREIRA ESQUERDA</label>
+              <label for="largura-barreira-esquerda"
+                >LARGURA BARREIRA ESQUERDA</label
+              >
               <input
                 type="number"
                 id="largura-barreira-esquerda"
@@ -944,7 +1170,8 @@
                 min="0.01"
               />
               <div class="error-message" id="largura-barreira-esquerda-error">
-                Este campo é obrigatório e deve ser maior que zero quando um tipo de barreira está selecionado
+                Este campo é obrigatório e deve ser maior que zero quando um
+                tipo de barreira está selecionado
               </div>
             </div>
           </div>
@@ -952,14 +1179,32 @@
             <div class="form-group">
               <label for="tipo-barreira-direita">TIPO BARREIRA DIREITA</label>
               <select id="tipo-barreira-direita" name="TIPO BARREIRA DIREITA">
-                 <option value="">Selecione</option>
+                <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
-                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">BARREIRA QUALQUER DE CONCRETO ARMADO</option>
-                <option value="BARREIRA COM GUARDA-CORPO">BARREIRA COM GUARDA-CORPO</option>
+                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">
+                  BARREIRA QUALQUER DE CONCRETO ARMADO
+                </option>
+                <option value="BARREIRA COM GUARDA-CORPO">
+                  BARREIRA COM GUARDA-CORPO
+                </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Barreira <strong>não pode coexistir com guarda rodas</strong>, mas <strong>pode ter calçada</strong>. Guarda rodas será definido como "Nenhum"
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Barreira
+                <strong>não pode coexistir com guarda rodas</strong>, mas
+                <strong>pode ter calçada</strong>. Guarda rodas será definido
+                como "Nenhum"
               </div>
             </div>
             <div class="form-group">
@@ -974,7 +1219,8 @@
                 min="0.01"
               />
               <div class="error-message" id="largura-barreira-direita-error">
-                Este campo é obrigatório e deve ser maior que zero quando um tipo de barreira está selecionado
+                Este campo é obrigatório e deve ser maior que zero quando um
+                tipo de barreira está selecionado
               </div>
             </div>
           </div>
@@ -988,8 +1234,20 @@
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Quando há calçada, o <strong>guarda corpo será adicionado automaticamente</strong>
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Quando há calçada, o
+                <strong>guarda corpo será adicionado automaticamente</strong>
               </div>
             </div>
             <div class="form-group">
@@ -1004,7 +1262,8 @@
                 min="0.01"
               />
               <div class="error-message" id="largura-calcada-esquerda-error">
-                Este campo é obrigatório e deve ser maior que zero quando um tipo de calçada está selecionado
+                Este campo é obrigatório e deve ser maior que zero quando um
+                tipo de calçada está selecionado
               </div>
             </div>
           </div>
@@ -1018,8 +1277,20 @@
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Quando há calçada, o <strong>guarda corpo será adicionado automaticamente</strong>
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Quando há calçada, o
+                <strong>guarda corpo será adicionado automaticamente</strong>
               </div>
             </div>
             <div class="form-group">
@@ -1034,7 +1305,8 @@
                 min="0.01"
               />
               <div class="error-message" id="largura-calcada-direita-error">
-                Este campo é obrigatório e deve ser maior que zero quando um tipo de calçada está selecionado
+                Este campo é obrigatório e deve ser maior que zero quando um
+                tipo de calçada está selecionado
               </div>
             </div>
           </div>
@@ -1048,8 +1320,23 @@
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Guarda rodas <strong>só pode existir sozinho</strong> (sem barreira ou calçada). O <strong>guarda corpo será adicionado automaticamente</strong> e barreira/calçada serão definidas como "Nenhum"
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Guarda rodas
+                <strong>só pode existir sozinho</strong> (sem barreira ou
+                calçada). O
+                <strong>guarda corpo será adicionado automaticamente</strong> e
+                barreira/calçada serão definidas como "Nenhum"
               </div>
             </div>
             <div class="form-group">
@@ -1057,14 +1344,18 @@
                 >LARGURA GUARDA RODAS ESQUERDO</label
               >
               <input
-              id="largura-guarda-rodas-esquerdo"
-              type="number"
+                id="largura-guarda-rodas-esquerdo"
+                type="number"
                 name="LARGURA GUARDA RODAS ESQUERDO"
                 step="0.01"
                 min="0.01"
               />
-              <div class="error-message" id="largura-guarda-rodas-esquerdo-error">
-                Este campo é obrigatório e deve ser maior que zero quando um tipo de guarda rodas está selecionado
+              <div
+                class="error-message"
+                id="largura-guarda-rodas-esquerdo-error"
+              >
+                Este campo é obrigatório e deve ser maior que zero quando um
+                tipo de guarda rodas está selecionado
               </div>
             </div>
           </div>
@@ -1078,8 +1369,23 @@
                 </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
-              <div style="margin-top: 8px; padding: 8px 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #0d47a1;">
-                <strong>ℹ️ Nota:</strong> Guarda rodas <strong>só pode existir sozinho</strong> (sem barreira ou calçada). O <strong>guarda corpo será adicionado automaticamente</strong> e barreira/calçada serão definidas como "Nenhum"
+              <div
+                style="
+                  margin-top: 8px;
+                  padding: 8px 12px;
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  border-left: 4px solid #2196f3;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  line-height: 1.4;
+                  color: #0d47a1;
+                "
+              >
+                <strong>ℹ️ Nota:</strong> Guarda rodas
+                <strong>só pode existir sozinho</strong> (sem barreira ou
+                calçada). O
+                <strong>guarda corpo será adicionado automaticamente</strong> e
+                barreira/calçada serão definidas como "Nenhum"
               </div>
             </div>
             <div class="form-group">
@@ -1093,8 +1399,12 @@
                 step="0.01"
                 min="0.01"
               />
-              <div class="error-message" id="largura-guarda-rodas-direito-error">
-                Este campo é obrigatório e deve ser maior que zero quando um tipo de guarda rodas está selecionado
+              <div
+                class="error-message"
+                id="largura-guarda-rodas-direito-error"
+              >
+                Este campo é obrigatório e deve ser maior que zero quando um
+                tipo de guarda rodas está selecionado
               </div>
             </div>
           </div>
@@ -1104,7 +1414,9 @@
               <select id="pavimento" name="TIPO PAVIMENTO" required>
                 <option value="">Selecione</option>
                 <option value="PAVIMENTO ASFÁLTICO">PAVIMENTO ASFÁLTICO</option>
-                <option value="PAVIMENTO DE CONCRETO">PAVIMENTO DE CONCRETO</option>
+                <option value="PAVIMENTO DE CONCRETO">
+                  PAVIMENTO DE CONCRETO
+                </option>
                 <option value="Nenhum">Nenhum</option>
               </select>
               <div class="error-message" id="pavimento-error">
@@ -1116,7 +1428,7 @@
               <input
                 type="number"
                 id="qtd-buzinotes"
-                step= "1"
+                step="1"
                 oninput="forceIntegerOnly(this)"
                 name="QTD BUZINOTES"
                 min="0"
@@ -1150,7 +1462,7 @@
             + Adicionar Campo
           </button> -->
         </div>
-      
+
         <!-- Botões de Ação -->
         <div class="form-actions">
           <button type="button" onclick="showSummaryBeforeSave()">
@@ -1167,7 +1479,7 @@
       <div class="modal-content summary-modal">
         <span class="close-modal" onclick="closeSummaryModal()">&times;</span>
         <h2>Resumo da Obra</h2>
-        <div id="missing-fields-container" style="display: none;">
+        <div id="missing-fields-container" style="display: none">
           <h3>Campos Obrigatórios Faltando:</h3>
           <ul id="missing-fields-list"></ul>
         </div>

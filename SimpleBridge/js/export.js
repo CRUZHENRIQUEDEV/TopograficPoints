@@ -5,7 +5,9 @@ function exportToCSV() {
   try {
     const { isValid, missingFields } = validateForm();
     if (!isValid) {
-      alert("Por favor, preencha todos os campos obrigatórios antes de exportar para CSV.");
+      alert(
+        "Por favor, preencha todos os campos obrigatórios antes de exportar para CSV."
+      );
       return;
     }
 
@@ -33,7 +35,22 @@ function exportToCSV() {
     }
 
     // Checkbox MODELADO
-    data["MODELADO"] = document.getElementById("modelado").checked ? "TRUE" : "FALSE";
+    data["MODELADO"] = document.getElementById("modelado").checked
+      ? "TRUE"
+      : "FALSE";
+
+    // Capturar campos que podem estar disabled (FormData ignora campos disabled)
+    const tipoTravessaField = document.getElementById("tipo-travessa");
+    if (tipoTravessaField) {
+      data["TIPO TRAVESSA"] = tipoTravessaField.value;
+    }
+
+    const tipoApoioTransicaoField = document.getElementById(
+      "tipo-apoio-transicao"
+    );
+    if (tipoApoioTransicaoField) {
+      data["TIPO APOIO TRANSICAO"] = tipoApoioTransicaoField.value;
+    }
 
     // Coletar valores dos tramos
     const tramosValues = [];
@@ -70,7 +87,9 @@ function exportToCSV() {
           }
           // Converter para string antes de verificar
           const strValue = String(value);
-          return strValue && strValue.includes(",") ? `"${strValue}"` : strValue;
+          return strValue && strValue.includes(",")
+            ? `"${strValue}"`
+            : strValue;
         })
         .join(",");
 
@@ -79,7 +98,12 @@ function exportToCSV() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `OAE_${data["CODIGO"] || "nova"}_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `OAE_${data["CODIGO"] || "nova"}_${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
     link.style.display = "none";
     document.body.appendChild(link);
     link.click();
@@ -124,7 +148,9 @@ function exportAllWorks() {
       let csvContent = csvColumns.join("\t") + "\n";
 
       // Coletar códigos de todas as obras para o nome do arquivo
-      const allCodes = works.map(work => work.CODIGO || "").filter(code => code !== "");
+      const allCodes = works
+        .map((work) => work.CODIGO || "")
+        .filter((code) => code !== "");
       const codesString = allCodes.join(",");
 
       // ========== CORREÇÃO AUTOMÁTICA PARA OBRAS ANTIGAS ==========
@@ -145,7 +171,9 @@ function exportAllWorks() {
           }
           // Converter para string antes de verificar
           const strValue = String(value);
-          return strValue && strValue.includes("\t") ? `"${strValue}"` : strValue;
+          return strValue && strValue.includes("\t")
+            ? `"${strValue}"`
+            : strValue;
         });
         csvContent += row.join("\t") + "\n";
       });
@@ -222,10 +250,14 @@ function importMultipleWorks() {
             if (headerLine.includes("\t")) separator = "\t";
             else if (headerLine.includes(";")) separator = ";";
 
-            const headers = headerLine.split(separator).map((header) => header.trim());
+            const headers = headerLine
+              .split(separator)
+              .map((header) => header.trim());
 
             if (!headers.includes("CODIGO")) {
-              alert("O arquivo CSV não contém o cabeçalho obrigatório 'CODIGO'.");
+              alert(
+                "O arquivo CSV não contém o cabeçalho obrigatório 'CODIGO'."
+              );
               return;
             }
 
@@ -250,7 +282,11 @@ function importMultipleWorks() {
             }
 
             if (works.length > 0) {
-              if (confirm(`O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`)) {
+              if (
+                confirm(
+                  `O arquivo contém ${works.length} obras. Deseja importar todas para o banco de dados?`
+                )
+              ) {
                 saveMultipleWorks(works);
               }
             } else {
@@ -376,7 +412,10 @@ function exportToJSON() {
             bridges.push(bridgeData);
           } catch (conversionError) {
             errorsCount++;
-            console.error(`Erro ao converter obra ${obraFlat.CODIGO}:`, conversionError);
+            console.error(
+              `Erro ao converter obra ${obraFlat.CODIGO}:`,
+              conversionError
+            );
             // Continua processando outras obras
           }
         }
@@ -399,7 +438,7 @@ function exportToJSON() {
 
         // Função replacer para arredondar todos os números para 3 casas decimais
         const numberReplacer = (key, value) => {
-          if (typeof value === 'number') {
+          if (typeof value === "number") {
             // Trata valores muito pequenos como 0
             if (Math.abs(value) < 1e-10) {
               return 0;
@@ -414,12 +453,17 @@ function exportToJSON() {
         const jsonString = JSON.stringify(exportData, numberReplacer, 2);
 
         // Cria o blob e faz download
-        const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+        const blob = new Blob([jsonString], {
+          type: "application/json;charset=utf-8;",
+        });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
 
         // Nome do arquivo com timestamp
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+        const timestamp = new Date()
+          .toISOString()
+          .replace(/[:.]/g, "-")
+          .slice(0, -5);
         link.href = url;
         link.download = `bridges_export_${timestamp}.json`;
 
@@ -452,7 +496,9 @@ function exportToJSON() {
 
   request.onupgradeneeded = function (event) {
     // Este evento não deve ser disparado, mas caso seja, apenas ignora
-    console.warn("onupgradeneeded disparado inesperadamente durante exportação");
+    console.warn(
+      "onupgradeneeded disparado inesperadamente durante exportação"
+    );
   };
 }
 

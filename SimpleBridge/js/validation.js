@@ -8,23 +8,26 @@ window.requiredFields = {
   largura: { type: "number", min: 0, required: true },
   altura: { type: "number", min: 0, required: true },
   "qtd-tramos": { type: "number", min: 1, required: true },
-  "cortina-altura": { 
-    type: "number", 
-    min: function() {
+  "cortina-altura": {
+    type: "number",
+    min: function () {
       const espessuraLajeField = document.getElementById("espessura-laje");
       return parseFloat(espessuraLajeField ? espessuraLajeField.value : 0) || 0;
-    }, 
-    required: true 
+    },
+    required: true,
   },
   "tipo-ala-paralela": {
     type: "text",
     required: function () {
       const encontroField = document.getElementById("tipo-encontro");
-      const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
+      const alaPerpendicularField = document.getElementById(
+        "tipo-ala-perpendicular"
+      );
       if (!encontroField || !alaPerpendicularField) return false;
       return (
         encontroField.value === "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
-        (alaPerpendicularField.value === "" || alaPerpendicularField.value === "Nenhum")
+        (alaPerpendicularField.value === "" ||
+          alaPerpendicularField.value === "Nenhum")
       );
     },
   },
@@ -45,11 +48,15 @@ window.requiredFields = {
     min: 0,
     required: function () {
       const alaParalelaField = document.getElementById("tipo-ala-paralela");
-      const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
+      const alaPerpendicularField = document.getElementById(
+        "tipo-ala-perpendicular"
+      );
       if (!alaParalelaField || !alaPerpendicularField) return false;
       return (
-        (alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum") ||
-        (alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum")
+        (alaParalelaField.value !== "" &&
+          alaParalelaField.value !== "Nenhum") ||
+        (alaPerpendicularField.value !== "" &&
+          alaPerpendicularField.value !== "Nenhum")
       );
     },
   },
@@ -59,11 +66,15 @@ window.requiredFields = {
     max: 1.5,
     required: function () {
       const alaParalelaField = document.getElementById("tipo-ala-paralela");
-      const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
+      const alaPerpendicularField = document.getElementById(
+        "tipo-ala-perpendicular"
+      );
       if (!alaParalelaField || !alaPerpendicularField) return false;
       return (
-        (alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum") ||
-        (alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum")
+        (alaParalelaField.value !== "" &&
+          alaParalelaField.value !== "Nenhum") ||
+        (alaPerpendicularField.value !== "" &&
+          alaPerpendicularField.value !== "Nenhum")
       );
     },
   },
@@ -91,34 +102,38 @@ window.requiredFields = {
       return encontroField && encontroField.value === "ENCONTRO LAJE";
     },
   },
-  "altura-longarina": { 
-    type: "number", 
-    min: 0, 
+  "altura-longarina": {
+    type: "number",
+    min: 0,
     required: function () {
       const qtdLongarinaField = document.getElementById("qtd-longarinas");
-      const qtdLongarinas = parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
+      const qtdLongarinas =
+        parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
       return qtdLongarinas > 0;
-    }
+    },
   },
   "deslocamento-esquerdo": { type: "number", min: 0, required: true },
   "deslocamento-direito": { type: "number", min: 0, required: true },
   "qtd-longarinas": { type: "number", min: 0, required: true },
-  "espessura-longarina": { 
-    type: "number", 
-    min: 0, 
+  "espessura-longarina": {
+    type: "number",
+    min: 0,
     required: function () {
       const qtdLongarinaField = document.getElementById("qtd-longarinas");
-      const qtdLongarinas = parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
+      const qtdLongarinas =
+        parseInt(qtdLongarinaField ? qtdLongarinaField.value : 0) || 0;
       // Só é obrigatório quando há mais de 1 longarina (quando há 1, é seção caixão com cálculo automático)
       return qtdLongarinas > 1;
-    }
+    },
   },
-  "tipo-transversina": { 
-    type: "text", 
-    min: null, 
+  "tipo-transversina": {
+    type: "text",
+    min: null,
     required: function () {
-      const qtdTransversinasField = document.getElementById("qtd-transversinas");
-      const qtdTransversinas = parseInt(qtdTransversinasField ? qtdTransversinasField.value : 0) || 0;
+      const qtdTransversinasField =
+        document.getElementById("qtd-transversinas");
+      const qtdTransversinas =
+        parseInt(qtdTransversinasField ? qtdTransversinasField.value : 0) || 0;
       return qtdTransversinas > 0;
     },
   },
@@ -126,8 +141,10 @@ window.requiredFields = {
     type: "number",
     min: 0,
     required: function () {
-      const qtdTransversinasField = document.getElementById("qtd-transversinas");
-      const qtdTransversinas = parseInt(qtdTransversinasField ? qtdTransversinasField.value : 0) || 0;
+      const qtdTransversinasField =
+        document.getElementById("qtd-transversinas");
+      const qtdTransversinas =
+        parseInt(qtdTransversinasField ? qtdTransversinasField.value : 0) || 0;
       return qtdTransversinas > 0;
     },
   },
@@ -138,7 +155,8 @@ window.requiredFields = {
     min: 0,
     required: function () {
       const qtdPilaresField = document.getElementById("qtd-pilares");
-      const qtdPilares = parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
+      const qtdPilares =
+        parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
       return qtdPilares > 0;
     },
   },
@@ -147,32 +165,35 @@ window.requiredFields = {
     min: 0,
     required: function () {
       const qtdPilaresField = document.getElementById("qtd-pilares");
-      const qtdPilares = parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
+      const qtdPilares =
+        parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
       return qtdPilares > 0;
     },
   },
   "altura-travessa": {
     type: "number",
     min: 0,
-    max: function() {
+    max: function () {
       // Altura máxima da travessa = MENOR altura de apoio - 0.10m
       // (para garantir que não ultrapasse nenhum apoio)
-      const apoioAlturaFields = document.querySelectorAll(".apoio-altura-field");
+      const apoioAlturaFields = document.querySelectorAll(
+        ".apoio-altura-field"
+      );
       if (apoioAlturaFields.length === 0) return null; // Sem limite se não há apoios
-      
+
       let menorApoio = Infinity;
-      apoioAlturaFields.forEach(field => {
+      apoioAlturaFields.forEach((field) => {
         const altura = parseFloat(field.value) || 0;
         if (altura > 0 && altura < menorApoio) {
           menorApoio = altura;
         }
       });
-      
+
       // Se não há apoios válidos, não há limite
       if (menorApoio === Infinity || menorApoio === 0) return null;
-      
+
       // Altura máxima = menor apoio - 10cm
-      return menorApoio - 0.10;
+      return menorApoio - 0.1;
     },
     required: function () {
       const tipoTravessaField = document.getElementById("tipo-travessa");
@@ -224,32 +245,56 @@ window.requiredFields = {
     type: "number",
     min: 0.01,
     required: function () {
-      const tipoBarreiraField = document.getElementById("tipo-barreira-esquerda");
-      return tipoBarreiraField && tipoBarreiraField.value !== "" && tipoBarreiraField.value !== "Nenhum";
+      const tipoBarreiraField = document.getElementById(
+        "tipo-barreira-esquerda"
+      );
+      return (
+        tipoBarreiraField &&
+        tipoBarreiraField.value !== "" &&
+        tipoBarreiraField.value !== "Nenhum"
+      );
     },
   },
   "largura-barreira-direita": {
     type: "number",
     min: 0.01,
     required: function () {
-      const tipoBarreiraField = document.getElementById("tipo-barreira-direita");
-      return tipoBarreiraField && tipoBarreiraField.value !== "" && tipoBarreiraField.value !== "Nenhum";
+      const tipoBarreiraField = document.getElementById(
+        "tipo-barreira-direita"
+      );
+      return (
+        tipoBarreiraField &&
+        tipoBarreiraField.value !== "" &&
+        tipoBarreiraField.value !== "Nenhum"
+      );
     },
   },
   "largura-guarda-rodas-esquerdo": {
     type: "number",
     min: 0.01,
     required: function () {
-      const tipoGuardaRodasField = document.getElementById("guarda-rodas-esquerdo");
-      return tipoGuardaRodasField && tipoGuardaRodasField.value !== "" && tipoGuardaRodasField.value !== "Nenhum";
+      const tipoGuardaRodasField = document.getElementById(
+        "guarda-rodas-esquerdo"
+      );
+      return (
+        tipoGuardaRodasField &&
+        tipoGuardaRodasField.value !== "" &&
+        tipoGuardaRodasField.value !== "Nenhum"
+      );
     },
   },
   "largura-guarda-rodas-direito": {
     type: "number",
     min: 0.01,
     required: function () {
-      const tipoGuardaRodasField = document.getElementById("guarda-rodas-direito");
-      return tipoGuardaRodasField && tipoGuardaRodasField.value !== "" && tipoGuardaRodasField.value !== "Nenhum";
+      const tipoGuardaRodasField = document.getElementById(
+        "guarda-rodas-direito"
+      );
+      return (
+        tipoGuardaRodasField &&
+        tipoGuardaRodasField.value !== "" &&
+        tipoGuardaRodasField.value !== "Nenhum"
+      );
     },
   },
   "largura-calcada-esquerda": {
@@ -257,7 +302,11 @@ window.requiredFields = {
     min: 0.01,
     required: function () {
       const tipoCalcadaField = document.getElementById("tipo-calcada-esquerda");
-      return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";
+      return (
+        tipoCalcadaField &&
+        tipoCalcadaField.value !== "" &&
+        tipoCalcadaField.value !== "Nenhum"
+      );
     },
   },
   "largura-calcada-direita": {
@@ -265,16 +314,25 @@ window.requiredFields = {
     min: 0.01,
     required: function () {
       const tipoCalcadaField = document.getElementById("tipo-calcada-direita");
-      return tipoCalcadaField && tipoCalcadaField.value !== "" && tipoCalcadaField.value !== "Nenhum";
+      return (
+        tipoCalcadaField &&
+        tipoCalcadaField.value !== "" &&
+        tipoCalcadaField.value !== "Nenhum"
+      );
     },
   },
   "qtd-viga-contraventamento-pilar": {
     type: "number",
     min: 1,
     required: function () {
-      const tipoContraventamentoField = document.getElementById("tipo-contraventamento-pilar");
-      return tipoContraventamentoField && 
-             tipoContraventamentoField.value === "VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO";
+      const tipoContraventamentoField = document.getElementById(
+        "tipo-contraventamento-pilar"
+      );
+      return (
+        tipoContraventamentoField &&
+        tipoContraventamentoField.value ===
+          "VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO"
+      );
     },
   },
 };
@@ -298,7 +356,10 @@ function validateField(fieldId) {
 
   if (requiredFields[fieldId]) {
     const config = requiredFields[fieldId];
-    const isRequired = typeof config.required === "function" ? config.required() : config.required;
+    const isRequired =
+      typeof config.required === "function"
+        ? config.required()
+        : config.required;
 
     if (isRequired) {
       if (config.type === "number") {
@@ -306,34 +367,46 @@ function validateField(fieldId) {
         // Debug para campos de bloco sapata
         if (fieldId.includes("bloco-sapata")) {
         }
-        
+
         // Obter o valor mínimo (pode ser número ou função)
-        const minValue = typeof config.min === "function" ? config.min() : config.min;
-        
+        const minValue =
+          typeof config.min === "function" ? config.min() : config.min;
+
         // Campo vazio ou valor menor que o mínimo
-        if (field.value === "" || isNaN(value) || (minValue !== null && value < minValue)) {
+        if (
+          field.value === "" ||
+          isNaN(value) ||
+          (minValue !== null && value < minValue)
+        ) {
           field.classList.add("error");
           if (errorElement) {
             // Mensagem customizada para cortina-altura
             if (fieldId === "cortina-altura" && minValue > 0) {
-              errorElement.textContent = `A altura mínima deve ser ${minValue.toFixed(2)}m (ESPESSURA LAJE)`;
+              errorElement.textContent = `A altura mínima deve ser ${minValue.toFixed(
+                2
+              )}m (ESPESSURA LAJE)`;
             }
             errorElement.classList.add("visible");
           }
           return false;
         }
-        
+
         // Validar valor máximo
-        const maxValue = typeof config.max === "function" ? config.max() : config.max;
+        const maxValue =
+          typeof config.max === "function" ? config.max() : config.max;
         if (maxValue !== undefined && maxValue !== null && value > maxValue) {
           field.classList.add("error");
           if (errorElement) {
             // Mensagem customizada para altura-travessa
             if (fieldId === "altura-travessa") {
-              const menorApoio = maxValue + 0.10; // Recupera o menor apoio
-              errorElement.textContent = `A altura máxima da travessa é ${maxValue.toFixed(2)}m (Menor Apoio ${menorApoio.toFixed(2)}m - 0.10m)`;
+              const menorApoio = maxValue + 0.1; // Recupera o menor apoio
+              errorElement.textContent = `A altura máxima da travessa é ${maxValue.toFixed(
+                2
+              )}m (Menor Apoio ${menorApoio.toFixed(2)}m - 0.10m)`;
             } else {
-              errorElement.textContent = `Valor máximo permitido: ${maxValue.toFixed(2)}m`;
+              errorElement.textContent = `Valor máximo permitido: ${maxValue.toFixed(
+                2
+              )}m`;
             }
             errorElement.classList.add("visible");
           }
@@ -391,9 +464,18 @@ function validateApoios() {
     if (compField) compField.classList.remove("error");
     if (largField) largField.classList.remove("error");
 
-    const alturaVazia = !alturaField || !alturaField.value.trim() || parseFloat(alturaField.value) < 0.1;
-    const compVazio = !compField || !compField.value.trim() || parseFloat(compField.value) < 0.1;
-    const largVazio = !largField || !largField.value.trim() || parseFloat(largField.value) < 0.1;
+    const alturaVazia =
+      !alturaField ||
+      !alturaField.value.trim() ||
+      parseFloat(alturaField.value) < 0.1;
+    const compVazio =
+      !compField ||
+      !compField.value.trim() ||
+      parseFloat(compField.value) < 0.1;
+    const largVazio =
+      !largField ||
+      !largField.value.trim() ||
+      parseFloat(largField.value) < 0.1;
 
     if (alturaVazia || compVazio || largVazio) {
       valid = false;
@@ -413,7 +495,9 @@ function validateApoios() {
   });
 
   if (!valid && errorElement) {
-    errorElement.textContent = `Campos obrigatórios vazios: ${emptyFields.join(", ")}`;
+    errorElement.textContent = `Campos obrigatórios vazios: ${emptyFields.join(
+      ", "
+    )}`;
     errorElement.classList.add("visible");
     errorElement.style.display = "block";
   } else if (errorElement) {
@@ -478,18 +562,28 @@ function validateAlaWithEncountro() {
   if (!encontroField) return true;
 
   const encontroValue = encontroField.value;
-  
+
   // PAREDE FRONTAL PORTANTE ou ALVENARIA DE PEDRA exigem ala
-  if (encontroValue !== "ENCONTRO - PAREDE FRONTAL PORTANTE" && 
-      encontroValue !== "ENCONTRO DE ALVENARIA DE PEDRA") {
+  if (
+    encontroValue !== "ENCONTRO - PAREDE FRONTAL PORTANTE" &&
+    encontroValue !== "ENCONTRO DE ALVENARIA DE PEDRA"
+  ) {
     return true;
   }
 
   const alaParalelaField = document.getElementById("tipo-ala-paralela");
-  const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
+  const alaPerpendicularField = document.getElementById(
+    "tipo-ala-perpendicular"
+  );
 
-  const hasAlaParalela = alaParalelaField && alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum";
-  const hasAlaPerpendicular = alaPerpendicularField && alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum";
+  const hasAlaParalela =
+    alaParalelaField &&
+    alaParalelaField.value !== "" &&
+    alaParalelaField.value !== "Nenhum";
+  const hasAlaPerpendicular =
+    alaPerpendicularField &&
+    alaPerpendicularField.value !== "" &&
+    alaPerpendicularField.value !== "Nenhum";
 
   return hasAlaParalela || hasAlaPerpendicular;
 }
@@ -497,18 +591,20 @@ function validateAlaWithEncountro() {
 // Validar largura mínima (deslocamento esq + dir + 0.5)
 function validateMinimumWidth() {
   const largura = parseFloat(document.getElementById("largura").value) || 0;
-  const deslocEsq = parseFloat(document.getElementById("deslocamento-esquerdo").value) || 0;
-  const deslocDir = parseFloat(document.getElementById("deslocamento-direito").value) || 0;
-  
+  const deslocEsq =
+    parseFloat(document.getElementById("deslocamento-esquerdo").value) || 0;
+  const deslocDir =
+    parseFloat(document.getElementById("deslocamento-direito").value) || 0;
+
   const larguraMinima = deslocEsq + deslocDir + 0.5;
-  
+
   if (largura < larguraMinima) {
     document.getElementById("largura").classList.add("error");
     document.getElementById("deslocamento-esquerdo").classList.add("error");
     document.getElementById("deslocamento-direito").classList.add("error");
     return false;
   }
-  
+
   document.getElementById("largura").classList.remove("error");
   document.getElementById("deslocamento-esquerdo").classList.remove("error");
   document.getElementById("deslocamento-direito").classList.remove("error");
@@ -518,29 +614,31 @@ function validateMinimumWidth() {
 // Validar altura mínima (altura longarina + maior apoio)
 function validateMinimumHeight() {
   const alturaTotal = parseFloat(document.getElementById("altura").value) || 0;
-  const alturaLongarina = parseFloat(document.getElementById("altura-longarina").value) || 0;
-  
+  const alturaLongarina =
+    parseFloat(document.getElementById("altura-longarina").value) || 0;
+
   const errorElement = document.getElementById("altura-sum-error");
-  
+
   // Se não há longarinas, não validar altura
   const qtdLongarinasField = document.getElementById("qtd-longarinas");
-  const qtdLongarinas = parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
+  const qtdLongarinas =
+    parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
   if (qtdLongarinas === 0) {
     if (errorElement) errorElement.style.display = "none";
     return true;
   }
-  
+
   if (alturaTotal === 0 || alturaLongarina === 0) {
     if (errorElement) errorElement.style.display = "none";
     return true;
   }
-  
+
   const apoioAlturaFields = document.querySelectorAll(".apoio-altura-field");
   if (apoioAlturaFields.length === 0) {
     if (errorElement) errorElement.style.display = "none";
     return true;
   }
-  
+
   // Encontrar o maior apoio
   let maiorApoio = 0;
   let indexMaiorApoio = -1;
@@ -551,57 +649,62 @@ function validateMinimumHeight() {
       indexMaiorApoio = index;
     }
   });
-  
+
   const alturaMinima = alturaLongarina + maiorApoio;
   const tolerancia = 0.01;
-  
+
   if (Math.abs(alturaTotal - alturaMinima) > tolerancia) {
     document.getElementById("altura").classList.add("error");
     document.getElementById("altura-longarina").classList.add("error");
-    
+
     // Destacar o maior apoio em vermelho
     apoioAlturaFields.forEach((field, index) => {
       if (index === indexMaiorApoio) {
         field.classList.add("error");
       }
     });
-    
+
     // Mostrar mensagem de erro com botão da calculadora
     if (errorElement) {
       errorElement.style.display = "block";
     }
-    
+
     return false;
   }
-  
+
   document.getElementById("altura").classList.remove("error");
   document.getElementById("altura-longarina").classList.remove("error");
-  apoioAlturaFields.forEach(field => field.classList.remove("error"));
-  
+  apoioAlturaFields.forEach((field) => field.classList.remove("error"));
+
   if (errorElement) {
     errorElement.style.display = "none";
   }
-  
+
   return true;
 }
 
 // Validar ALA: OU paralela OU perpendicular, não ambas
 function validateAlaExclusivity() {
   const alaParalelaField = document.getElementById("tipo-ala-paralela");
-  const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
-  
+  const alaPerpendicularField = document.getElementById(
+    "tipo-ala-perpendicular"
+  );
+
   if (!alaParalelaField || !alaPerpendicularField) return true;
-  
-  const hasParalela = alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum";
-  const hasPerpendicular = alaPerpendicularField.value !== "" && alaPerpendicularField.value !== "Nenhum";
-  
+
+  const hasParalela =
+    alaParalelaField.value !== "" && alaParalelaField.value !== "Nenhum";
+  const hasPerpendicular =
+    alaPerpendicularField.value !== "" &&
+    alaPerpendicularField.value !== "Nenhum";
+
   // Se ambas estiverem selecionadas, é erro
   if (hasParalela && hasPerpendicular) {
     alaParalelaField.classList.add("error");
     alaPerpendicularField.classList.add("error");
     return false;
   }
-  
+
   alaParalelaField.classList.remove("error");
   alaPerpendicularField.classList.remove("error");
   return true;
@@ -611,7 +714,7 @@ function validateAlaExclusivity() {
 function validatePilarMaxLength() {
   const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
   let valid = true;
-  
+
   apoiosCompFields.forEach((field, index) => {
     const valor = parseFloat(field.value) || 0;
     if (valor > 2) {
@@ -621,31 +724,75 @@ function validatePilarMaxLength() {
       field.classList.remove("error");
     }
   });
-  
+
   return valid;
 }
 
 // Validar soma dos tramos
 function validateTramosSum() {
-  const comprimento = parseFloat(document.getElementById("comprimento").value) || 0;
+  const comprimento =
+    parseFloat(document.getElementById("comprimento").value) || 0;
   const tramosFields = document.querySelectorAll(".tramo-field");
-  
+
   if (tramosFields.length === 0) return true;
-  
+
   let somaTramos = 0;
-  tramosFields.forEach(field => {
+  tramosFields.forEach((field) => {
     somaTramos += parseFloat(field.value) || 0;
   });
-  
+
   const tolerancia = 0.01;
   if (Math.abs(somaTramos - comprimento) > tolerancia) {
     document.getElementById("comprimento").classList.add("error");
-    tramosFields.forEach(f => f.classList.add("error"));
+    tramosFields.forEach((f) => f.classList.add("error"));
     return false;
   }
-  
+
   document.getElementById("comprimento").classList.remove("error");
-  tramosFields.forEach(f => f.classList.remove("error"));
+  tramosFields.forEach((f) => f.classList.remove("error"));
+  return true;
+}
+
+// Validar altura longarina quando há APOIO na transição
+function validateAlturaLongarinaComApoioTransicao() {
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  const cortinaAlturaField = document.getElementById("cortina-altura");
+  const errorElement = document.getElementById("altura-longarina-apoio-error");
+
+  if (!tipoEncontroField || !alturaLongarinaField || !cortinaAlturaField) {
+    return true;
+  }
+
+  const hasApoioTransicao = tipoEncontroField.value === "APOIO";
+
+  if (!hasApoioTransicao) {
+    if (errorElement) errorElement.style.display = "none";
+    alturaLongarinaField.classList.remove("error");
+    cortinaAlturaField.classList.remove("error");
+    return true;
+  }
+
+  const alturaLongarina = parseFloat(alturaLongarinaField.value) || 0;
+  const cortinaAltura = parseFloat(cortinaAlturaField.value) || 0;
+  const diferencaMinima = 0.06; // 6cm = 0.06m
+
+  const diferencaAtual = cortinaAltura - alturaLongarina;
+
+  if (diferencaAtual < diferencaMinima) {
+    if (errorElement) {
+      errorElement.style.display = "block";
+      const diferencaNecessaria = (diferencaMinima - diferencaAtual).toFixed(2);
+      errorElement.innerHTML = `<strong>⚠️ APOIO na Transição:</strong> ALTURA CORTINA deve ser pelo menos <strong>6cm maior</strong> que ALTURA LONGARINA (para aparelho de apoio 5cm + berço 1cm).<br>Diferença atual: <strong>${(diferencaAtual * 100).toFixed(1)}cm</strong> | Necessário: <strong>6cm</strong><br>💡 Aumente a altura cortina em <strong>${(diferencaNecessaria * 100).toFixed(1)}cm</strong> ou diminua a altura longarina.`;
+    }
+    alturaLongarinaField.classList.add("error");
+    cortinaAlturaField.classList.add("error");
+    return false;
+  }
+
+  if (errorElement) errorElement.style.display = "none";
+  alturaLongarinaField.classList.remove("error");
+  cortinaAlturaField.classList.remove("error");
   return true;
 }
 
@@ -654,7 +801,6 @@ function validateForm() {
   let isValid = true;
   const missingFields = [];
 
-  
   for (const fieldId in requiredFields) {
     const isFieldValid = validateField(fieldId);
     if (!isFieldValid) {
@@ -679,7 +825,7 @@ function validateForm() {
     isValid = false;
     missingFields.push("Comprimento dos Tramos (mínimo 0.5m)");
   }
-  
+
   const tramosSumValid = validateTramosSum();
   if (!tramosSumValid) {
     isValid = false;
@@ -691,28 +837,39 @@ function validateForm() {
     isValid = false;
     missingFields.push("Dados dos Apoios");
   }
-  
+
   const widthValid = validateMinimumWidth();
   if (!widthValid) {
     isValid = false;
-    const deslocEsq = parseFloat(document.getElementById("deslocamento-esquerdo").value) || 0;
-    const deslocDir = parseFloat(document.getElementById("deslocamento-direito").value) || 0;
+    const deslocEsq =
+      parseFloat(document.getElementById("deslocamento-esquerdo").value) || 0;
+    const deslocDir =
+      parseFloat(document.getElementById("deslocamento-direito").value) || 0;
     const minWidth = deslocEsq + deslocDir + 0.5;
-    missingFields.push(`Largura mínima deve ser ${minWidth.toFixed(2)}m (DESLOCAMENTO ESQUERDO + DESLOCAMENTO DIREITO + 0.5)`);
+    missingFields.push(
+      `Largura mínima deve ser ${minWidth.toFixed(
+        2
+      )}m (DESLOCAMENTO ESQUERDO + DESLOCAMENTO DIREITO + 0.5)`
+    );
   }
-  
+
   const heightValid = validateMinimumHeight();
   if (!heightValid) {
     isValid = false;
-    const alturaLong = parseFloat(document.getElementById("altura-longarina").value) || 0;
+    const alturaLong =
+      parseFloat(document.getElementById("altura-longarina").value) || 0;
     const apoioFields = document.querySelectorAll(".apoio-altura-field");
     let maiorApoio = 0;
-    apoioFields.forEach(f => {
+    apoioFields.forEach((f) => {
       const h = parseFloat(f.value) || 0;
       if (h > maiorApoio) maiorApoio = h;
     });
     const minHeight = alturaLong + maiorApoio;
-    missingFields.push(`Altura deve ser ${minHeight.toFixed(2)}m (Altura Longarina + Maior Apoio) - Use a Calculadora 🧮`);
+    missingFields.push(
+      `Altura deve ser ${minHeight.toFixed(
+        2
+      )}m (Altura Longarina + Maior Apoio) - Use a Calculadora 🧮`
+    );
   }
 
   const lateralProtectionValid = validateLateralProtection();
@@ -724,19 +881,31 @@ function validateForm() {
   const alaWithEncontroValid = validateAlaWithEncountro();
   if (!alaWithEncontroValid) {
     isValid = false;
-    missingFields.push("Ala obrigatória quando o encontro é Parede Frontal Portante ou Alvenaria de Pedra");
+    missingFields.push(
+      "Ala obrigatória quando o encontro é Parede Frontal Portante ou Alvenaria de Pedra"
+    );
   }
 
   const alaExclusivityValid = validateAlaExclusivity();
   if (!alaExclusivityValid) {
     isValid = false;
-    missingFields.push("Ala: Selecione APENAS uma opção (Paralela OU Perpendicular), não ambas");
+    missingFields.push(
+      "Ala: Selecione APENAS uma opção (Paralela OU Perpendicular), não ambas"
+    );
   }
 
   const pilarMaxLengthValid = validatePilarMaxLength();
   if (!pilarMaxLengthValid) {
     isValid = false;
     missingFields.push("Comprimento dos pilares não pode ser maior que 2m");
+  }
+
+  const alturaLongarinaApoioValid = validateAlturaLongarinaComApoioTransicao();
+  if (!alturaLongarinaApoioValid) {
+    isValid = false;
+    missingFields.push(
+      "APOIO na Transição: ALTURA CORTINA deve ser 6cm maior que ALTURA LONGARINA"
+    );
   }
 
   // console.log(`Campos faltando (${missingFields.length}):`, missingFields);
@@ -746,14 +915,22 @@ function validateForm() {
 
 // Função para mostrar/ocultar campo de quantidade de viga de contraventamento
 function togglePillarBracingQuantityField() {
-  const tipoContraventamentoField = document.getElementById("tipo-contraventamento-pilar");
-  const qtdVigaGroup = document.getElementById("qtd-viga-contraventamento-group");
-  const qtdVigaField = document.getElementById("qtd-viga-contraventamento-pilar");
-  
+  const tipoContraventamentoField = document.getElementById(
+    "tipo-contraventamento-pilar"
+  );
+  const qtdVigaGroup = document.getElementById(
+    "qtd-viga-contraventamento-group"
+  );
+  const qtdVigaField = document.getElementById(
+    "qtd-viga-contraventamento-pilar"
+  );
+
   if (!tipoContraventamentoField || !qtdVigaGroup || !qtdVigaField) return;
-  
-  const isVigaContraventamento = tipoContraventamentoField.value === "VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO";
-  
+
+  const isVigaContraventamento =
+    tipoContraventamentoField.value ===
+    "VIGA DE CONTRAVENTAMENTO DE PILAR DE CONCRETO ARMADO";
+
   if (isVigaContraventamento) {
     qtdVigaGroup.style.display = "";
     qtdVigaField.setAttribute("required", "required");
@@ -762,7 +939,9 @@ function togglePillarBracingQuantityField() {
     qtdVigaField.removeAttribute("required");
     qtdVigaField.value = "";
     qtdVigaField.classList.remove("error");
-    const errorElement = document.getElementById("qtd-viga-contraventamento-pilar-error");
+    const errorElement = document.getElementById(
+      "qtd-viga-contraventamento-pilar-error"
+    );
     if (errorElement) errorElement.classList.remove("visible");
   }
 }
@@ -771,68 +950,87 @@ function togglePillarBracingQuantityField() {
 function checkLongarinaHeightWarning() {
   const tramosFields = document.querySelectorAll(".tramo-field");
   const alturaLongarinaField = document.getElementById("altura-longarina");
-  
+
   // Se não há longarinas, não gerar aviso
   const qtdLongarinasField = document.getElementById("qtd-longarinas");
-  const qtdLongarinas = parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
+  const qtdLongarinas =
+    parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
   if (qtdLongarinas === 0) {
     return null; // Sem longarinas, não validar
   }
-  
+
   if (!alturaLongarinaField || tramosFields.length === 0) {
     return null; // Sem dados para validar
   }
-  
+
   const alturaLongarina = parseFloat(alturaLongarinaField.value) || 0;
-  
+
   // Encontrar o maior tramo
   let maiorTramo = 0;
-  tramosFields.forEach(field => {
+  tramosFields.forEach((field) => {
     const comprimento = parseFloat(field.value) || 0;
     if (comprimento > maiorTramo) {
       maiorTramo = comprimento;
     }
   });
-  
+
   if (maiorTramo === 0 || alturaLongarina === 0) {
     return null; // Sem dados para validar
   }
-  
+
   // Quando há apenas 1 longarina, será uma seção caixão protendida, ideal é 5%
   // Quando há mais de 1 longarina, referência comum é 10%
   const isSecaoCaixao = qtdLongarinas === 1;
   const percentualMinimo = 0.05; // 5%
-  const percentualReferencia = isSecaoCaixao ? 0.05 : 0.10; // 5% para caixão, 10% para múltiplas longarinas
+  const percentualReferencia = isSecaoCaixao ? 0.05 : 0.1; // 5% para caixão, 10% para múltiplas longarinas
   const alturaMinima = maiorTramo * percentualMinimo;
   const alturaReferencia = maiorTramo * percentualReferencia;
-  
+
   const percentualAtual = (alturaLongarina / maiorTramo) * 100;
-  
+
   // Se a altura for menor que 5%, retorna aviso crítico
   if (alturaLongarina < alturaMinima) {
-    const tipoSecao = isSecaoCaixao ? '(Seção Caixão Protendida)' : '';
+    const tipoSecao = isSecaoCaixao ? "(Seção Caixão Protendida)" : "";
     return {
-      type: 'critical',
-      message: `⚠️ <strong>POSSÍVEL ERRO DE PREENCHIMENTO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) parece muito baixa em relação ao maior tramo (${maiorTramo.toFixed(2)}m). ${tipoSecao}<br>
-                • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(1)}% do vão<br>
-                • <strong>Referência comum:</strong> Em torno de ${(percentualReferencia * 100).toFixed(0)}% do vão (${alturaReferencia.toFixed(2)}m)<br>
-                • <strong>Mínimo estrutural típico:</strong> ${alturaMinima.toFixed(2)}m (5% do vão)<br>
-                <strong>Verifique se a medição está correta antes de salvar.</strong>`
+      type: "critical",
+      message: `⚠️ <strong>POSSÍVEL ERRO DE PREENCHIMENTO:</strong> A altura da longarina (${alturaLongarina.toFixed(
+        2
+      )}m) parece muito baixa em relação ao maior tramo (${maiorTramo.toFixed(
+        2
+      )}m). ${tipoSecao}<br>
+                • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(
+                  1
+                )}% do vão<br>
+                • <strong>Referência comum:</strong> Em torno de ${(
+                  percentualReferencia * 100
+                ).toFixed(0)}% do vão (${alturaReferencia.toFixed(2)}m)<br>
+                • <strong>Mínimo estrutural típico:</strong> ${alturaMinima.toFixed(
+                  2
+                )}m (5% do vão)<br>
+                <strong>Verifique se a medição está correta antes de salvar.</strong>`,
     };
   }
-  
+
   // Se a altura for menor que a referência mas maior que 5%, retorna aviso moderado
   // Para seção caixão (1 longarina), a referência é 5%, então este aviso não aparecerá
   if (alturaLongarina < alturaReferencia && !isSecaoCaixao) {
     return {
-      type: 'moderate',
-      message: `💡 <strong>VERIFICAÇÃO:</strong> A altura da longarina (${alturaLongarina.toFixed(2)}m) está abaixo do comum para o maior tramo (${maiorTramo.toFixed(2)}m).<br>
-                • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(1)}% do vão<br>
-                • <strong>Referência comum:</strong> Em torno de 10% do vão (${alturaReferencia.toFixed(2)}m)<br>
-                <strong>Confirme se a medição foi realizada corretamente.</strong>`
+      type: "moderate",
+      message: `💡 <strong>VERIFICAÇÃO:</strong> A altura da longarina (${alturaLongarina.toFixed(
+        2
+      )}m) está abaixo do comum para o maior tramo (${maiorTramo.toFixed(
+        2
+      )}m).<br>
+                • <strong>Percentual atual:</strong> ${percentualAtual.toFixed(
+                  1
+                )}% do vão<br>
+                • <strong>Referência comum:</strong> Em torno de 10% do vão (${alturaReferencia.toFixed(
+                  2
+                )}m)<br>
+                <strong>Confirme se a medição foi realizada corretamente.</strong>`,
     };
   }
-  
+
   return null; // Tudo OK
 }
 
@@ -842,58 +1040,71 @@ function checkCortinaHeightWarning() {
   const tipoAparelhoApoioField = document.getElementById("tipo-aparelho-apoio");
   const cortinaAlturaField = document.getElementById("cortina-altura");
   const alturaLongarinaField = document.getElementById("altura-longarina");
-  
-  if (!tipoEncontroField || !tipoAparelhoApoioField || !cortinaAlturaField || !alturaLongarinaField) {
+
+  if (
+    !tipoEncontroField ||
+    !tipoAparelhoApoioField ||
+    !cortinaAlturaField ||
+    !alturaLongarinaField
+  ) {
     return null; // Campos não existem
   }
-  
+
   const tipoEncontro = tipoEncontroField.value;
   const tipoAparelhoApoio = tipoAparelhoApoioField.value;
   const cortinaAltura = parseFloat(cortinaAlturaField.value) || 0;
   const alturaLongarina = parseFloat(alturaLongarinaField.value) || 0;
-  
+
   // Verificar se tem parede frontal portante OU encontro laje
-  const temParedeFrontal = tipoEncontro === "ENCONTRO - PAREDE FRONTAL PORTANTE";
+  const temParedeFrontal =
+    tipoEncontro === "ENCONTRO - PAREDE FRONTAL PORTANTE";
   const temEncontroLaje = tipoEncontro === "ENCONTRO LAJE";
-  
+
   // Verificar se tem aparelho de apoio
-  const temAparelhoApoio = tipoAparelhoApoio !== "" && tipoAparelhoApoio !== "Nenhum";
-  
+  const temAparelhoApoio =
+    tipoAparelhoApoio !== "" && tipoAparelhoApoio !== "Nenhum";
+
   // Se tem (parede frontal OU encontro laje) E tem aparelho de apoio
   if ((temParedeFrontal || temEncontroLaje) && temAparelhoApoio) {
     const alturaCortinaMinima = alturaLongarina + 0.05; // 5cm = 0.05m
     const diferenca = alturaCortinaMinima - cortinaAltura;
-    
+
     // Usar tolerância de 1mm para evitar problemas de precisão de ponto flutuante
     if (diferenca > 0.001) {
       return {
-        type: 'critical',
+        type: "critical",
         message: `⚠️ <strong>ATENÇÃO:</strong> Quando há ${tipoEncontro} com aparelho de apoio, a altura da cortina deve ter pelo menos 5cm a mais que a longarina.<br>
-                  • <strong>Altura da longarina:</strong> ${alturaLongarina.toFixed(2)}m<br>
-                  • <strong>Altura da cortina atual:</strong> ${cortinaAltura.toFixed(2)}m<br>
-                  • <strong>Altura mínima recomendada:</strong> ${alturaCortinaMinima.toFixed(2)}m<br>
-                  <strong>Deseja revisar a altura da cortina ou da longarina?</strong>`
+                  • <strong>Altura da longarina:</strong> ${alturaLongarina.toFixed(
+                    2
+                  )}m<br>
+                  • <strong>Altura da cortina atual:</strong> ${cortinaAltura.toFixed(
+                    2
+                  )}m<br>
+                  • <strong>Altura mínima recomendada:</strong> ${alturaCortinaMinima.toFixed(
+                    2
+                  )}m<br>
+                  <strong>Deseja revisar a altura da cortina ou da longarina?</strong>`,
       };
     }
   }
-  
+
   return null; // Tudo OK
 }
 
 // Obter todos os avisos (não bloqueadores)
 function getWarnings() {
   const warnings = [];
-  
+
   const longarinaWarning = checkLongarinaHeightWarning();
   if (longarinaWarning) {
     warnings.push(longarinaWarning);
   }
-  
+
   const cortinaWarning = checkCortinaHeightWarning();
   if (cortinaWarning) {
     warnings.push(cortinaWarning);
   }
-  
+
   return warnings;
 }
 
@@ -908,6 +1119,8 @@ window.validatePilarMaxLength = validatePilarMaxLength;
 window.validateMinimumWidth = validateMinimumWidth;
 window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;
+window.validateAlturaLongarinaComApoioTransicao =
+  validateAlturaLongarinaComApoioTransicao;
 window.validateForm = validateForm;
 window.togglePillarBracingQuantityField = togglePillarBracingQuantityField;
 window.checkLongarinaHeightWarning = checkLongarinaHeightWarning;

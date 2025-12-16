@@ -15,7 +15,9 @@ function initDB() {
       const oldVersion = event.oldVersion;
 
       if (oldVersion < 1) {
-        const objectStore = database.createObjectStore("obras", { keyPath: "CODIGO" });
+        const objectStore = database.createObjectStore("obras", {
+          keyPath: "CODIGO",
+        });
         objectStore.createIndex("CODIGO", "CODIGO", { unique: true });
         objectStore.createIndex("LOTE", "LOTE", { unique: false });
       } else if (oldVersion === 1) {
@@ -27,7 +29,9 @@ function initDB() {
 
       if (oldVersion < 3) {
         if (!database.objectStoreNames.contains("pontes")) {
-          const pontesStore = database.createObjectStore("pontes", { keyPath: "Id" });
+          const pontesStore = database.createObjectStore("pontes", {
+            keyPath: "Id",
+          });
           pontesStore.createIndex("CodigoSgo", "CodigoSgo", { unique: true });
           pontesStore.createIndex("Uf", "Uf", { unique: false });
           pontesStore.createIndex("Br", "Br", { unique: false });
@@ -66,7 +70,7 @@ function loadWorksList() {
     // Calcular contadores
     const totalWorks = works.length;
     let modeledWorks = 0;
-    
+
     if (totalWorks > 0) {
       works.forEach((work) => {
         const isModelado = work.MODELADO === "TRUE" || work.MODELADO === true;
@@ -75,14 +79,15 @@ function loadWorksList() {
         }
       });
     }
-    
+
     const pendingWorks = totalWorks - modeledWorks;
-    
+
     // Atualizar contadores no DOM
     updateWorksCounter(totalWorks, modeledWorks, pendingWorks);
 
     if (works.length === 0) {
-      worksList.innerHTML = '<div class="work-item">Nenhuma obra cadastrada</div>';
+      worksList.innerHTML =
+        '<div class="work-item">Nenhuma obra cadastrada</div>';
       return;
     }
 
@@ -99,18 +104,23 @@ function loadWorksList() {
 
       // Verificar se a obra foi modelada
       const isModelado = work.MODELADO === "TRUE" || work.MODELADO === true;
-      const checkIcon = isModelado 
-        ? '<span class="modelado-check">✅</span>' 
+      const checkIcon = isModelado
+        ? '<span class="modelado-check">✅</span>'
         : '<span class="no-check"></span>';
 
       // Formatar LOTE para exibição
-      const loteFormatado = work.LOTE && typeof formatLote === 'function' 
-        ? formatLote(work.LOTE) 
-        : (work.LOTE || "N/A");
+      const loteFormatado =
+        work.LOTE && typeof formatLote === "function"
+          ? formatLote(work.LOTE)
+          : work.LOTE || "N/A";
 
       workItem.innerHTML = `
-        <span>${checkIcon}${work.CODIGO} - Lote: ${loteFormatado} - ${work.NOME || "Sem nome"}</span>
-        <button type="button" class="delete-btn" onclick="deleteWork('${work.CODIGO}', event)">Excluir</button>
+        <span>${checkIcon}${work.CODIGO} - Lote: ${loteFormatado} - ${
+        work.NOME || "Sem nome"
+      }</span>
+        <button type="button" class="delete-btn" onclick="deleteWork('${
+          work.CODIGO
+        }', event)">Excluir</button>
       `;
 
       // Adicionar evento de clique para carregar a obra
@@ -135,17 +145,20 @@ function saveCurrentWork() {
   try {
     // console.log("=== TENTANDO SALVAR OBRA ===");
     const { isValid, missingFields } = validateForm();
-    
-    console.log(`Validação: ${isValid ? '✅ VÁLIDA' : '❌ INVÁLIDA'}`);
+
+    console.log(`Validação: ${isValid ? "✅ VÁLIDA" : "❌ INVÁLIDA"}`);
     // console.log(`Campos faltando: ${missingFields.length}`, missingFields);
-    
+
     if (!isValid) {
       console.error("❌ BLOQUEADO: Não é possível salvar com campos inválidos");
-      alert("❌ ERRO: Não é possível salvar!\n\nCampos obrigatórios faltando:\n" + missingFields.join("\n"));
+      alert(
+        "❌ ERRO: Não é possível salvar!\n\nCampos obrigatórios faltando:\n" +
+          missingFields.join("\n")
+      );
       closeSummaryModal();
       return;
     }
-    
+
     // console.log("✅ Validação passou, prosseguindo com salvamento...");
 
     const form = document.getElementById("oae-form");
@@ -158,12 +171,27 @@ function saveCurrentWork() {
       }
     }
 
-    workData["MODELADO"] = document.getElementById("modelado").checked ? "TRUE" : "FALSE";
-    workData["REFORCO VIGA"] = document.getElementById("beam-reinforcement").checked;
+    workData["MODELADO"] = document.getElementById("modelado").checked
+      ? "TRUE"
+      : "FALSE";
+    workData["REFORCO VIGA"] =
+      document.getElementById("beam-reinforcement").checked;
 
-    
+    // Capturar campos que podem estar disabled (FormData ignora campos disabled)
+    const tipoTravessaField = document.getElementById("tipo-travessa");
+    if (tipoTravessaField) {
+      workData["TIPO TRAVESSA"] = tipoTravessaField.value;
+    }
+
+    const tipoApoioTransicaoField = document.getElementById(
+      "tipo-apoio-transicao"
+    );
+    if (tipoApoioTransicaoField) {
+      workData["TIPO APOIO TRANSICAO"] = tipoApoioTransicaoField.value;
+    }
+
     // Formatar LOTE antes de salvar
-    if (workData["LOTE"] && typeof formatLote === 'function') {
+    if (workData["LOTE"] && typeof formatLote === "function") {
       workData["LOTE"] = formatLote(workData["LOTE"]);
     }
 
@@ -178,19 +206,19 @@ function saveCurrentWork() {
     const apoiosAlturas = [];
     const apoiosLarguras = [];
     const apoiosComprimentos = [];
-    
+
     document.querySelectorAll(".apoio-altura-field").forEach((field) => {
       apoiosAlturas.push(field.value || "0.00");
     });
-    
+
     document.querySelectorAll(".apoio-larg-field").forEach((field) => {
       apoiosLarguras.push(field.value || "0.00");
     });
-    
+
     document.querySelectorAll(".apoio-comp-field").forEach((field) => {
       apoiosComprimentos.push(field.value || "0.00");
     });
-    
+
     workData["ALTURA APOIO"] = apoiosAlturas.join(";");
     workData["LARGURA PILAR"] = apoiosLarguras.join(";");
     workData["COMPRIMENTO PILARES"] = apoiosComprimentos.join(";");
@@ -244,7 +272,7 @@ function loadWork(codigo) {
       }
 
       // Limpar formulário antes de carregar nova obra para evitar dados de outras obras
-      if (typeof clearFormSilent === 'function') {
+      if (typeof clearFormSilent === "function") {
         clearFormSilent();
       }
 
@@ -277,7 +305,7 @@ function deleteWork(codigo, event) {
   if (event) {
     event.stopPropagation();
   }
-  
+
   if (!confirm(`Tem certeza que deseja excluir a obra ${codigo}?`)) {
     return;
   }
@@ -295,7 +323,7 @@ function deleteWork(codigo, event) {
     alert("Obra excluída com sucesso!");
     if (currentWorkCode === codigo) {
       currentWorkCode = null;
-      if (typeof clearFormSilent === 'function') {
+      if (typeof clearFormSilent === "function") {
         clearFormSilent();
       }
     }
@@ -329,7 +357,9 @@ function clearDatabase() {
 
   if (!db) {
     console.error("Banco de dados não inicializado");
-    alert("❌ Banco de dados não disponível. Recarregue a página e tente novamente.");
+    alert(
+      "❌ Banco de dados não disponível. Recarregue a página e tente novamente."
+    );
     return;
   }
 
@@ -341,14 +371,16 @@ function clearDatabase() {
 
     request.onsuccess = function () {
       console.log("Banco de dados limpo com sucesso!");
-      alert("✅ Banco de dados limpo com sucesso! Todas as obras foram removidas.");
+      alert(
+        "✅ Banco de dados limpo com sucesso! Todas as obras foram removidas."
+      );
       currentWorkCode = null;
-      
+
       // Usar clearFormSilent para não ter confirmação dupla
-      if (typeof clearFormSilent === 'function') {
+      if (typeof clearFormSilent === "function") {
         clearFormSilent();
       }
-      
+
       loadWorksList();
     };
 
@@ -373,7 +405,9 @@ function clearDatabase() {
 
 // Filtrar obras
 function filterWorks() {
-  const codigoFilter = document.getElementById("filter-works").value.toLowerCase();
+  const codigoFilter = document
+    .getElementById("filter-works")
+    .value.toLowerCase();
   const loteFilter = document.getElementById("filter-lote").value.toLowerCase();
 
   if (!db) return;
@@ -390,11 +424,13 @@ function filterWorks() {
 
     const filtered = works.filter(
       (work) =>
-        work.CODIGO.toLowerCase().includes(codigoFilter) && (work.LOTE || "").toLowerCase().includes(loteFilter)
+        work.CODIGO.toLowerCase().includes(codigoFilter) &&
+        (work.LOTE || "").toLowerCase().includes(loteFilter)
     );
 
     if (filtered.length === 0) {
-      worksList.innerHTML = '<div class="work-item">Nenhuma obra encontrada</div>';
+      worksList.innerHTML =
+        '<div class="work-item">Nenhuma obra encontrada</div>';
       return;
     }
 
@@ -403,12 +439,16 @@ function filterWorks() {
     filtered.forEach((work) => {
       const workItem = document.createElement("div");
       workItem.className = "work-item";
-      const modeladoIcon = work.MODELADO === "TRUE" ? '<span class="modelado-check">✓</span>' : '<span class="no-check"></span>';
+      const modeladoIcon =
+        work.MODELADO === "TRUE"
+          ? '<span class="modelado-check">✓</span>'
+          : '<span class="no-check"></span>';
 
       // Formatar LOTE para exibição
-      const loteFormatado = work.LOTE && typeof formatLote === 'function' 
-        ? formatLote(work.LOTE) 
-        : (work.LOTE || "N/A");
+      const loteFormatado =
+        work.LOTE && typeof formatLote === "function"
+          ? formatLote(work.LOTE)
+          : work.LOTE || "N/A";
 
       workItem.innerHTML = `
         <span>${modeladoIcon}${work.CODIGO} - Lote: ${loteFormatado}</span>
@@ -441,7 +481,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-
 // Sistema de abas
 function initTabSystem() {
   const tabs = document.querySelectorAll(".tab");
@@ -457,8 +496,12 @@ function initTabSystem() {
 
       const tabId = this.getAttribute("data-tab");
 
-      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+      document
+        .querySelectorAll(".tab")
+        .forEach((t) => t.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-content")
+        .forEach((c) => c.classList.remove("active"));
 
       this.classList.add("active");
 
@@ -481,7 +524,7 @@ function showSaveReminder() {
     const reminder = document.getElementById("save-reminder");
     if (reminder) {
       reminder.style.display = "block";
-      
+
       // Ocultar o lembrete após 5 segundos
       setTimeout(function () {
         reminder.style.display = "none";
@@ -506,7 +549,7 @@ function updateWorksCounter(total, modeled, pending) {
   const totalElement = document.getElementById("total-works");
   const modeledElement = document.getElementById("modeled-works");
   const pendingElement = document.getElementById("pending-works");
-  
+
   if (totalElement) totalElement.textContent = total;
   if (modeledElement) modeledElement.textContent = modeled;
   if (pendingElement) pendingElement.textContent = pending;
@@ -518,18 +561,18 @@ let refreshClickTimeout = null;
 
 function trackRefreshClicks() {
   refreshClickCount++;
-  
+
   // Resetar contador após 3 segundos de inatividade
   if (refreshClickTimeout) {
     clearTimeout(refreshClickTimeout);
   }
-  
+
   refreshClickTimeout = setTimeout(() => {
     if (refreshClickCount < 5) {
       refreshClickCount = 0;
     }
   }, 3000);
-  
+
   // Revelar botão após 5 cliques
   if (refreshClickCount >= 5) {
     revealExportJsonButton();
@@ -539,17 +582,17 @@ function trackRefreshClicks() {
 
 function revealExportJsonButton() {
   const exportJsonBtn = document.getElementById("export-json-btn");
-  
+
   if (exportJsonBtn && exportJsonBtn.classList.contains("hidden-feature")) {
     exportJsonBtn.classList.remove("hidden-feature");
-    
+
     // Adicionar animação de revelação
     exportJsonBtn.style.animation = "fadeInScale 0.5s ease-out";
   }
 }
 
 // Adicionar animação CSS dinamicamente
-const style = document.createElement('style');
+const style = document.createElement("style");
 style.textContent = `
   @keyframes fadeInScale {
     0% {
@@ -572,7 +615,9 @@ function initBlocoSapataVisibility() {
   const tipoSelect = document.getElementById("tipo-bloco-sapata");
   const alturaGroup = document.getElementById("altura-bloco-sapata-group");
   const larguraGroup = document.getElementById("largura-bloco-sapata-group");
-  const comprimentoGroup = document.getElementById("comprimento-bloco-sapata-group");
+  const comprimentoGroup = document.getElementById(
+    "comprimento-bloco-sapata-group"
+  );
 
   if (!tipoSelect || !alturaGroup || !larguraGroup || !comprimentoGroup) {
     return;
@@ -580,8 +625,10 @@ function initBlocoSapataVisibility() {
 
   function toggleBlocoSapataFields() {
     const selectedValue = tipoSelect.value;
-    const shouldShow = selectedValue === window.CONSTANTS.TIPO_BLOCO_SAPATA.BLOCO_SAPATA_CONCRETO_ARMADO;
-    
+    const shouldShow =
+      selectedValue ===
+      window.CONSTANTS.TIPO_BLOCO_SAPATA.BLOCO_SAPATA_CONCRETO_ARMADO;
+
     alturaGroup.style.display = shouldShow ? "block" : "none";
     larguraGroup.style.display = shouldShow ? "block" : "none";
     comprimentoGroup.style.display = shouldShow ? "block" : "none";
@@ -608,18 +655,25 @@ function initBarreiraGuardaRodasExclusion() {
   const barreiraDireita = document.getElementById("tipo-barreira-direita");
   const guardaRodasDireito = document.getElementById("guarda-rodas-direito");
 
-  if (!barreiraEsquerda || !guardaRodasEsquerdo || !barreiraDireita || !guardaRodasDireito) {
+  if (
+    !barreiraEsquerda ||
+    !guardaRodasEsquerdo ||
+    !barreiraDireita ||
+    !guardaRodasDireito
+  ) {
     return;
   }
 
   // Função para verificar se uma barreira impede guarda rodas
   function isBarreiraExcludente(value) {
-    return value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_NEW_JERSEY || 
-           value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_COM_GUARDA_CORPO;
+    return (
+      value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_NEW_JERSEY ||
+      value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_COM_GUARDA_CORPO
+    );
   }
 
   // Lado ESQUERDO
-  barreiraEsquerda.addEventListener("change", function() {
+  barreiraEsquerda.addEventListener("change", function () {
     if (isBarreiraExcludente(this.value)) {
       guardaRodasEsquerdo.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       guardaRodasEsquerdo.disabled = true;
@@ -628,9 +682,11 @@ function initBarreiraGuardaRodasExclusion() {
     } else {
       // Só reabilitar se não houver calçada selecionada
       const calcadaEsquerda = document.getElementById("tipo-calcada-esquerda");
-      const hasCalcadaSelecionada = calcadaEsquerda && 
-        calcadaEsquerda.value === window.CONSTANTS.TIPO_CALCADA.CALCADA_PEDESTRES_CONCRETO_ARMADO;
-      
+      const hasCalcadaSelecionada =
+        calcadaEsquerda &&
+        calcadaEsquerda.value ===
+          window.CONSTANTS.TIPO_CALCADA.CALCADA_PEDESTRES_CONCRETO_ARMADO;
+
       if (!hasCalcadaSelecionada) {
         guardaRodasEsquerdo.disabled = false;
         guardaRodasEsquerdo.style.opacity = "1";
@@ -639,9 +695,11 @@ function initBarreiraGuardaRodasExclusion() {
     }
   });
 
-  guardaRodasEsquerdo.addEventListener("change", function() {
-    if (this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-        this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  guardaRodasEsquerdo.addEventListener("change", function () {
+    if (
+      this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+      this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+    ) {
       if (isBarreiraExcludente(barreiraEsquerda.value)) {
         barreiraEsquerda.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       }
@@ -649,7 +707,7 @@ function initBarreiraGuardaRodasExclusion() {
       barreiraEsquerda.style.opacity = "0.6";
       barreiraEsquerda.style.cursor = "not-allowed";
       // Remover opções excludentes temporariamente
-      Array.from(barreiraEsquerda.options).forEach(option => {
+      Array.from(barreiraEsquerda.options).forEach((option) => {
         if (isBarreiraExcludente(option.value)) {
           option.disabled = true;
         }
@@ -659,14 +717,14 @@ function initBarreiraGuardaRodasExclusion() {
       barreiraEsquerda.style.opacity = "1";
       barreiraEsquerda.style.cursor = "pointer";
       // Reabilitar opções
-      Array.from(barreiraEsquerda.options).forEach(option => {
+      Array.from(barreiraEsquerda.options).forEach((option) => {
         option.disabled = false;
       });
     }
   });
 
   // Lado DIREITO
-  barreiraDireita.addEventListener("change", function() {
+  barreiraDireita.addEventListener("change", function () {
     if (isBarreiraExcludente(this.value)) {
       guardaRodasDireito.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       guardaRodasDireito.disabled = true;
@@ -675,9 +733,11 @@ function initBarreiraGuardaRodasExclusion() {
     } else {
       // Só reabilitar se não houver calçada selecionada
       const calcadaDireita = document.getElementById("tipo-calcada-direita");
-      const hasCalcadaSelecionada = calcadaDireita && 
-        calcadaDireita.value === window.CONSTANTS.TIPO_CALCADA.CALCADA_PEDESTRES_CONCRETO_ARMADO;
-      
+      const hasCalcadaSelecionada =
+        calcadaDireita &&
+        calcadaDireita.value ===
+          window.CONSTANTS.TIPO_CALCADA.CALCADA_PEDESTRES_CONCRETO_ARMADO;
+
       if (!hasCalcadaSelecionada) {
         guardaRodasDireito.disabled = false;
         guardaRodasDireito.style.opacity = "1";
@@ -686,9 +746,11 @@ function initBarreiraGuardaRodasExclusion() {
     }
   });
 
-  guardaRodasDireito.addEventListener("change", function() {
-    if (this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-        this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  guardaRodasDireito.addEventListener("change", function () {
+    if (
+      this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+      this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+    ) {
       if (isBarreiraExcludente(barreiraDireita.value)) {
         barreiraDireita.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       }
@@ -696,7 +758,7 @@ function initBarreiraGuardaRodasExclusion() {
       barreiraDireita.style.opacity = "0.6";
       barreiraDireita.style.cursor = "not-allowed";
       // Remover opções excludentes temporariamente
-      Array.from(barreiraDireita.options).forEach(option => {
+      Array.from(barreiraDireita.options).forEach((option) => {
         if (isBarreiraExcludente(option.value)) {
           option.disabled = true;
         }
@@ -706,7 +768,7 @@ function initBarreiraGuardaRodasExclusion() {
       barreiraDireita.style.opacity = "1";
       barreiraDireita.style.cursor = "pointer";
       // Reabilitar opções
-      Array.from(barreiraDireita.options).forEach(option => {
+      Array.from(barreiraDireita.options).forEach((option) => {
         option.disabled = false;
       });
     }
@@ -727,30 +789,34 @@ function initBarreiraGuardaRodasExclusion() {
     guardaRodasDireito.style.cursor = "not-allowed";
   }
 
-  if (guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-      guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  if (
+    guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+    guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+  ) {
     if (isBarreiraExcludente(barreiraEsquerda.value)) {
       barreiraEsquerda.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
     }
     barreiraEsquerda.disabled = true;
     barreiraEsquerda.style.opacity = "0.6";
     barreiraEsquerda.style.cursor = "not-allowed";
-    Array.from(barreiraEsquerda.options).forEach(option => {
+    Array.from(barreiraEsquerda.options).forEach((option) => {
       if (isBarreiraExcludente(option.value)) {
         option.disabled = true;
       }
     });
   }
 
-  if (guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-      guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  if (
+    guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+    guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+  ) {
     if (isBarreiraExcludente(barreiraDireita.value)) {
       barreiraDireita.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
     }
     barreiraDireita.disabled = true;
     barreiraDireita.style.opacity = "0.6";
     barreiraDireita.style.cursor = "not-allowed";
-    Array.from(barreiraDireita.options).forEach(option => {
+    Array.from(barreiraDireita.options).forEach((option) => {
       if (isBarreiraExcludente(option.value)) {
         option.disabled = true;
       }
@@ -765,17 +831,24 @@ function initCalcadaGuardaRodasExclusion() {
   const calcadaDireita = document.getElementById("tipo-calcada-direita");
   const guardaRodasDireito = document.getElementById("guarda-rodas-direito");
 
-  if (!calcadaEsquerda || !guardaRodasEsquerdo || !calcadaDireita || !guardaRodasDireito) {
+  if (
+    !calcadaEsquerda ||
+    !guardaRodasEsquerdo ||
+    !calcadaDireita ||
+    !guardaRodasDireito
+  ) {
     return;
   }
 
   // Função para verificar se calçada está selecionada
   function hasCalcada(value) {
-    return value === window.CONSTANTS.TIPO_CALCADA.CALCADA_PEDESTRES_CONCRETO_ARMADO;
+    return (
+      value === window.CONSTANTS.TIPO_CALCADA.CALCADA_PEDESTRES_CONCRETO_ARMADO
+    );
   }
 
   // Lado ESQUERDO
-  calcadaEsquerda.addEventListener("change", function() {
+  calcadaEsquerda.addEventListener("change", function () {
     if (hasCalcada(this.value)) {
       guardaRodasEsquerdo.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       guardaRodasEsquerdo.disabled = true;
@@ -783,13 +856,18 @@ function initCalcadaGuardaRodasExclusion() {
       guardaRodasEsquerdo.style.cursor = "not-allowed";
     } else {
       // Só reabilitar se não houver barreira excludente selecionada
-      const barreiraEsquerda = document.getElementById("tipo-barreira-esquerda");
+      const barreiraEsquerda = document.getElementById(
+        "tipo-barreira-esquerda"
+      );
       const isBarreiraExcludente = (value) => {
-        return value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_NEW_JERSEY || 
-               value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_COM_GUARDA_CORPO;
+        return (
+          value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_NEW_JERSEY ||
+          value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_COM_GUARDA_CORPO
+        );
       };
-      const hasBarreiraExcludente = barreiraEsquerda && isBarreiraExcludente(barreiraEsquerda.value);
-      
+      const hasBarreiraExcludente =
+        barreiraEsquerda && isBarreiraExcludente(barreiraEsquerda.value);
+
       if (!hasBarreiraExcludente) {
         guardaRodasEsquerdo.disabled = false;
         guardaRodasEsquerdo.style.opacity = "1";
@@ -798,9 +876,11 @@ function initCalcadaGuardaRodasExclusion() {
     }
   });
 
-  guardaRodasEsquerdo.addEventListener("change", function() {
-    if (this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-        this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  guardaRodasEsquerdo.addEventListener("change", function () {
+    if (
+      this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+      this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+    ) {
       if (hasCalcada(calcadaEsquerda.value)) {
         calcadaEsquerda.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       }
@@ -808,7 +888,7 @@ function initCalcadaGuardaRodasExclusion() {
       calcadaEsquerda.style.opacity = "0.6";
       calcadaEsquerda.style.cursor = "not-allowed";
       // Desabilitar opção de calçada
-      Array.from(calcadaEsquerda.options).forEach(option => {
+      Array.from(calcadaEsquerda.options).forEach((option) => {
         if (hasCalcada(option.value)) {
           option.disabled = true;
         }
@@ -818,14 +898,14 @@ function initCalcadaGuardaRodasExclusion() {
       calcadaEsquerda.style.opacity = "1";
       calcadaEsquerda.style.cursor = "pointer";
       // Reabilitar opções
-      Array.from(calcadaEsquerda.options).forEach(option => {
+      Array.from(calcadaEsquerda.options).forEach((option) => {
         option.disabled = false;
       });
     }
   });
 
   // Lado DIREITO
-  calcadaDireita.addEventListener("change", function() {
+  calcadaDireita.addEventListener("change", function () {
     if (hasCalcada(this.value)) {
       guardaRodasDireito.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       guardaRodasDireito.disabled = true;
@@ -835,11 +915,14 @@ function initCalcadaGuardaRodasExclusion() {
       // Só reabilitar se não houver barreira excludente selecionada
       const barreiraDireita = document.getElementById("tipo-barreira-direita");
       const isBarreiraExcludente = (value) => {
-        return value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_NEW_JERSEY || 
-               value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_COM_GUARDA_CORPO;
+        return (
+          value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_NEW_JERSEY ||
+          value === window.CONSTANTS.TIPO_BARREIRA.BARREIRA_COM_GUARDA_CORPO
+        );
       };
-      const hasBarreiraExcludente = barreiraDireita && isBarreiraExcludente(barreiraDireita.value);
-      
+      const hasBarreiraExcludente =
+        barreiraDireita && isBarreiraExcludente(barreiraDireita.value);
+
       if (!hasBarreiraExcludente) {
         guardaRodasDireito.disabled = false;
         guardaRodasDireito.style.opacity = "1";
@@ -848,9 +931,11 @@ function initCalcadaGuardaRodasExclusion() {
     }
   });
 
-  guardaRodasDireito.addEventListener("change", function() {
-    if (this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-        this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  guardaRodasDireito.addEventListener("change", function () {
+    if (
+      this.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+      this.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+    ) {
       if (hasCalcada(calcadaDireita.value)) {
         calcadaDireita.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       }
@@ -858,7 +943,7 @@ function initCalcadaGuardaRodasExclusion() {
       calcadaDireita.style.opacity = "0.6";
       calcadaDireita.style.cursor = "not-allowed";
       // Desabilitar opção de calçada
-      Array.from(calcadaDireita.options).forEach(option => {
+      Array.from(calcadaDireita.options).forEach((option) => {
         if (hasCalcada(option.value)) {
           option.disabled = true;
         }
@@ -868,7 +953,7 @@ function initCalcadaGuardaRodasExclusion() {
       calcadaDireita.style.opacity = "1";
       calcadaDireita.style.cursor = "pointer";
       // Reabilitar opções
-      Array.from(calcadaDireita.options).forEach(option => {
+      Array.from(calcadaDireita.options).forEach((option) => {
         option.disabled = false;
       });
     }
@@ -889,30 +974,34 @@ function initCalcadaGuardaRodasExclusion() {
     guardaRodasDireito.style.cursor = "not-allowed";
   }
 
-  if (guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-      guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  if (
+    guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+    guardaRodasEsquerdo.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+  ) {
     if (hasCalcada(calcadaEsquerda.value)) {
       calcadaEsquerda.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
     }
     calcadaEsquerda.disabled = true;
     calcadaEsquerda.style.opacity = "0.6";
     calcadaEsquerda.style.cursor = "not-allowed";
-    Array.from(calcadaEsquerda.options).forEach(option => {
+    Array.from(calcadaEsquerda.options).forEach((option) => {
       if (hasCalcada(option.value)) {
         option.disabled = true;
       }
     });
   }
 
-  if (guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO && 
-      guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM) {
+  if (
+    guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.VAZIO &&
+    guardaRodasDireito.value !== window.CONSTANTS.VALORES_COMUNS.NENHUM
+  ) {
     if (hasCalcada(calcadaDireita.value)) {
       calcadaDireita.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
     }
     calcadaDireita.disabled = true;
     calcadaDireita.style.opacity = "0.6";
     calcadaDireita.style.cursor = "not-allowed";
-    Array.from(calcadaDireita.options).forEach(option => {
+    Array.from(calcadaDireita.options).forEach((option) => {
       if (hasCalcada(option.value)) {
         option.disabled = true;
       }
@@ -955,7 +1044,7 @@ function initGoogleMapsListener() {
   if (latInput && longInput) {
     latInput.addEventListener("input", updateGoogleMapsLink);
     longInput.addEventListener("input", updateGoogleMapsLink);
-    
+
     // Atualizar link inicial
     updateGoogleMapsLink();
   }
@@ -964,10 +1053,10 @@ function initGoogleMapsListener() {
 // Inicializar formatação automática do campo LOTE
 function initLoteFormatting() {
   const loteField = document.getElementById("lote");
-  
+
   if (loteField) {
-    loteField.addEventListener("blur", function() {
-      if (this.value && typeof formatLote === 'function') {
+    loteField.addEventListener("blur", function () {
+      if (this.value && typeof formatLote === "function") {
         this.value = formatLote(this.value);
       }
     });
@@ -977,16 +1066,16 @@ function initLoteFormatting() {
 // Inicializar listener no campo comprimento para atualizar soma dos tramos
 function initComprimentoListener() {
   const comprimentoField = document.getElementById("comprimento");
-  
+
   if (comprimentoField) {
-    comprimentoField.addEventListener("input", function() {
-      if (typeof updateTramosSum === 'function') {
+    comprimentoField.addEventListener("input", function () {
+      if (typeof updateTramosSum === "function") {
         updateTramosSum();
       }
     });
-    
-    comprimentoField.addEventListener("blur", function() {
-      if (typeof updateTramosSum === 'function') {
+
+    comprimentoField.addEventListener("blur", function () {
+      if (typeof updateTramosSum === "function") {
         updateTramosSum();
       }
     });
@@ -998,38 +1087,39 @@ function initAlturaTravessaValidation() {
   const alturaTravessaField = document.getElementById("altura-travessa");
   const tipoTravessaField = document.getElementById("tipo-travessa");
   const infoMessage = document.getElementById("altura-travessa-info");
-  
+
   // Controlar visibilidade da mensagem informativa
   function toggleTravessaInfoMessage() {
     if (!tipoTravessaField || !infoMessage) return;
-    
-    const hasTravessa = tipoTravessaField.value !== "" && tipoTravessaField.value !== "Nenhum";
+
+    const hasTravessa =
+      tipoTravessaField.value !== "" && tipoTravessaField.value !== "Nenhum";
     infoMessage.style.display = hasTravessa ? "block" : "none";
   }
-  
+
   // Adicionar listener ao select de tipo-travessa
   if (tipoTravessaField) {
-    tipoTravessaField.addEventListener("change", function() {
+    tipoTravessaField.addEventListener("change", function () {
       toggleTravessaInfoMessage();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("altura-travessa");
       }
     });
-    
+
     // Aplicar estado inicial
     toggleTravessaInfoMessage();
   }
-  
+
   // Validação em tempo real no campo altura-travessa
   if (alturaTravessaField) {
-    alturaTravessaField.addEventListener("input", function() {
-      if (typeof validateField === 'function') {
+    alturaTravessaField.addEventListener("input", function () {
+      if (typeof validateField === "function") {
         validateField("altura-travessa");
       }
     });
-    
-    alturaTravessaField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+
+    alturaTravessaField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("altura-travessa");
       }
     });

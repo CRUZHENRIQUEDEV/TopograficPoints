@@ -3,15 +3,15 @@
 // Gerar campos de tramos
 function generateTramosFields() {
   let qtdTramos = parseInt(document.getElementById("qtd-tramos").value) || 1;
-  
+
   // Garantir mínimo de 1 tramo
   if (qtdTramos < 1) {
     qtdTramos = 1;
     document.getElementById("qtd-tramos").value = 1;
   }
-  
+
   const container = document.getElementById("tramos-fields");
-  
+
   if (!container) return;
 
   container.innerHTML = "";
@@ -34,14 +34,14 @@ function generateTramosFields() {
     input.required = true;
 
     // Adicionar listeners para atualizar soma em tempo real
-    input.addEventListener("input", function() {
-      if (typeof updateTramosSum === 'function') {
+    input.addEventListener("input", function () {
+      if (typeof updateTramosSum === "function") {
         updateTramosSum();
       }
     });
-    
-    input.addEventListener("blur", function() {
-      if (typeof updateTramosSum === 'function') {
+
+    input.addEventListener("blur", function () {
+      if (typeof updateTramosSum === "function") {
         updateTramosSum();
       }
     });
@@ -59,18 +59,18 @@ function generateTramosFields() {
     qtdApoiosField.value = qtdApoios;
     generateApoiosFields();
   }
-  
+
   // Reinicializar handlers de erro para os novos campos
-  if (typeof initErrorHandlers === 'function') {
+  if (typeof initErrorHandlers === "function") {
     initErrorHandlers();
   }
-  
+
   // Nota: updateTramosSum() será chamado manualmente após preencher valores
   // Não chamar aqui para evitar calcular com campos vazios ao carregar obra
-  
+
   // Gerenciar bloqueios quando qtd tramos = 1
   handleSingleTramoRestrictions(qtdTramos);
-  
+
   // Se houver apenas 1 tramo, auto-preencher com o comprimento total
   if (qtdTramos === 1) {
     autoFillSingleTramo();
@@ -80,11 +80,19 @@ function generateTramosFields() {
 // Função para gerenciar bloqueios quando a quantidade de tramos = 1
 function handleSingleTramoRestrictions(qtdTramos) {
   const isSingleTramo = qtdTramos === 1;
-  
-  // 1. CAMPO QTD PILARES
+
+  // Verificar se há "APOIO" selecionado na transição
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const hasApoioTransicao =
+    tipoEncontroField && tipoEncontroField.value === "APOIO";
+
+  // Se há APOIO na transição, não bloqueia a aba de apoio completamente
+  const shouldBlockApoioTab = isSingleTramo && !hasApoioTransicao;
+
+  // 1. CAMPO QTD PILARES - só bloqueia se não houver apoio na transição
   const qtdPilaresField = document.getElementById("qtd-pilares");
   if (qtdPilaresField) {
-    if (isSingleTramo) {
+    if (shouldBlockApoioTab) {
       qtdPilaresField.value = "0";
       qtdPilaresField.disabled = true;
       qtdPilaresField.classList.remove("error");
@@ -94,11 +102,13 @@ function handleSingleTramoRestrictions(qtdTramos) {
       qtdPilaresField.disabled = false;
     }
   }
-  
-  // 2. CAMPO PILAR DESCENTRALIZADO
-  const pilarDescentralizadoField = document.getElementById("pilar-descentralizado");
+
+  // 2. CAMPO PILAR DESCENTRALIZADO - só bloqueia se não houver apoio na transição
+  const pilarDescentralizadoField = document.getElementById(
+    "pilar-descentralizado"
+  );
   if (pilarDescentralizadoField) {
-    if (isSingleTramo) {
+    if (shouldBlockApoioTab) {
       pilarDescentralizadoField.value = "";
       pilarDescentralizadoField.disabled = true;
       pilarDescentralizadoField.classList.remove("error");
@@ -106,25 +116,42 @@ function handleSingleTramoRestrictions(qtdTramos) {
       pilarDescentralizadoField.disabled = false;
     }
   }
-  
-  // 3. TIPO TRAVESSA
+
+  // 3. TIPO TRAVESSA - auto-seleciona e bloqueia quando há APOIO na transição
   const tipoTravessaField = document.getElementById("tipo-travessa");
   if (tipoTravessaField) {
-    if (isSingleTramo) {
+    if (shouldBlockApoioTab) {
+      // Só bloqueia se não houver apoio na transição
       tipoTravessaField.value = "Nenhum";
       tipoTravessaField.disabled = true;
       tipoTravessaField.classList.remove("error");
       const errorEl = document.getElementById("tipo-travessa-error");
       if (errorEl) errorEl.classList.remove("visible");
+    } else if (hasApoioTransicao) {
+      // Se há APOIO na transição: auto-selecionar travessa e BLOQUEAR
+      if (
+        !tipoTravessaField.value ||
+        tipoTravessaField.value === "" ||
+        tipoTravessaField.value === "Nenhum"
+      ) {
+        tipoTravessaField.value = "TRAVESSA DE APOIO DE CONCRETO ARMADO";
+      }
+      tipoTravessaField.disabled = true; // Bloqueia para não permitir alterar
+      tipoTravessaField.classList.remove("error");
+      const errorEl = document.getElementById("tipo-travessa-error");
+      if (errorEl) errorEl.classList.remove("visible");
+      // Disparar evento change para atualizar dependências
+      tipoTravessaField.dispatchEvent(new Event("change", { bubbles: true }));
     } else {
+      // Libera normalmente se houver mais de 1 tramo
       tipoTravessaField.disabled = false;
     }
   }
-  
-  // 4. ALTURA TRAVESSA
+
+  // 4. ALTURA TRAVESSA - libera se houver APOIO na transição
   const alturaTravessaField = document.getElementById("altura-travessa");
   if (alturaTravessaField) {
-    if (isSingleTramo) {
+    if (shouldBlockApoioTab) {
       alturaTravessaField.value = "";
       alturaTravessaField.disabled = true;
       alturaTravessaField.classList.remove("error");
@@ -136,8 +163,8 @@ function handleSingleTramoRestrictions(qtdTramos) {
       alturaTravessaField.disabled = false;
     }
   }
-  
-  // 5. TIPO ENCAMISAMENTO
+
+  // 5. TIPO ENCAMISAMENTO - permanece bloqueado se apenas 1 tramo
   const tipoEncamisamentoField = document.getElementById("tipo-encamisamento");
   if (tipoEncamisamentoField) {
     if (isSingleTramo) {
@@ -148,21 +175,29 @@ function handleSingleTramoRestrictions(qtdTramos) {
       tipoEncamisamentoField.disabled = false;
     }
   }
-  
-  // 6. TIPO CONTRAVENTAMENTO PILAR
-  const tipoContraventamentoField = document.getElementById("tipo-contraventamento-pilar");
+
+  // 6. TIPO CONTRAVENTAMENTO PILAR - permanece bloqueado se apenas 1 tramo
+  const tipoContraventamentoField = document.getElementById(
+    "tipo-contraventamento-pilar"
+  );
   if (tipoContraventamentoField) {
     if (isSingleTramo) {
       tipoContraventamentoField.value = "Nenhum";
       tipoContraventamentoField.disabled = true;
       tipoContraventamentoField.classList.remove("error");
-      const errorEl = document.getElementById("tipo-contraventamento-pilar-error");
+      const errorEl = document.getElementById(
+        "tipo-contraventamento-pilar-error"
+      );
       if (errorEl) errorEl.classList.remove("visible");
-      
+
       // Também esconder campo de quantidade de viga contraventamento
-      const qtdVigaGroup = document.getElementById("qtd-viga-contraventamento-group");
+      const qtdVigaGroup = document.getElementById(
+        "qtd-viga-contraventamento-group"
+      );
       if (qtdVigaGroup) qtdVigaGroup.style.display = "none";
-      const qtdVigaField = document.getElementById("qtd-viga-contraventamento-pilar");
+      const qtdVigaField = document.getElementById(
+        "qtd-viga-contraventamento-pilar"
+      );
       if (qtdVigaField) {
         qtdVigaField.value = "";
         qtdVigaField.classList.remove("error");
@@ -171,17 +206,24 @@ function handleSingleTramoRestrictions(qtdTramos) {
       tipoContraventamentoField.disabled = false;
     }
   }
-  
-  // 7. LIMPAR MENSAGENS DE ERRO DOS APOIOS
+
+  // 7. LIMPAR MENSAGENS DE ERRO DOS APOIOS - só se estiver bloqueando a aba
   const apoiosErrorElement = document.getElementById("apoios-error");
-  if (apoiosErrorElement && isSingleTramo) {
+  if (apoiosErrorElement && shouldBlockApoioTab) {
     apoiosErrorElement.classList.remove("visible");
     apoiosErrorElement.style.display = "none";
   }
-  
+
   // Forçar regeneração dos apoios se necessário
   if (isSingleTramo) {
     generateApoiosFields();
+  }
+
+  // Atualizar TIPO APOIO TRANSIÇÃO baseado no estado atual
+  if (typeof toggleTipoApoioTransicao === "function") {
+    setTimeout(() => {
+      toggleTipoApoioTransicao();
+    }, 100);
   }
 }
 
@@ -189,26 +231,58 @@ function handleSingleTramoRestrictions(qtdTramos) {
 function autoFillSingleTramo() {
   const comprimentoField = document.getElementById("comprimento");
   const tramoField = document.querySelector(".tramo-field");
-  
+
   if (!comprimentoField || !tramoField) return;
-  
+
   const comprimentoValue = parseFloat(comprimentoField.value);
-  
+
   // Se há comprimento definido e o tramo está vazio, preencher automaticamente
   if (comprimentoValue > 0 && !tramoField.value) {
     tramoField.value = comprimentoValue.toFixed(2);
-    
+
     // Atualizar soma dos tramos
-    if (typeof updateTramosSum === 'function') {
+    if (typeof updateTramosSum === "function") {
       updateTramosSum();
     }
+  }
+}
+
+// Função para controlar disponibilidade do TIPO APOIO TRANSIÇÃO baseado na travessa e APOIO na transição
+function toggleTipoApoioTransicao() {
+  const tipoTravessaField = document.getElementById("tipo-travessa");
+  const tipoApoioTransicaoField = document.getElementById(
+    "tipo-apoio-transicao"
+  );
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+
+  if (!tipoApoioTransicaoField) return;
+
+  const hasTravessa =
+    tipoTravessaField &&
+    tipoTravessaField.value !== "" &&
+    tipoTravessaField.value !== "Nenhum";
+  const hasApoioTransicao =
+    tipoEncontroField && tipoEncontroField.value === "APOIO";
+
+  if (hasApoioTransicao) {
+    // Se há APOIO na transição: auto-selecionar BERÇO/PILARETE e habilitar
+    tipoApoioTransicaoField.value = "BERÇO/PILARETE";
+    tipoApoioTransicaoField.disabled = false;
+    tipoApoioTransicaoField.style.opacity = "1";
+    tipoApoioTransicaoField.style.cursor = "default";
+  } else {
+    // TRAVESSA é independente: sempre pode ter BERÇO se quiser
+    tipoApoioTransicaoField.disabled = false;
+    tipoApoioTransicaoField.style.opacity = "1";
+    tipoApoioTransicaoField.style.cursor = "pointer";
   }
 }
 
 // Gerar campos de apoios
 function generateApoiosFields() {
   const qtdApoios = parseInt(document.getElementById("qtd-apoios").value) || 0;
-  const qtdPilares = parseInt(document.getElementById("qtd-pilares")?.value) || 0;
+  const qtdPilares =
+    parseInt(document.getElementById("qtd-pilares")?.value) || 0;
   const container = document.getElementById("apoios-fields");
 
   if (!container) return;
@@ -237,33 +311,44 @@ function generateApoiosFields() {
                step="0.01" min="0.1" placeholder="0.00" required />
       </div>
       <div class="apoio-field-wrapper">
-        <input type="${isPilarParede ? 'text' : 'number'}" class="apoio-larg-field" name="apoio-larg-${i}" 
-               step="0.01" min="0.1" placeholder="${isPilarParede ? 'Cálculo automático' : '0.00'}" 
-               ${isPilarParede ? 'disabled readonly' : 'required'} 
-               value="${isPilarParede ? 'Cálculo automático' : ''}" 
-               style="${isPilarParede ? 'background-color: #f0f0f0; cursor: not-allowed;' : ''}" />
+        <input type="${
+          isPilarParede ? "text" : "number"
+        }" class="apoio-larg-field" name="apoio-larg-${i}" 
+               step="0.01" min="0.1" placeholder="${
+                 isPilarParede ? "Cálculo automático" : "0.00"
+               }" 
+               ${isPilarParede ? "disabled readonly" : "required"} 
+               value="${isPilarParede ? "Cálculo automático" : ""}" 
+               style="${
+                 isPilarParede
+                   ? "background-color: #f0f0f0; cursor: not-allowed;"
+                   : ""
+               }" />
       </div>
     `;
 
     container.appendChild(apoioRow);
-    
+
     // Adicionar validação em tempo real para os campos de apoio
     const alturaField = apoioRow.querySelector(".apoio-altura-field");
     const compField = apoioRow.querySelector(".apoio-comp-field");
     const largField = apoioRow.querySelector(".apoio-larg-field");
-    
-    [alturaField, compField, largField].forEach(field => {
+
+    [alturaField, compField, largField].forEach((field) => {
       if (field) {
-        field.addEventListener("blur", function() {
-          if (typeof validateApoios === 'function') {
+        field.addEventListener("blur", function () {
+          if (typeof validateApoios === "function") {
             validateApoios();
           }
           // Validar também a altura da travessa quando a altura dos apoios mudar
-          if (field.classList.contains("apoio-altura-field") && typeof validateField === 'function') {
+          if (
+            field.classList.contains("apoio-altura-field") &&
+            typeof validateField === "function"
+          ) {
             validateField("altura-travessa");
           }
         });
-        field.addEventListener("input", function() {
+        field.addEventListener("input", function () {
           // Remove erro ao começar a digitar
           if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
             this.classList.remove("error");
@@ -272,18 +357,19 @@ function generateApoiosFields() {
       }
     });
   }
-  
+
   // Reinicializar handlers de erro para os novos campos
-  if (typeof initErrorHandlers === 'function') {
+  if (typeof initErrorHandlers === "function") {
     initErrorHandlers();
   }
 }
 
 // Validar comprimento dos tramos
 function validateTramosLength() {
-  const comprimentoTotal = parseFloat(document.getElementById("comprimento").value) || 0;
+  const comprimentoTotal =
+    parseFloat(document.getElementById("comprimento").value) || 0;
   const tramosFields = document.querySelectorAll(".tramo-field");
-  
+
   let somaTramos = 0;
   tramosFields.forEach((field) => {
     somaTramos += parseFloat(field.value) || 0;
@@ -292,7 +378,11 @@ function validateTramosLength() {
   const diferenca = Math.abs(somaTramos - comprimentoTotal);
 
   if (diferenca > 0.01) {
-    alert(`Atenção: A soma dos tramos (${somaTramos.toFixed(2)}m) difere do comprimento total (${comprimentoTotal.toFixed(2)}m)`);
+    alert(
+      `Atenção: A soma dos tramos (${somaTramos.toFixed(
+        2
+      )}m) difere do comprimento total (${comprimentoTotal.toFixed(2)}m)`
+    );
     return false;
   }
 
@@ -302,8 +392,9 @@ function validateTramosLength() {
 // Validar alturas
 function validateHeights() {
   const alturaTotal = parseFloat(document.getElementById("altura").value) || 0;
-  const alturaLongarina = parseFloat(document.getElementById("altura-longarina").value) || 0;
-  
+  const alturaLongarina =
+    parseFloat(document.getElementById("altura-longarina").value) || 0;
+
   const apoiosFields = document.querySelectorAll(".apoio-altura-field");
   let maiorApoio = 0;
 
@@ -319,7 +410,11 @@ function validateHeights() {
 
   if (diferenca > 0.01 && alturaLongarina > 0 && maiorApoio > 0) {
     alert(
-      `Atenção: Altura longarina (${alturaLongarina.toFixed(2)}m) + maior apoio (${maiorApoio.toFixed(2)}m) = ${somaAlturas.toFixed(2)}m difere da altura total (${alturaTotal.toFixed(2)}m)`
+      `Atenção: Altura longarina (${alturaLongarina.toFixed(
+        2
+      )}m) + maior apoio (${maiorApoio.toFixed(2)}m) = ${somaAlturas.toFixed(
+        2
+      )}m difere da altura total (${alturaTotal.toFixed(2)}m)`
     );
     return false;
   }
@@ -329,15 +424,20 @@ function validateHeights() {
 
 // Validar deslocamentos
 function validateDisplacements() {
-  const larguraTotal = parseFloat(document.getElementById("largura").value) || 0;
-  const deslocEsq = parseFloat(document.getElementById("desloc-esquerdo").value) || 0;
-  const deslocDir = parseFloat(document.getElementById("desloc-direito").value) || 0;
+  const larguraTotal =
+    parseFloat(document.getElementById("largura").value) || 0;
+  const deslocEsq =
+    parseFloat(document.getElementById("desloc-esquerdo").value) || 0;
+  const deslocDir =
+    parseFloat(document.getElementById("desloc-direito").value) || 0;
 
   const somaDeslocamentos = deslocEsq + deslocDir;
 
   if (somaDeslocamentos > larguraTotal) {
     alert(
-      `Atenção: A soma dos deslocamentos (${somaDeslocamentos.toFixed(2)}m) é maior que a largura total (${larguraTotal.toFixed(2)}m)`
+      `Atenção: A soma dos deslocamentos (${somaDeslocamentos.toFixed(
+        2
+      )}m) é maior que a largura total (${larguraTotal.toFixed(2)}m)`
     );
     return false;
   }
@@ -350,13 +450,18 @@ function updateBlocoSapataFieldsRequired() {
   const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
   if (!tipoBlocoSapataField) return;
 
-  const isBlocoSapataSelected = tipoBlocoSapataField.value !== "" && 
-                                tipoBlocoSapataField.value !== "Nenhum";
+  const isBlocoSapataSelected =
+    tipoBlocoSapataField.value !== "" &&
+    tipoBlocoSapataField.value !== "Nenhum";
 
   // Lista de campos que devem ser marcados como obrigatórios
-  const fields = ["altura-bloco-sapata", "largura-bloco-sapata", "comprimento-bloco-sapata"];
+  const fields = [
+    "altura-bloco-sapata",
+    "largura-bloco-sapata",
+    "comprimento-bloco-sapata",
+  ];
 
-  fields.forEach(fieldId => {
+  fields.forEach((fieldId) => {
     const label = document.querySelector(`label[for="${fieldId}"]`);
     if (label) {
       if (isBlocoSapataSelected) {
@@ -377,7 +482,9 @@ function updateLongarinaFieldsRequired() {
   const hasLongarinas = qtdLongarinas > 0;
 
   // Atualizar altura longarina
-  const alturaLongarinaLabel = document.querySelector('label[for="altura-longarina"]');
+  const alturaLongarinaLabel = document.querySelector(
+    'label[for="altura-longarina"]'
+  );
   const alturaLongarinaField = document.getElementById("altura-longarina");
   if (alturaLongarinaField) {
     if (hasLongarinas) {
@@ -386,7 +493,8 @@ function updateLongarinaFieldsRequired() {
     } else {
       alturaLongarinaField.disabled = true;
       alturaLongarinaField.value = ""; // Limpar o valor
-      if (alturaLongarinaLabel) alturaLongarinaLabel.classList.remove("required");
+      if (alturaLongarinaLabel)
+        alturaLongarinaLabel.classList.remove("required");
       alturaLongarinaField.classList.remove("error");
       const errorEl = document.getElementById("altura-longarina-error");
       if (errorEl) errorEl.classList.remove("visible");
@@ -394,26 +502,33 @@ function updateLongarinaFieldsRequired() {
   }
 
   // Atualizar espessura longarina
-  const espessuraLongarinaLabel = document.querySelector('label[for="espessura-longarina"]');
-  const espessuraLongarinaField = document.getElementById("espessura-longarina");
+  const espessuraLongarinaLabel = document.querySelector(
+    'label[for="espessura-longarina"]'
+  );
+  const espessuraLongarinaField = document.getElementById(
+    "espessura-longarina"
+  );
   if (espessuraLongarinaField) {
     // Se há apenas 1 longarina, bloquear o campo (será uma seção caixão protendida com cálculo automático)
     if (qtdLongarinas === 1) {
       espessuraLongarinaField.disabled = true;
       espessuraLongarinaField.value = ""; // Limpar o valor
-      if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.remove("required");
+      if (espessuraLongarinaLabel)
+        espessuraLongarinaLabel.classList.remove("required");
       espessuraLongarinaField.classList.remove("error");
       const errorEl = document.getElementById("espessura-longarina-error");
       if (errorEl) errorEl.classList.remove("visible");
     } else if (hasLongarinas) {
       // Se há mais de 1 longarina, habilitar o campo
       espessuraLongarinaField.disabled = false;
-      if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.add("required");
+      if (espessuraLongarinaLabel)
+        espessuraLongarinaLabel.classList.add("required");
     } else {
       // Se não há longarinas, bloquear e limpar
       espessuraLongarinaField.disabled = true;
       espessuraLongarinaField.value = ""; // Limpar o valor
-      if (espessuraLongarinaLabel) espessuraLongarinaLabel.classList.remove("required");
+      if (espessuraLongarinaLabel)
+        espessuraLongarinaLabel.classList.remove("required");
       espessuraLongarinaField.classList.remove("error");
       const errorEl = document.getElementById("espessura-longarina-error");
       if (errorEl) errorEl.classList.remove("visible");
@@ -421,7 +536,8 @@ function updateLongarinaFieldsRequired() {
   }
 
   // Bloquear/desbloquear checkbox de reforço viga
-  const beamReinforcementCheckbox = document.getElementById("beam-reinforcement");
+  const beamReinforcementCheckbox =
+    document.getElementById("beam-reinforcement");
   if (beamReinforcementCheckbox) {
     if (!hasLongarinas) {
       beamReinforcementCheckbox.checked = false;
@@ -434,7 +550,9 @@ function updateLongarinaFieldsRequired() {
   // SE NÃO HÁ LONGARINAS OU HÁ APENAS 1 LONGARINA (SEÇÃO CAIXÃO), NÃO PODE HAVER TRANSVERSINAS
   const qtdTransversinasField = document.getElementById("qtd-transversinas");
   const tipoTransversinaField = document.getElementById("tipo-transversina");
-  const espessuraTransversinaField = document.getElementById("espessura-transversina");
+  const espessuraTransversinaField = document.getElementById(
+    "espessura-transversina"
+  );
 
   if (!hasLongarinas || qtdLongarinas === 1) {
     // Limpar e desabilitar QTD TRANSVERSINAS
@@ -486,9 +604,11 @@ function updateTransversinaFieldsRequired() {
   const hasTransversinas = qtdTransversinas > 0;
 
   // Atualizar tipo de transversina
-  const tipoTransversinaLabel = document.querySelector('label[for="tipo-transversina"]');
+  const tipoTransversinaLabel = document.querySelector(
+    'label[for="tipo-transversina"]'
+  );
   const tipoTransversinaField = document.getElementById("tipo-transversina");
-  
+
   if (tipoTransversinaLabel) {
     if (hasTransversinas) {
       tipoTransversinaLabel.classList.add("required");
@@ -496,7 +616,7 @@ function updateTransversinaFieldsRequired() {
       tipoTransversinaLabel.classList.remove("required");
     }
   }
-  
+
   // Bloquear/desbloquear campo de tipo
   if (tipoTransversinaField) {
     if (hasTransversinas) {
@@ -511,9 +631,13 @@ function updateTransversinaFieldsRequired() {
   }
 
   // Atualizar espessura de transversina
-  const espessuraTransversinaLabel = document.querySelector('label[for="espessura-transversina"]');
-  const espessuraTransversinaField = document.getElementById("espessura-transversina");
-  
+  const espessuraTransversinaLabel = document.querySelector(
+    'label[for="espessura-transversina"]'
+  );
+  const espessuraTransversinaField = document.getElementById(
+    "espessura-transversina"
+  );
+
   if (espessuraTransversinaLabel) {
     if (hasTransversinas) {
       espessuraTransversinaLabel.classList.add("required");
@@ -521,7 +645,7 @@ function updateTransversinaFieldsRequired() {
       espessuraTransversinaLabel.classList.remove("required");
     }
   }
-  
+
   // Bloquear/desbloquear campo de espessura
   if (espessuraTransversinaField) {
     if (hasTransversinas) {
@@ -541,50 +665,64 @@ function manageComplementaryElements() {
   // Lado ESQUERDO
   const guardaRodasEsq = document.getElementById("guarda-rodas-esquerdo");
   const tipoBarreiraEsq = document.getElementById("tipo-barreira-esquerda");
-  const larguraBarreiraEsq = document.getElementById("largura-barreira-esquerda");
-  const larguraGuardaRodasEsq = document.getElementById("largura-guarda-rodas-esquerdo");
+  const larguraBarreiraEsq = document.getElementById(
+    "largura-barreira-esquerda"
+  );
+  const larguraGuardaRodasEsq = document.getElementById(
+    "largura-guarda-rodas-esquerdo"
+  );
   const tipoCalcadaEsq = document.getElementById("tipo-calcada-esquerda");
   const larguraCalcadaEsq = document.getElementById("largura-calcada-esquerda");
 
   // Lado DIREITO
   const guardaRodasDir = document.getElementById("guarda-rodas-direito");
   const tipoBarreiraDir = document.getElementById("tipo-barreira-direita");
-  const larguraBarreiraDir = document.getElementById("largura-barreira-direita");
-  const larguraGuardaRodasDir = document.getElementById("largura-guarda-rodas-direito");
+  const larguraBarreiraDir = document.getElementById(
+    "largura-barreira-direita"
+  );
+  const larguraGuardaRodasDir = document.getElementById(
+    "largura-guarda-rodas-direito"
+  );
   const tipoCalcadaDir = document.getElementById("tipo-calcada-direita");
   const larguraCalcadaDir = document.getElementById("largura-calcada-direita");
 
   // ========== LADO ESQUERDO ==========
-  
+
   // Verificar se há guarda rodas ESQUERDO
-  const hasGuardaRodasEsq = guardaRodasEsq && guardaRodasEsq.value !== "" && guardaRodasEsq.value !== "Nenhum";
-  
+  const hasGuardaRodasEsq =
+    guardaRodasEsq &&
+    guardaRodasEsq.value !== "" &&
+    guardaRodasEsq.value !== "Nenhum";
+
   // Verificar se há barreira ESQUERDA
-  const hasBarreiraEsq = tipoBarreiraEsq && tipoBarreiraEsq.value !== "" && tipoBarreiraEsq.value !== "Nenhum";
-  
+  const hasBarreiraEsq =
+    tipoBarreiraEsq &&
+    tipoBarreiraEsq.value !== "" &&
+    tipoBarreiraEsq.value !== "Nenhum";
+
   if (hasGuardaRodasEsq) {
     // GUARDA RODAS só pode sozinho - bloqueia BARREIRA e CALÇADA
     if (tipoBarreiraEsq) {
       tipoBarreiraEsq.value = "Nenhum";
-      tipoBarreiraEsq.setAttribute('data-locked', 'true');
+      tipoBarreiraEsq.setAttribute("data-locked", "true");
       tipoBarreiraEsq.style.opacity = "0.5";
       tipoBarreiraEsq.style.pointerEvents = "none";
     }
     if (larguraBarreiraEsq) {
       larguraBarreiraEsq.value = "";
-      larguraBarreiraEsq.setAttribute('readonly', true);
+      larguraBarreiraEsq.setAttribute("readonly", true);
       larguraBarreiraEsq.style.opacity = "0.5";
       larguraBarreiraEsq.style.pointerEvents = "none";
     }
     if (tipoCalcadaEsq) {
       tipoCalcadaEsq.value = "Nenhum";
-      tipoCalcadaEsq.setAttribute('data-locked', 'true');
+      tipoCalcadaEsq.setAttribute("data-locked", "true");
       tipoCalcadaEsq.style.opacity = "0.5";
       tipoCalcadaEsq.style.pointerEvents = "none";
     }
     if (larguraCalcadaEsq) {
       larguraCalcadaEsq.value = "";
-      larguraCalcadaEsq.setAttribute('readonly', true);
+      larguraCalcadaEsq.setAttribute("readonly", true);
       larguraCalcadaEsq.style.opacity = "0.5";
       larguraCalcadaEsq.style.pointerEvents = "none";
     }
@@ -592,92 +730,98 @@ function manageComplementaryElements() {
     // BARREIRA bloqueia apenas GUARDA RODAS (CALÇADA pode coexistir)
     if (guardaRodasEsq) {
       guardaRodasEsq.value = "Nenhum";
-      guardaRodasEsq.setAttribute('data-locked', 'true');
+      guardaRodasEsq.setAttribute("data-locked", "true");
       guardaRodasEsq.style.opacity = "0.5";
       guardaRodasEsq.style.pointerEvents = "none";
     }
     if (larguraGuardaRodasEsq) {
       larguraGuardaRodasEsq.value = "";
-      larguraGuardaRodasEsq.setAttribute('readonly', true);
+      larguraGuardaRodasEsq.setAttribute("readonly", true);
       larguraGuardaRodasEsq.style.opacity = "0.5";
       larguraGuardaRodasEsq.style.pointerEvents = "none";
     }
     // CALÇADA permanece livre quando há BARREIRA
     if (tipoCalcadaEsq) {
-      tipoCalcadaEsq.removeAttribute('data-locked');
+      tipoCalcadaEsq.removeAttribute("data-locked");
       tipoCalcadaEsq.style.opacity = "";
       tipoCalcadaEsq.style.pointerEvents = "";
     }
     if (larguraCalcadaEsq) {
-      larguraCalcadaEsq.removeAttribute('readonly');
+      larguraCalcadaEsq.removeAttribute("readonly");
       larguraCalcadaEsq.style.opacity = "";
       larguraCalcadaEsq.style.pointerEvents = "";
     }
   } else {
     // Nenhum elemento selecionado - liberar todos os campos
     if (tipoBarreiraEsq) {
-      tipoBarreiraEsq.removeAttribute('data-locked');
+      tipoBarreiraEsq.removeAttribute("data-locked");
       tipoBarreiraEsq.style.opacity = "";
       tipoBarreiraEsq.style.pointerEvents = "";
     }
     if (larguraBarreiraEsq) {
-      larguraBarreiraEsq.removeAttribute('readonly');
+      larguraBarreiraEsq.removeAttribute("readonly");
       larguraBarreiraEsq.style.opacity = "";
       larguraBarreiraEsq.style.pointerEvents = "";
     }
     if (guardaRodasEsq) {
-      guardaRodasEsq.removeAttribute('data-locked');
+      guardaRodasEsq.removeAttribute("data-locked");
       guardaRodasEsq.style.opacity = "";
       guardaRodasEsq.style.pointerEvents = "";
     }
     if (larguraGuardaRodasEsq) {
-      larguraGuardaRodasEsq.removeAttribute('readonly');
+      larguraGuardaRodasEsq.removeAttribute("readonly");
       larguraGuardaRodasEsq.style.opacity = "";
       larguraGuardaRodasEsq.style.pointerEvents = "";
     }
     if (tipoCalcadaEsq) {
-      tipoCalcadaEsq.removeAttribute('data-locked');
+      tipoCalcadaEsq.removeAttribute("data-locked");
       tipoCalcadaEsq.style.opacity = "";
       tipoCalcadaEsq.style.pointerEvents = "";
     }
     if (larguraCalcadaEsq) {
-      larguraCalcadaEsq.removeAttribute('readonly');
+      larguraCalcadaEsq.removeAttribute("readonly");
       larguraCalcadaEsq.style.opacity = "";
       larguraCalcadaEsq.style.pointerEvents = "";
     }
   }
 
   // ========== LADO DIREITO ==========
-  
+
   // Verificar se há guarda rodas DIREITO
-  const hasGuardaRodasDir = guardaRodasDir && guardaRodasDir.value !== "" && guardaRodasDir.value !== "Nenhum";
-  
+  const hasGuardaRodasDir =
+    guardaRodasDir &&
+    guardaRodasDir.value !== "" &&
+    guardaRodasDir.value !== "Nenhum";
+
   // Verificar se há barreira DIREITA
-  const hasBarreiraDir = tipoBarreiraDir && tipoBarreiraDir.value !== "" && tipoBarreiraDir.value !== "Nenhum";
-  
+  const hasBarreiraDir =
+    tipoBarreiraDir &&
+    tipoBarreiraDir.value !== "" &&
+    tipoBarreiraDir.value !== "Nenhum";
+
   if (hasGuardaRodasDir) {
     // GUARDA RODAS só pode sozinho - bloqueia BARREIRA e CALÇADA
     if (tipoBarreiraDir) {
       tipoBarreiraDir.value = "Nenhum";
-      tipoBarreiraDir.setAttribute('data-locked', 'true');
+      tipoBarreiraDir.setAttribute("data-locked", "true");
       tipoBarreiraDir.style.opacity = "0.5";
       tipoBarreiraDir.style.pointerEvents = "none";
     }
     if (larguraBarreiraDir) {
       larguraBarreiraDir.value = "";
-      larguraBarreiraDir.setAttribute('readonly', true);
+      larguraBarreiraDir.setAttribute("readonly", true);
       larguraBarreiraDir.style.opacity = "0.5";
       larguraBarreiraDir.style.pointerEvents = "none";
     }
     if (tipoCalcadaDir) {
       tipoCalcadaDir.value = "Nenhum";
-      tipoCalcadaDir.setAttribute('data-locked', 'true');
+      tipoCalcadaDir.setAttribute("data-locked", "true");
       tipoCalcadaDir.style.opacity = "0.5";
       tipoCalcadaDir.style.pointerEvents = "none";
     }
     if (larguraCalcadaDir) {
       larguraCalcadaDir.value = "";
-      larguraCalcadaDir.setAttribute('readonly', true);
+      larguraCalcadaDir.setAttribute("readonly", true);
       larguraCalcadaDir.style.opacity = "0.5";
       larguraCalcadaDir.style.pointerEvents = "none";
     }
@@ -685,56 +829,56 @@ function manageComplementaryElements() {
     // BARREIRA bloqueia apenas GUARDA RODAS (CALÇADA pode coexistir)
     if (guardaRodasDir) {
       guardaRodasDir.value = "Nenhum";
-      guardaRodasDir.setAttribute('data-locked', 'true');
+      guardaRodasDir.setAttribute("data-locked", "true");
       guardaRodasDir.style.opacity = "0.5";
       guardaRodasDir.style.pointerEvents = "none";
     }
     if (larguraGuardaRodasDir) {
       larguraGuardaRodasDir.value = "";
-      larguraGuardaRodasDir.setAttribute('readonly', true);
+      larguraGuardaRodasDir.setAttribute("readonly", true);
       larguraGuardaRodasDir.style.opacity = "0.5";
       larguraGuardaRodasDir.style.pointerEvents = "none";
     }
     // CALÇADA permanece livre quando há BARREIRA
     if (tipoCalcadaDir) {
-      tipoCalcadaDir.removeAttribute('data-locked');
+      tipoCalcadaDir.removeAttribute("data-locked");
       tipoCalcadaDir.style.opacity = "";
       tipoCalcadaDir.style.pointerEvents = "";
     }
     if (larguraCalcadaDir) {
-      larguraCalcadaDir.removeAttribute('readonly');
+      larguraCalcadaDir.removeAttribute("readonly");
       larguraCalcadaDir.style.opacity = "";
       larguraCalcadaDir.style.pointerEvents = "";
     }
   } else {
     // Nenhum elemento selecionado - liberar todos os campos
     if (tipoBarreiraDir) {
-      tipoBarreiraDir.removeAttribute('data-locked');
+      tipoBarreiraDir.removeAttribute("data-locked");
       tipoBarreiraDir.style.opacity = "";
       tipoBarreiraDir.style.pointerEvents = "";
     }
     if (larguraBarreiraDir) {
-      larguraBarreiraDir.removeAttribute('readonly');
+      larguraBarreiraDir.removeAttribute("readonly");
       larguraBarreiraDir.style.opacity = "";
       larguraBarreiraDir.style.pointerEvents = "";
     }
     if (guardaRodasDir) {
-      guardaRodasDir.removeAttribute('data-locked');
+      guardaRodasDir.removeAttribute("data-locked");
       guardaRodasDir.style.opacity = "";
       guardaRodasDir.style.pointerEvents = "";
     }
     if (larguraGuardaRodasDir) {
-      larguraGuardaRodasDir.removeAttribute('readonly');
+      larguraGuardaRodasDir.removeAttribute("readonly");
       larguraGuardaRodasDir.style.opacity = "";
       larguraGuardaRodasDir.style.pointerEvents = "";
     }
     if (tipoCalcadaDir) {
-      tipoCalcadaDir.removeAttribute('data-locked');
+      tipoCalcadaDir.removeAttribute("data-locked");
       tipoCalcadaDir.style.opacity = "";
       tipoCalcadaDir.style.pointerEvents = "";
     }
     if (larguraCalcadaDir) {
-      larguraCalcadaDir.removeAttribute('readonly');
+      larguraCalcadaDir.removeAttribute("readonly");
       larguraCalcadaDir.style.opacity = "";
       larguraCalcadaDir.style.pointerEvents = "";
     }
@@ -745,10 +889,10 @@ function manageComplementaryElements() {
 document.addEventListener("DOMContentLoaded", function () {
   const qtdTramosField = document.getElementById("qtd-tramos");
   if (qtdTramosField) {
-    qtdTramosField.addEventListener("change", function() {
+    qtdTramosField.addEventListener("change", function () {
       generateTramosFields();
       // Atualizar soma após gerar campos (em nova obra ou mudança manual)
-      if (typeof updateTramosSum === 'function') {
+      if (typeof updateTramosSum === "function") {
         setTimeout(() => updateTramosSum(), 150);
       }
     });
@@ -760,13 +904,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // Listener no campo COMPRIMENTO para auto-preencher quando QTD TRAMOS = 1
   const comprimentoField = document.getElementById("comprimento");
   if (comprimentoField) {
-    comprimentoField.addEventListener("input", function() {
+    comprimentoField.addEventListener("input", function () {
       const qtdTramos = parseInt(qtdTramosField?.value) || 1;
       if (qtdTramos === 1) {
         const tramoField = document.querySelector(".tramo-field");
         if (tramoField && this.value) {
           tramoField.value = parseFloat(this.value).toFixed(2);
-          if (typeof updateTramosSum === 'function') {
+          if (typeof updateTramosSum === "function") {
             updateTramosSum();
           }
         }
@@ -789,14 +933,14 @@ document.addEventListener("DOMContentLoaded", function () {
   // Validar campos de longarina quando a quantidade for alterada
   const qtdLongarinasField = document.getElementById("qtd-longarinas");
   if (qtdLongarinasField) {
-    qtdLongarinasField.addEventListener("change", function() {
+    qtdLongarinasField.addEventListener("change", function () {
       updateLongarinaFieldsRequired();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("altura-longarina");
         validateField("espessura-longarina");
       }
     });
-    qtdLongarinasField.addEventListener("input", function() {
+    qtdLongarinasField.addEventListener("input", function () {
       updateLongarinaFieldsRequired();
     });
     // Executar ao carregar a página (com timeout para garantir que DOM está pronto)
@@ -808,14 +952,14 @@ document.addEventListener("DOMContentLoaded", function () {
   // Validar campos de transversina quando a quantidade for alterada
   const qtdTransversinasField = document.getElementById("qtd-transversinas");
   if (qtdTransversinasField) {
-    qtdTransversinasField.addEventListener("change", function() {
+    qtdTransversinasField.addEventListener("change", function () {
       updateTransversinaFieldsRequired();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("tipo-transversina");
         validateField("espessura-transversina");
       }
     });
-    qtdTransversinasField.addEventListener("input", function() {
+    qtdTransversinasField.addEventListener("input", function () {
       updateTransversinaFieldsRequired();
     });
     // Executar ao carregar a página (com timeout para garantir que DOM está pronto)
@@ -827,45 +971,62 @@ document.addEventListener("DOMContentLoaded", function () {
   // Validar campos de bloco sapata quando o tipo for alterado
   const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
   if (tipoBlocoSapataField) {
-    tipoBlocoSapataField.addEventListener("change", function() {
+    tipoBlocoSapataField.addEventListener("change", function () {
       // console.log("🔄 Tipo de bloco sapata alterado para:", this.value);
       // Atualizar visualização dos campos obrigatórios
       updateBlocoSapataFieldsRequired();
-      
+
       const isBlocoSelected = this.value !== "" && this.value !== "Nenhum";
-      
-      if (typeof validateField === 'function') {
+
+      if (typeof validateField === "function") {
         validateField("altura-bloco-sapata");
         validateField("largura-bloco-sapata");
         validateField("comprimento-bloco-sapata");
       }
-      
+
       // Se bloco foi selecionado e campos estão vazios, destacar em vermelho
       if (isBlocoSelected) {
         const alturaField = document.getElementById("altura-bloco-sapata");
         const larguraField = document.getElementById("largura-bloco-sapata");
-        const comprimentoField = document.getElementById("comprimento-bloco-sapata");
-        
+        const comprimentoField = document.getElementById(
+          "comprimento-bloco-sapata"
+        );
+
         setTimeout(() => {
-          if (alturaField && (!alturaField.value || parseFloat(alturaField.value) <= 0)) {
+          if (
+            alturaField &&
+            (!alturaField.value || parseFloat(alturaField.value) <= 0)
+          ) {
             alturaField.classList.add("error");
-            const errorEl = document.getElementById("altura-bloco-sapata-error");
+            const errorEl = document.getElementById(
+              "altura-bloco-sapata-error"
+            );
             if (errorEl) errorEl.classList.add("visible");
           }
-          if (larguraField && (!larguraField.value || parseFloat(larguraField.value) <= 0)) {
+          if (
+            larguraField &&
+            (!larguraField.value || parseFloat(larguraField.value) <= 0)
+          ) {
             larguraField.classList.add("error");
-            const errorEl = document.getElementById("largura-bloco-sapata-error");
+            const errorEl = document.getElementById(
+              "largura-bloco-sapata-error"
+            );
             if (errorEl) errorEl.classList.add("visible");
           }
-          if (comprimentoField && (!comprimentoField.value || parseFloat(comprimentoField.value) <= 0)) {
+          if (
+            comprimentoField &&
+            (!comprimentoField.value || parseFloat(comprimentoField.value) <= 0)
+          ) {
             comprimentoField.classList.add("error");
-            const errorEl = document.getElementById("comprimento-bloco-sapata-error");
+            const errorEl = document.getElementById(
+              "comprimento-bloco-sapata-error"
+            );
             if (errorEl) errorEl.classList.add("visible");
           }
         }, 100);
       }
     });
-    
+
     // Executar ao carregar a página
     updateBlocoSapataFieldsRequired();
   }
@@ -873,15 +1034,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // Adicionar event listeners diretos nos campos de dimensões do bloco sapata
   const alturaBlocoField = document.getElementById("altura-bloco-sapata");
   const larguraBlocoField = document.getElementById("largura-bloco-sapata");
-  const comprimentoBlocoField = document.getElementById("comprimento-bloco-sapata");
+  const comprimentoBlocoField = document.getElementById(
+    "comprimento-bloco-sapata"
+  );
 
   if (alturaBlocoField) {
-    alturaBlocoField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    alturaBlocoField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("altura-bloco-sapata");
       }
     });
-    alturaBlocoField.addEventListener("input", function() {
+    alturaBlocoField.addEventListener("input", function () {
       // Remove erro ao digitar valor válido
       if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
         this.classList.remove("error");
@@ -892,12 +1055,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (larguraBlocoField) {
-    larguraBlocoField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    larguraBlocoField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("largura-bloco-sapata");
       }
     });
-    larguraBlocoField.addEventListener("input", function() {
+    larguraBlocoField.addEventListener("input", function () {
       // Remove erro ao digitar valor válido
       if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
         this.classList.remove("error");
@@ -908,17 +1071,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (comprimentoBlocoField) {
-    comprimentoBlocoField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    comprimentoBlocoField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         const result = validateField("comprimento-bloco-sapata");
         console.log("Resultado da validação:", result);
       }
     });
-    comprimentoBlocoField.addEventListener("input", function() {
+    comprimentoBlocoField.addEventListener("input", function () {
       // Remove erro ao digitar valor válido
       if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
         this.classList.remove("error");
-        const errorEl = document.getElementById("comprimento-bloco-sapata-error");
+        const errorEl = document.getElementById(
+          "comprimento-bloco-sapata-error"
+        );
         if (errorEl) errorEl.classList.remove("visible");
       }
     });
@@ -927,51 +1092,61 @@ document.addEventListener("DOMContentLoaded", function () {
   // Validar campos de bloco sapata ao alterar valores
   const alturaBlocoSapataField = document.getElementById("altura-bloco-sapata");
   if (alturaBlocoSapataField) {
-    alturaBlocoSapataField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    alturaBlocoSapataField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("altura-bloco-sapata");
       }
     });
   }
 
-  const larguraBlocoSapataField = document.getElementById("largura-bloco-sapata");
+  const larguraBlocoSapataField = document.getElementById(
+    "largura-bloco-sapata"
+  );
   if (larguraBlocoSapataField) {
-    larguraBlocoSapataField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    larguraBlocoSapataField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("largura-bloco-sapata");
       }
     });
   }
 
-  const comprimentoBlocoSapataField = document.getElementById("comprimento-bloco-sapata");
+  const comprimentoBlocoSapataField = document.getElementById(
+    "comprimento-bloco-sapata"
+  );
   if (comprimentoBlocoSapataField) {
-    comprimentoBlocoSapataField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    comprimentoBlocoSapataField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("comprimento-bloco-sapata");
       }
     });
   }
 
   // Event listeners para campos complementares com sugestões automáticas
-  const tipoBarreiraEsqField = document.getElementById("tipo-barreira-esquerda");
+  const tipoBarreiraEsqField = document.getElementById(
+    "tipo-barreira-esquerda"
+  );
   if (tipoBarreiraEsqField) {
-    tipoBarreiraEsqField.addEventListener("change", function() {
+    tipoBarreiraEsqField.addEventListener("change", function () {
       const larguraField = document.getElementById("largura-barreira-esquerda");
       if (this.value !== "" && this.value !== "Nenhum" && larguraField) {
         if (!larguraField.value || parseFloat(larguraField.value) === 0) {
           larguraField.value = "0.4";
         }
         larguraField.classList.add("required");
-        const label = document.querySelector('label[for="largura-barreira-esquerda"]');
+        const label = document.querySelector(
+          'label[for="largura-barreira-esquerda"]'
+        );
         if (label) label.classList.add("required");
       } else if (larguraField) {
         larguraField.classList.remove("required");
-        const label = document.querySelector('label[for="largura-barreira-esquerda"]');
+        const label = document.querySelector(
+          'label[for="largura-barreira-esquerda"]'
+        );
         if (label) label.classList.remove("required");
       }
       // Gerenciar exclusividades de elementos complementares
       manageComplementaryElements();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("largura-barreira-esquerda");
       }
     });
@@ -979,23 +1154,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const tipoBarreiraDirField = document.getElementById("tipo-barreira-direita");
   if (tipoBarreiraDirField) {
-    tipoBarreiraDirField.addEventListener("change", function() {
+    tipoBarreiraDirField.addEventListener("change", function () {
       const larguraField = document.getElementById("largura-barreira-direita");
       if (this.value !== "" && this.value !== "Nenhum" && larguraField) {
         if (!larguraField.value || parseFloat(larguraField.value) === 0) {
           larguraField.value = "0.4";
         }
         larguraField.classList.add("required");
-        const label = document.querySelector('label[for="largura-barreira-direita"]');
+        const label = document.querySelector(
+          'label[for="largura-barreira-direita"]'
+        );
         if (label) label.classList.add("required");
       } else if (larguraField) {
         larguraField.classList.remove("required");
-        const label = document.querySelector('label[for="largura-barreira-direita"]');
+        const label = document.querySelector(
+          'label[for="largura-barreira-direita"]'
+        );
         if (label) label.classList.remove("required");
       }
       // Gerenciar exclusividades de elementos complementares
       manageComplementaryElements();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("largura-barreira-direita");
       }
     });
@@ -1003,21 +1182,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const guardaRodasEsqField = document.getElementById("guarda-rodas-esquerdo");
   if (guardaRodasEsqField) {
-    guardaRodasEsqField.addEventListener("change", function() {
-      const larguraField = document.getElementById("largura-guarda-rodas-esquerdo");
+    guardaRodasEsqField.addEventListener("change", function () {
+      const larguraField = document.getElementById(
+        "largura-guarda-rodas-esquerdo"
+      );
       if (this.value !== "" && this.value !== "Nenhum" && larguraField) {
         if (!larguraField.value || parseFloat(larguraField.value) === 0) {
           larguraField.value = "0.9";
         }
-        const label = document.querySelector('label[for="largura-guarda-rodas-esquerdo"]');
+        const label = document.querySelector(
+          'label[for="largura-guarda-rodas-esquerdo"]'
+        );
         if (label) label.classList.add("required");
       } else if (larguraField) {
-        const label = document.querySelector('label[for="largura-guarda-rodas-esquerdo"]');
+        const label = document.querySelector(
+          'label[for="largura-guarda-rodas-esquerdo"]'
+        );
         if (label) label.classList.remove("required");
       }
       // Gerenciar exclusividades de elementos complementares
       manageComplementaryElements();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("largura-guarda-rodas-esquerdo");
       }
     });
@@ -1025,21 +1210,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const guardaRodasDirField = document.getElementById("guarda-rodas-direito");
   if (guardaRodasDirField) {
-    guardaRodasDirField.addEventListener("change", function() {
-      const larguraField = document.getElementById("largura-guarda-rodas-direito");
+    guardaRodasDirField.addEventListener("change", function () {
+      const larguraField = document.getElementById(
+        "largura-guarda-rodas-direito"
+      );
       if (this.value !== "" && this.value !== "Nenhum" && larguraField) {
         if (!larguraField.value || parseFloat(larguraField.value) === 0) {
           larguraField.value = "0.9";
         }
-        const label = document.querySelector('label[for="largura-guarda-rodas-direito"]');
+        const label = document.querySelector(
+          'label[for="largura-guarda-rodas-direito"]'
+        );
         if (label) label.classList.add("required");
       } else if (larguraField) {
-        const label = document.querySelector('label[for="largura-guarda-rodas-direito"]');
+        const label = document.querySelector(
+          'label[for="largura-guarda-rodas-direito"]'
+        );
         if (label) label.classList.remove("required");
       }
       // Gerenciar exclusividades de elementos complementares
       manageComplementaryElements();
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("largura-guarda-rodas-direito");
       }
     });
@@ -1047,19 +1238,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const calcadaEsqField = document.getElementById("tipo-calcada-esquerda");
   if (calcadaEsqField) {
-    calcadaEsqField.addEventListener("change", function() {
+    calcadaEsqField.addEventListener("change", function () {
       const larguraField = document.getElementById("largura-calcada-esquerda");
       if (this.value !== "" && this.value !== "Nenhum" && larguraField) {
         if (!larguraField.value || parseFloat(larguraField.value) === 0) {
           larguraField.value = "1.5";
         }
-        const label = document.querySelector('label[for="largura-calcada-esquerda"]');
+        const label = document.querySelector(
+          'label[for="largura-calcada-esquerda"]'
+        );
         if (label) label.classList.add("required");
       } else if (larguraField) {
-        const label = document.querySelector('label[for="largura-calcada-esquerda"]');
+        const label = document.querySelector(
+          'label[for="largura-calcada-esquerda"]'
+        );
         if (label) label.classList.remove("required");
       }
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("largura-calcada-esquerda");
       }
     });
@@ -1067,19 +1262,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const calcadaDirField = document.getElementById("tipo-calcada-direita");
   if (calcadaDirField) {
-    calcadaDirField.addEventListener("change", function() {
+    calcadaDirField.addEventListener("change", function () {
       const larguraField = document.getElementById("largura-calcada-direita");
       if (this.value !== "" && this.value !== "Nenhum" && larguraField) {
         if (!larguraField.value || parseFloat(larguraField.value) === 0) {
           larguraField.value = "1.5";
         }
-        const label = document.querySelector('label[for="largura-calcada-direita"]');
+        const label = document.querySelector(
+          'label[for="largura-calcada-direita"]'
+        );
         if (label) label.classList.add("required");
       } else if (larguraField) {
-        const label = document.querySelector('label[for="largura-calcada-direita"]');
+        const label = document.querySelector(
+          'label[for="largura-calcada-direita"]'
+        );
         if (label) label.classList.remove("required");
       }
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("largura-calcada-direita");
       }
     });
@@ -1087,27 +1286,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event listeners para validação de ala (não ambas selecionadas)
   const alaParalelaField = document.getElementById("tipo-ala-paralela");
-  const alaPerpendicularField = document.getElementById("tipo-ala-perpendicular");
-  
+  const alaPerpendicularField = document.getElementById(
+    "tipo-ala-perpendicular"
+  );
+
   if (alaParalelaField) {
-    alaParalelaField.addEventListener("change", function() {
-      if (typeof validateAlaExclusivity === 'function') {
+    alaParalelaField.addEventListener("change", function () {
+      if (typeof validateAlaExclusivity === "function") {
         validateAlaExclusivity();
       }
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("tipo-ala-paralela");
         validateField("comprimento-ala");
         validateField("espessura-ala");
       }
     });
   }
-  
+
   if (alaPerpendicularField) {
-    alaPerpendicularField.addEventListener("change", function() {
-      if (typeof validateAlaExclusivity === 'function') {
+    alaPerpendicularField.addEventListener("change", function () {
+      if (typeof validateAlaExclusivity === "function") {
         validateAlaExclusivity();
       }
-      if (typeof validateField === 'function') {
+      if (typeof validateField === "function") {
         validateField("tipo-ala-perpendicular");
         validateField("comprimento-ala");
         validateField("espessura-ala");
@@ -1118,8 +1319,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event listener para espessura ala (máximo 1.5m)
   const espessuraAlaField = document.getElementById("espessura-ala");
   if (espessuraAlaField) {
-    espessuraAlaField.addEventListener("blur", function() {
-      if (typeof validateField === 'function') {
+    espessuraAlaField.addEventListener("blur", function () {
+      if (typeof validateField === "function") {
         validateField("espessura-ala");
       }
     });
@@ -1128,24 +1329,102 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event listener para espessura laje - valida cortina-altura quando muda
   const espessuraLajeField = document.getElementById("espessura-laje");
   if (espessuraLajeField) {
-    espessuraLajeField.addEventListener("input", function() {
+    espessuraLajeField.addEventListener("input", function () {
       // Revalidar cortina-altura quando espessura laje mudar
       const cortinaAlturaField = document.getElementById("cortina-altura");
       if (cortinaAlturaField && cortinaAlturaField.value) {
-        if (typeof validateField === 'function') {
+        if (typeof validateField === "function") {
           validateField("cortina-altura");
         }
       }
     });
-    espessuraLajeField.addEventListener("blur", function() {
+    espessuraLajeField.addEventListener("blur", function () {
       // Revalidar cortina-altura quando espessura laje mudar
       const cortinaAlturaField = document.getElementById("cortina-altura");
       if (cortinaAlturaField && cortinaAlturaField.value) {
-        if (typeof validateField === 'function') {
+        if (typeof validateField === "function") {
           validateField("cortina-altura");
         }
       }
     });
+  }
+
+  // Event listener para tipo-encontro - reagir quando APOIO for selecionado
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  if (tipoEncontroField) {
+    tipoEncontroField.addEventListener("change", function () {
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const qtdTramos = parseInt(qtdTramosField?.value) || 1;
+      // Re-avaliar restrições quando o tipo de encontro mudar
+      handleSingleTramoRestrictions(qtdTramos);
+      // Validar altura longarina com apoio na transição
+      if (typeof validateAlturaLongarinaComApoioTransicao === "function") {
+        validateAlturaLongarinaComApoioTransicao();
+      }
+    });
+  }
+
+  // Event listeners para validar altura longarina com apoio na transição
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  if (alturaLongarinaField) {
+    alturaLongarinaField.addEventListener("blur", function () {
+      if (typeof validateAlturaLongarinaComApoioTransicao === "function") {
+        validateAlturaLongarinaComApoioTransicao();
+      }
+    });
+    alturaLongarinaField.addEventListener("input", function () {
+      // Remove erro ao digitar
+      if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
+        this.classList.remove("error");
+        const cortinaField = document.getElementById("cortina-altura");
+        if (cortinaField) cortinaField.classList.remove("error");
+      }
+    });
+  }
+
+  const cortinaAlturaField = document.getElementById("cortina-altura");
+  if (cortinaAlturaField) {
+    cortinaAlturaField.addEventListener("blur", function () {
+      if (typeof validateAlturaLongarinaComApoioTransicao === "function") {
+        validateAlturaLongarinaComApoioTransicao();
+      }
+    });
+    cortinaAlturaField.addEventListener("input", function () {
+      // Remove erro ao digitar
+      if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
+        this.classList.remove("error");
+        const longarinaField = document.getElementById("altura-longarina");
+        if (longarinaField) longarinaField.classList.remove("error");
+      }
+    });
+  }
+
+  // Event listener para tipo-travessa e tipo-encontro - controlar BERÇO/PILARETE
+  const tipoTravessaField = document.getElementById("tipo-travessa");
+  const tipoApoioTransicaoField = document.getElementById(
+    "tipo-apoio-transicao"
+  );
+
+  if (tipoApoioTransicaoField) {
+    // Listener no TIPO TRAVESSA
+    if (tipoTravessaField) {
+      tipoTravessaField.addEventListener("change", function () {
+        toggleTipoApoioTransicao();
+      });
+    }
+
+    // Listener no TIPO ENCONTRO para ativar automaticamente BERÇO quando = "APOIO"
+    const tipoEncontroFieldForBerco = document.getElementById("tipo-encontro");
+    if (tipoEncontroFieldForBerco) {
+      tipoEncontroFieldForBerco.addEventListener("change", function () {
+        toggleTipoApoioTransicao();
+      });
+    }
+
+    // Aplicar estado inicial
+    setTimeout(() => {
+      toggleTipoApoioTransicao();
+    }, 150);
   }
 
   // Gerar campos iniciais
@@ -1163,3 +1442,5 @@ window.updateTransversinaFieldsRequired = updateTransversinaFieldsRequired;
 window.updateLongarinaFieldsRequired = updateLongarinaFieldsRequired;
 window.manageComplementaryElements = manageComplementaryElements;
 window.autoFillSingleTramo = autoFillSingleTramo;
+window.toggleTipoApoioTransicao = toggleTipoApoioTransicao;
+window.handleSingleTramoRestrictions = handleSingleTramoRestrictions;
