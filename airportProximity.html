@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- Versão: 1.3 -->
+  <!-- Versão: 2.2 -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Análise de Zonas de Drone para Pontes</title>
@@ -203,7 +203,7 @@
 
     .filter-controls {
       display: grid;
-      grid-template-columns: 1fr 1fr auto auto;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
       gap: 1rem;
       align-items: end;
     }
@@ -457,6 +457,80 @@
       display: none;
     }
 
+    /* Estilos para checkboxes de filtro */
+    .checkbox-container {
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      margin: 4px 0;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+
+    .checkbox-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #3498db;
+    }
+
+    .checkbox-item label {
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .checkbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .checkbox-header-title {
+      font-weight: 600;
+      color: #64b5f6;
+      font-size: 0.95rem;
+    }
+
+    .checkbox-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .checkbox-action-btn {
+      background: none;
+      border: none;
+      color: #3498db;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .checkbox-action-btn:hover {
+      background: rgba(52, 152, 219, 0.2);
+      color: #64b5f6;
+    }
+
     /* Responsividade para filtros */
     @media (max-width: 768px) {
       .filter-controls {
@@ -475,56 +549,66 @@
 
     <div class="info-box">
       <h3>📋 Critérios de Classificação das Zonas</h3>
-      <p><strong>Este sistema utiliza os critérios estabelecidos pela legislação brasileira de aviação civil:</strong></p>
+      <p><strong>Este sistema utiliza os critérios estabelecidos pela ICA 100-40 (DECEA) e RBAC-E nº 94/2017 (ANAC):</strong></p>
       
       <div class="criteria-grid">
         <div class="criteria-card prohibited">
-          <h4>🚫 ZONA PROIBIDA</h4>
-          <div class="distance">0 a 5 km</div>
-          <p><strong>Distância do aeroporto/heliponto:</strong> 0 a 5 quilômetros</p>
-          <p><strong>Classificação:</strong> CTR (Zona de Tráfego do Aeródromo)</p>
-          <p><strong>Restrição:</strong> Voo de drone <strong>PROIBIDO</strong> sem autorização especial do DECEA</p>
-        </div>
-
-        <div class="criteria-card restricted">
-          <h4>⚠️ ZONA RESTRITA</h4>
-          <div class="distance">5 a 10 km</div>
-          <p><strong>Distância do aeroporto/heliponto:</strong> 5 a 10 quilômetros</p>
-          <p><strong>Classificação:</strong> Área de Transição</p>
-          <p><strong>Restrição:</strong> Voo de drone <strong>REQUER AUTORIZAÇÃO PRÉVIA</strong> do DECEA/ANAC</p>
+          <h4>🚫 ZONA DE APROXIMAÇÃO/DECOLAGEM (ZAD)</h4>
+          <div class="distance">0 a 9 km</div>
+          <p><strong>Distância do aeroporto/heliponto:</strong> 0 a 9 quilômetros</p>
+          <p><strong>Base Legal:</strong> ICA 100-40/2023 - <strong>Item 2.1.57</strong> (versão 2020) ou <strong>Item 2.1.69</strong> (versão 2023)</p>
+          <p style="font-size: 0.85rem; font-style: italic; margin-top: 8px;">
+            "Para fins de entendimento do constante desta Instrução, considera-se Zona de Aproximação ou de Decolagem 
+            a área compreendida entre a cabeceira da pista até a distância de 9 km (nove quilômetros)."
+          </p>
+          <p><strong>Restrição:</strong> Voo de drone <strong>REQUER MÚLTIPLAS AUTORIZAÇÕES</strong>:</p>
+          <ul style="margin-left: 20px; margin-top: 8px;">
+            <li>Administrador do Aeródromo</li>
+            <li>Órgão Regional DECEA</li>
+            <li>Órgão ATS local (se houver)</li>
+            <li>Paralisação de operações tripuladas pode ser necessária</li>
+          </ul>
         </div>
 
         <div class="criteria-card permitted">
           <h4>✅ ZONA PERMITIDA</h4>
-          <div class="distance">> 10 km</div>
-          <p><strong>Distância do aeroporto/heliponto:</strong> Mais de 10 quilômetros</p>
-          <p><strong>Classificação:</strong> Área Livre</p>
-          <p><strong>Restrição:</strong> Voo de drone <strong>PERMITIDO</strong> seguindo regras gerais da ANAC</p>
+          <div class="distance">> 9 km</div>
+          <p><strong>Distância do aeroporto/heliponto:</strong> Mais de 9 quilômetros</p>
+          <p><strong>Base Legal:</strong> RBAC-E nº 94/2017 e ICA 100-40/2023</p>
+          <p><strong>Restrição:</strong> Voo de drone <strong>PERMITIDO</strong> seguindo regras gerais:</p>
+          <ul style="margin-left: 20px; margin-top: 8px;">
+            <li>Cadastro no SISANT (drones >250g)</li>
+            <li>Altura máxima: 120m (400 pés)</li>
+            <li>Distância mínima de 30m de pessoas</li>
+            <li>Operação VLOS (linha de visada visual)</li>
+          </ul>
         </div>
       </div>
 
       <p style="margin-top: 1.5rem;"><strong>📖 Base Legal:</strong></p>
       <ul>
+        <li><strong>ICA 100-40/2023</strong> - Item 2.1.69 (versão 2023) ou Item 2.1.57 (versão 2020) - Aeronaves não Tripuladas e o Acesso ao Espaço Aéreo Brasileiro (DECEA)</li>
         <li><strong>RBAC-E nº 94/2017</strong> - Regulamento Brasileiro de Aviação Civil Especial (ANAC)</li>
-        <li><strong>AIC-N 21/17</strong> - Aeronautical Information Circular (DECEA)</li>
-        <li><strong>Portaria DECEA nº 415/DGCEA</strong> - Procedimentos para voo de RPAS (drones)</li>
-        <li><strong>ICA 100-40</strong> - Sistemas de Aeronaves Remotamente Pilotadas</li>
+        <li><strong>ICA 100-12</strong> - Regras do Ar (DECEA)</li>
+        <li><strong>Lei 7.565/1986</strong> - Código Brasileiro de Aeronáutica</li>
       </ul>
 
       <p style="margin-top: 1rem; font-size: 0.9rem; color: rgba(255, 255, 255, 0.8);">
-        <strong>⚠️ Importante:</strong> Esta ferramenta fornece uma análise preliminar baseada nas distâncias regulamentares. 
-        Para operações reais com drones, sempre consulte o DECEA (Departamento de Controle do Espaço Aéreo) e a ANAC 
-        (Agência Nacional de Aviação Civil) para obter autorizações específicas.
+        <strong>⚠️ Importante:</strong> A ICA 100-40 especifica que a ZAD possui "distância variável em relação à cabeceira 
+        e em função da altura do voo". Os 9km são o parâmetro geral, mas distâncias exatas podem variar conforme altura, 
+        tipo de aeródromo e procedimentos específicos. Para operações reais com drones, sempre consulte o 
+        <strong>SARPAS (Sistema de Solicitação de Acesso de RPAS)</strong> do DECEA e a ANAC para obter autorizações específicas.
       </p>
     </div>
 
     <div class="note">
       <p><strong>📋 Como usar:</strong></p>
-      <p>1. Faça upload do CSV com dados das pontes (incluindo colunas: Latitude e Longitude)</p>
-      <p>2. O sistema consultará aeroportos próximos automaticamente via OpenStreetMap</p>
-      <p>3. Visualize o relatório com zonas de restrição para drones baseadas na legislação</p>
-      <p>4. Use os filtros para localizar obras específicas</p>
-      <p>5. Exporte o resultado completo em CSV</p>
+      <p>1. Faça upload do CSV com dados das pontes (aceita múltiplos formatos)</p>
+      <p>2. O sistema detectará automaticamente o formato do CSV</p>
+      <p>3. Consulta aeroportos próximos via OpenStreetMap</p>
+      <p>4. Visualize o relatório com zonas de restrição baseadas na legislação</p>
+      <p>5. Use os filtros para localizar obras específicas</p>
+      <p>6. Exporte o resultado completo em CSV</p>
     </div>
 
     <div class="upload-section">
@@ -557,30 +641,22 @@
         </div>
         <div class="stat-card">
           <div class="stat-value" id="pontesProibidas">0</div>
-          <div class="stat-label">🚫 Zona Proibida</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="pontesRestritas">0</div>
-          <div class="stat-label">⚠️ Zona Restrita</div>
+          <div class="stat-label">🚫 ZAD (0-9km)</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" id="pontesPermitidas">0</div>
-          <div class="stat-label">✅ Zona Permitida</div>
+          <div class="stat-label">✅ Zona Permitida (>9km)</div>
         </div>
       </div>
 
       <div class="legend">
         <div class="legend-item">
           <div class="legend-color" style="background: rgba(231, 76, 60, 0.7);"></div>
-          <span>🚫 Proibido (0-5km)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color" style="background: rgba(241, 196, 15, 0.7);"></div>
-          <span>⚠️ Restrito (5-10km)</span>
+          <span>🚫 ZAD - Requer Autorização (0-9km)</span>
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: rgba(46, 204, 113, 0.7);"></div>
-          <span>✅ Permitido (>10km)</span>
+          <span>✅ Permitido (>9km)</span>
         </div>
       </div>
 
@@ -607,24 +683,63 @@
           </div>
           
           <div class="filter-group">
-            <label for="filterUF">Estado (UF)</label>
-            <select id="filterUF" onchange="aplicarFiltros()">
-              <option value="">Todos os estados</option>
-            </select>
+            <label>Região do Brasil</label>
+            <div class="checkbox-container" id="regiaoContainer">
+              <div class="checkbox-header">
+                <span class="checkbox-header-title">Selecione as regiões</span>
+                <div class="checkbox-actions">
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosRegiao(true)">Todos</button>
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosRegiao(false)">Limpar</button>
+                </div>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-norte" value="Norte" onchange="aplicarFiltros()">
+                <label for="regiao-norte">Norte</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-nordeste" value="Nordeste" onchange="aplicarFiltros()">
+                <label for="regiao-nordeste">Nordeste</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-centro-oeste" value="Centro-Oeste" onchange="aplicarFiltros()">
+                <label for="regiao-centro-oeste">Centro-Oeste</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-sudeste" value="Sudeste" onchange="aplicarFiltros()">
+                <label for="regiao-sudeste">Sudeste</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="regiao-sul" value="Sul" onchange="aplicarFiltros()">
+                <label for="regiao-sul">Sul</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Estado (UF)</label>
+            <div class="checkbox-container" id="ufContainer">
+              <div class="checkbox-header">
+                <span class="checkbox-header-title">Selecione os estados</span>
+                <div class="checkbox-actions">
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosUF(true)">Todos</button>
+                  <button type="button" class="checkbox-action-btn" onclick="selecionarTodosUF(false)">Limpar</button>
+                </div>
+              </div>
+              <div id="ufCheckboxList"></div>
+            </div>
           </div>
 
           <div class="filter-group">
             <label for="filterZona">Zona</label>
             <select id="filterZona" onchange="aplicarFiltros()">
               <option value="">Todas as zonas</option>
-              <option value="prohibited">🚫 Proibido</option>
-              <option value="restricted">⚠️ Restrito</option>
-              <option value="permitted">✅ Permitido</option>
+              <option value="prohibited">🚫 ZAD (0-9km)</option>
+              <option value="permitted">✅ Permitido (>9km)</option>
             </select>
           </div>
           
-          <button class="btn-clear" onclick="limparFiltros()">
-            🗑️ Limpar
+          <button class="btn-clear" onclick="limparFiltros()" style="align-self: end;">
+            🗑️ Limpar Tudo
           </button>
         </div>
         
@@ -666,13 +781,30 @@
   </div>
 
   <script>
-    // Versão: 1.3
+    // Versão: 2.2
     
     // Variáveis globais
     let pontesData = [];
     let aeroportosCache = new Map();
     let resultadosAnalise = [];
     let debugMessages = [];
+    let formatoCSV = null; // 'tipo1' ou 'tipo2'
+    let separadorCSV = ','; // Detectado automaticamente
+
+    // Mapeamento de UF para Região
+    const ufParaRegiao = {
+      // Norte
+      'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
+      // Nordeste
+      'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste', 
+      'PE': 'Nordeste', 'PI': 'Nordeste', 'RN': 'Nordeste', 'SE': 'Nordeste',
+      // Centro-Oeste
+      'DF': 'Centro-Oeste', 'GO': 'Centro-Oeste', 'MT': 'Centro-Oeste', 'MS': 'Centro-Oeste',
+      // Sudeste
+      'ES': 'Sudeste', 'MG': 'Sudeste', 'RJ': 'Sudeste', 'SP': 'Sudeste',
+      // Sul
+      'PR': 'Sul', 'RS': 'Sul', 'SC': 'Sul'
+    };
 
     // Função para adicionar mensagens de debug
     function addDebugLog(message, type = 'info') {
@@ -691,6 +823,27 @@
       console.log(`[${type.toUpperCase()}] ${message}`);
     }
 
+    // Detectar separador do CSV (vírgula, ponto e vírgula ou tab)
+    function detectarSeparador(primeiraLinha) {
+      const separadores = [';', ',', '\t'];
+      let melhorSeparador = ',';
+      let maiorContagem = 0;
+      
+      separadores.forEach(sep => {
+        const contagem = (primeiraLinha.match(new RegExp(sep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+        if (contagem > maiorContagem) {
+          maiorContagem = contagem;
+          melhorSeparador = sep;
+        }
+      });
+      
+      const nomeSeparador = melhorSeparador === ';' ? 'ponto e vírgula (;)' : 
+                           melhorSeparador === '\t' ? 'tab (\\t)' : 'vírgula (,)';
+      addDebugLog(`Separador detectado: ${nomeSeparador}`, 'success');
+      
+      return melhorSeparador;
+    }
+
     // Event listener para upload de CSV
     document.getElementById('csvInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
@@ -701,6 +854,7 @@
       // Limpar debug log anterior
       document.getElementById('debugLog').innerHTML = '';
       debugMessages = [];
+      formatoCSV = null;
       
       const reader = new FileReader();
       reader.onload = function(event) {
@@ -709,6 +863,115 @@
       };
       reader.readAsText(file, 'UTF-8');
     });
+
+    // Detectar formato do CSV baseado nos headers
+    function detectarFormatoCSV(headers) {
+      addDebugLog('Detectando formato do CSV...', 'info');
+      
+      // Formato Tipo 1: Tem "Código SGO"
+      const temCodigoSGO = headers.some(h => h.toLowerCase().includes('código sgo'));
+      
+      // Formato Tipo 2: Tem "Via / UF / km" ou similar
+      const temViaUFKm = headers.some(h => 
+        h.toLowerCase().includes('via') && 
+        h.toLowerCase().includes('uf') && 
+        h.toLowerCase().includes('km')
+      );
+      
+      if (temCodigoSGO) {
+        formatoCSV = 'tipo1';
+        addDebugLog('✓ Formato detectado: CSV Tipo 1 (formato antigo)', 'success');
+        return 'tipo1';
+      } else if (temViaUFKm || headers.some(h => h.toLowerCase() === 'código')) {
+        formatoCSV = 'tipo2';
+        addDebugLog('✓ Formato detectado: CSV Tipo 2 (formato novo)', 'success');
+        return 'tipo2';
+      } else {
+        formatoCSV = 'tipo1';
+        addDebugLog('⚠️ Formato não identificado claramente - usando Tipo 1 como padrão', 'warning');
+        return 'tipo1';
+      }
+    }
+
+    // Extrair Rodovia, UF e Km da coluna "Via / UF / km"
+    function extrairViaUFKm(texto) {
+      // Padrão: "BR-319 / AM / 734,31"
+      const regex = /^([A-Z]{2}-\d+)\s*\/\s*([A-Z]{2})\s*\/\s*([\d,\.]+)$/;
+      const match = texto.trim().match(regex);
+      
+      if (match) {
+        return {
+          rodovia: match[1],      // BR-319
+          uf: match[2],            // AM
+          km: match[3]             // 734,31
+        };
+      }
+      
+      // Tentar extrair pelo menos a UF (segundo elemento)
+      const partes = texto.split('/').map(p => p.trim());
+      if (partes.length >= 2) {
+        return {
+          rodovia: partes[0] || '',
+          uf: partes[1] || '',
+          km: partes[2] || ''
+        };
+      }
+      
+      return { rodovia: '', uf: '', km: '' };
+    }
+
+    // Normalizar dados do CSV para formato interno único
+    function normalizarDados(ponte, formato) {
+      const normalizado = {};
+      
+      if (formato === 'tipo1') {
+        // Mapeamento direto Tipo 1
+        normalizado.codigo = ponte['Código SGO'] || ponte['Codigo SGO'] || '';
+        normalizado.identificacao = ponte['Identificação'] || ponte['Identificacao'] || '';
+        normalizado.municipio = ponte['Município'] || ponte['Municipio'] || '';
+        normalizado.uf = ponte['UF'] || '';
+        normalizado.regiao = ponte['Região'] || ponte['Regiao'] || '';
+        normalizado.rodovia = ponte['Rodovia'] || '';
+        normalizado.km = ponte['Km'] || '';
+        normalizado.natureza = ponte['Natureza'] || '';
+        normalizado.comprimento = ponte['Comprimento'] || '';
+        normalizado.largura = ponte['Largura'] || '';
+        normalizado.ano = ponte['Ano'] || '';
+        normalizado.latitude = ponte['Latitude'] || '';
+        normalizado.longitude = ponte['Longitude'] || '';
+        
+      } else if (formato === 'tipo2') {
+        // Mapeamento Tipo 2 com extração
+        normalizado.codigo = ponte['Código'] || ponte['Codigo'] || '';
+        normalizado.identificacao = ponte['Identificação da OAE'] || ponte['Identificacao da OAE'] || '';
+        normalizado.municipio = ''; // Não disponível no Tipo 2
+        normalizado.regiao = ''; // Não disponível no Tipo 2
+        normalizado.natureza = ''; // Não disponível no Tipo 2
+        normalizado.ano = ''; // Não disponível no Tipo 2
+        
+        // Extrair Via/UF/Km
+        const viaUFKm = ponte['Via / UF / km'] || ponte['Via / UF / Km'] || '';
+        const extraido = extrairViaUFKm(viaUFKm);
+        normalizado.rodovia = extraido.rodovia;
+        normalizado.uf = extraido.uf;
+        normalizado.km = extraido.km;
+        
+        // Extensão = Comprimento
+        normalizado.comprimento = ponte['Extensão (m)'] || ponte['Extensao (m)'] || '';
+        normalizado.largura = ponte['Largura (m)'] || '';
+        
+        normalizado.latitude = ponte['Latitude'] || '';
+        normalizado.longitude = ponte['Longitude'] || '';
+        
+        // Campos extras do Tipo 2
+        normalizado.codigoSNV = ponte['Código SNV'] || ponte['Codigo SNV'] || '';
+        normalizado.versaoSNV = ponte['Versão SNV'] || ponte['Versao SNV'] || '';
+        normalizado.dataVistoria = ponte['Data da Vistoria'] || '';
+        normalizado.notaTecnica = ponte['Nota Técnica'] || ponte['Nota Tecnica'] || '';
+      }
+      
+      return normalizado;
+    }
 
     // Parser CSV robusto que respeita campos com aspas
     function parseCSVLine(line) {
@@ -729,8 +992,8 @@
             // Alternar estado de aspas
             inQuotes = !inQuotes;
           }
-        } else if (char === ',' && !inQuotes) {
-          // Vírgula fora de aspas = separador
+        } else if (char === separadorCSV && !inQuotes) {
+          // Separador fora de aspas = novo campo
           result.push(current.trim());
           current = '';
         } else {
@@ -744,7 +1007,7 @@
       return result;
     }
 
-    // Parse do CSV com parser robusto
+    // Parse do CSV com detecção automática de formato
     function parseCSV(csvContent) {
       addDebugLog('Iniciando parse do CSV...', 'info');
       
@@ -757,11 +1020,15 @@
         return;
       }
       
-      // Parse da primeira linha (cabeçalho)
+      // Parse da primeira linha (cabeçalho) - detectar separador primeiro
       const headerLine = lines[0].trim();
+      separadorCSV = detectarSeparador(headerLine);
       const headers = parseCSVLine(headerLine);
       
       addDebugLog(`Cabeçalhos encontrados: ${headers.join(', ')}`, 'success');
+      
+      // Detectar formato do CSV
+      const formato = detectarFormatoCSV(headers);
       
       // Verificar se tem colunas Latitude e Longitude
       const hasLatitude = headers.some(h => h.toLowerCase().includes('latitude'));
@@ -797,14 +1064,17 @@
             ponte[header] = values[index] || '';
           });
           
+          // Normalizar dados baseado no formato
+          const ponteNormalizada = normalizarDados(ponte, formato);
+          
           // Validar coordenadas
-          const lat = parseFloat(ponte.Latitude);
-          const lng = parseFloat(ponte.Longitude);
+          const lat = parseFloat(ponteNormalizada.latitude.replace(',', '.'));
+          const lng = parseFloat(ponteNormalizada.longitude.replace(',', '.'));
           
           if (isNaN(lat) || isNaN(lng)) {
             linhasSemCoordenadas++;
             if (linhasSemCoordenadas <= 5) {
-              addDebugLog(`Linha ${i + 1}: Coordenadas inválidas (Lat: ${ponte.Latitude}, Lng: ${ponte.Longitude})`, 'warning');
+              addDebugLog(`Linha ${i + 1}: Coordenadas inválidas (Lat: ${ponteNormalizada.latitude}, Lng: ${ponteNormalizada.longitude})`, 'warning');
             }
             continue;
           }
@@ -818,10 +1088,10 @@
           }
           
           // Adicionar coordenadas numéricas
-          ponte.LatitudeNum = lat;
-          ponte.LongitudeNum = lng;
+          ponteNormalizada.latitudeNum = lat;
+          ponteNormalizada.longitudeNum = lng;
           
-          pontesData.push(ponte);
+          pontesData.push(ponteNormalizada);
           linhasValidas++;
           
         } catch (error) {
@@ -834,6 +1104,7 @@
       
       // Resumo do parse
       addDebugLog('=== RESUMO DO PARSE ===', 'info');
+      addDebugLog(`Formato detectado: ${formato === 'tipo1' ? 'CSV Tipo 1' : 'CSV Tipo 2'}`, 'info');
       addDebugLog(`Total de linhas processadas: ${linhasProcessadas}`, 'info');
       addDebugLog(`Linhas válidas importadas: ${linhasValidas}`, 'success');
       addDebugLog(`Linhas sem coordenadas válidas: ${linhasSemCoordenadas}`, 'warning');
@@ -866,10 +1137,10 @@
       let minLng = Infinity, maxLng = -Infinity;
       
       pontesData.forEach(ponte => {
-        minLat = Math.min(minLat, ponte.LatitudeNum);
-        maxLat = Math.max(maxLat, ponte.LatitudeNum);
-        minLng = Math.min(minLng, ponte.LongitudeNum);
-        maxLng = Math.max(maxLng, ponte.LongitudeNum);
+        minLat = Math.min(minLat, ponte.latitudeNum);
+        maxLat = Math.max(maxLat, ponte.latitudeNum);
+        minLng = Math.min(minLng, ponte.longitudeNum);
+        maxLng = Math.max(maxLng, ponte.longitudeNum);
       });
       
       // Expandir bbox em 20km (~0.2 graus)
@@ -986,8 +1257,8 @@
 
       aeroportos.forEach(aeroporto => {
         const distancia = calcularDistanciaHaversine(
-          ponte.LatitudeNum, 
-          ponte.LongitudeNum, 
+          ponte.latitudeNum, 
+          ponte.longitudeNum, 
           aeroporto.lat, 
           aeroporto.lng
         );
@@ -999,15 +1270,12 @@
       });
 
       let zona, descricao;
-      if (menorDistancia <= 5) {
+      if (menorDistancia <= 9) {
         zona = 'prohibited';
-        descricao = '🚫 Proibido';
-      } else if (menorDistancia <= 10) {
-        zona = 'restricted';
-        descricao = '⚠️ Restrito';
+        descricao = '🚫 ZAD (0-9km)';
       } else {
         zona = 'permitted';
-        descricao = '✅ Permitido';
+        descricao = '✅ Permitido (>9km)';
       }
 
       return {
@@ -1043,15 +1311,13 @@
       // Calcular estatísticas
       const total = resultadosAnalise.length;
       const proibidas = resultadosAnalise.filter(r => r.zona === 'prohibited').length;
-      const restritas = resultadosAnalise.filter(r => r.zona === 'restricted').length;
       const permitidas = resultadosAnalise.filter(r => r.zona === 'permitted').length;
 
       document.getElementById('totalPontes').textContent = total;
       document.getElementById('pontesProibidas').textContent = proibidas;
-      document.getElementById('pontesRestritas').textContent = restritas;
       document.getElementById('pontesPermitidas').textContent = permitidas;
 
-      addDebugLog(`Estatísticas: ${total} total | ${proibidas} proibidas | ${restritas} restritas | ${permitidas} permitidas`, 'success');
+      addDebugLog(`Estatísticas: ${total} total | ${proibidas} ZAD (0-9km) | ${permitidas} permitidas (>9km)`, 'success');
 
       // Preencher tabela
       const tbody = document.getElementById('resultsBody');
@@ -1061,18 +1327,18 @@
         const row = tbody.insertRow();
         row.className = `zone-${resultado.zona}`;
         row.dataset.index = index;
-        row.dataset.codigo = resultado['Código SGO'] || '';
-        row.dataset.uf = resultado['UF'] || '';
+        row.dataset.codigo = resultado.codigo || '';
+        row.dataset.uf = resultado.uf || '';
         row.dataset.zona = resultado.zona || '';
 
-        row.insertCell(0).textContent = resultado['Código SGO'] || '-';
-        row.insertCell(1).textContent = resultado['Identificação'] || '-';
-        row.insertCell(2).textContent = resultado['Município'] || '-';
-        row.insertCell(3).textContent = resultado['UF'] || '-';
-        row.insertCell(4).textContent = resultado['Rodovia'] || '-';
-        row.insertCell(5).textContent = resultado['Km'] || '-';
-        row.insertCell(6).textContent = resultado.Latitude || '-';
-        row.insertCell(7).textContent = resultado.Longitude || '-';
+        row.insertCell(0).textContent = resultado.codigo || '-';
+        row.insertCell(1).textContent = resultado.identificacao || '-';
+        row.insertCell(2).textContent = resultado.municipio || '-';
+        row.insertCell(3).textContent = resultado.uf || '-';
+        row.insertCell(4).textContent = resultado.rodovia || '-';
+        row.insertCell(5).textContent = resultado.km || '-';
+        row.insertCell(6).textContent = resultado.latitude || '-';
+        row.insertCell(7).textContent = resultado.longitude || '-';
         
         const zonaCell = row.insertCell(8);
         zonaCell.innerHTML = `<span class="zone-badge badge-${resultado.zona}">${resultado.descricao}</span>`;
@@ -1085,8 +1351,8 @@
         row.insertCell(10).textContent = resultado.aeroportoProximo || 'N/A';
       });
 
-      // Popular dropdown de UFs
-      popularDropdownUFs();
+      // Popular checkboxes de UFs
+      popularCheckboxesUF();
 
       // Mostrar seções
       document.getElementById('statsSection').style.display = 'block';
@@ -1101,27 +1367,62 @@
       }, 1000);
     }
 
-    // Popular dropdown de UFs com valores únicos
-    function popularDropdownUFs() {
-      const ufsUnicas = [...new Set(resultadosAnalise.map(r => r.UF).filter(uf => uf))].sort();
-      const selectUF = document.getElementById('filterUF');
+    // Popular checkboxes de UFs com valores únicos
+    function popularCheckboxesUF() {
+      const ufsUnicas = [...new Set(resultadosAnalise.map(r => r.uf).filter(uf => uf))].sort();
+      const container = document.getElementById('ufCheckboxList');
       
-      // Limpar options existentes (exceto o primeiro)
-      selectUF.innerHTML = '<option value="">Todos os estados</option>';
+      // Limpar checkboxes existentes
+      container.innerHTML = '';
       
       ufsUnicas.forEach(uf => {
-        const option = document.createElement('option');
-        option.value = uf;
-        option.textContent = uf;
-        selectUF.appendChild(option);
+        const div = document.createElement('div');
+        div.className = 'checkbox-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `uf-${uf}`;
+        checkbox.value = uf;
+        checkbox.onchange = aplicarFiltros;
+        
+        const label = document.createElement('label');
+        label.htmlFor = `uf-${uf}`;
+        label.textContent = uf;
+        
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        container.appendChild(div);
       });
+    }
+
+    // Selecionar/Desselecionar todas as regiões
+    function selecionarTodosRegiao(selecionar) {
+      const checkboxes = document.querySelectorAll('#regiaoContainer input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = selecionar);
+      aplicarFiltros();
+    }
+
+    // Selecionar/Desselecionar todos os UFs
+    function selecionarTodosUF(selecionar) {
+      const checkboxes = document.querySelectorAll('#ufCheckboxList input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = selecionar);
+      aplicarFiltros();
     }
 
     // Aplicar filtros
     function aplicarFiltros() {
       const filterCodigo = document.getElementById('filterCodigo').value.toLowerCase().trim();
-      const filterUF = document.getElementById('filterUF').value;
       const filterZona = document.getElementById('filterZona').value;
+      
+      // Obter regiões selecionadas
+      const regioesSelecionadas = Array.from(
+        document.querySelectorAll('#regiaoContainer input[type="checkbox"]:checked')
+      ).map(cb => cb.value);
+      
+      // Obter UFs selecionadas
+      const ufsSelecionadas = Array.from(
+        document.querySelectorAll('#ufCheckboxList input[type="checkbox"]:checked')
+      ).map(cb => cb.value);
       
       const tbody = document.getElementById('resultsBody');
       const rows = tbody.getElementsByTagName('tr');
@@ -1134,10 +1435,19 @@
         
         // Verificar se passa nos filtros
         const codigoMatch = !filterCodigo || codigo.includes(filterCodigo);
-        const ufMatch = !filterUF || uf === filterUF;
+        
+        // Filtro de região
+        const regiaoMatch = regioesSelecionadas.length === 0 || 
+                           regioesSelecionadas.includes(ufParaRegiao[uf]);
+        
+        // Filtro de UF
+        const ufMatch = ufsSelecionadas.length === 0 || 
+                       ufsSelecionadas.includes(uf);
+        
+        // Filtro de zona
         const zonaMatch = !filterZona || zona === filterZona;
         
-        if (codigoMatch && ufMatch && zonaMatch) {
+        if (codigoMatch && regiaoMatch && ufMatch && zonaMatch) {
           row.classList.remove('hidden');
           visibleCount++;
         } else {
@@ -1175,8 +1485,14 @@
     // Limpar filtros
     function limparFiltros() {
       document.getElementById('filterCodigo').value = '';
-      document.getElementById('filterUF').value = '';
       document.getElementById('filterZona').value = '';
+      
+      // Desmarcar todas as regiões
+      document.querySelectorAll('#regiaoContainer input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
+      // Desmarcar todas as UFs
+      document.querySelectorAll('#ufCheckboxList input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
       aplicarFiltros();
     }
 
@@ -1184,37 +1500,66 @@
     function exportarCSV() {
       if (resultadosAnalise.length === 0) return;
 
-      // Cabeçalhos
-      const headers = [
-        'ID', 'Código SGO', 'Identificação', 'Município', 'UF', 'Região', 
-        'Rodovia', 'Km', 'Natureza', 'Comprimento', 'Largura', 'Ano', 
-        'Latitude', 'Longitude', 'Zona_Drone', 'Descrição_Zona', 
-        'Distância_Aeroporto_km', 'Aeroporto_Próximo'
-      ];
+      // Cabeçalhos adaptados ao formato
+      let headers;
+      if (formatoCSV === 'tipo2') {
+        headers = [
+          'Código', 'Identificação da OAE', 'Via / UF / km', 'Extensão (m)', 
+          'Largura (m)', 'Latitude', 'Longitude', 'Zona_Drone', 'Descrição_Zona', 
+          'Distância_Aeroporto_km', 'Aeroporto_Próximo'
+        ];
+      } else {
+        headers = [
+          'Código SGO', 'Identificação', 'Município', 'UF', 'Região', 
+          'Rodovia', 'Km', 'Natureza', 'Comprimento', 'Largura', 'Ano', 
+          'Latitude', 'Longitude', 'Zona_Drone', 'Descrição_Zona', 
+          'Distância_Aeroporto_km', 'Aeroporto_Próximo'
+        ];
+      }
 
       let csvContent = headers.join(',') + '\n';
 
       resultadosAnalise.forEach(resultado => {
-        const row = [
-          resultado.ID || '',
-          resultado['Código SGO'] || '',
-          `"${(resultado['Identificação'] || '').replace(/"/g, '""')}"`,
-          resultado['Município'] || '',
-          resultado['UF'] || '',
-          resultado['Região'] || '',
-          resultado['Rodovia'] || '',
-          resultado['Km'] || '',
-          resultado['Natureza'] || '',
-          resultado['Comprimento'] || '',
-          resultado['Largura'] || '',
-          resultado['Ano'] || '',
-          resultado.Latitude || '',
-          resultado.Longitude || '',
-          resultado.zona || '',
-          `"${resultado.descricao || ''}"`,
-          resultado.distanciaAeroporto !== null ? resultado.distanciaAeroporto.toFixed(2) : '',
-          `"${(resultado.aeroportoProximo || '').replace(/"/g, '""')}"`
-        ];
+        let row;
+        
+        if (formatoCSV === 'tipo2') {
+          // Reconstruir coluna Via / UF / km
+          const viaUFKm = `${resultado.rodovia} / ${resultado.uf} / ${resultado.km}`;
+          
+          row = [
+            resultado.codigo || '',
+            `"${(resultado.identificacao || '').replace(/"/g, '""')}"`,
+            `"${viaUFKm}"`,
+            resultado.comprimento || '',
+            resultado.largura || '',
+            resultado.latitude || '',
+            resultado.longitude || '',
+            resultado.zona || '',
+            `"${resultado.descricao || ''}"`,
+            resultado.distanciaAeroporto !== null ? resultado.distanciaAeroporto.toFixed(2) : '',
+            `"${(resultado.aeroportoProximo || '').replace(/"/g, '""')}"`
+          ];
+        } else {
+          row = [
+            resultado.codigo || '',
+            `"${(resultado.identificacao || '').replace(/"/g, '""')}"`,
+            resultado.municipio || '',
+            resultado.uf || '',
+            resultado.regiao || '',
+            resultado.rodovia || '',
+            resultado.km || '',
+            resultado.natureza || '',
+            resultado.comprimento || '',
+            resultado.largura || '',
+            resultado.ano || '',
+            resultado.latitude || '',
+            resultado.longitude || '',
+            resultado.zona || '',
+            `"${resultado.descricao || ''}"`,
+            resultado.distanciaAeroporto !== null ? resultado.distanciaAeroporto.toFixed(2) : '',
+            `"${(resultado.aeroportoProximo || '').replace(/"/g, '""')}"`
+          ];
+        }
 
         csvContent += row.join(',') + '\n';
       });
