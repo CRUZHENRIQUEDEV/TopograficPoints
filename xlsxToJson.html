@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Excel/CSV → JSON - SICRO</title>
+    
+    <!-- Biblioteca SheetJS para ler Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        .drop-zone:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+            transform: scale(1.02);
+        }
+
+        .drop-zone.dragover {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+
+        .drop-zone-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .drop-zone-subtext {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .file-stats {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .options {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .option-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-convert {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-convert:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-convert:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #d32f2f;
+        }
+
+        .preview {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .preview.show {
+            display: block;
+        }
+
+        .preview-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .json-preview {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .success-message {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Conversor Excel/CSV → JSON</h1>
+        <p class="subtitle">Converta tabelas SICRO/SINAPI para JSON em segundos</p>
+
+        <!-- Zona de Upload -->
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-icon">📁</div>
+            <div class="drop-zone-text">Arraste seu arquivo aqui</div>
+            <div class="drop-zone-subtext">ou clique para selecionar (.xlsx, .xls, .csv)</div>
+        </div>
+
+        <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
+
+        <!-- Info do Arquivo -->
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-stats" id="fileStats"></div>
+        </div>
+
+        <!-- Opções -->
+        <div class="options">
+            <div class="option-group">
+                <label>Nome do Estado (opcional):</label>
+                <input type="text" id="estadoInput" placeholder="Ex: SP, RJ, MG...">
+            </div>
+
+            <div class="option-group">
+                <label>Aba da planilha:</label>
+                <select id="sheetSelect">
+                    <option value="0">Primeira aba</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prettifyJson" checked>
+                    <label for="prettifyJson">JSON formatado (legível)</label>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="includeEmpty">
+                    <label for="includeEmpty">Incluir células vazias</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="buttons">
+            <button class="btn-convert" id="btnConvert" disabled>
+                🔄 Converter para JSON
+            </button>
+            <button class="btn-clear" id="btnClear">
+                🗑️ Limpar
+            </button>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview" id="preview">
+            <div class="preview-title">📄 Preview do JSON:</div>
+            <pre class="json-preview" id="jsonPreview"></pre>
+        </div>
+
+        <!-- Mensagem de Sucesso -->
+        <div class="success-message" id="successMessage">
+            ✅ Arquivo JSON baixado com sucesso!
+        </div>
+    </div>
+
+    <script>
+        // Elementos
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileStats = document.getElementById('fileStats');
+        const estadoInput = document.getElementById('estadoInput');
+        const sheetSelect = document.getElementById('sheetSelect');
+        const prettifyJson = document.getElementById('prettifyJson');
+        const includeEmpty = document.getElementById('includeEmpty');
+        const btnConvert = document.getElementById('btnConvert');
+        const btnClear = document.getElementById('btnClear');
+        const preview = document.getElementById('preview');
+        const jsonPreview = document.getElementById('jsonPreview');
+        const successMessage = document.getElementById('successMessage');
+
+        let currentFile = null;
+        let workbook = null;
+
+        // Click na drop zone abre seletor
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Drag & Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        // Seleção de arquivo
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        // Processar arquivo
+        function handleFile(file) {
+            if (!file) return;
+
+            const validTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel',
+                'text/csv'
+            ];
+
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                alert('❌ Formato inválido! Use .xlsx, .xls ou .csv');
+                return;
+            }
+
+            currentFile = file;
+            fileName.textContent = `📄 ${file.name}`;
+            fileStats.textContent = `Tamanho: ${(file.size / 1024).toFixed(2)} KB`;
+            fileInfo.classList.add('show');
+
+            // Ler arquivo
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                workbook = XLSX.read(data, { type: 'array' });
+
+                // Preencher dropdown de abas
+                sheetSelect.innerHTML = workbook.SheetNames.map((name, index) => 
+                    `<option value="${index}">${name}</option>`
+                ).join('');
+
+                btnConvert.disabled = false;
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Converter
+        btnConvert.addEventListener('click', () => {
+            if (!workbook) return;
+
+            const sheetIndex = parseInt(sheetSelect.value);
+            const sheetName = workbook.SheetNames[sheetIndex];
+            const worksheet = workbook.Sheets[sheetName];
+
+            // Converter para JSON
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                defval: includeEmpty.checked ? null : undefined,
+                blankrows: false
+            });
+
+            // Adicionar metadata
+            const output = {
+                metadata: {
+                    arquivo: currentFile.name,
+                    estado: estadoInput.value || null,
+                    aba: sheetName,
+                    totalRegistros: jsonData.length,
+                    dataConversao: new Date().toISOString()
+                },
+                dados: jsonData
+            };
+
+            // Formatar JSON
+            const jsonString = prettifyJson.checked 
+                ? JSON.stringify(output, null, 2)
+                : JSON.stringify(output);
+
+            // Preview
+            jsonPreview.textContent = jsonString.substring(0, 2000) + 
+                (jsonString.length > 2000 ? '\n\n... (preview limitado a 2000 caracteres)' : '');
+            preview.classList.add('show');
+
+            // Download
+            downloadJSON(jsonString, currentFile.name);
+
+            // Mensagem de sucesso
+            successMessage.classList.add('show');
+            setTimeout(() => successMessage.classList.remove('show'), 3000);
+        });
+
+        // Download JSON
+        function downloadJSON(jsonString, originalFileName) {
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = originalFileName.replace(/\.(xlsx|xls|csv)$/i, '.json');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Limpar
+        btnClear.addEventListener('click', () => {
+            currentFile = null;
+            workbook = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            preview.classList.remove('show');
+            btnConvert.disabled = true;
+            estadoInput.value = '';
+        });
+    </script>
+</body>
+</html>
