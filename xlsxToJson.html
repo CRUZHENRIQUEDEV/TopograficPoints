@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor Excel/CSV → JSON - SICRO</title>
+    <title>Conversor Excel/CSV → JSON/CSV (Múltiplos) - SICRO</title>
     
-    <!-- Biblioteca SheetJS para ler Excel -->
+    <!-- Bibliotecas -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <style>
         * {
@@ -19,9 +21,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
@@ -29,8 +28,8 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 800px;
-            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 40px;
         }
 
@@ -87,29 +86,6 @@
             display: none;
         }
 
-        .file-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e3f2fd;
-            border-radius: 10px;
-            display: none;
-        }
-
-        .file-info.show {
-            display: block;
-        }
-
-        .file-name {
-            font-weight: bold;
-            color: #1976d2;
-            margin-bottom: 5px;
-        }
-
-        .file-stats {
-            font-size: 14px;
-            color: #666;
-        }
-
         .options {
             margin-top: 30px;
             padding: 20px;
@@ -117,8 +93,14 @@
             border-radius: 10px;
         }
 
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
         .option-group {
-            margin-bottom: 15px;
+            margin-bottom: 0;
         }
 
         label {
@@ -126,6 +108,7 @@
             margin-bottom: 5px;
             color: #333;
             font-weight: 500;
+            font-size: 14px;
         }
 
         input[type="text"], select {
@@ -155,13 +138,13 @@
         }
 
         .buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-top: 30px;
         }
 
         button {
-            flex: 1;
             padding: 15px;
             border: none;
             border-radius: 10px;
@@ -176,7 +159,7 @@
             color: white;
         }
 
-        .btn-convert:hover {
+        .btn-convert:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
@@ -185,6 +168,15 @@
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .btn-download-all {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-download-all:hover:not(:disabled) {
+            background: #45a049;
         }
 
         .btn-clear {
@@ -196,106 +188,263 @@
             background: #d32f2f;
         }
 
-        .preview {
+        .progress-container {
             margin-top: 30px;
             display: none;
         }
 
-        .preview.show {
+        .progress-container.show {
             display: block;
         }
 
-        .preview-title {
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .files-list {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .files-list.show {
+            display: block;
+        }
+
+        .files-list-title {
             font-size: 18px;
             color: #333;
             margin-bottom: 15px;
             font-weight: bold;
         }
 
-        .json-preview {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
+        .file-item {
+            background: #f8f9fa;
             border-radius: 10px;
-            max-height: 400px;
-            overflow: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+            transition: all 0.3s;
         }
 
-        .success-message {
+        .file-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .file-item-info {
+            flex: 1;
+        }
+
+        .file-item-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-item-stats {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .file-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-json {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-json:hover {
+            background: #1976d2;
+        }
+
+        .btn-csv {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-csv:hover {
+            background: #f57c00;
+        }
+
+        .btn-remove {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-remove:hover {
+            background: #d32f2f;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-pending {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .status-done {
             background: #4caf50;
             color: white;
-            padding: 15px;
+        }
+
+        .status-error {
+            background: #f44336;
+            color: white;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
             border-radius: 10px;
-            margin-top: 20px;
-            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             display: none;
+            z-index: 1000;
+            animation: slideInUp 0.5s;
         }
 
-        .success-message.show {
+        .toast.show {
             display: block;
-            animation: slideIn 0.5s;
         }
 
-        @keyframes slideIn {
+        @keyframes slideInUp {
             from {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: translateY(50px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
+
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .summary.show {
+            display: block;
+        }
+
+        .summary-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .summary-stat {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .summary-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .summary-stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Conversor Excel/CSV → JSON</h1>
-        <p class="subtitle">Converta tabelas SICRO/SINAPI para JSON em segundos</p>
+        <h1>📊 Conversor Excel/CSV → JSON/CSV (Múltiplos)</h1>
+        <p class="subtitle">Converta vários arquivos SICRO/SINAPI de uma vez - JSON e CSV</p>
 
         <!-- Zona de Upload -->
         <div class="drop-zone" id="dropZone">
             <div class="drop-zone-icon">📁</div>
-            <div class="drop-zone-text">Arraste seu arquivo aqui</div>
-            <div class="drop-zone-subtext">ou clique para selecionar (.xlsx, .xls, .csv)</div>
+            <div class="drop-zone-text">Arraste seus arquivos aqui</div>
+            <div class="drop-zone-subtext">ou clique para selecionar múltiplos arquivos (.xlsx, .xls, .csv)</div>
         </div>
 
-        <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
-
-        <!-- Info do Arquivo -->
-        <div class="file-info" id="fileInfo">
-            <div class="file-name" id="fileName"></div>
-            <div class="file-stats" id="fileStats"></div>
-        </div>
+        <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" multiple>
 
         <!-- Opções -->
         <div class="options">
-            <div class="option-group">
-                <label>Nome do Estado (opcional):</label>
-                <input type="text" id="estadoInput" placeholder="Ex: SP, RJ, MG...">
-            </div>
-
-            <div class="option-group">
-                <label>Aba da planilha:</label>
-                <select id="sheetSelect">
-                    <option value="0">Primeira aba</option>
-                </select>
-            </div>
-
-            <div class="option-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="prettifyJson" checked>
-                    <label for="prettifyJson">JSON formatado (legível)</label>
+            <div class="options-grid">
+                <div class="option-group">
+                    <label>Estado (opcional):</label>
+                    <input type="text" id="estadoInput" placeholder="Ex: SP, RJ, MG...">
                 </div>
-            </div>
 
-            <div class="option-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="includeEmpty">
-                    <label for="includeEmpty">Incluir células vazias</label>
+                <div class="option-group">
+                    <label>Prefixo do arquivo:</label>
+                    <input type="text" id="prefixInput" placeholder="Ex: sicro_, sinapi_">
+                </div>
+
+                <div class="option-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="prettifyJson" checked>
+                        <label for="prettifyJson">JSON formatado</label>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeEmpty">
+                        <label for="includeEmpty">Incluir células vazias</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -303,44 +452,75 @@
         <!-- Botões -->
         <div class="buttons">
             <button class="btn-convert" id="btnConvert" disabled>
-                🔄 Converter para JSON
+                🔄 Converter Todos
+            </button>
+            <button class="btn-download-all" id="btnDownloadAll" disabled>
+                📦 Baixar Tudo (ZIP)
             </button>
             <button class="btn-clear" id="btnClear">
-                🗑️ Limpar
+                🗑️ Limpar Tudo
             </button>
         </div>
 
-        <!-- Preview -->
-        <div class="preview" id="preview">
-            <div class="preview-title">📄 Preview do JSON:</div>
-            <pre class="json-preview" id="jsonPreview"></pre>
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
         </div>
 
-        <!-- Mensagem de Sucesso -->
-        <div class="success-message" id="successMessage">
-            ✅ Arquivo JSON baixado com sucesso!
+        <!-- Summary -->
+        <div class="summary" id="summary">
+            <div class="summary-title">📈 Resumo da Conversão</div>
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <div class="summary-stat-value" id="totalFiles">0</div>
+                    <div class="summary-stat-label">Arquivos</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value" id="totalRecords">0</div>
+                    <div class="summary-stat-label">Registros</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value" id="totalSize">0 KB</div>
+                    <div class="summary-stat-label">Tamanho Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Arquivos -->
+        <div class="files-list" id="filesList">
+            <div class="files-list-title">📋 Arquivos Carregados</div>
+            <div id="filesContainer"></div>
         </div>
     </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
     <script>
         // Elementos
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileStats = document.getElementById('fileStats');
         const estadoInput = document.getElementById('estadoInput');
-        const sheetSelect = document.getElementById('sheetSelect');
+        const prefixInput = document.getElementById('prefixInput');
         const prettifyJson = document.getElementById('prettifyJson');
         const includeEmpty = document.getElementById('includeEmpty');
         const btnConvert = document.getElementById('btnConvert');
+        const btnDownloadAll = document.getElementById('btnDownloadAll');
         const btnClear = document.getElementById('btnClear');
-        const preview = document.getElementById('preview');
-        const jsonPreview = document.getElementById('jsonPreview');
-        const successMessage = document.getElementById('successMessage');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const filesList = document.getElementById('filesList');
+        const filesContainer = document.getElementById('filesContainer');
+        const summary = document.getElementById('summary');
+        const totalFiles = document.getElementById('totalFiles');
+        const totalRecords = document.getElementById('totalRecords');
+        const totalSize = document.getElementById('totalSize');
+        const toast = document.getElementById('toast');
 
-        let currentFile = null;
-        let workbook = null;
+        let files = [];
+        let convertedData = new Map();
 
         // Click na drop zone abre seletor
         dropZone.addEventListener('click', () => fileInput.click());
@@ -358,120 +538,252 @@
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            handleFile(file);
+            handleFiles(Array.from(e.dataTransfer.files));
         });
 
         // Seleção de arquivo
         fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            handleFile(file);
+            handleFiles(Array.from(e.target.files));
         });
 
-        // Processar arquivo
-        function handleFile(file) {
-            if (!file) return;
+        // Processar múltiplos arquivos
+        function handleFiles(newFiles) {
+            const validFiles = newFiles.filter(file => {
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+                return validTypes.includes(file.type) || file.name.match(/\.(xlsx|xls|csv)$/i);
+            });
 
-            const validTypes = [
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'application/vnd.ms-excel',
-                'text/csv'
-            ];
-
-            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
-                alert('❌ Formato inválido! Use .xlsx, .xls ou .csv');
+            if (validFiles.length === 0) {
+                showToast('❌ Nenhum arquivo válido selecionado!', 'error');
                 return;
             }
 
-            currentFile = file;
-            fileName.textContent = `📄 ${file.name}`;
-            fileStats.textContent = `Tamanho: ${(file.size / 1024).toFixed(2)} KB`;
-            fileInfo.classList.add('show');
-
-            // Ler arquivo
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                workbook = XLSX.read(data, { type: 'array' });
-
-                // Preencher dropdown de abas
-                sheetSelect.innerHTML = workbook.SheetNames.map((name, index) => 
-                    `<option value="${index}">${name}</option>`
-                ).join('');
-
-                btnConvert.disabled = false;
-            };
-
-            reader.readAsArrayBuffer(file);
+            files.push(...validFiles);
+            renderFilesList();
+            btnConvert.disabled = false;
+            showToast(`✅ ${validFiles.length} arquivo(s) adicionado(s)!`);
         }
 
-        // Converter
-        btnConvert.addEventListener('click', () => {
-            if (!workbook) return;
+        // Renderizar lista de arquivos
+        function renderFilesList() {
+            filesContainer.innerHTML = files.map((file, index) => `
+                <div class="file-item" data-index="${index}">
+                    <div class="file-item-info">
+                        <div class="file-item-name">
+                            📄 ${file.name}
+                            <span class="status-badge status-pending" id="status-${index}">Pendente</span>
+                        </div>
+                        <div class="file-item-stats">
+                            Tamanho: ${(file.size / 1024).toFixed(2)} KB
+                            <span id="records-${index}"></span>
+                        </div>
+                    </div>
+                    <div class="file-item-actions">
+                        <button class="btn-small btn-json" onclick="downloadSingle(${index}, 'json')" disabled id="btn-json-${index}">
+                            ⬇️ JSON
+                        </button>
+                        <button class="btn-small btn-csv" onclick="downloadSingle(${index}, 'csv')" disabled id="btn-csv-${index}">
+                            ⬇️ CSV
+                        </button>
+                        <button class="btn-small btn-remove" onclick="removeFile(${index})">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
 
-            const sheetIndex = parseInt(sheetSelect.value);
-            const sheetName = workbook.SheetNames[sheetIndex];
-            const worksheet = workbook.Sheets[sheetName];
+            filesList.classList.add('show');
+        }
 
-            // Converter para JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-                defval: includeEmpty.checked ? null : undefined,
-                blankrows: false
-            });
+        // Converter todos
+        btnConvert.addEventListener('click', async () => {
+            btnConvert.disabled = true;
+            progressContainer.classList.add('show');
+            convertedData.clear();
 
-            // Adicionar metadata
-            const output = {
-                metadata: {
-                    arquivo: currentFile.name,
-                    estado: estadoInput.value || null,
-                    aba: sheetName,
-                    totalRegistros: jsonData.length,
-                    dataConversao: new Date().toISOString()
-                },
-                dados: jsonData
-            };
+            let totalRecs = 0;
+            let totalSz = 0;
 
-            // Formatar JSON
-            const jsonString = prettifyJson.checked 
-                ? JSON.stringify(output, null, 2)
-                : JSON.stringify(output);
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                updateProgress((i / files.length) * 100, `Convertendo ${i + 1}/${files.length}`);
 
-            // Preview
-            jsonPreview.textContent = jsonString.substring(0, 2000) + 
-                (jsonString.length > 2000 ? '\n\n... (preview limitado a 2000 caracteres)' : '');
-            preview.classList.add('show');
+                try {
+                    const data = await readFile(file);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                        defval: includeEmpty.checked ? null : undefined,
+                        blankrows: false
+                    });
 
-            // Download
-            downloadJSON(jsonString, currentFile.name);
+                    const output = {
+                        metadata: {
+                            arquivo: file.name,
+                            estado: estadoInput.value || null,
+                            aba: workbook.SheetNames[0],
+                            totalRegistros: jsonData.length,
+                            dataConversao: new Date().toISOString()
+                        },
+                        dados: jsonData
+                    };
 
-            // Mensagem de sucesso
-            successMessage.classList.add('show');
-            setTimeout(() => successMessage.classList.remove('show'), 3000);
+                    convertedData.set(i, {
+                        json: output,
+                        csv: XLSX.utils.sheet_to_csv(worksheet),
+                        fileName: file.name
+                    });
+
+                    totalRecs += jsonData.length;
+                    totalSz += file.size;
+
+                    // Atualizar UI
+                    document.getElementById(`status-${i}`).textContent = 'Pronto';
+                    document.getElementById(`status-${i}`).className = 'status-badge status-done';
+                    document.getElementById(`records-${i}`).textContent = ` | ${jsonData.length} registros`;
+                    document.getElementById(`btn-json-${i}`).disabled = false;
+                    document.getElementById(`btn-csv-${i}`).disabled = false;
+
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById(`status-${i}`).textContent = 'Erro';
+                    document.getElementById(`status-${i}`).className = 'status-badge status-error';
+                }
+            }
+
+            updateProgress(100, 'Concluído!');
+            btnDownloadAll.disabled = false;
+
+            // Atualizar summary
+            totalFiles.textContent = files.length;
+            totalRecords.textContent = totalRecs.toLocaleString();
+            totalSize.textContent = (totalSz / 1024).toFixed(2) + ' KB';
+            summary.classList.add('show');
+
+            showToast(`✅ ${files.length} arquivo(s) convertido(s) com sucesso!`);
         });
 
-        // Download JSON
-        function downloadJSON(jsonString, originalFileName) {
-            const blob = new Blob([jsonString], { type: 'application/json' });
+        // Ler arquivo
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(new Uint8Array(e.target.result));
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Atualizar progress
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressFill.textContent = text || Math.round(percent) + '%';
+        }
+
+        // Download individual
+        window.downloadSingle = function(index, format) {
+            const data = convertedData.get(index);
+            if (!data) return;
+
+            const prefix = prefixInput.value || '';
+            const baseName = data.fileName.replace(/\.(xlsx|xls|csv)$/i, '');
+
+            if (format === 'json') {
+                const jsonString = prettifyJson.checked 
+                    ? JSON.stringify(data.json, null, 2)
+                    : JSON.stringify(data.json);
+                downloadFile(jsonString, `${prefix}${baseName}.json`, 'application/json');
+            } else if (format === 'csv') {
+                downloadFile(data.csv, `${prefix}${baseName}.csv`, 'text/csv');
+            }
+
+            showToast(`✅ ${format.toUpperCase()} baixado: ${baseName}`);
+        };
+
+        // Download tudo em ZIP
+        btnDownloadAll.addEventListener('click', async () => {
+            const zip = new JSZip();
+            const prefix = prefixInput.value || '';
+
+            // Adicionar JSONs
+            const jsonFolder = zip.folder('json');
+            convertedData.forEach((data, index) => {
+                const baseName = data.fileName.replace(/\.(xlsx|xls|csv)$/i, '');
+                const jsonString = prettifyJson.checked 
+                    ? JSON.stringify(data.json, null, 2)
+                    : JSON.stringify(data.json);
+                jsonFolder.file(`${prefix}${baseName}.json`, jsonString);
+            });
+
+            // Adicionar CSVs
+            const csvFolder = zip.folder('csv');
+            convertedData.forEach((data, index) => {
+                const baseName = data.fileName.replace(/\.(xlsx|xls|csv)$/i, '');
+                csvFolder.file(`${prefix}${baseName}.csv`, data.csv);
+            });
+
+            // Gerar ZIP
+            const blob = await zip.generateAsync({ type: 'blob' });
+            saveAs(blob, 'sicro-convertidos.zip');
+
+            showToast(`✅ ZIP baixado com ${convertedData.size} arquivos!`);
+        });
+
+        // Remover arquivo
+        window.removeFile = function(index) {
+            files.splice(index, 1);
+            convertedData.delete(index);
+            
+            if (files.length === 0) {
+                filesList.classList.remove('show');
+                summary.classList.remove('show');
+                btnConvert.disabled = true;
+                btnDownloadAll.disabled = true;
+            } else {
+                renderFilesList();
+            }
+
+            showToast('🗑️ Arquivo removido');
+        };
+
+        // Limpar tudo
+        btnClear.addEventListener('click', () => {
+            files = [];
+            convertedData.clear();
+            fileInput.value = '';
+            filesContainer.innerHTML = '';
+            filesList.classList.remove('show');
+            progressContainer.classList.remove('show');
+            summary.classList.remove('show');
+            btnConvert.disabled = true;
+            btnDownloadAll.disabled = true;
+            showToast('🗑️ Tudo limpo!');
+        });
+
+        // Download helper
+        function downloadFile(content, fileName, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = originalFileName.replace(/\.(xlsx|xls|csv)$/i, '.json');
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
 
-        // Limpar
-        btnClear.addEventListener('click', () => {
-            currentFile = null;
-            workbook = null;
-            fileInput.value = '';
-            fileInfo.classList.remove('show');
-            preview.classList.remove('show');
-            btnConvert.disabled = true;
-            estadoInput.value = '';
-        });
+        // Toast
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? '#f44336' : '#4caf50';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
     </script>
 </body>
 </html>
