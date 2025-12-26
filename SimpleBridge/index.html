@@ -626,7 +626,28 @@
         <div class="tab-content" id="superestrutura-content">
           <h2>ELEMENTOS DE SUPERESTRUTURA</h2>
 
-          <!-- Primeira linha: Quantidade de longarinas, transversinas e tipo -->
+          <!-- Primeira linha: Tipo de superestrutura -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo-superestrutura" class="required"
+                >TIPO DE SUPERESTRUTURA</label
+              >
+              <select
+                id="tipo-superestrutura"
+                name="TIPO SUPERESTRUTURA"
+                required
+                onchange="validateSuperstructureType()"
+              >
+                <option value="ENGASTADA" selected>ENGASTADA</option>
+                <option value="ROTULADA">ROTULADA</option>
+              </select>
+              <div class="error-message" id="tipo-superestrutura-error">
+                Este campo é obrigatório
+              </div>
+            </div>
+          </div>
+
+          <!-- Segunda linha: Quantidade de longarinas, transversinas e tipo -->
           <div class="form-row">
             <div class="form-group">
               <label for="qtd-longarinas" class="required"

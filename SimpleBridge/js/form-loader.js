@@ -10,6 +10,11 @@ function loadWorkToForm(work) {
     if (qtdLongarinas === 1) {
       work["ESPESSURA LONGARINA"] = "1";
     }
+
+    // Se TIPO SUPERESTRUTURA não existe ou está vazio, define como ENGASTADA (padrão)
+    if (!work["TIPO SUPERESTRUTURA"] || work["TIPO SUPERESTRUTURA"] === "") {
+      work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
+    }
     // ===========================================================
 
     // Processar campo MODELADO
@@ -33,32 +38,32 @@ function loadWorkToForm(work) {
       const qtdTramosField = document.getElementById("qtd-tramos");
       if (qtdTramosField) {
         qtdTramosField.value = tramos.length;
-        
+
         // Chamar função para gerar campos de tramos se existir
-        if (typeof generateTramosFields === 'function') {
+        if (typeof generateTramosFields === "function") {
           generateTramosFields();
         }
 
         // Aguardar um pouco para os campos serem gerados
         setTimeout(() => {
           const tramosFields = document.querySelectorAll(".tramo-field");
-          
+
           // Limpar erros dos campos antes de preencher
-          tramosFields.forEach(field => {
-            field.classList.remove('error');
+          tramosFields.forEach((field) => {
+            field.classList.remove("error");
           });
-          const tramosError = document.getElementById('tramos-error');
+          const tramosError = document.getElementById("tramos-error");
           if (tramosError) {
-            tramosError.classList.remove('visible');
+            tramosError.classList.remove("visible");
           }
-          
+
           // Preencher valores
           for (let i = 0; i < tramosFields.length && i < tramos.length; i++) {
             tramosFields[i].value = tramos[i];
           }
-          
+
           // Atualizar soma dos tramos APÓS preencher os valores
-          if (typeof updateTramosSum === 'function') {
+          if (typeof updateTramosSum === "function") {
             setTimeout(() => updateTramosSum(), 50);
           }
         }, 100);
@@ -66,10 +71,20 @@ function loadWorkToForm(work) {
     }
 
     // Processar APOIOS - 3 campos: altura, largura e comprimento
-    if (work["ALTURA APOIO"] || work["LARGURA PILAR"] || work["COMPRIMENTO PILARES"]) {
-      const alturas = work["ALTURA APOIO"] ? work["ALTURA APOIO"].split(";") : [];
-      const larguras = work["LARGURA PILAR"] ? work["LARGURA PILAR"].split(";") : [];
-      const comprimentos = work["COMPRIMENTO PILARES"] ? work["COMPRIMENTO PILARES"].split(";") : [];
+    if (
+      work["ALTURA APOIO"] ||
+      work["LARGURA PILAR"] ||
+      work["COMPRIMENTO PILARES"]
+    ) {
+      const alturas = work["ALTURA APOIO"]
+        ? work["ALTURA APOIO"].split(";")
+        : [];
+      const larguras = work["LARGURA PILAR"]
+        ? work["LARGURA PILAR"].split(";")
+        : [];
+      const comprimentos = work["COMPRIMENTO PILARES"]
+        ? work["COMPRIMENTO PILARES"].split(";")
+        : [];
 
       // Verificar se é pilar parede (QTD PILARES = 1)
       const qtdPilares = parseInt(work["QTD PILARES"]) || 0;
@@ -77,21 +92,24 @@ function loadWorkToForm(work) {
 
       // Aguardar um pouco para os campos serem gerados
       setTimeout(() => {
-        const apoiosAlturaFields = document.querySelectorAll(".apoio-altura-field");
+        const apoiosAlturaFields = document.querySelectorAll(
+          ".apoio-altura-field"
+        );
         const apoiosLargFields = document.querySelectorAll(".apoio-larg-field");
         const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
 
         for (let i = 0; i < apoiosAlturaFields.length; i++) {
           // Preencher altura
           if (i < alturas.length) apoiosAlturaFields[i].value = alturas[i];
-          
+
           // LARGURA: Não preencher se for pilar parede (deixar bloqueado com "Cálculo automático")
           if (!isPilarParede && i < larguras.length) {
             apoiosLargFields[i].value = larguras[i];
           }
-          
+
           // Preencher comprimento
-          if (i < comprimentos.length) apoiosCompFields[i].value = comprimentos[i];
+          if (i < comprimentos.length)
+            apoiosCompFields[i].value = comprimentos[i];
         }
       }, 100);
     }
@@ -115,7 +133,7 @@ function loadWorkToForm(work) {
             field.value = value || "";
           } else {
             // Aplicar formatação especial para LOTE
-            if (key === "LOTE" && value && typeof formatLote === 'function') {
+            if (key === "LOTE" && value && typeof formatLote === "function") {
               field.value = formatLote(value);
             } else {
               field.value = value || "";
@@ -126,7 +144,7 @@ function loadWorkToForm(work) {
     }
 
     // Atualizar visualização de campos obrigatórios condicionais
-    if (typeof updateBlocoSapataFieldsRequired === 'function') {
+    if (typeof updateBlocoSapataFieldsRequired === "function") {
       setTimeout(() => {
         updateBlocoSapataFieldsRequired();
       }, 100);
@@ -137,53 +155,71 @@ function loadWorkToForm(work) {
       const tipoBlocoSapataField = document.getElementById("tipo-bloco-sapata");
       if (tipoBlocoSapataField && tipoBlocoSapataField.value) {
         // Disparar evento change para acionar os listeners registrados
-        tipoBlocoSapataField.dispatchEvent(new Event('change', { bubbles: true }));
+        tipoBlocoSapataField.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
       }
     }, 50);
 
     // Atualizar visibilidade do campo de quantidade de viga de contraventamento
-    if (typeof togglePillarBracingQuantityField === 'function') {
+    if (typeof togglePillarBracingQuantityField === "function") {
       setTimeout(() => {
         togglePillarBracingQuantityField();
       }, 100);
     }
 
     // Atualizar campos de longarina (desbloquear se QTD LONGARINAS > 0)
-    if (typeof updateLongarinaFieldsRequired === 'function') {
+    if (typeof updateLongarinaFieldsRequired === "function") {
       setTimeout(() => {
         updateLongarinaFieldsRequired();
       }, 100);
     }
 
     // Atualizar campos de transversina
-    if (typeof updateTransversinaFieldsRequired === 'function') {
+    if (typeof updateTransversinaFieldsRequired === "function") {
       setTimeout(() => {
         updateTransversinaFieldsRequired();
       }, 100);
     }
 
     // Regenerar campos de apoio para garantir que largura fique bloqueada se for pilar parede
-    if (typeof generateApoiosFields === 'function') {
+    if (typeof generateApoiosFields === "function") {
       setTimeout(() => {
         generateApoiosFields();
-        
+
         // Recarregar valores após regenerar os campos
-        if (work["ALTURA APOIO"] || work["LARGURA PILAR"] || work["COMPRIMENTO PILARES"]) {
-          const alturas = work["ALTURA APOIO"] ? work["ALTURA APOIO"].split(";") : [];
-          const larguras = work["LARGURA PILAR"] ? work["LARGURA PILAR"].split(";") : [];
-          const comprimentos = work["COMPRIMENTO PILARES"] ? work["COMPRIMENTO PILARES"].split(";") : [];
+        if (
+          work["ALTURA APOIO"] ||
+          work["LARGURA PILAR"] ||
+          work["COMPRIMENTO PILARES"]
+        ) {
+          const alturas = work["ALTURA APOIO"]
+            ? work["ALTURA APOIO"].split(";")
+            : [];
+          const larguras = work["LARGURA PILAR"]
+            ? work["LARGURA PILAR"].split(";")
+            : [];
+          const comprimentos = work["COMPRIMENTO PILARES"]
+            ? work["COMPRIMENTO PILARES"].split(";")
+            : [];
           const qtdPilares = parseInt(work["QTD PILARES"]) || 0;
           const isPilarParede = qtdPilares === 1;
 
           setTimeout(() => {
-            const apoiosAlturaFields = document.querySelectorAll(".apoio-altura-field");
-            const apoiosLargFields = document.querySelectorAll(".apoio-larg-field");
-            const apoiosCompFields = document.querySelectorAll(".apoio-comp-field");
+            const apoiosAlturaFields = document.querySelectorAll(
+              ".apoio-altura-field"
+            );
+            const apoiosLargFields =
+              document.querySelectorAll(".apoio-larg-field");
+            const apoiosCompFields =
+              document.querySelectorAll(".apoio-comp-field");
 
             for (let i = 0; i < apoiosAlturaFields.length; i++) {
               if (i < alturas.length) apoiosAlturaFields[i].value = alturas[i];
-              if (!isPilarParede && i < larguras.length) apoiosLargFields[i].value = larguras[i];
-              if (i < comprimentos.length) apoiosCompFields[i].value = comprimentos[i];
+              if (!isPilarParede && i < larguras.length)
+                apoiosLargFields[i].value = larguras[i];
+              if (i < comprimentos.length)
+                apoiosCompFields[i].value = comprimentos[i];
             }
           }, 50);
         }
@@ -191,51 +227,59 @@ function loadWorkToForm(work) {
     }
 
     // Atualizar exclusividades de elementos complementares (guarda rodas, barreiras, calçadas)
-    if (typeof manageComplementaryElements === 'function') {
+    if (typeof manageComplementaryElements === "function") {
       setTimeout(() => {
         manageComplementaryElements();
       }, 150);
     }
 
     // Executar validação após carregar (aguardar campos serem preenchidos)
-    if (typeof validateForm === 'function') {
+    if (typeof validateForm === "function") {
       setTimeout(() => {
         validateForm();
       }, 250);
+    }
+
+    // Validar tipo de superestrutura especificamente
+    if (typeof validateSuperstructureType === "function") {
+      setTimeout(() => {
+        validateSuperstructureType();
+      }, 260);
     }
 
     // Atualizar link do Google Maps com as coordenadas carregadas
     // Disparar eventos de input para garantir que os listeners sejam acionados
     const latInput = document.getElementById("latitude");
     const longInput = document.getElementById("longitude");
-    
+
     if (latInput && latInput.value) {
-      latInput.dispatchEvent(new Event('input', { bubbles: true }));
+      latInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
     if (longInput && longInput.value) {
-      longInput.dispatchEvent(new Event('input', { bubbles: true }));
+      longInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
-    
+
     // Chamada direta como backup
-    if (typeof updateGoogleMapsLink === 'function') {
+    if (typeof updateGoogleMapsLink === "function") {
       updateGoogleMapsLink();
     }
-    
+
     // Atualizar visibilidade da mensagem informativa de altura-travessa
     const tipoTravessaField = document.getElementById("tipo-travessa");
     const infoMessage = document.getElementById("altura-travessa-info");
     if (tipoTravessaField && infoMessage) {
-      const hasTravessa = tipoTravessaField.value !== "" && tipoTravessaField.value !== "Nenhum";
+      const hasTravessa =
+        tipoTravessaField.value !== "" && tipoTravessaField.value !== "Nenhum";
       infoMessage.style.display = hasTravessa ? "block" : "none";
     }
-    
+
     // Atualizar soma dos tramos (com delay para garantir que todos os campos foram preenchidos)
-    if (typeof updateTramosSum === 'function') {
+    if (typeof updateTramosSum === "function") {
       setTimeout(() => updateTramosSum(), 200);
     }
-    
+
     // Aplicar restrições de single tramo se necessário
-    if (typeof handleSingleTramoRestrictions === 'function') {
+    if (typeof handleSingleTramoRestrictions === "function") {
       const qtdTramos = parseInt(work["QTD TRAMOS"]) || 1;
       setTimeout(() => {
         handleSingleTramoRestrictions(qtdTramos);

@@ -72,6 +72,11 @@ function exportToCSV() {
     if (qtdLongarinas === 1) {
       data["ESPESSURA LONGARINA"] = "1";
     }
+
+    // Garantir que TIPO SUPERESTRUTURA nunca seja vazio/null
+    if (!data["TIPO SUPERESTRUTURA"] || data["TIPO SUPERESTRUTURA"] === "") {
+      data["TIPO SUPERESTRUTURA"] = "ENGASTADA";
+    }
     // ==========================================
 
     // Construir CSV
@@ -159,6 +164,14 @@ function exportAllWorks() {
         const qtdLongarinas = parseInt(work["QTD LONGARINAS"]) || 0;
         if (qtdLongarinas === 1) {
           work["ESPESSURA LONGARINA"] = "1";
+        }
+
+        // Garantir que TIPO SUPERESTRUTURA nunca seja vazio/null
+        if (
+          !work["TIPO SUPERESTRUTURA"] ||
+          work["TIPO SUPERESTRUTURA"] === ""
+        ) {
+          work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
         }
       });
       // =============================================================
@@ -335,6 +348,11 @@ function saveMultipleWorks(works) {
     const qtdLongarinas = parseInt(work["QTD LONGARINAS"]) || 0;
     if (qtdLongarinas === 1) {
       work["ESPESSURA LONGARINA"] = "1";
+    }
+
+    // Garantir que TIPO SUPERESTRUTURA nunca seja vazio/null
+    if (!work["TIPO SUPERESTRUTURA"] || work["TIPO SUPERESTRUTURA"] === "") {
+      work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
     }
   });
   // =============================================================

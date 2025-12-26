@@ -8,6 +8,7 @@ window.requiredFields = {
   largura: { type: "number", min: 0, required: true },
   altura: { type: "number", min: 0, required: true },
   "qtd-tramos": { type: "number", min: 1, required: true },
+  "tipo-superestrutura": { type: "text", min: null, required: true },
   "cortina-altura": {
     type: "number",
     min: function () {
@@ -783,7 +784,13 @@ function validateAlturaLongarinaComApoioTransicao() {
     if (errorElement) {
       errorElement.style.display = "block";
       const diferencaNecessaria = (diferencaMinima - diferencaAtual).toFixed(2);
-      errorElement.innerHTML = `<strong>⚠️ APOIO na Transição:</strong> ALTURA CORTINA deve ser pelo menos <strong>6cm maior</strong> que ALTURA LONGARINA (para aparelho de apoio 5cm + berço 1cm).<br>Diferença atual: <strong>${(diferencaAtual * 100).toFixed(1)}cm</strong> | Necessário: <strong>6cm</strong><br>💡 Aumente a altura cortina em <strong>${(diferencaNecessaria * 100).toFixed(1)}cm</strong> ou diminua a altura longarina.`;
+      errorElement.innerHTML = `<strong>⚠️ APOIO na Transição:</strong> ALTURA CORTINA deve ser pelo menos <strong>6cm maior</strong> que ALTURA LONGARINA (para aparelho de apoio 5cm + berço 1cm).<br>Diferença atual: <strong>${(
+        diferencaAtual * 100
+      ).toFixed(
+        1
+      )}cm</strong> | Necessário: <strong>6cm</strong><br>💡 Aumente a altura cortina em <strong>${(
+        diferencaNecessaria * 100
+      ).toFixed(1)}cm</strong> ou diminua a altura longarina.`;
     }
     alturaLongarinaField.classList.add("error");
     cortinaAlturaField.classList.add("error");
@@ -905,6 +912,14 @@ function validateForm() {
     isValid = false;
     missingFields.push(
       "APOIO na Transição: ALTURA CORTINA deve ser 6cm maior que ALTURA LONGARINA"
+    );
+  }
+
+  const superstructureTypeValid = validateSuperstructureType();
+  if (!superstructureTypeValid) {
+    isValid = false;
+    missingFields.push(
+      "Tipo de Superestrutura inválido ou ROTULADA sem mínimo de 2 transversinas"
     );
   }
 
@@ -1091,6 +1106,55 @@ function checkCortinaHeightWarning() {
   return null; // Tudo OK
 }
 
+// Validar tipo de superestrutura e regras associadas
+function validateSuperstructureType() {
+  const tipoSuperestruturaField = document.getElementById(
+    "tipo-superestrutura"
+  );
+  const qtdTransversinasField = document.getElementById("qtd-transversinas");
+  const errorElement = document.getElementById("tipo-superestrutura-error");
+
+  if (!tipoSuperestruturaField) return true;
+
+  const tipoSuperestrutura = tipoSuperestruturaField.value;
+
+  // Validar que não está vazio
+  if (!tipoSuperestrutura || tipoSuperestrutura === "") {
+    tipoSuperestruturaField.classList.add("error");
+    if (errorElement) {
+      errorElement.textContent = "Este campo é obrigatório";
+      errorElement.classList.add("visible");
+    }
+    return false;
+  }
+
+  // Se for ROTULADA, validar que tem pelo menos 2 transversinas
+  if (tipoSuperestrutura === "ROTULADA") {
+    const qtdTransversinas = parseInt(qtdTransversinasField?.value) || 0;
+
+    if (qtdTransversinas < 2) {
+      tipoSuperestruturaField.classList.add("error");
+      if (qtdTransversinasField) qtdTransversinasField.classList.add("error");
+
+      if (errorElement) {
+        errorElement.textContent =
+          "Superestrutura ROTULADA requer no mínimo 2 transversinas";
+        errorElement.classList.add("visible");
+      }
+      return false;
+    }
+  }
+
+  // Tudo OK
+  tipoSuperestruturaField.classList.remove("error");
+  if (qtdTransversinasField) qtdTransversinasField.classList.remove("error");
+  if (errorElement) {
+    errorElement.classList.remove("visible");
+  }
+
+  return true;
+}
+
 // Obter todos os avisos (não bloqueadores)
 function getWarnings() {
   const warnings = [];
@@ -1119,6 +1183,7 @@ window.validatePilarMaxLength = validatePilarMaxLength;
 window.validateMinimumWidth = validateMinimumWidth;
 window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;
+window.validateSuperstructureType = validateSuperstructureType;
 window.validateAlturaLongarinaComApoioTransicao =
   validateAlturaLongarinaComApoioTransicao;
 window.validateForm = validateForm;

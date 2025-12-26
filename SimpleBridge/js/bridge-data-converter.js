@@ -273,6 +273,9 @@ function generateSuperstructureDataFromObra(obra) {
       : 0; // Se vazio, salvar como 0 ao invés de 3
 
   return {
+    BridgeSuperstructureType: createZSElementTypeFromValue(
+      obra["TIPO SUPERESTRUTURA"] || obra.TIPO_SUPERESTRUTURA
+    ),
     LongarineHeight: roundTo3Decimals(
       parseFloat(obra["ALTURA LONGARINA"] || obra.ALTURA_LONGARINA) || 0.0
     ),
