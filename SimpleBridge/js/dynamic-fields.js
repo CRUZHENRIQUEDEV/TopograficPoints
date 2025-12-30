@@ -593,6 +593,7 @@ function updateLongarinaFieldsRequired() {
 // Função chamada quando a quantidade de longarinas muda
 function handleLongarinaChange() {
   updateLongarinaFieldsRequired();
+  validateSuperstructureType();
 }
 
 // Atualizar visualização dos campos obrigatórios de transversina

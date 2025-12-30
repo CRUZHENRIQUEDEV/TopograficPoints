@@ -1138,6 +1138,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initAlturaTravessaValidation(); // Inicializar validação de altura-travessa em tempo real
   initLoteFormatting(); // Inicializar formatação automática do campo LOTE
   initComprimentoListener(); // Inicializar listener de comprimento para soma dos tramos
+  validateSuperstructureType(); // Inicializar validação de tipo de superestrutura
 });
 
 // Expor funções globalmente

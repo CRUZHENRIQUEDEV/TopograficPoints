@@ -1106,17 +1106,38 @@ function checkCortinaHeightWarning() {
   return null; // Tudo OK
 }
 
+// Verificar se o checkbox de reforço de viga pode ser marcado
+function checkBeamReinforcementAllowed() {
+  const tipoSuperestruturaField = document.getElementById(
+    "tipo-superestrutura"
+  );
+  if (!tipoSuperestruturaField) return true;
+
+  const tipoSuperestrutura = tipoSuperestruturaField.value;
+
+  // Se for ROTULADA, não permitir marcar o checkbox
+  if (tipoSuperestrutura === "ROTULADA") {
+    return false;
+  }
+
+  return true;
+}
+
 // Validar tipo de superestrutura e regras associadas
 function validateSuperstructureType() {
   const tipoSuperestruturaField = document.getElementById(
     "tipo-superestrutura"
   );
   const qtdTransversinasField = document.getElementById("qtd-transversinas");
+  const qtdLongarinaField = document.getElementById("qtd-longarinas");
+  const beamReinforcementCheckbox =
+    document.getElementById("beam-reinforcement");
   const errorElement = document.getElementById("tipo-superestrutura-error");
 
   if (!tipoSuperestruturaField) return true;
 
   const tipoSuperestrutura = tipoSuperestruturaField.value;
+  console.log("validateSuperstructureType chamado - Tipo:", tipoSuperestrutura);
 
   // Validar que não está vazio
   if (!tipoSuperestrutura || tipoSuperestrutura === "") {
@@ -1128,26 +1149,91 @@ function validateSuperstructureType() {
     return false;
   }
 
-  // Se for ROTULADA, validar que tem pelo menos 2 transversinas
+  // Se for ROTULADA, aplicar regras específicas
   if (tipoSuperestrutura === "ROTULADA") {
+    let isValid = true;
+    let errorMessages = [];
+
+    // Regra 1: Desabilitar REFORÇO VIGA
+    if (beamReinforcementCheckbox) {
+      console.log(
+        "Desabilitando REFORÇO VIGA - checkbox encontrado:",
+        beamReinforcementCheckbox
+      );
+      beamReinforcementCheckbox.disabled = true;
+      beamReinforcementCheckbox.checked = false;
+      beamReinforcementCheckbox.style.cursor = "not-allowed";
+      beamReinforcementCheckbox.style.opacity = "0.5";
+      // Desabilitar também o label pai
+      const parentLabel = beamReinforcementCheckbox.closest("label");
+      if (parentLabel) {
+        parentLabel.style.cursor = "not-allowed";
+        parentLabel.style.opacity = "0.5";
+      }
+      console.log(
+        "REFORÇO VIGA desabilitado - disabled:",
+        beamReinforcementCheckbox.disabled
+      );
+    } else {
+      console.log("ERRO: Checkbox beam-reinforcement não encontrado!");
+    }
+
+    // Regra 2: Validar que tem pelo menos 2 transversinas
     const qtdTransversinas = parseInt(qtdTransversinasField?.value) || 0;
-
     if (qtdTransversinas < 2) {
-      tipoSuperestruturaField.classList.add("error");
       if (qtdTransversinasField) qtdTransversinasField.classList.add("error");
+      errorMessages.push("mínimo 2 transversinas");
+      isValid = false;
+    } else {
+      if (qtdTransversinasField)
+        qtdTransversinasField.classList.remove("error");
+    }
 
+    // Regra 3: Validar que quantidade de longarinas > 1
+    const qtdLongarinas = parseInt(qtdLongarinaField?.value) || 0;
+    if (qtdLongarinas <= 1) {
+      if (qtdLongarinaField) qtdLongarinaField.classList.add("error");
+      errorMessages.push("mais de 1 longarina");
+      isValid = false;
+    } else {
+      if (qtdLongarinaField) qtdLongarinaField.classList.remove("error");
+    }
+
+    // Mostrar mensagens de erro
+    if (!isValid) {
+      tipoSuperestruturaField.classList.add("error");
       if (errorElement) {
         errorElement.textContent =
-          "Superestrutura ROTULADA requer no mínimo 2 transversinas";
+          "ROTULADA requer: " + errorMessages.join(" e ");
         errorElement.classList.add("visible");
       }
-      return false;
+    } else {
+      tipoSuperestruturaField.classList.remove("error");
+      if (errorElement) {
+        errorElement.classList.remove("visible");
+      }
+    }
+
+    return isValid;
+  } else {
+    // Se não for ROTULADA, habilitar REFORÇO VIGA
+    if (beamReinforcementCheckbox) {
+      beamReinforcementCheckbox.disabled = false;
+      beamReinforcementCheckbox.style.cursor = "pointer";
+      beamReinforcementCheckbox.style.opacity = "1";
+      // Reabilitar também o label pai
+      const parentLabel = beamReinforcementCheckbox.closest("label");
+      if (parentLabel) {
+        parentLabel.style.cursor = "pointer";
+        parentLabel.style.opacity = "1";
+      }
     }
   }
 
   // Tudo OK
   tipoSuperestruturaField.classList.remove("error");
   if (qtdTransversinasField) qtdTransversinasField.classList.remove("error");
+  if (qtdLongarinaField) qtdLongarinaField.classList.remove("error");
   if (errorElement) {
     errorElement.classList.remove("visible");
   }
@@ -1184,6 +1270,7 @@ window.validateMinimumWidth = validateMinimumWidth;
 window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;
 window.validateSuperstructureType = validateSuperstructureType;
+window.checkBeamReinforcementAllowed = checkBeamReinforcementAllowed;
 window.validateAlturaLongarinaComApoioTransicao =
   validateAlturaLongarinaComApoioTransicao;
 window.validateForm = validateForm;
