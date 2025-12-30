@@ -314,16 +314,17 @@ function generateApoiosFields() {
         <input type="${
           isPilarParede ? "text" : "number"
         }" class="apoio-larg-field" name="apoio-larg-${i}" 
-               step="0.01" min="0.1" placeholder="${
-                 isPilarParede ? "Cálculo automático" : "0.00"
-               }" 
+               step="0.01" min="0.1" ${
+                 !isPilarParede ? 'max="2"' : ""
+               } placeholder="${isPilarParede ? "Cálculo automático" : "0.00"}" 
                ${isPilarParede ? "disabled readonly" : "required"} 
                value="${isPilarParede ? "Cálculo automático" : ""}" 
                style="${
                  isPilarParede
                    ? "background-color: #f0f0f0; cursor: not-allowed;"
                    : ""
-               }" />
+               }"
+               title="${!isPilarParede ? "Largura máxima: 2 metros" : ""}" />
       </div>
     `;
 

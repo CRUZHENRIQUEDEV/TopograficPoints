@@ -113,8 +113,26 @@ window.requiredFields = {
       return qtdLongarinas > 0;
     },
   },
-  "deslocamento-esquerdo": { type: "number", min: 0, required: true },
-  "deslocamento-direito": { type: "number", min: 0, required: true },
+  "deslocamento-esquerdo": {
+    type: "number",
+    min: function () {
+      // Mínimo = metade da espessura da longarina
+      const espessuraLongarina =
+        parseFloat(document.getElementById("espessura-longarina")?.value) || 0;
+      return espessuraLongarina / 2;
+    },
+    required: true,
+  },
+  "deslocamento-direito": {
+    type: "number",
+    min: function () {
+      // Mínimo = metade da espessura da longarina
+      const espessuraLongarina =
+        parseFloat(document.getElementById("espessura-longarina")?.value) || 0;
+      return espessuraLongarina / 2;
+    },
+    required: true,
+  },
   "qtd-longarinas": { type: "number", min: 0, required: true },
   "espessura-longarina": {
     type: "number",
@@ -154,6 +172,13 @@ window.requiredFields = {
   "largura-pilar": {
     type: "number",
     min: 0,
+    max: function () {
+      // Se há mais de 1 pilar, largura máxima é 2 metros
+      const qtdPilaresField = document.getElementById("qtd-pilares");
+      const qtdPilares =
+        parseInt(qtdPilaresField ? qtdPilaresField.value : 0) || 0;
+      return qtdPilares > 1 ? 2 : null;
+    },
     required: function () {
       const qtdPilaresField = document.getElementById("qtd-pilares");
       const qtdPilares =
@@ -386,6 +411,20 @@ function validateField(fieldId) {
               errorElement.textContent = `A altura mínima deve ser ${minValue.toFixed(
                 2
               )}m (ESPESSURA LAJE)`;
+            }
+            // Mensagem customizada para deslocamento esquerdo/direito
+            if (
+              (fieldId === "deslocamento-esquerdo" ||
+                fieldId === "deslocamento-direito") &&
+              minValue > 0
+            ) {
+              const espessuraLong =
+                parseFloat(
+                  document.getElementById("espessura-longarina")?.value
+                ) || 0;
+              errorElement.textContent = `Mínimo ${minValue.toFixed(
+                2
+              )}m (metade da ESPESSURA LONGARINA ${espessuraLong.toFixed(2)}m)`;
             }
             errorElement.classList.add("visible");
           }
@@ -814,7 +853,24 @@ function validateForm() {
       isValid = false;
       const field = document.getElementById(fieldId);
       const label = document.querySelector(`label[for="${fieldId}"]`);
-      const fieldName = label ? label.textContent.replace(":", "") : fieldId;
+      let fieldName = label ? label.textContent.replace(":", "") : fieldId;
+
+      // Mensagem explicativa para deslocamento esquerdo/direito
+      if (
+        fieldId === "deslocamento-esquerdo" ||
+        fieldId === "deslocamento-direito"
+      ) {
+        const espessuraLong =
+          parseFloat(document.getElementById("espessura-longarina")?.value) ||
+          0;
+        const minValue = espessuraLong / 2;
+        if (minValue > 0) {
+          fieldName = `${fieldName} (mínimo ${minValue.toFixed(
+            2
+          )}m = metade da ESPESSURA LONGARINA)`;
+        }
+      }
+
       missingFields.push(fieldName);
       console.log(`❌ Campo inválido: ${fieldId} (${fieldName})`);
 
