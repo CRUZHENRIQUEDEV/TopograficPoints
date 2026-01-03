@@ -742,6 +742,17 @@ function manageComplementaryElements() {
       larguraGuardaRodasEsq.style.opacity = "0.5";
       larguraGuardaRodasEsq.style.pointerEvents = "none";
     }
+    // BARREIRA permanece editável (pode ser removida a qualquer momento)
+    if (tipoBarreiraEsq) {
+      tipoBarreiraEsq.removeAttribute("data-locked");
+      tipoBarreiraEsq.style.opacity = "";
+      tipoBarreiraEsq.style.pointerEvents = "";
+    }
+    if (larguraBarreiraEsq) {
+      larguraBarreiraEsq.removeAttribute("readonly");
+      larguraBarreiraEsq.style.opacity = "";
+      larguraBarreiraEsq.style.pointerEvents = "";
+    }
     // CALÇADA permanece livre quando há BARREIRA
     if (tipoCalcadaEsq) {
       tipoCalcadaEsq.removeAttribute("data-locked");
@@ -840,6 +851,17 @@ function manageComplementaryElements() {
       larguraGuardaRodasDir.setAttribute("readonly", true);
       larguraGuardaRodasDir.style.opacity = "0.5";
       larguraGuardaRodasDir.style.pointerEvents = "none";
+    }
+    // BARREIRA permanece editável (pode ser removida a qualquer momento)
+    if (tipoBarreiraDir) {
+      tipoBarreiraDir.removeAttribute("data-locked");
+      tipoBarreiraDir.style.opacity = "";
+      tipoBarreiraDir.style.pointerEvents = "";
+    }
+    if (larguraBarreiraDir) {
+      larguraBarreiraDir.removeAttribute("readonly");
+      larguraBarreiraDir.style.opacity = "";
+      larguraBarreiraDir.style.pointerEvents = "";
     }
     // CALÇADA permanece livre quando há BARREIRA
     if (tipoCalcadaDir) {

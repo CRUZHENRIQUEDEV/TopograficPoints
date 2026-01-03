@@ -52,6 +52,12 @@ function exportToCSV() {
       data["TIPO APOIO TRANSICAO"] = tipoApoioTransicaoField.value;
     }
 
+    // Capturar TIPO ENCONTRO (pode estar disabled em alguns casos)
+    const tipoEncontroField = document.getElementById("tipo-encontro");
+    if (tipoEncontroField) {
+      data["TIPO ENCONTRO"] = tipoEncontroField.value;
+    }
+
     // Coletar valores dos tramos
     const tramosValues = [];
     document.querySelectorAll(".tramo-field").forEach((field) => {

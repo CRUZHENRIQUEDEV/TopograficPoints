@@ -285,6 +285,13 @@ function loadWorkToForm(work) {
         handleSingleTramoRestrictions(qtdTramos);
       }, 150);
     }
+
+    // Aplicar regras de transição monolítica após carregar os dados
+    if (typeof applyMonolithicTransitionRules === "function") {
+      setTimeout(() => {
+        applyMonolithicTransitionRules();
+      }, 300);
+    }
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);
     alert("Erro ao carregar dados no formulário: " + error.message);

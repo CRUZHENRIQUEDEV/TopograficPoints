@@ -1314,6 +1314,298 @@ function getWarnings() {
   return warnings;
 }
 
+/**
+ * Aplica regras específicas quando o tipo de transição é MONOLÍTICO
+ * TRANSIÇÃO:
+ * - Cortina Altura = Espessura Laje (bloqueado)
+ * - Aparelho de Apoio = Nenhum (bloqueado)
+ * - Deslocamento Esquerdo Encontro Laje = vazio/null (bloqueado)
+ * - Deslocamento Direito Encontro Laje = vazio/null (bloqueado)
+ * SUPERESTRUTURA:
+ * - Tipo Superestrutura = ENGASTADA (bloqueado)
+ * - Qtd Longarinas = 0 (bloqueado)
+ * - Qtd Transversinas = 0 (bloqueado)
+ * - Tipo Transversina = Nenhum (bloqueado)
+ * - Altura Longarina = vazio/null (bloqueado)
+ * - Deslocamento Esquerdo = 1.0m (padrão, editável, min > 0)
+ * - Deslocamento Direito = 1.0m (padrão, editável, min > 0)
+ */
+function applyMonolithicTransitionRules() {
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const cortinaAlturaField = document.getElementById("cortina-altura");
+  const espessuraLajeField = document.getElementById("espessura-laje");
+  const aparelhoApoioField = document.getElementById("tipo-aparelho-apoio");
+
+  // Campos de superestrutura
+  const tipoSuperestrutura = document.getElementById("tipo-superestrutura");
+  const qtdLongarinas = document.getElementById("qtd-longarinas");
+  const qtdTransversinas = document.getElementById("qtd-transversinas");
+  const tipoTransversina = document.getElementById("tipo-transversina");
+  const alturaLongarina = document.getElementById("altura-longarina");
+
+  // Campos de deslocamento
+  const deslocamentoEsquerdo = document.getElementById(
+    "deslocamento-esquerdo-encontro-laje"
+  );
+  const deslocamentoDireito = document.getElementById(
+    "deslocamento-direito-encontro-laje"
+  );
+
+  if (!tipoEncontroField) {
+    return;
+  }
+
+  const isMonolithic = tipoEncontroField.value === "MONOLITICO";
+
+  if (isMonolithic) {
+    // ========== REGRAS DE TRANSIÇÃO ==========
+    if (cortinaAlturaField && espessuraLajeField) {
+      const espessuraLaje = parseFloat(espessuraLajeField.value) || 0;
+      cortinaAlturaField.value = espessuraLaje.toFixed(2);
+      cortinaAlturaField.disabled = true;
+      cortinaAlturaField.style.backgroundColor = "#f0f0f0";
+      cortinaAlturaField.style.cursor = "not-allowed";
+      addMonolithicNote(
+        cortinaAlturaField,
+        "🔒 Automático: igual à espessura da laje"
+      );
+    }
+
+    if (aparelhoApoioField) {
+      aparelhoApoioField.value = "Nenhum";
+      aparelhoApoioField.disabled = true;
+      aparelhoApoioField.style.backgroundColor = "#f0f0f0";
+      aparelhoApoioField.style.cursor = "not-allowed";
+      addMonolithicNote(
+        aparelhoApoioField,
+        "🔒 Bloqueado para transição monolítica"
+      );
+    }
+
+    // ========== REGRAS DE SUPERESTRUTURA ==========
+    if (tipoSuperestrutura) {
+      tipoSuperestrutura.value = "ENGASTADA";
+      tipoSuperestrutura.disabled = true;
+      tipoSuperestrutura.style.backgroundColor = "#f0f0f0";
+      tipoSuperestrutura.style.cursor = "not-allowed";
+      addMonolithicNote(
+        tipoSuperestrutura,
+        "🔒 Ponte monolítica: sempre engastada"
+      );
+    }
+
+    if (qtdLongarinas) {
+      qtdLongarinas.value = "0";
+      qtdLongarinas.disabled = true;
+      qtdLongarinas.style.backgroundColor = "#f0f0f0";
+      qtdLongarinas.style.cursor = "not-allowed";
+      addMonolithicNote(qtdLongarinas, "🔒 Ponte monolítica: sem longarinas");
+    }
+
+    if (qtdTransversinas) {
+      qtdTransversinas.value = "0";
+      qtdTransversinas.disabled = true;
+      qtdTransversinas.style.backgroundColor = "#f0f0f0";
+      qtdTransversinas.style.cursor = "not-allowed";
+      addMonolithicNote(
+        qtdTransversinas,
+        "🔒 Ponte monolítica: sem transversinas"
+      );
+    }
+
+    if (tipoTransversina) {
+      tipoTransversina.value = "Nenhum";
+      tipoTransversina.disabled = true;
+      tipoTransversina.style.backgroundColor = "#f0f0f0";
+      tipoTransversina.style.cursor = "not-allowed";
+      addMonolithicNote(
+        tipoTransversina,
+        "🔒 Ponte monolítica: sem transversinas"
+      );
+    }
+
+    if (alturaLongarina) {
+      alturaLongarina.value = "";
+      alturaLongarina.disabled = true;
+      alturaLongarina.style.backgroundColor = "#f0f0f0";
+      alturaLongarina.style.cursor = "not-allowed";
+      addMonolithicNote(alturaLongarina, "🔒 Ponte monolítica: sem longarinas");
+    }
+
+    // ========== REGRAS DE DESLOCAMENTO ENCONTRO LAJE (TRANSIÇÃO) ==========
+    // Deslocamentos do encontro laje devem ser bloqueados e nulos
+    if (deslocamentoEsquerdo) {
+      deslocamentoEsquerdo.value = "";
+      deslocamentoEsquerdo.disabled = true;
+      deslocamentoEsquerdo.style.backgroundColor = "#f0f0f0";
+      deslocamentoEsquerdo.style.cursor = "not-allowed";
+      addMonolithicNote(
+        deslocamentoEsquerdo,
+        "🔒 Ponte monolítica: sem deslocamento no encontro"
+      );
+    }
+
+    if (deslocamentoDireito) {
+      deslocamentoDireito.value = "";
+      deslocamentoDireito.disabled = true;
+      deslocamentoDireito.style.backgroundColor = "#f0f0f0";
+      deslocamentoDireito.style.cursor = "not-allowed";
+      addMonolithicNote(
+        deslocamentoDireito,
+        "🔒 Ponte monolítica: sem deslocamento no encontro"
+      );
+    }
+
+    // ========== REGRAS DE DESLOCAMENTO SUPERESTRUTURA ==========
+    // Deslocamentos da superestrutura devem ser 1.0m (editáveis, nunca zero)
+    const deslocamentoEsquerdoSuper = document.getElementById(
+      "deslocamento-esquerdo"
+    );
+    const deslocamentoDireitoSuper = document.getElementById(
+      "deslocamento-direito"
+    );
+
+    if (deslocamentoEsquerdoSuper) {
+      if (
+        !deslocamentoEsquerdoSuper.value ||
+        parseFloat(deslocamentoEsquerdoSuper.value) === 0
+      ) {
+        deslocamentoEsquerdoSuper.value = "1.00";
+      }
+      deslocamentoEsquerdoSuper.min = "0.01"; // Nunca pode ser 0
+      addMonolithicNote(
+        deslocamentoEsquerdoSuper,
+        "ℹ️ Padrão: 1.0m (não pode ser zero)"
+      );
+    }
+
+    if (deslocamentoDireitoSuper) {
+      if (
+        !deslocamentoDireitoSuper.value ||
+        parseFloat(deslocamentoDireitoSuper.value) === 0
+      ) {
+        deslocamentoDireitoSuper.value = "1.00";
+      }
+      deslocamentoDireitoSuper.min = "0.01"; // Nunca pode ser 0
+      addMonolithicNote(
+        deslocamentoDireitoSuper,
+        "ℹ️ Padrão: 1.0m (não pode ser zero)"
+      );
+    }
+  } else {
+    // ========== DESBLOQUEAR TODOS OS CAMPOS ==========
+    const deslocamentoEsquerdoSuper = document.getElementById(
+      "deslocamento-esquerdo"
+    );
+    const deslocamentoDireitoSuper = document.getElementById(
+      "deslocamento-direito"
+    );
+
+    const fieldsToUnlock = [
+      cortinaAlturaField,
+      aparelhoApoioField,
+      tipoSuperestrutura,
+      qtdLongarinas,
+      qtdTransversinas,
+      tipoTransversina,
+      alturaLongarina,
+      deslocamentoEsquerdo,
+      deslocamentoDireito,
+    ];
+
+    fieldsToUnlock.forEach((field) => {
+      if (field) {
+        field.disabled = false;
+        field.style.backgroundColor = "";
+        field.style.cursor = "";
+        removeMonolithicNote(field);
+      }
+    });
+
+    // Remover notas e restrições dos deslocamentos da superestrutura
+    if (deslocamentoEsquerdoSuper) {
+      deslocamentoEsquerdoSuper.min = "0";
+      removeMonolithicNote(deslocamentoEsquerdoSuper);
+    }
+    if (deslocamentoDireitoSuper) {
+      deslocamentoDireitoSuper.min = "0";
+      removeMonolithicNote(deslocamentoDireitoSuper);
+    }
+  }
+}
+
+/**
+ * Adiciona nota visual informativa abaixo do campo
+ */
+function addMonolithicNote(field, message) {
+  const parentGroup = field.closest(".form-group");
+  if (!parentGroup) return;
+
+  // Remove nota existente se houver
+  const existingNote = parentGroup.querySelector(".monolithic-note");
+  if (existingNote) {
+    existingNote.remove();
+  }
+
+  // Cria nova nota
+  const note = document.createElement("div");
+  note.className = "monolithic-note";
+  note.style.cssText = `
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-left: 4px solid #f39c12;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #856404;
+    font-weight: 500;
+  `;
+  note.textContent = message;
+  parentGroup.appendChild(note);
+}
+
+/**
+ * Remove nota visual do campo
+ */
+function removeMonolithicNote(field) {
+  const parentGroup = field.closest(".form-group");
+  if (!parentGroup) return;
+
+  const existingNote = parentGroup.querySelector(".monolithic-note");
+  if (existingNote) {
+    existingNote.remove();
+  }
+}
+
+/**
+ * Inicializa listeners para regras de transição monolítica
+ */
+function initMonolithicTransitionListeners() {
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const espessuraLajeField = document.getElementById("espessura-laje");
+
+  if (tipoEncontroField) {
+    tipoEncontroField.addEventListener(
+      "change",
+      applyMonolithicTransitionRules
+    );
+  }
+
+  if (espessuraLajeField) {
+    // Quando espessura da laje mudar, atualizar cortina se for MONOLÍTICO
+    espessuraLajeField.addEventListener("input", function () {
+      const tipoEncontro = document.getElementById("tipo-encontro");
+      if (tipoEncontro && tipoEncontro.value === "MONOLITICO") {
+        applyMonolithicTransitionRules();
+      }
+    });
+  }
+
+  // Aplicar regras ao carregar a página (caso já tenha dados)
+  applyMonolithicTransitionRules();
+}
+
 // Expor funções globalmente
 window.validateField = validateField;
 window.validateTramos = validateTramos;
@@ -1334,3 +1626,5 @@ window.togglePillarBracingQuantityField = togglePillarBracingQuantityField;
 window.checkLongarinaHeightWarning = checkLongarinaHeightWarning;
 window.checkCortinaHeightWarning = checkCortinaHeightWarning;
 window.getWarnings = getWarnings;
+window.applyMonolithicTransitionRules = applyMonolithicTransitionRules;
+window.initMonolithicTransitionListeners = initMonolithicTransitionListeners;

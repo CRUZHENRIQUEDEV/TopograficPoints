@@ -556,6 +556,7 @@
                   ENCONTRO - PAREDE FRONTAL PORTANTE
                 </option>
                 <option value="ENCONTRO LAJE">ENCONTRO LAJE</option>
+                <option value="MONOLITICO">MONOLÍTICO</option>
                 <option value="APOIO">APOIO</option>
               </select>
             </div>
@@ -1152,12 +1153,12 @@
               <select id="tipo-barreira-esquerda" name="TIPO BARREIRA ESQUERDA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
-                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">
+                <!-- <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">
                   BARREIRA QUALQUER DE CONCRETO ARMADO
                 </option>
                 <option value="BARREIRA COM GUARDA-CORPO">
                   BARREIRA COM GUARDA-CORPO
-                </option>
+                </option> -->
                 <option value="Nenhum">Nenhum</option>
               </select>
               <div
@@ -1201,12 +1202,12 @@
               <select id="tipo-barreira-direita" name="TIPO BARREIRA DIREITA">
                 <option value="">Selecione</option>
                 <option value="BARREIRA NEW JERSEY">BARREIRA NEW JERSEY</option>
-                <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">
+                <!-- <option value="BARREIRA QUALQUER DE CONCRETO ARMADO">
                   BARREIRA QUALQUER DE CONCRETO ARMADO
                 </option>
                 <option value="BARREIRA COM GUARDA-CORPO">
                   BARREIRA COM GUARDA-CORPO
-                </option>
+                </option> -->
                 <option value="Nenhum">Nenhum</option>
               </select>
               <div
@@ -1486,6 +1487,7 @@
             Salvar Obra
           </button>
           <button type="button" onclick="exportToCSV()">Exportar CSV</button>
+          <button type="button" onclick="exportToJSON()">Exportar JSON</button>
           <button type="button" onclick="clearForm()">Limpar Formulário</button>
         </div>
       </form>

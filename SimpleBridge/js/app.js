@@ -190,6 +190,80 @@ function saveCurrentWork() {
       workData["TIPO APOIO TRANSICAO"] = tipoApoioTransicaoField.value;
     }
 
+    // Capturar TIPO ENCONTRO (importante para identificar MONOLÍTICO, APOIO, etc)
+    const tipoEncontroField = document.getElementById("tipo-encontro");
+    if (tipoEncontroField) {
+      workData["TIPO ENCONTRO"] = tipoEncontroField.value;
+    }
+
+    // Capturar campos que podem estar disabled por regras de transição monolítica
+    const cortinaAlturaField = document.getElementById("cortina-altura");
+    if (cortinaAlturaField) {
+      workData["CORTINA ALTURA"] = cortinaAlturaField.value;
+    }
+
+    const aparelhoApoioField = document.getElementById("tipo-aparelho-apoio");
+    if (aparelhoApoioField) {
+      workData["TIPO APARELHO APOIO"] = aparelhoApoioField.value;
+    }
+
+    // Capturar campos de superestrutura que podem estar disabled
+    const tipoSuperestruturaField = document.getElementById(
+      "tipo-superestrutura"
+    );
+    if (tipoSuperestruturaField) {
+      workData["TIPO SUPERESTRUTURA"] = tipoSuperestruturaField.value;
+    }
+
+    const qtdLongarinasField = document.getElementById("qtd-longarinas");
+    if (qtdLongarinasField) {
+      workData["QTD LONGARINAS"] = qtdLongarinasField.value;
+    }
+
+    const qtdTransversinasField = document.getElementById("qtd-transversinas");
+    if (qtdTransversinasField) {
+      workData["QTD TRANSVERSINAS"] = qtdTransversinasField.value;
+    }
+
+    const tipoTransversinaField = document.getElementById("tipo-transversina");
+    if (tipoTransversinaField) {
+      workData["TIPO DE TRANSVERSINA"] = tipoTransversinaField.value;
+    }
+
+    const alturaLongarinaField = document.getElementById("altura-longarina");
+    if (alturaLongarinaField) {
+      workData["ALTURA LONGARINA"] = alturaLongarinaField.value;
+    }
+
+    // Capturar deslocamentos que podem estar disabled
+    const deslocEsqEncontroField = document.getElementById(
+      "deslocamento-esquerdo-encontro-laje"
+    );
+    if (deslocEsqEncontroField) {
+      workData["DESLOCAMENTO ESQUERDO ENCONTRO LAJE"] =
+        deslocEsqEncontroField.value;
+    }
+
+    const deslocDirEncontroField = document.getElementById(
+      "deslocamento-direito-encontro-laje"
+    );
+    if (deslocDirEncontroField) {
+      workData["DESLOCAMENTO DIREITO ENCONTRO LAJE"] =
+        deslocDirEncontroField.value;
+    }
+
+    const deslocEsqSuperField = document.getElementById(
+      "deslocamento-esquerdo"
+    );
+    if (deslocEsqSuperField) {
+      workData["DESLOCAMENTO ESQUERDO"] = deslocEsqSuperField.value;
+    }
+
+    const deslocDirSuperField = document.getElementById("deslocamento-direito");
+    if (deslocDirSuperField) {
+      workData["DESLOCAMENTO DIREITO"] = deslocDirSuperField.value;
+    }
+
     // Formatar LOTE antes de salvar
     if (workData["LOTE"] && typeof formatLote === "function") {
       workData["LOTE"] = formatLote(workData["LOTE"]);
@@ -675,12 +749,13 @@ function initBarreiraGuardaRodasExclusion() {
   // Lado ESQUERDO
   barreiraEsquerda.addEventListener("change", function () {
     if (isBarreiraExcludente(this.value)) {
+      // Barreira excludente selecionada: bloquear guarda-rodas
       guardaRodasEsquerdo.value = window.CONSTANTS.VALORES_COMUNS.NENHUM;
       guardaRodasEsquerdo.disabled = true;
       guardaRodasEsquerdo.style.opacity = "0.6";
       guardaRodasEsquerdo.style.cursor = "not-allowed";
     } else {
-      // Só reabilitar se não houver calçada selecionada
+      // Barreira removida ou não-excludente: reabilitar guarda-rodas se não houver calçada
       const calcadaEsquerda = document.getElementById("tipo-calcada-esquerda");
       const hasCalcadaSelecionada =
         calcadaEsquerda &&
@@ -1139,6 +1214,11 @@ document.addEventListener("DOMContentLoaded", function () {
   initLoteFormatting(); // Inicializar formatação automática do campo LOTE
   initComprimentoListener(); // Inicializar listener de comprimento para soma dos tramos
   validateSuperstructureType(); // Inicializar validação de tipo de superestrutura
+
+  // Inicializar regras de transição monolítica
+  if (typeof initMonolithicTransitionListeners === "function") {
+    initMonolithicTransitionListeners();
+  }
 });
 
 // Expor funções globalmente
