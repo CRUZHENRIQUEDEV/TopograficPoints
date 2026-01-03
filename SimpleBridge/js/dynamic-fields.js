@@ -728,6 +728,17 @@ function manageComplementaryElements() {
       larguraCalcadaEsq.style.opacity = "0.5";
       larguraCalcadaEsq.style.pointerEvents = "none";
     }
+    // GUARDA RODAS permanece editável (pode ser removido a qualquer momento)
+    if (guardaRodasEsq) {
+      guardaRodasEsq.removeAttribute("data-locked");
+      guardaRodasEsq.style.opacity = "";
+      guardaRodasEsq.style.pointerEvents = "";
+    }
+    if (larguraGuardaRodasEsq) {
+      larguraGuardaRodasEsq.removeAttribute("readonly");
+      larguraGuardaRodasEsq.style.opacity = "";
+      larguraGuardaRodasEsq.style.pointerEvents = "";
+    }
   } else if (hasBarreiraEsq) {
     // BARREIRA bloqueia apenas GUARDA RODAS (CALÇADA pode coexistir)
     if (guardaRodasEsq) {
@@ -837,6 +848,17 @@ function manageComplementaryElements() {
       larguraCalcadaDir.setAttribute("readonly", true);
       larguraCalcadaDir.style.opacity = "0.5";
       larguraCalcadaDir.style.pointerEvents = "none";
+    }
+    // GUARDA RODAS permanece editável (pode ser removido a qualquer momento)
+    if (guardaRodasDir) {
+      guardaRodasDir.removeAttribute("data-locked");
+      guardaRodasDir.style.opacity = "";
+      guardaRodasDir.style.pointerEvents = "";
+    }
+    if (larguraGuardaRodasDir) {
+      larguraGuardaRodasDir.removeAttribute("readonly");
+      larguraGuardaRodasDir.style.opacity = "";
+      larguraGuardaRodasDir.style.pointerEvents = "";
     }
   } else if (hasBarreiraDir) {
     // BARREIRA bloqueia apenas GUARDA RODAS (CALÇADA pode coexistir)
