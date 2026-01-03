@@ -1019,6 +1019,12 @@ function togglePillarBracingQuantityField() {
 
 // Validar altura da longarina em relação ao maior tramo (aviso, não impede salvamento)
 function checkLongarinaHeightWarning() {
+  // Se for MONOLÍTICO, não gerar aviso de longarina
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  if (tipoEncontroField && tipoEncontroField.value === "MONOLITICO") {
+    return null; // Monolítico não tem longarinas
+  }
+
   const tramosFields = document.querySelectorAll(".tramo-field");
   const alturaLongarinaField = document.getElementById("altura-longarina");
 
@@ -1122,6 +1128,12 @@ function checkCortinaHeightWarning() {
   }
 
   const tipoEncontro = tipoEncontroField.value;
+
+  // Se for MONOLÍTICO ou APOIO, não gerar aviso de cortina
+  if (tipoEncontro === "MONOLITICO" || tipoEncontro.includes("APOIO")) {
+    return null; // Monolítico e Apoio não têm cortina
+  }
+
   const tipoAparelhoApoio = tipoAparelhoApoioField.value;
   const cortinaAltura = parseFloat(cortinaAlturaField.value) || 0;
   const alturaLongarina = parseFloat(alturaLongarinaField.value) || 0;
@@ -1357,6 +1369,11 @@ function applyMonolithicTransitionRules() {
 
   const isMonolithic = tipoEncontroField.value === "MONOLITICO";
 
+  // Verificar quantidade de tramos
+  const qtdTramosField = document.getElementById("qtd-tramos");
+  const qtdTramos = parseInt(qtdTramosField?.value) || 1;
+  const isUmTramo = qtdTramos === 1;
+
   if (isMonolithic) {
     // ========== REGRAS DE TRANSIÇÃO ==========
     if (cortinaAlturaField && espessuraLajeField) {
@@ -1371,15 +1388,24 @@ function applyMonolithicTransitionRules() {
       );
     }
 
+    // APARELHO DE APOIO: Bloquear apenas se for 1 tramo
     if (aparelhoApoioField) {
-      aparelhoApoioField.value = "Nenhum";
-      aparelhoApoioField.disabled = true;
-      aparelhoApoioField.style.backgroundColor = "#f0f0f0";
-      aparelhoApoioField.style.cursor = "not-allowed";
-      addMonolithicNote(
-        aparelhoApoioField,
-        "🔒 Bloqueado para transição monolítica"
-      );
+      if (isUmTramo) {
+        aparelhoApoioField.value = "Nenhum";
+        aparelhoApoioField.disabled = true;
+        aparelhoApoioField.style.backgroundColor = "#f0f0f0";
+        aparelhoApoioField.style.cursor = "not-allowed";
+        addMonolithicNote(
+          aparelhoApoioField,
+          "🔒 Bloqueado: ponte de 1 tramo não tem aparelho de apoio"
+        );
+      } else {
+        // Mais de 1 tramo: liberar o campo
+        aparelhoApoioField.disabled = false;
+        aparelhoApoioField.style.backgroundColor = "";
+        aparelhoApoioField.style.cursor = "";
+        removeMonolithicNote(aparelhoApoioField);
+      }
     }
 
     // ========== REGRAS DE SUPERESTRUTURA ==========
@@ -1584,6 +1610,7 @@ function removeMonolithicNote(field) {
 function initMonolithicTransitionListeners() {
   const tipoEncontroField = document.getElementById("tipo-encontro");
   const espessuraLajeField = document.getElementById("espessura-laje");
+  const qtdTramosField = document.getElementById("qtd-tramos");
 
   if (tipoEncontroField) {
     tipoEncontroField.addEventListener(
@@ -1595,6 +1622,16 @@ function initMonolithicTransitionListeners() {
   if (espessuraLajeField) {
     // Quando espessura da laje mudar, atualizar cortina se for MONOLÍTICO
     espessuraLajeField.addEventListener("input", function () {
+      const tipoEncontro = document.getElementById("tipo-encontro");
+      if (tipoEncontro && tipoEncontro.value === "MONOLITICO") {
+        applyMonolithicTransitionRules();
+      }
+    });
+  }
+
+  if (qtdTramosField) {
+    // Quando quantidade de tramos mudar, reaplicar regras (afeta aparelho de apoio)
+    qtdTramosField.addEventListener("change", function () {
       const tipoEncontro = document.getElementById("tipo-encontro");
       if (tipoEncontro && tipoEncontro.value === "MONOLITICO") {
         applyMonolithicTransitionRules();
