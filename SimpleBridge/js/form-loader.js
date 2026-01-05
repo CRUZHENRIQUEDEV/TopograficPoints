@@ -11,6 +11,18 @@ function loadWorkToForm(work) {
       work["ESPESSURA LONGARINA"] = "1";
     }
 
+    // Se QTD LONGARINAS = 0, aplicar regras especiais
+    if (qtdLongarinas === 0) {
+      work["QTD TRANSVERSINAS"] = "0";
+      work["TIPO DE TRANSVERSINA"] = "Nenhum";
+      work["ALTURA LONGARINA"] = "0.5";
+      work["DESLOCAMENTO ESQUERDO"] = "1";
+      work["DESLOCAMENTO DIREITO"] = "1";
+      work["REFORCO VIGA"] = "FALSE";
+      work["ESPESSURA TRANSVERSINA"] = "0.25";
+      work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
+    }
+
     // Se TIPO SUPERESTRUTURA não existe ou está vazio, define como ENGASTADA (padrão)
     if (!work["TIPO SUPERESTRUTURA"] || work["TIPO SUPERESTRUTURA"] === "") {
       work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
@@ -291,6 +303,13 @@ function loadWorkToForm(work) {
       setTimeout(() => {
         applyMonolithicTransitionRules();
       }, 300);
+    }
+
+    // Aplicar regras de longarinas = 0 após carregar os dados
+    if (typeof applyZeroLongarinaRules === "function") {
+      setTimeout(() => {
+        applyZeroLongarinaRules();
+      }, 310);
     }
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);

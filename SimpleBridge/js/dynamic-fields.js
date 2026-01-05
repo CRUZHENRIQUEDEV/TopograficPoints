@@ -595,6 +595,115 @@ function updateLongarinaFieldsRequired() {
 function handleLongarinaChange() {
   updateLongarinaFieldsRequired();
   validateSuperstructureType();
+  applyZeroLongarinaRules();
+}
+
+// Aplicar regras quando quantidade de longarinas = 0
+function applyZeroLongarinaRules() {
+  const qtdLongarinaField = document.getElementById("qtd-longarinas");
+  if (!qtdLongarinaField) return;
+
+  const qtdLongarinas = parseInt(qtdLongarinaField.value) || 0;
+  const isZeroLongarinas = qtdLongarinas === 0;
+
+  // Campos a serem controlados
+  const qtdTransversinasField = document.getElementById("qtd-transversinas");
+  const tipoTransversinaField = document.getElementById("tipo-transversina");
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  const deslocEsqField = document.getElementById("deslocamento-esquerdo");
+  const deslocDirField = document.getElementById("deslocamento-direito");
+  const beamReinforcementField = document.getElementById("beam-reinforcement");
+  const espessuraTransversinaField = document.getElementById(
+    "espessura-transversina"
+  );
+  const tipoSuperestruturaField = document.getElementById(
+    "tipo-superestrutura"
+  );
+
+  if (isZeroLongarinas) {
+    // Quantidade de transversinas = 0 e travado
+    if (qtdTransversinasField) {
+      qtdTransversinasField.value = "0";
+      qtdTransversinasField.disabled = true;
+    }
+
+    // Tipo de transversina = "Nenhum" e travado
+    if (tipoTransversinaField) {
+      tipoTransversinaField.value = "Nenhum";
+      tipoTransversinaField.disabled = true;
+    }
+
+    // Altura da longarina = 0.5 (oculto do usuário, apenas guarda o valor)
+    if (alturaLongarinaField) {
+      alturaLongarinaField.value = "0.5";
+      alturaLongarinaField.setAttribute("data-hidden-value", "0.5");
+    }
+
+    // Deslocamentos = 1 e travados
+    if (deslocEsqField) {
+      deslocEsqField.value = "1";
+      deslocEsqField.disabled = true;
+    }
+    if (deslocDirField) {
+      deslocDirField.value = "1";
+      deslocDirField.disabled = true;
+    }
+
+    // Reforço da viga desmarcado e travado
+    if (beamReinforcementField) {
+      beamReinforcementField.checked = false;
+      beamReinforcementField.disabled = true;
+    }
+
+    // Espessura transversina = 0.25 (oculto do usuário)
+    if (espessuraTransversinaField) {
+      espessuraTransversinaField.value = "0.25";
+      espessuraTransversinaField.setAttribute("data-hidden-value", "0.25");
+    }
+
+    // Tipo de superestrutura = "ENGASTADA" e travado
+    if (tipoSuperestruturaField) {
+      tipoSuperestruturaField.value = "ENGASTADA";
+      tipoSuperestruturaField.disabled = true;
+    }
+  } else {
+    // Desbloquear campos quando longarinas > 0
+    if (qtdTransversinasField) {
+      qtdTransversinasField.disabled = false;
+    }
+
+    if (tipoTransversinaField) {
+      // Só desbloqueia se houver transversinas
+      const qtdTransversinas = parseInt(qtdTransversinasField?.value) || 0;
+      tipoTransversinaField.disabled = qtdTransversinas === 0;
+    }
+
+    if (alturaLongarinaField) {
+      alturaLongarinaField.removeAttribute("data-hidden-value");
+    }
+
+    if (deslocEsqField) {
+      deslocEsqField.disabled = false;
+    }
+    if (deslocDirField) {
+      deslocDirField.disabled = false;
+    }
+
+    if (beamReinforcementField) {
+      beamReinforcementField.disabled = false;
+    }
+
+    if (espessuraTransversinaField) {
+      espessuraTransversinaField.removeAttribute("data-hidden-value");
+      // Só desbloqueia se houver transversinas
+      const qtdTransversinas = parseInt(qtdTransversinasField?.value) || 0;
+      espessuraTransversinaField.disabled = qtdTransversinas === 0;
+    }
+
+    if (tipoSuperestruturaField) {
+      tipoSuperestruturaField.disabled = false;
+    }
+  }
 }
 
 // Atualizar visualização dos campos obrigatórios de transversina
@@ -1490,3 +1599,5 @@ window.manageComplementaryElements = manageComplementaryElements;
 window.autoFillSingleTramo = autoFillSingleTramo;
 window.toggleTipoApoioTransicao = toggleTipoApoioTransicao;
 window.handleSingleTramoRestrictions = handleSingleTramoRestrictions;
+window.applyZeroLongarinaRules = applyZeroLongarinaRules;
+window.handleLongarinaChange = handleLongarinaChange;

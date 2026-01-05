@@ -304,6 +304,18 @@ function saveCurrentWork() {
       workData["ESPESSURA LONGARINA"] = "1";
     }
 
+    // Se QTD LONGARINAS = 0, aplicar regras especiais
+    if (qtdLongarinas === 0) {
+      workData["QTD TRANSVERSINAS"] = "0";
+      workData["TIPO DE TRANSVERSINA"] = "Nenhum";
+      workData["ALTURA LONGARINA"] = "0.5";
+      workData["DESLOCAMENTO ESQUERDO"] = "1";
+      workData["DESLOCAMENTO DIREITO"] = "1";
+      workData["REFORCO VIGA"] = "FALSE";
+      workData["ESPESSURA TRANSVERSINA"] = "0.25";
+      workData["TIPO SUPERESTRUTURA"] = "ENGASTADA";
+    }
+
     // Aplicar regras de monolítico (qtd transversinas = 0, altura/espessura >= 0.5)
     applyMonolithicRules(workData);
     // ==========================================
