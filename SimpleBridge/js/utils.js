@@ -289,6 +289,58 @@ function updateTramosSum() {
   }
 }
 
+/**
+ * Aplica regras de monolítico em um objeto de dados (para CSV/banco)
+ * - Se monolítico: QTD TRANSVERSINAS = 0
+ * - Altura/Espessura de longarinas e transversinas nunca podem ser 0 (mínimo 0.5)
+ * @param {object} workData - Objeto com dados da obra
+ * @returns {object} Objeto modificado com as regras aplicadas
+ */
+function applyMonolithicRules(workData) {
+  if (!workData) return workData;
+
+  const tipoEncontro = workData["TIPO ENCONTRO"] || "";
+  const isMonolithic = tipoEncontro === "MONOLITICO";
+
+  const ensureMinPositive = (value, minValue) => {
+    const num = parseFloat(value);
+    return !isNaN(num) && num > 0 ? value : minValue.toString();
+  };
+
+  // Monolítico: forçar QTD TRANSVERSINAS = 0
+  if (isMonolithic) {
+    workData["QTD TRANSVERSINAS"] = "0";
+  }
+
+  // Garantir altura/espessura mínimas (nunca 0) para longarinas e transversinas
+  if (workData["ALTURA LONGARINA"] !== undefined) {
+    workData["ALTURA LONGARINA"] = ensureMinPositive(
+      workData["ALTURA LONGARINA"],
+      0.5
+    );
+  }
+  if (workData["ESPESSURA LONGARINA"] !== undefined) {
+    workData["ESPESSURA LONGARINA"] = ensureMinPositive(
+      workData["ESPESSURA LONGARINA"],
+      0.5
+    );
+  }
+  if (workData["ALTURA TRANSVERSINA"] !== undefined) {
+    workData["ALTURA TRANSVERSINA"] = ensureMinPositive(
+      workData["ALTURA TRANSVERSINA"],
+      0.5
+    );
+  }
+  if (workData["ESPESSURA TRANSVERSINA"] !== undefined) {
+    workData["ESPESSURA TRANSVERSINA"] = ensureMinPositive(
+      workData["ESPESSURA TRANSVERSINA"],
+      0.5
+    );
+  }
+
+  return workData;
+}
+
 // Expor funções globalmente
 window.debugLog = debugLog;
 window.forceIntegerOnly = forceIntegerOnly;
@@ -301,3 +353,4 @@ window.clearForm = clearForm;
 window.formatLote = formatLote;
 window.updateTramosSum = updateTramosSum;
 window.clearFormSilent = clearFormSilent;
+window.applyMonolithicRules = applyMonolithicRules;

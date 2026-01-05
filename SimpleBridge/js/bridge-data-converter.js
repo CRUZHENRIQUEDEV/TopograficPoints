@@ -253,48 +253,68 @@ function generateBridgeTransitionDataFromObra(obra) {
  * @returns {object} BridgeSuperstructureData
  */
 function generateSuperstructureDataFromObra(obra) {
+  const abutmentTypeValue = obra["TIPO ENCONTRO"] ?? obra.TIPO_ENCONTRO;
+  const isMonolithic = abutmentTypeValue === "MONOLITICO";
+
+  const ensureMinPositive = (num, minValue) =>
+    typeof num === "number" && !isNaN(num) && num > 0 ? num : minValue;
+
   // Parse QTD LONGARINAS - aceitar 0 como valor válido
   const qtdLongarinasValue = obra["QTD LONGARINAS"] ?? obra.QTD_LONGARINAS;
-  const qtdLongarinas =
+  const parsedQtdLongarinas =
     qtdLongarinasValue !== null &&
     qtdLongarinasValue !== undefined &&
     qtdLongarinasValue !== ""
       ? parseInt(qtdLongarinasValue)
       : 2;
+  const qtdLongarinas = isMonolithic ? 0 : parsedQtdLongarinas;
 
   // Parse QTD TRANSVERSINAS - aceitar 0 como valor válido
   const qtdTransversinasValue =
     obra["QTD TRANSVERSINAS"] ?? obra.QTD_TRANSVERSINAS;
-  const qtdTransversinas =
+  const parsedQtdTransversinas =
     qtdTransversinasValue !== null &&
     qtdTransversinasValue !== undefined &&
     qtdTransversinasValue !== ""
       ? parseInt(qtdTransversinasValue)
       : 0; // Se vazio, salvar como 0 ao invés de 3
 
+  const qtdTransversinas = isMonolithic ? 0 : parsedQtdTransversinas;
+
+  const longarineHeightRaw = parseFloat(
+    obra["ALTURA LONGARINA"] || obra.ALTURA_LONGARINA
+  );
+  const longarineThicknessRaw = parseFloat(
+    obra["ESPESSURA LONGARINA"] || obra.ESPESSURA_LONGARINA
+  );
+  const transversineHeightRaw = parseFloat(
+    obra["ALTURA TRANSVERSINA"] || obra.ALTURA_TRANSVERSINA
+  );
+  const transversineThicknessRaw = parseFloat(
+    obra["ESPESSURA TRANSVERSINA"] || obra.ESPESSURA_TRANSVERSINA
+  );
+
+  const longarineHeight = ensureMinPositive(longarineHeightRaw, 0.5);
+  const longarineThickness = ensureMinPositive(longarineThicknessRaw, 0.5);
+  const transversineHeight = ensureMinPositive(transversineHeightRaw, 0.5);
+  const transversineThickness = ensureMinPositive(
+    transversineThicknessRaw,
+    0.5
+  );
+
   return {
     BridgeSuperstructureType: createZSElementTypeFromValue(
       obra["TIPO SUPERESTRUTURA"] || obra.TIPO_SUPERESTRUTURA
     ),
-    LongarineHeight: roundTo3Decimals(
-      parseFloat(obra["ALTURA LONGARINA"] || obra.ALTURA_LONGARINA) || 0.0
-    ),
-    LongarineThickness: roundTo3Decimals(
-      parseFloat(obra["ESPESSURA LONGARINA"] || obra.ESPESSURA_LONGARINA) || 0.0
-    ),
+    LongarineHeight: roundTo3Decimals(longarineHeight),
+    LongarineThickness: roundTo3Decimals(longarineThickness),
     NumberOfLongarines: qtdLongarinas,
     LongarineType: createZSElementTypeFromValue(
       obra["TIPO LONGARINA"] || obra.TIPO_LONGARINA
     ),
     BeamReinforcement: Boolean(obra["REFORCO VIGA"] || obra.REFORCO_VIGA),
-    TransversineHeight: roundTo3Decimals(
-      parseFloat(obra["ALTURA TRANSVERSINA"] || obra.ALTURA_TRANSVERSINA) || 0.0
-    ),
-    TransversineThickness: roundTo3Decimals(
-      parseFloat(
-        obra["ESPESSURA TRANSVERSINA"] || obra.ESPESSURA_TRANSVERSINA
-      ) || 0.0
-    ),
+    TransversineHeight: roundTo3Decimals(transversineHeight),
+    TransversineThickness: roundTo3Decimals(transversineThickness),
     NumberOfTransversines: qtdTransversinas,
     TransversineType: createZSElementTypeFromValue(
       obra["TIPO DE TRANSVERSINA"] || obra.TIPO_TRANSVERSINA

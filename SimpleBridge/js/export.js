@@ -83,6 +83,9 @@ function exportToCSV() {
     if (!data["TIPO SUPERESTRUTURA"] || data["TIPO SUPERESTRUTURA"] === "") {
       data["TIPO SUPERESTRUTURA"] = "ENGASTADA";
     }
+
+    // Aplicar regras de monolítico (qtd transversinas = 0, altura/espessura >= 0.5)
+    applyMonolithicRules(data);
     // ==========================================
 
     // Construir CSV
@@ -179,6 +182,9 @@ function exportAllWorks() {
         ) {
           work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
         }
+
+        // Aplicar regras de monolítico (qtd transversinas = 0, altura/espessura >= 0.5)
+        applyMonolithicRules(work);
       });
       // =============================================================
 
@@ -360,6 +366,9 @@ function saveMultipleWorks(works) {
     if (!work["TIPO SUPERESTRUTURA"] || work["TIPO SUPERESTRUTURA"] === "") {
       work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
     }
+
+    // Aplicar regras de monolítico (qtd transversinas = 0, altura/espessura >= 0.5)
+    applyMonolithicRules(work);
   });
   // =============================================================
 

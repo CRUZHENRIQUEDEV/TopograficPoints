@@ -303,6 +303,9 @@ function saveCurrentWork() {
     if (qtdLongarinas === 1) {
       workData["ESPESSURA LONGARINA"] = "1";
     }
+
+    // Aplicar regras de monolítico (qtd transversinas = 0, altura/espessura >= 0.5)
+    applyMonolithicRules(workData);
     // ==========================================
 
     const transaction = db.transaction(["obras"], "readwrite");
