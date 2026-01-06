@@ -1,12 +1,13 @@
+<!-- Versão: 7.0 - Sistema completo de estatísticas de reavaliação -->
+<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OAE Support</title>
-    <!-- Chart.js é a única dependência externa -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
-      /* Versão: 5.0 - Estilo simplificado e robusto */
+      /* Versão: 7.0 - Estilo com suporte a reavaliações */
       :root {
         --bg-color: #1e3d59;
         --text-color: #ffffff;
@@ -16,6 +17,9 @@
         --warning: #f39c12;
         --danger: #e74c3c;
         --info: #3498db;
+        --purple: #9b59b6;
+        --orange: #e67e22;
+        --teal: #1abc9c;
       }
 
       * {
@@ -52,7 +56,7 @@
       }
 
       .container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
       }
 
@@ -121,11 +125,14 @@
         display: flex;
         gap: 10px;
         margin-bottom: 20px;
+        flex-wrap: wrap;
       }
 
       .tabs {
         display: flex;
         margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 2px;
       }
 
       .tab {
@@ -133,7 +140,6 @@
         background-color: rgba(255, 255, 255, 0.1);
         cursor: pointer;
         border-radius: 4px 4px 0 0;
-        margin-right: 2px;
       }
 
       .tab.active {
@@ -194,6 +200,7 @@
         flex-wrap: wrap;
         gap: 10px;
         margin-bottom: 10px;
+        align-items: center;
       }
 
       select,
@@ -258,8 +265,13 @@
         background-color: rgba(255, 255, 255, 0.05);
         padding: 15px;
         border-radius: 8px;
-        height: 300px; /* Altura fixa para evitar esticamento */
-        position: relative; /* Importante para posicionamento do canvas */
+        height: 300px;
+        position: relative;
+      }
+
+      .chart-box.large {
+        flex: 1 0 400px;
+        height: 350px;
       }
 
       .chart-title {
@@ -270,8 +282,13 @@
 
       canvas {
         width: 100% !important;
-        height: 220px !important; /* Altura fixa para o canvas */
-        max-height: 220px !important; /* Garantir altura máxima */
+        height: 220px !important;
+        max-height: 220px !important;
+      }
+
+      .chart-box.large canvas {
+        height: 270px !important;
+        max-height: 270px !important;
       }
 
       .message-card {
@@ -302,6 +319,232 @@
         font-size: 0.9em;
       }
 
+      /* Cards de estatísticas */
+      .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .stat-card .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .stat-card .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      .stat-card.highlight-success .stat-value {
+        color: var(--success);
+      }
+
+      .stat-card.highlight-warning .stat-value {
+        color: var(--warning);
+      }
+
+      .stat-card.highlight-danger .stat-value {
+        color: var(--danger);
+      }
+
+      .stat-card.highlight-info .stat-value {
+        color: var(--info);
+      }
+
+      .stat-card.highlight-purple .stat-value {
+        color: var(--purple);
+      }
+
+      /* Tabela de reavaliações */
+      .reav-table {
+        font-size: 0.9rem;
+      }
+
+      .reav-table th {
+        position: sticky;
+        top: 0;
+        background-color: #2c5282;
+        z-index: 10;
+      }
+
+      .reav-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin: 2px;
+      }
+
+      .reav-badge-1 { background-color: rgba(52, 152, 219, 0.3); }
+      .reav-badge-2 { background-color: rgba(243, 156, 18, 0.3); }
+      .reav-badge-3 { background-color: rgba(230, 126, 34, 0.3); }
+      .reav-badge-4 { background-color: rgba(231, 76, 60, 0.3); }
+      .reav-badge-5 { background-color: rgba(155, 89, 182, 0.3); }
+      .reav-badge-6 { background-color: rgba(192, 57, 43, 0.4); }
+
+      .status-final-aprovada {
+        color: var(--success);
+        font-weight: bold;
+      }
+
+      .status-final-reprovada {
+        color: var(--danger);
+        font-weight: bold;
+      }
+
+      .status-final-andamento {
+        color: var(--warning);
+        font-weight: bold;
+      }
+
+      /* Filtros de período */
+      .period-filter {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      .period-btn {
+        padding: 8px 12px;
+        background-color: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .period-btn:hover {
+        background-color: rgba(255,255,255,0.2);
+      }
+
+      .period-btn.active {
+        background-color: var(--highlight);
+        border-color: var(--highlight);
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+
+      .modal-content {
+        background-color: var(--bg-color);
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid var(--highlight);
+        border-radius: 8px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .close-modal {
+        color: var(--text-color);
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close-modal:hover {
+        color: var(--highlight);
+      }
+
+      .history-timeline {
+        position: relative;
+        padding-left: 30px;
+        margin-top: 20px;
+      }
+
+      .history-timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--highlight), var(--purple));
+      }
+
+      .timeline-item {
+        position: relative;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        border-left: 3px solid var(--highlight);
+      }
+
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -24px;
+        top: 20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--highlight);
+        border: 2px solid var(--bg-color);
+      }
+
+      .timeline-item.status-aprovada-item::before {
+        background-color: var(--success);
+      }
+
+      .timeline-item.status-reprovada-item::before {
+        background-color: var(--danger);
+      }
+
+      .timeline-item.status-reavaliacao-item::before {
+        background-color: var(--warning);
+      }
+
+      .timeline-date {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        margin-bottom: 5px;
+      }
+
+      .timeline-status {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+
+      .timeline-sender {
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      /* Scrollable table container */
+      .table-container {
+        max-height: 500px;
+        overflow-y: auto;
+        border-radius: 8px;
+      }
+
       @media (max-width: 768px) {
         .filter-row {
           flex-direction: column;
@@ -310,133 +553,30 @@
         .chart-box {
           flex: 1 0 100%;
         }
+
+        .stats-cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
-
-
-      /* Adicionar isso ao bloco de estilos CSS existente */
-.view-icon {
-  cursor: pointer;
-  color: var(--highlight);
-  font-size: 1.2em;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.view-icon:hover {
-  color: white;
-  transform: scale(1.2);
-  transition: all 0.2s ease-in-out;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.modal-content {
-  background-color: var(--bg-color);
-  margin: 10% auto;
-  padding: 20px;
-  border: 1px solid var(--highlight);
-  border-radius: 8px;
-  width: 80%;
-  max-width: 800px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.close-modal {
-  color: var(--text-color);
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.close-modal:hover {
-  color: var(--highlight);
-}
-
-.message-view {
-  margin-top: 15px;
-  white-space: pre-wrap;
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 15px;
-  border-radius: 5px;
-  border-left: 3px solid var(--highlight);
-}
-
-.message-header {
-  margin-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
-}
-
-
-
-.most-recent-badge {
-  background-color: var(--info);
-  color: white;
-  padding: 3px 6px;
-  border-radius: 3px;
-  font-size: 0.75em;
-  margin-left: 8px;
-  display: inline-block;
-}
-
-/* Adicionar efeito de destaque para a linha da mensagem mais recente na tabela */
-tr.most-recent-row {
-  background-color: rgba(52, 152, 219, 0.15) !important;
-  position: relative;
-}
-
-tr.most-recent-row::after {
-  content: "mais recente";
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: var(--info);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.7em;
-}
-
-
-
-
-
-
-
     </style>
   </head>
   <body>
     <div class="container">
       <header>
         <h1>OAE Support</h1>
-        <p>Ferramenta de geração de estatisticas de avaliação de OAEs</p>
+        <p>Ferramenta de geração de estatísticas de avaliação de OAEs</p>
       </header>
 
       <div class="card">
-
-        <!-- Adicionar isso dentro da div "card", antes do textarea -->
-<div class="format-selector">
-  <label for="dateFormatSelect">Formato de Data:</label>
-  <select id="dateFormatSelect">
-    <option value="auto">Detecção Automática</option>
-    <option value="DD/MM/YYYY">Dia/Mês/Ano (DD/MM/YYYY)</option>
-    <option value="MM/DD/YYYY">Mês/Dia/Ano (MM/DD/YYYY)</option>
-  </select>
-  <span id="detectedFormat"></span>
-</div>
+        <div class="format-selector" style="margin-bottom: 15px;">
+          <label for="dateFormatSelect">Formato de Data:</label>
+          <select id="dateFormatSelect">
+            <option value="auto">Detecção Automática</option>
+            <option value="DD/MM/YYYY">Dia/Mês/Ano (DD/MM/YYYY)</option>
+            <option value="MM/DD/YYYY">Mês/Dia/Ano (MM/DD/YYYY)</option>
+          </select>
+          <span id="detectedFormat"></span>
+        </div>
 
         <textarea
           id="whatsappText"
@@ -445,12 +585,14 @@ tr.most-recent-row::after {
         <div class="button-group">
           <button id="processBtn">Processar Mensagens</button>
           <button id="exportBtn" disabled>Exportar para CSV</button>
+          <button id="exportReavBtn" disabled style="background-color: var(--purple);">Exportar Reavaliações</button>
         </div>
       </div>
 
       <div class="tabs">
         <div class="tab active" data-tab="dados">Dados</div>
         <div class="tab" data-tab="estatisticas">Estatísticas</div>
+        <div class="tab" data-tab="reavaliacoes">Reavaliações</div>
         <div class="tab" data-tab="despadronizadas">Despadronizadas</div>
       </div>
 
@@ -468,16 +610,7 @@ tr.most-recent-row::after {
               <select id="filterTipo">
                 <option value="">Todos os Tipos</option>
               </select>
-              <input
-                type="text"
-                id="filterCodigo"
-                placeholder="Filtrar por Código"
-              />
-
-              <div class="summary-container">
-                <h3>Sumário dos Dados</h3>
-                <div id="dataSummary" class="summary-content"></div>
-              </div>
+              <input type="text" id="filterCodigo" placeholder="Filtrar por Código" />
             </div>
 
             <div class="filter-row">
@@ -488,6 +621,11 @@ tr.most-recent-row::after {
               <button id="applyFiltersBtn">Aplicar Filtros</button>
               <button id="clearFiltersBtn">Limpar Filtros</button>
             </div>
+          </div>
+
+          <div class="summary-container">
+            <h3>Sumário dos Dados</h3>
+            <div id="dataSummary" class="summary-content"></div>
           </div>
 
           <table id="resultTable">
@@ -507,8 +645,7 @@ tr.most-recent-row::after {
             <tbody>
               <tr>
                 <td colspan="9" style="text-align: center">
-                  Nenhum dado processado. Cole as mensagens e clique em
-                  "Processar".
+                  Nenhum dado processado. Cole as mensagens e clique em "Processar".
                 </td>
               </tr>
             </tbody>
@@ -516,14 +653,180 @@ tr.most-recent-row::after {
         </div>
       </div>
 
+      <!-- Tab: Estatísticas -->
+      <div id="estatisticas-tab" class="tab-content">
+        <div class="card">
+          <div class="filter-container stats-filter">
+            <div class="filter-row">
+              <select id="statsTipoFilter">
+                <option value="">Todos os Tipos de Inspeção</option>
+                <option value="CADASTRAL">CADASTRAL</option>
+                <option value="ROTINEIRA">ROTINEIRA</option>
+                <option value="CORREÇÃO DE CADASTRO">CORREÇÃO DE CADASTRO</option>
+              </select>
+              <select id="statsLoteFilter">
+                <option value="">Todos os Lotes</option>
+              </select>
+              <button id="applyStatsFiltersBtn">Aplicar Filtros</button>
+              <button id="clearStatsFiltersBtn">Limpar Filtros</button>
+            </div>
+          </div>
+          
+          <div id="statsFilterInfo"><h3>Estatísticas</h3></div>
+          
+          <div class="charts-container">
+            <div class="chart-box">
+              <div class="chart-title">Quantidade por Status</div>
+              <canvas id="statusChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">Reprovações por Código OAE</div>
+              <canvas id="reprovacaoChart"></canvas>
+            </div>
+          </div>
+          <div class="charts-container">
+            <div class="chart-box">
+              <div class="chart-title">Quem mais Aprova</div>
+              <canvas id="aprovadorChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">Quem mais Reprova</div>
+              <canvas id="reprovadorChart"></canvas>
+            </div>
+          </div>
+          <div class="charts-container">
+            <div class="chart-box">
+              <div class="chart-title">Tempo Médio de Avaliação (Dias)</div>
+              <canvas id="tempoChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">Tipo de Inspeção</div>
+              <canvas id="tipoChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Reavaliações (NOVA) -->
+      <div id="reavaliacoes-tab" class="tab-content">
+        <div class="card">
+          <h2>📊 Dashboard de Reavaliações</h2>
+          
+          <!-- Filtros de período -->
+          <div class="filter-container">
+            <div class="filter-row">
+              <span style="margin-right: 10px;">Período:</span>
+              <div class="period-filter">
+                <button class="period-btn active" data-period="all">Todos</button>
+                <button class="period-btn" data-period="week">Última Semana</button>
+                <button class="period-btn" data-period="month">Último Mês</button>
+                <button class="period-btn" data-period="quarter">Último Trimestre</button>
+                <button class="period-btn" data-period="year">Último Ano</button>
+              </div>
+            </div>
+            <div class="filter-row">
+              <label>De:</label>
+              <input type="text" id="reavStartDate" placeholder="DD/MM/AAAA" />
+              <label>Até:</label>
+              <input type="text" id="reavEndDate" placeholder="DD/MM/AAAA" />
+              <select id="reavLoteFilter">
+                <option value="">Todos os Lotes</option>
+              </select>
+              <button id="applyReavFiltersBtn">Aplicar</button>
+              <button id="clearReavFiltersBtn">Limpar</button>
+            </div>
+          </div>
+
+          <!-- Cards de estatísticas -->
+          <div class="stats-cards" id="reavStatsCards">
+            <div class="stat-card highlight-info">
+              <div class="stat-value" id="totalObrasAvaliadas">0</div>
+              <div class="stat-label">Obras Avaliadas</div>
+            </div>
+            <div class="stat-card highlight-warning">
+              <div class="stat-value" id="totalObrasReavaliadas">0</div>
+              <div class="stat-label">Obras Reavaliadas</div>
+            </div>
+            <div class="stat-card highlight-danger">
+              <div class="stat-value" id="totalReavaliacoes">0</div>
+              <div class="stat-label">Total de Reavaliações</div>
+            </div>
+            <div class="stat-card highlight-purple">
+              <div class="stat-value" id="mediaReavPorObra">0</div>
+              <div class="stat-label">Média Reav/Obra</div>
+            </div>
+            <div class="stat-card highlight-success">
+              <div class="stat-value" id="taxaAprovacaoFinal">0%</div>
+              <div class="stat-label">Taxa Aprovação Final</div>
+            </div>
+          </div>
+
+          <!-- Gráficos de reavaliação -->
+          <div class="charts-container">
+            <div class="chart-box large">
+              <div class="chart-title">Distribuição: Obras por Número de Reavaliações</div>
+              <canvas id="distribuicaoReavChart"></canvas>
+            </div>
+            <div class="chart-box large">
+              <div class="chart-title">Funil de Reavaliação</div>
+              <canvas id="funilReavChart"></canvas>
+            </div>
+          </div>
+
+          <div class="charts-container">
+            <div class="chart-box">
+              <div class="chart-title">Top 10 Obras Mais Reavaliadas</div>
+              <canvas id="topObrasReavChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">Taxa de Aprovação por Ciclo</div>
+              <canvas id="taxaAprovacaoCicloChart"></canvas>
+            </div>
+          </div>
+
+          <div class="charts-container">
+            <div class="chart-box large">
+              <div class="chart-title">Evolução de Reavaliações por Mês</div>
+              <canvas id="evolucaoReavChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">Reavaliações por Lote</div>
+              <canvas id="reavPorLoteChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Tabela detalhada -->
+          <h3 style="margin-top: 30px; margin-bottom: 15px;">📋 Detalhamento por Obra</h3>
+          <div class="table-container">
+            <table class="reav-table" id="reavTable">
+              <thead>
+                <tr>
+                  <th>Código OAE</th>
+                  <th>Lote</th>
+                  <th>Tipo</th>
+                  <th>Total Registros</th>
+                  <th>Nº Reavaliações</th>
+                  <th>Status Final</th>
+                  <th>Primeira Data</th>
+                  <th>Última Data</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="9" style="text-align: center">Nenhum dado processado.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Tab: Despadronizadas -->
       <div id="despadronizadas-tab" class="tab-content">
         <div class="card">
           <h2>Mensagens com Formato Irregular</h2>
-          <p>
-            Abaixo estão listadas mensagens que não seguem completamente o
-            padrão esperado:
-          </p>
+          <p>Abaixo estão listadas mensagens que não seguem completamente o padrão esperado:</p>
           <div id="irregularMessages">
             <p>Nenhuma mensagem irregular encontrada.</p>
           </div>
@@ -531,2136 +834,2009 @@ tr.most-recent-row::after {
       </div>
     </div>
 
-    <!-- Tab: Estatísticas -->
-    <div id="estatisticas-tab" class="tab-content">
-      <div class="filter-container stats-filter">
-        <div class="filter-row">
-          <select id="statsTipoFilter">
-            <option value="">Todos os Tipos de Inspeção</option>
-            <option value="CADASTRAL">CADASTRAL</option>
-            <option value="ROTINEIRA">ROTINEIRA</option>
-            <option value="CORREÇÃO DE CADASTRO">CORREÇÃO DE CADASTRO</option>
-          </select>
-          <select id="statsLoteFilter">
-            <option value="">Todos os Lotes</option>
-          </select>
-          <button id="applyStatsFiltersBtn">Aplicar Filtros</button>
-          <button id="clearStatsFiltersBtn">Limpar Filtros</button>
-        </div>
+    <!-- Modal para histórico da OAE -->
+    <div id="oaeHistoryModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" id="closeHistoryModal">&times;</span>
+        <h2 id="modalOAETitle">Histórico da OAE</h2>
+        <div id="modalOAEInfo" style="margin-bottom: 20px;"></div>
+        <div id="modalOAEHistory" class="history-timeline"></div>
       </div>
-      <div id="statsFilterInfo"><h3>Estatísticas</h3></div>
-      <div class="charts-container">
-        <div class="chart-box">
-          <div class="chart-title">Quantidade por Status</div>
-          <canvas id="statusChart"></canvas>
-        </div>
-        <div class="chart-box">
-          <div class="chart-title">Reprovações por Código OAE</div>
-          <canvas id="reprovacaoChart"></canvas>
-        </div>
-      </div>
-      <div class="charts-container">
-        <div class="chart-box">
-          <div class="chart-title">Quem mais Aprova</div>
-          <canvas id="aprovadorChart"></canvas>
-        </div>
-        <div class="chart-box">
-          <div class="chart-title">Quem mais Reprova</div>
-          <canvas id="reprovadorChart"></canvas>
-        </div>
-      </div>
-      <div class="charts-container">
-        <div class="chart-box">
-          <div class="chart-title">Tempo Médio de Avaliação (Dias)</div>
-          <canvas id="tempoChart"></canvas>
-        </div>
-        <div class="chart-box">
-          <div class="chart-title">Tipo de Inspeção</div>
-          <canvas id="tipoChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Adicionar este código após a última tag div de fechamento -->
-<div id="messageModal" class="modal">
-  <div class="modal-content">
-    <span class="close-modal">&times;</span>
-    <div class="message-header">
-      <h3>Detalhes da Mensagem</h3>
-      <p id="messageInfo"></p>
-    </div>
-    <div id="messageView" class="message-view"></div>
-  </div>
-</div>
-
     </div>
 
     <script>
-      // Versão: 6.0 - Correções para processamento de mensagens OAE
+      // Versão: 7.0 - Script completo com sistema de reavaliações
 
-      // Adicionar depois do DOMContentLoaded no início do script
-document.getElementById("dateFormatSelect").addEventListener("change", function() {
-    userSelectedFormat = this.value;
-    localStorage.setItem("oaePreferredDateFormat", userSelectedFormat);
-    
-    if (processedData.length > 0) {
-        // Reprocessar os dados se necessário
-        updateTable();
-    }
-});
+      // Variáveis globais
+      let processedData = [];
+      let irregularData = [];
+      let oaeGroupedData = {}; // Dados agrupados por código OAE
+      let detectedDateFormat = "DD/MM/YYYY";
+      let userSelectedFormat = "auto";
 
-// Carregar configuração salva (adicionar antes de document.addEventListener("DOMContentLoaded"...))
-if (localStorage.getItem("oaePreferredDateFormat")) {
-    userSelectedFormat = localStorage.getItem("oaePreferredDateFormat");
-    // Definir o valor selecionado depois do DOM estar carregado
-    document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById("dateFormatSelect").value = userSelectedFormat;
-    });
-}
-
+      // Carregar configuração salva
+      if (localStorage.getItem("oaePreferredDateFormat")) {
+        userSelectedFormat = localStorage.getItem("oaePreferredDateFormat");
+      }
 
       document.addEventListener("DOMContentLoaded", function () {
-        // Função de formatação de data para o formato brasileiro
-        function formatDateBR(dateStr) {
-          if (!dateStr) return "";
+        // Definir formato salvo
+        document.getElementById("dateFormatSelect").value = userSelectedFormat;
 
-          // Se já estiver no formato DD/MM/YYYY, retornar como está
-          if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-            return dateStr;
+        // Event listeners principais
+        document.getElementById("dateFormatSelect").addEventListener("change", function() {
+          userSelectedFormat = this.value;
+          localStorage.setItem("oaePreferredDateFormat", userSelectedFormat);
+          if (processedData.length > 0) {
+            updateTable();
           }
+        });
 
-          // Se estiver no formato YYYY-MM-DD (do input date), converter para DD/MM/YYYY
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            const parts = dateStr.split("-");
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-          }
-
-          // Tentar converter de outras formas
-          try {
-            const date = new Date(dateStr);
-            if (!isNaN(date.getTime())) {
-              const day = String(date.getDate()).padStart(2, "0");
-              const month = String(date.getMonth() + 1).padStart(2, "0");
-              const year = date.getFullYear();
-              return `${day}/${month}/${year}`;
-            }
-          } catch (e) {
-            // Se falhar, retornar o original
-          }
-
-          return dateStr;
-        }
-
-        // Elementos DOM
-        const whatsappText = document.getElementById("whatsappText");
-        const processBtn = document.getElementById("processBtn");
-        const exportBtn = document.getElementById("exportBtn");
-        const resultTable = document.getElementById("resultTable");
-
-        const filterLote = document.getElementById("filterLote");
-        const filterStatus = document.getElementById("filterStatus");
-        const filterTipo = document.getElementById("filterTipo");
-        const filterCodigo = document.getElementById("filterCodigo");
-        const startDate = document.getElementById("startDate");
-        const endDate = document.getElementById("endDate");
-        const applyFiltersBtn = document.getElementById("applyFiltersBtn");
-        const clearFiltersBtn = document.getElementById("clearFiltersBtn");
-        const tabs = document.querySelectorAll(".tab");
-        const tabContents = document.querySelectorAll(".tab-content");
-        const irregularMessages = document.getElementById("irregularMessages");
-
-        // Adicionar no bloco DOMContentLoaded
-        document
-          .getElementById("applyStatsFiltersBtn")
-          .addEventListener("click", applyStatsFilters);
-        document
-          .getElementById("clearStatsFiltersBtn")
-          .addEventListener("click", clearStatsFilters);
-
-        // Dados
-        let processedData = [];
-        let irregularData = [];
-let detectedDateFormat = "DD/MM/YYYY"; // Formato padrão (BR)
-let userSelectedFormat = "auto"; // Auto por padrã
-
-
-        // Event Listeners
-        processBtn.addEventListener("click", processMessages);
-        exportBtn.addEventListener("click", exportToCSV);
-        applyFiltersBtn.addEventListener("click", applyFilters);
-        clearFiltersBtn.addEventListener("click", clearFilters);
+        document.getElementById("processBtn").addEventListener("click", processMessages);
+        document.getElementById("exportBtn").addEventListener("click", exportToCSV);
+        document.getElementById("exportReavBtn").addEventListener("click", exportReavaliacoesToCSV);
+        document.getElementById("applyFiltersBtn").addEventListener("click", applyFilters);
+        document.getElementById("clearFiltersBtn").addEventListener("click", clearFilters);
+        document.getElementById("applyStatsFiltersBtn").addEventListener("click", applyStatsFilters);
+        document.getElementById("clearStatsFiltersBtn").addEventListener("click", clearStatsFilters);
+        document.getElementById("applyReavFiltersBtn").addEventListener("click", applyReavFilters);
+        document.getElementById("clearReavFiltersBtn").addEventListener("click", clearReavFilters);
 
         // Tabs
-        tabs.forEach((tab) => {
+        document.querySelectorAll(".tab").forEach((tab) => {
           tab.addEventListener("click", () => {
-            // Desativar todas as abas
-            tabs.forEach((t) => t.classList.remove("active"));
-            tabContents.forEach((t) => t.classList.remove("active"));
-
-            // Ativar a aba clicada
+            document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
             tab.classList.add("active");
-            document
-              .getElementById(tab.dataset.tab + "-tab")
-              .classList.add("active");
+            document.getElementById(tab.dataset.tab + "-tab").classList.add("active");
 
-            // Se for a aba de estatísticas e houver dados, atualizar gráficos
-            if (
-              tab.dataset.tab === "estatisticas" &&
-              processedData.length > 0
-            ) {
+            if (tab.dataset.tab === "estatisticas" && processedData.length > 0) {
               updateCharts();
+            }
+            if (tab.dataset.tab === "reavaliacoes" && processedData.length > 0) {
+              updateReavaliacoesTab();
             }
           });
         });
 
-        // MELHORIAS #1: Função robusta para normalizar lotes (remove zeros à esquerda)
-        function normalizeLote(lote) {
-          if (!lote) return "";
+        // Botões de período
+        document.querySelectorAll(".period-btn").forEach((btn) => {
+          btn.addEventListener("click", function() {
+            document.querySelectorAll(".period-btn").forEach((b) => b.classList.remove("active"));
+            this.classList.add("active");
+            applyPeriodFilter(this.dataset.period);
+          });
+        });
 
-          // Remover espaços extras
-          const trimmedLote = lote.trim();
+        // Modal
+        document.getElementById("closeHistoryModal").addEventListener("click", function() {
+          document.getElementById("oaeHistoryModal").style.display = "none";
+        });
 
-          // Verificar se é um número
-          if (/^\d+$/.test(trimmedLote)) {
-            // Converter para número e depois para string para remover zeros à esquerda
-            return parseInt(trimmedLote, 10).toString();
+        window.addEventListener("click", function(event) {
+          const modal = document.getElementById("oaeHistoryModal");
+          if (event.target === modal) {
+            modal.style.display = "none";
           }
+        });
+      });
 
-          return trimmedLote;
+      // ==========================================
+      // FUNÇÕES DE NORMALIZAÇÃO (MELHORADAS)
+      // ==========================================
+
+      function normalizeText(text) {
+        if (!text) return "";
+        return text
+          .toString()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .trim();
+      }
+
+      function normalizeLote(lote) {
+        if (!lote) return "";
+        const trimmedLote = lote.trim();
+        if (/^\d+$/.test(trimmedLote)) {
+          return parseInt(trimmedLote, 10).toString();
+        }
+        return trimmedLote;
+      }
+
+      function normalizeTipoInspecao(tipo) {
+        if (!tipo) return "";
+        const normalized = normalizeText(tipo);
+
+        if (normalized.includes("cadastral") || normalized.includes("cadstral") || 
+            normalized.includes("cdastral") || normalized.includes("cadatral") ||
+            normalized.includes("cadastrais")) {
+          return "CADASTRAL";
         }
 
-        // MELHORIAS #1: Modificar a função extractLote para normalizar o lote após extração
-        function extractLote(text, message) {
-          // Melhorar regex para capturar lotes com qualquer número de dígitos
-          const loteMatch =
-            text.match(/Lote:?\s*(\d+)/i) || text.match(/Lote\s*(\d+)/i);
+        if (normalized.includes("rotineira") || normalized.includes("rotinera") || 
+            normalized.includes("rotineirra") || normalized.includes("rotinieira")) {
+          return "ROTINEIRA";
+        }
 
-          if (loteMatch) {
-            // Normalizar o lote ao extrair
-            message.lote = normalizeLote(loteMatch[1]);
+        if (normalized.includes("correcao") || normalized.includes("correção") || 
+            normalized.includes("retificacao") || normalized.includes("retificação")) {
+          return "CORREÇÃO DE CADASTRO";
+        }
+
+        return tipo.toUpperCase();
+      }
+
+      // FUNÇÃO MELHORADA: Normalização de status com detecção ampliada de reavaliações
+      function normalizeStatus(status) {
+        if (!status) return "";
+
+        // Remover caracteres especiais e normalizar
+        let normalized = normalizeText(status).replace(/\s+/g, " ").trim();
+        let original = status.trim().toUpperCase();
+
+        // Tratar strings truncadas
+        if (status.endsWith("AVALIAC") || status.endsWith("AVALIACÃ") || status.endsWith("AVALIACA")) {
+          return "AVALIAÇÃO";
+        }
+
+        // ========================================
+        // DETECÇÃO AMPLIADA DE REAVALIAÇÃO
+        // ========================================
+
+        // Padrão 1: Números seguidos de "reavaliação" ou variações
+        // Ex: "1ª reavaliação", "2a reavaliacao", "3° reavaliaçao", "4 reavaliação"
+        const reavaliacaoNumeroMatch = normalized.match(
+          /^(\d+)[ªºa°]?\s*r?e?[-\s]?a?v?a?l?i?a?[cç]?[aã]?o?$/i
+        );
+        if (reavaliacaoNumeroMatch) {
+          return `${reavaliacaoNumeroMatch[1]}ª REAVALIAÇÃO`;
+        }
+
+        // Padrão 2: Apenas número (1, 2, 3...) que representa reavaliação
+        if (/^[1-9]$/.test(normalized)) {
+          return `${normalized}ª REAVALIAÇÃO`;
+        }
+
+        // Padrão 3: "reavaliação" com número no final
+        // Ex: "reavaliação 1", "reav 2", "re-avaliação 3"
+        const reavaliacaoFinalMatch = normalized.match(
+          /^r?e?[-\s]?a?v?a?l?i?a?[cç]?[aã]?o?\s*(\d+)$/i
+        );
+        if (reavaliacaoFinalMatch) {
+          return `${reavaliacaoFinalMatch[1]}ª REAVALIAÇÃO`;
+        }
+
+        // Padrão 4: Números por extenso
+        const numerosExtenso = {
+          'primeira': '1', 'primeiro': '1', 'um': '1', 'uma': '1',
+          'segunda': '2', 'segundo': '2', 'dois': '2', 'duas': '2',
+          'terceira': '3', 'terceiro': '3', 'tres': '3', 'três': '3',
+          'quarta': '4', 'quarto': '4', 'quatro': '4',
+          'quinta': '5', 'quinto': '5', 'cinco': '5',
+          'sexta': '6', 'sexto': '6', 'seis': '6',
+          'setima': '7', 'setimo': '7', 'sete': '7',
+          'oitava': '8', 'oitavo': '8', 'oito': '8',
+          'nona': '9', 'nono': '9', 'nove': '9',
+          'decima': '10', 'decimo': '10', 'dez': '10'
+        };
+
+        for (const [extenso, numero] of Object.entries(numerosExtenso)) {
+          if (normalized.includes(extenso) && 
+              (normalized.includes('reav') || normalized.includes('avalia'))) {
+            return `${numero}ª REAVALIAÇÃO`;
           }
         }
 
-        // MELHORIAS #2: Função melhorada para normalização de tipos de inspeção
-        function normalizeTipoInspecao(tipo) {
-          if (!tipo) return "";
+        // Padrão 5: Variações de digitação de "reavaliação" sem número (considera como 1ª)
+        const variacoesReavaliacao = [
+          'reavaliacao', 'reavaliaçao', 'reavaliacão', 'reavaliação',
+          're-avaliacao', 're-avaliação', 're avaliacao', 're avaliação',
+          'reav', 'reavalia', 'reaval', 'reavali',
+          'reavaliaça', 'reavaliaç', 'reavaliaca',
+          'reavliaçao', 'reaavaliaçao', 'reavalliaçao', 'reavaliaçãoo',
+          'reavaliçao', 'reavaliaco', 'revaliaçao', 'reavaçao',
+          'reavliacoa', 'reavalizacao', 'reavalidacao'
+        ];
 
-          const normalized = normalizeText(tipo);
-
-          // Verificações mais robustas para CADASTRAL
-          if (
-            normalized.includes("cadastral") ||
-            normalized.includes("cadstral") ||
-            normalized.includes("cdastral") ||
-            normalized.includes("cdstral") ||
-            normalized.includes("cadastrais") ||
-            normalized.includes("cadatral")
-          ) {
-            return "CADASTRAL";
+        for (const variacao of variacoesReavaliacao) {
+          if (normalized.includes(variacao)) {
+            // Verificar se tem número antes ou depois
+            const matchNum = normalized.match(/(\d+)/);
+            if (matchNum) {
+              return `${matchNum[1]}ª REAVALIAÇÃO`;
+            }
+            return "REAVALIAÇÃO";
           }
-
-          // Verificações mais robustas para ROTINEIRA
-          if (
-            normalized.includes("rotineira") ||
-            normalized.includes("rotinera") ||
-            normalized.includes("rotineirra") ||
-            normalized.includes("rotinieira")
-          ) {
-            return "ROTINEIRA";
-          }
-
-          // Verificações mais robustas para CORREÇÃO DE CADASTRO
-          if (
-            normalized.includes("correcao") ||
-            normalized.includes("correção") ||
-            normalized.includes("retificacao") ||
-            normalized.includes("retificação") ||
-            normalized.includes("cadastro corrigido")
-          ) {
-            return "CORREÇÃO DE CADASTRO";
-          }
-
-          // Se não encontrar nenhum padrão conhecido, retornar o original em maiúsculas
-          return tipo.toUpperCase();
         }
 
-       
-        // Substitua a função detectDateFormat existente por esta versão melhorada
-function detectDateFormat(messages) {
-    // Primeiro, verificar se o usuário escolheu um formato específico
-    if (userSelectedFormat !== "auto") {
-        return userSelectedFormat;
-    }
+        // ========================================
+        // OUTROS STATUS
+        // ========================================
 
-    // Analisar as mensagens para detectar o formato
-    for (const message of messages) {
-        if (message.data) {
-            // Primeiro verificar formato com colchetes [MM/DD/YY] ou [DD/MM/YY]
+        // Padrões para cada tipo de status
+        const statusPatterns = {
+          APROVADA: ["aprovad", "aprovacao", "aprovação", "liberada", "aceita"],
+          REPROVADA: ["reprovad", "reprovacao", "rejeitad", "desaprovad", "nao aprovad", "não aprovad"],
+          AVALIAÇÃO: ["avaliaca", "avaliac", "avaliação", "analise", "análise", "em analise", "em análise"],
+          "OBRA AGUARDANDO DRONE": ["aguardando", "drone", "fotos"],
+          "CORREÇÃO CADASTRAL": ["correcao cadastr", "correção cadastr", "retifica"]
+        };
+
+        for (const [padrao, variantes] of Object.entries(statusPatterns)) {
+          for (const variante of variantes) {
+            if (normalized.includes(variante)) {
+              return padrao;
+            }
+          }
+        }
+
+        return status.toUpperCase();
+      }
+
+      // Função para verificar se um status é reavaliação
+      function isReavaliacao(status) {
+        if (!status) return false;
+        const normalized = normalizeStatus(status);
+        return normalized.includes("REAVALIAÇÃO");
+      }
+
+      // Função para extrair número da reavaliação
+      function extractNumeroReavaliacao(status) {
+        if (!status) return 0;
+        const normalized = normalizeStatus(status);
+        const match = normalized.match(/(\d+)ª?\s*REAVALIAÇÃO/i);
+        if (match) {
+          return parseInt(match[1], 10);
+        }
+        if (normalized === "REAVALIAÇÃO") {
+          return 1;
+        }
+        return 0;
+      }
+
+      // ==========================================
+      // FUNÇÕES DE DATA
+      // ==========================================
+
+      function detectDateFormat(messages) {
+        if (userSelectedFormat !== "auto") {
+          return userSelectedFormat;
+        }
+
+        for (const message of messages) {
+          if (message.data) {
             const bracketMatch = message.data.match(/\[(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
             if (bracketMatch) {
-                const firstNumber = parseInt(bracketMatch[1], 10);
-                const secondNumber = parseInt(bracketMatch[2], 10);
-                
-                // Se o primeiro número > 12, então é um dia (formato DD/MM)
-                if (firstNumber > 12 && secondNumber <= 12) {
-                    return "DD/MM/YYYY";
-                }
-                
-                // Se o segundo número > 12, então é um dia (formato MM/DD)
-                if (secondNumber > 12 && firstNumber <= 12) {
-                    return "MM/DD/YYYY";
-                }
+              const firstNumber = parseInt(bracketMatch[1], 10);
+              const secondNumber = parseInt(bracketMatch[2], 10);
+              if (firstNumber > 12 && secondNumber <= 12) return "DD/MM/YYYY";
+              if (secondNumber > 12 && firstNumber <= 12) return "MM/DD/YYYY";
             }
-            
-            // Verificar formato sem colchetes DD/MM/YYYY ou MM/DD/YYYY
+
             const datePart = message.data.split(" ")[0];
             if (datePart.includes("/")) {
-                const parts = datePart.split("/");
-                if (parts.length === 3) {
-                    const firstNumber = parseInt(parts[0], 10);
-                    const secondNumber = parseInt(parts[1], 10);
-                    
-                    // Se o primeiro número > 12, então é um dia (formato DD/MM)
-                    if (firstNumber > 12 && secondNumber <= 12) {
-                        return "DD/MM/YYYY";
-                    }
-                    
-                    // Se o segundo número > 12, então é um dia (formato MM/DD)
-                    if (secondNumber > 12 && firstNumber <= 12) {
-                        return "MM/DD/YYYY";
-                    }
-                }
-            }
-        }
-    }
-    
-    // Verificar nas datas de entrega/recebimento/devolução
-    for (const message of messages) {
-        // Verificar todas as datas adicionais no objeto
-        const dates = [message.dataEntrega, message.dataRecebimento, message.dataDevolucao];
-        
-        for (const date of dates) {
-            if (date && date.includes("/")) {
-                const parts = date.split("/");
-                if (parts.length === 3) {
-                    const firstNumber = parseInt(parts[0], 10);
-                    const secondNumber = parseInt(parts[1], 10);
-                    
-                    if (firstNumber > 12 && secondNumber <= 12) {
-                        return "DD/MM/YYYY";
-                    }
-                    if (secondNumber > 12 && firstNumber <= 12) {
-                        return "MM/DD/YYYY";
-                    }
-                }
-            }
-        }
-    }
-    
-    // Se não conseguir detectar, usar o padrão brasileiro
-    return "DD/MM/YYYY";
-}
-
-
-        // Função para formatar qualquer data no formato brasileiro
-        function formatDateBrazilian(dateObj) {
-          if (
-            !dateObj ||
-            !(dateObj instanceof Date) ||
-            isNaN(dateObj.getTime())
-          ) {
-            return "";
-          }
-
-          const day = String(dateObj.getDate()).padStart(2, "0");
-          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-          const year = dateObj.getFullYear();
-
-          return `${day}/${month}/${year}`;
-        }
-
-        // MELHORIAS #3: Função robusta para interpretar múltiplos formatos de data
-        function parseComplexDate(dateStr) {
-          if (!dateStr) return null;
-
-          // Remover espaços extras
-          dateStr = dateStr.trim();
-
-          // Tratar formato DD/MM/YYYY
-          const dmyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-          if (dmyMatch) {
-            const day = parseInt(dmyMatch[1], 10);
-            const month = parseInt(dmyMatch[2], 10) - 1; // Meses em JS são 0-indexed
-            const year = parseInt(dmyMatch[3], 10);
-
-            // Verificar se o formato detectado é MM/DD/YYYY
-            if (detectedDateFormat === "MM/DD/YYYY") {
-              // Inverter dia e mês
-              return new Date(year, day - 1, month + 1);
-            } else {
-              return new Date(year, month, day);
-            }
-          }
-
-          // Tratar formato DD/MM/YY (ano com 2 dígitos)
-          const dmyShortMatch = dateStr.match(
-            /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/
-          );
-          if (dmyShortMatch) {
-            const day = parseInt(dmyShortMatch[1], 10);
-            const month = parseInt(dmyShortMatch[2], 10) - 1;
-            let year = parseInt(dmyShortMatch[3], 10);
-            // Converter ano de 2 dígitos para 4 dígitos
-            year = year < 50 ? 2000 + year : 1900 + year;
-
-            // Verificar se o formato detectado é MM/DD/YYYY
-            if (detectedDateFormat === "MM/DD/YYYY") {
-              // Inverter dia e mês
-              return new Date(year, day - 1, month + 1);
-            } else {
-              return new Date(year, month, day);
-            }
-          }
-
-          // Tratar formato YYYY-MM-DD (usado pelo input HTML)
-          const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-          if (isoMatch) {
-            const year = parseInt(isoMatch[1], 10);
-            const month = parseInt(isoMatch[2], 10) - 1;
-            const day = parseInt(isoMatch[3], 10);
-
-            return new Date(year, month, day);
-          }
-
-          // Se não conseguir reconhecer o formato, retornar null
-          return null;
-        }
-
-        // MELHORIAS #3: Extrair data de mensagem em qualquer formato
-        function extractDateFromMessage(dateString) {
-          if (!dateString) return null;
-
-          // Extrair a parte da data (sem horário)
-          let datePart = null;
-
-          // Formato com colchetes [DD/MM/YY, HH:MM:SS]
-          const bracketMatch = dateString.match(
-            /\[(\d{1,2}\/\d{1,2}\/\d{2,4}),/
-          );
-          if (bracketMatch) {
-            datePart = bracketMatch[1];
-          }
-          // Formato padrão DD/MM/YYYY HH:MM
-          else if (dateString.includes("/")) {
-            datePart = dateString.split(" ")[0];
-          }
-
-          if (datePart) {
-            return parseComplexDate(datePart);
-          }
-
-          return null;
-        }
-
-        // Função auxiliar para validar datas
-        function isValidDate(date) {
-          return date instanceof Date && !isNaN(date.getTime());
-        }
-
-        // MELHORIAS #4: Função para ordenação de mensagens por data (mais recentes primeiro)
-        function sortMessagesByDate(messages) {
-          return messages.sort((a, b) => {
-            const dateA = extractDateFromMessage(a.data);
-            const dateB = extractDateFromMessage(b.data);
-
-            if (dateA && dateB) {
-              // Ordem decrescente (mais recente primeiro)
-              return dateB - dateA;
-            }
-
-            // Fallback para comparação de strings se não conseguir extrair as datas
-            return (b.data || "").localeCompare(a.data || "");
-          });
-        }
-
-        // Função melhorada para processamento de mensagens
-        function processMessages() {
-          const text = whatsappText.value.trim();
-          if (!text) {
-            alert("Por favor, cole o texto das conversas do WhatsApp.");
-            return;
-          }
-
-          // Limpar dados anteriores
-          processedData = [];
-          irregularData = [];
-
-          // Feedback visual
-          resultTable.querySelector("tbody").innerHTML =
-            '<tr><td colspan="9" style="text-align: center;">Processando...</td></tr>';
-
-          // Separar as linhas
-          const lines = text.split("\n");
-          console.log(`Processando ${lines.length} linhas`);
-
-          // Variáveis para processamento
-          let currentMessage = null;
-          let currentText = "";
-          let isProcessingMessage = false;
-
-          // Processar cada linha
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-
-            // Pular linhas vazias
-            if (!line) continue;
-
-            // Verificar se é mensagem do sistema
-            if (isSystemMessage(line)) {
-              continue;
-            }
-
-            // Verificar diferentes formatos de início de mensagem
-
-            // Formato [DD/MM/YY, HH:MM:SS] Remetente: Conteúdo
-            const bracketDateMatch = line.match(
-              /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.+?):\s*(.*)$/
-            );
-
-            // Formato DD/MM/YYYY HH:MM - Remetente: Conteúdo
-            const standardDateMatch = line.match(
-              /^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*(.+?):\s*(.*)$/
-            );
-
-            if (bracketDateMatch) {
-              // Salvar mensagem anterior se existir
-              if (isProcessingMessage && currentMessage) {
-                checkAndSaveMessage(currentMessage, currentText);
+              const parts = datePart.split("/");
+              if (parts.length === 3) {
+                const firstNumber = parseInt(parts[0], 10);
+                const secondNumber = parseInt(parts[1], 10);
+                if (firstNumber > 12 && secondNumber <= 12) return "DD/MM/YYYY";
+                if (secondNumber > 12 && firstNumber <= 12) return "MM/DD/YYYY";
               }
-
-              // Iniciar nova mensagem com formato [DD/MM/YY, HH:MM:SS]
-              const date = bracketDateMatch[1];
-              const time = bracketDateMatch[2];
-              const sender = bracketDateMatch[3];
-              const content = bracketDateMatch[4];
-
-              currentMessage = {
-                data: `${date} ${time}`,
-                remetente: sender,
-                lote: "",
-                codigoOAE: "",
-                tipoInspecao: "",
-                dataEntrega: "",
-                dataRecebimento: "",
-                dataDevolucao: "",
-                status: "",
-              };
-
-              currentText = content;
-              isProcessingMessage = true;
-
-              // Processar conteúdo inicial
-              extractData(content, currentMessage);
-            } else if (standardDateMatch) {
-              // Salvar mensagem anterior se existir
-              if (isProcessingMessage && currentMessage) {
-                checkAndSaveMessage(currentMessage, currentText);
-              }
-
-              // Iniciar nova mensagem com formato DD/MM/YYYY HH:MM
-              const date = standardDateMatch[1];
-              const time = standardDateMatch[2];
-              const sender = standardDateMatch[3];
-              const content = standardDateMatch[4];
-
-              currentMessage = {
-                data: `${date} ${time}`,
-                remetente: sender,
-                lote: "",
-                codigoOAE: "",
-                tipoInspecao: "",
-                dataEntrega: "",
-                dataRecebimento: "",
-                dataDevolucao: "",
-                status: "",
-              };
-
-              currentText = content;
-              isProcessingMessage = true;
-
-              // Processar conteúdo inicial
-              extractData(content, currentMessage);
-            } else if (isProcessingMessage && currentMessage) {
-              // Linha de continuação
-              currentText += "\n" + line;
-              extractData(line, currentMessage);
-            }
-          }
-
-          // Processar a última mensagem
-          if (isProcessingMessage && currentMessage) {
-            checkAndSaveMessage(currentMessage, currentText);
-          }
-
-          // MELHORIAS #3: Detectar formato de data com base nas mensagens processadas
-          detectedDateFormat = detectDateFormat(processedData);
-          console.log(`Formato de data detectado: ${detectedDateFormat}`);
-
-          // MELHORIAS #4: Ordenar mensagens por data (mais recentes primeiro)
-          processedData = sortMessagesByDate(processedData);
-
-          console.log(
-            `Mensagens processadas: ${processedData.length}, Irregulares: ${irregularData.length}`
-          );
-
-          // Atualizar interface
-          updateTable();
-          updateFilterOptions();
-          updateIrregularMessages();
-          initializeDateFilters();
-          initializeStatsFilters();
-
-          // Habilitar exportação
-          exportBtn.disabled = processedData.length === 0;
-        }
-
-        function isSystemMessage(line) {
-          return (
-            line.includes("As mensagens e ligações são protegidas") ||
-            line.includes("criou o grupo") ||
-            line.includes("adicionou você") ||
-            line.includes("mudou a descrição do grupo") ||
-            line.includes("mudou o assunto") ||
-            line.includes("mensagens e ligações são protegidas") ||
-            line.includes("Você adicionou") ||
-            line.includes("adicionou") ||
-            line.match(/^‎.*adicionou/) !== null ||
-            line.match(/^‎.*mudou/) !== null ||
-            line.match(/^‎.*criou/) !== null ||
-            line.match(/‎/) !== null // Caractere invisível usado pelo WhatsApp em mensagens de sistema
-          );
-        }
-
-        function extractData(text, message) {
-          // Extrair Lote
-          extractLote(text, message);
-
-          // Extrair Código OAE
-          extractCodigoOAE(text, message);
-
-          // Extrair Tipo de Inspeção
-          extractTipoInspecao(text, message);
-
-          // Extrair Datas
-          extractDatas(text, message);
-
-          // Extrair Status
-          extractStatus(text, message);
-        }
-
-        function extractCodigoOAE(text, message) {
-          const codigoMatch =
-            text.match(/Código OAE:?\s*([0-9\/]+)/i) ||
-            text.match(/Código\s*(?:da)?\s*OAE:?\s*([0-9\/]+)/i) ||
-            text.match(/OAE:?\s*([0-9\/]+)/i);
-          if (codigoMatch) {
-            message.codigoOAE = codigoMatch[1].trim();
-          }
-        }
-
-        function extractTipoInspecao(text, message) {
-          const tipoMatch =
-            text.match(/Tipo de Inspeção:?\s*([A-Za-zÀ-ú\s]+)/i) ||
-            text.match(/Tipo\s*(?:de)?\s*Inspeção:?\s*([A-Za-zÀ-ú\s]+)/i);
-
-          if (tipoMatch) {
-            message.tipoInspecao = normalizeTipoInspecao(tipoMatch[1].trim());
-          } else if (text.includes("Cadastral") || text.includes("CADASTRAL")) {
-            message.tipoInspecao = "CADASTRAL";
-          } else if (text.includes("Cdastral") || text.includes("CADASTRAL")) {
-            message.tipoInspecao = "CADASTRAL";
-          } else if (text.includes("Rotineira") || text.includes("ROTINEIRA")) {
-            message.tipoInspecao = "ROTINEIRA";
-          } else if (
-            text.includes("Correção de Cadastro") ||
-            text.includes("CORREÇÃO DE CADASTRO") ||
-            text.includes("Correcao de Cadastro")
-          ) {
-            message.tipoInspecao = "CORREÇÃO DE CADASTRO";
-          }
-
-          // Também verificar campos específicos
-          const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
-          if (fieldMatch) {
-            const field = normalizeText(fieldMatch[1].trim());
-            const value = fieldMatch[2].trim();
-
-            if (field.includes("tipo") || field.includes("inspecao")) {
-              message.tipoInspecao = normalizeTipoInspecao(value);
             }
           }
         }
-
-        function extractDatas(text, message) {
-          // Data de Entrega/Envio
-          const dataEntregaMatch =
-            text.match(/Data de [Ee]ntrega:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
-            text.match(/Data de [Ee]nvio:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
-            text.match(
-              /Data(?:\s*de)?\s*(?:[Ee]ntrega|[Ee]nvio):?\s*(\d{2}\/\d{2}\/\d{4})/
-            );
-          if (dataEntregaMatch) {
-            message.dataEntrega = dataEntregaMatch[1];
-          }
-
-          // Data de Recebimento
-          const dataRecebimentoMatch =
-            text.match(/Data de [Rr]ecebimento:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
-            text.match(
-              /Data(?:\s*de)?\s*[Rr]ecebimento:?\s*(\d{2}\/\d{2}\/\d{4})/
-            );
-          if (dataRecebimentoMatch) {
-            message.dataRecebimento = dataRecebimentoMatch[1];
-          }
-
-          // Data de Devolução/Retorno
-          const dataDevolucaoMatch =
-            text.match(/Data de [Dd]evolução:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
-            text.match(/Data de [Rr]etorno:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
-            text.match(
-              /Data(?:\s*de)?\s*(?:[Dd]evolução|[Rr]etorno):?\s*(\d{2}\/\d{2}\/\d{4})/
-            );
-          if (dataDevolucaoMatch) {
-            message.dataDevolucao = dataDevolucaoMatch[1];
-          }
-
-          // Também verificar campos específicos
-          const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
-          if (fieldMatch) {
-            const field = normalizeText(fieldMatch[1].trim());
-            const value = fieldMatch[2].trim();
-
-            if (
-              field.includes("data") &&
-              (field.includes("entrega") || field.includes("envio"))
-            ) {
-              message.dataEntrega = value;
-            } else if (
-              field.includes("data") &&
-              field.includes("recebimento")
-            ) {
-              message.dataRecebimento = value;
-            } else if (
-              field.includes("data") &&
-              (field.includes("devolucao") || field.includes("retorno"))
-            ) {
-              message.dataDevolucao = value;
-            }
-          }
-        }
-
-     
-
-        // MELHORIAS #2: Função robusta para normalização de status
-function normalizeStatus(status) {
-  if (!status) return "";
-
-  // Tratar casos de strings truncadas
-  if (
-    status.endsWith("AVALIAC") ||
-    status.endsWith("AVALIACÃ") ||
-    status.endsWith("AVALIACA")
-  ) {
-    return "AVALIAÇÃO";
-  }
-
-  // Remover caracteres especiais e normalizar espaços
-  let normalized = normalizeText(status)
-    .replace(/\s+/g, " ") // Substituir múltiplos espaços por um único
-    .trim();
-
-  // Verificar prefixos numéricos para reavaliação
-  const reavaliacaoMatch = normalized.match(
-    /^(\d+)[ªa°]?\s*r?e?a?v?a?l?i?a?c?a?o?$/i
-  );
-  if (reavaliacaoMatch || /^[123456789]$/.test(normalized)) {
-    const numero = reavaliacaoMatch ? reavaliacaoMatch[1] : normalized;
-    return `${numero}ª REAVALIAÇÃO`;
-  }
-
-  // Padrões específicos com palavras que podem estar juntas
-  if (/obraaguardando|aguardandodrone|obradrone/.test(normalized)) {
-    return "OBRA AGUARDANDO DRONE";
-  }
-
-  if (/correcaocadastral|cadastralcorrecao/.test(normalized)) {
-    return "CORREÇÃO CADASTRAL";
-  }
-
-  // Padrões para cada tipo de status
-  const statusPatterns = {
-    APROVADA: [
-      "aprovad",
-      "aprovacao",
-      "aprovação",
-      "liberada",
-      "aceita",
-    ],
-    REPROVADA: [
-      "reprovad",
-      "reprovacao",
-      "rejeitad",
-      "desaprovad",
-      "nao aprovad",
-      "não aprovad",
-    ],
-    AVALIAÇÃO: [
-      "avaliaca",
-      "avaliac",
-      "aAvaliaca",
-      "avaliaca",
-      "avaliaca",
-      "avaliaCã",
-      "avaliação",
-      "analise",
-      "análise",
-    ],
-    REAVALIAÇÃO: ["reavaliaca", "reavaliaçã", "reavaliação"],
-    "OBRA AGUARDANDO DRONE": ["aguardando", "drone", "fotos"],
-    "CORREÇÃO CADASTRAL": [
-      "correcao",
-      "correção",
-      "cadastr",
-      "retifica",
-    ],
-  };
-
-  // Verificar cada padrão
-  for (const [padrao, variantes] of Object.entries(statusPatterns)) {
-    for (const variante of variantes) {
-      if (normalized.includes(variante)) {
-        return padrao;
+        return "DD/MM/YYYY";
       }
-    }
-  }
 
-  // Se não encontrou nenhum padrão conhecido, retornar o original em maiúsculas
-  return status.toUpperCase();
-}
+      function parseComplexDate(dateStr) {
+        if (!dateStr) return null;
+        dateStr = dateStr.trim();
 
-
-        function extractStatus(text, message) {
-  const statusMatch = text.match(/Status:?\s*([A-Za-zÀ-ú\s0-9ª<>]+)(?:<|$)/i);
-
-  if (statusMatch) {
-    message.status = normalizeStatus(statusMatch[1].trim());
-  } else if (
-    text.toUpperCase().includes("APROVADA") ||
-    text.includes("aprovada")
-  ) {
-    message.status = "APROVADA";
-  } else if (
-    text.toUpperCase().includes("REPROVADA") ||
-    text.includes("reprovada")
-  ) {
-    message.status = "REPROVADA";
-  } else if (
-    text.toUpperCase().includes("AVALIAÇÃO") ||
-    text.includes("Avaliação") ||
-    text.includes("Avaliaçã") ||
-    text.includes("avaliação")
-  ) {
-    message.status = "AVALIAÇÃO";
-  } else if (
-    text.toUpperCase().includes("REAVALIAÇÃO") ||
-    text.includes("Reavaliação") ||
-    text.includes("reavaliação")
-  ) {
-    message.status = "REAVALIAÇÃO";
-  } else if (text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
-    const match = text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i);
-    message.status = `${match[1]}ª REAVALIAÇÃO`;
-  } else if (
-    text.includes("RETIFICAÇÃO DE CADASTRO") ||
-    normalizeText(text).includes("retificacao")
-  ) {
-    message.status = "RETIFICAÇÃO DE CADASTRO";
-  }
-
-  // Também verificar campos específicos
-  const fieldMatch = text.match(/^([A-Za-zÀ-ú\s]+):\s*(.+)$/);
-  if (fieldMatch) {
-    const field = normalizeText(fieldMatch[1].trim());
-    const value = fieldMatch[2].trim();
-
-    if (field.includes("status")) {
-      message.status = normalizeStatus(value);
-    }
-  }
-}
-
-
-
-      // Modifique a função checkAndSaveMessage para armazenar o texto original
-function checkAndSaveMessage(message, text) {
-  // Armazenar o texto completo da mensagem
-  message.textoOriginal = text;
-  
-  // Verificar campos obrigatórios
-  const missingFields = [];
-  let fieldsCount = 0;
-
-  if (message.lote) fieldsCount++;
-  else missingFields.push("Lote");
-
-  if (message.codigoOAE) fieldsCount++;
-  else missingFields.push("Código OAE");
-
-  if (message.tipoInspecao) fieldsCount++;
-  else missingFields.push("Tipo de Inspeção");
-
-  if (message.status) fieldsCount++;
-  else missingFields.push("Status");
-
-  // Só adicionar aos dados processados se tiver pelo menos os campos obrigatórios
-  if (fieldsCount >= 3) {
-    processedData.push(message);
-  }
-
-  // Se faltam campos, marcar como irregular
-  if (fieldsCount < 3) {
-    irregularData.push({
-      data: message.data,
-      remetente: message.remetente,
-      texto: text,
-      camposFaltantes: missingFields.join(", "),
-    });
-  }
-}
-
-
-
-
-        // MELHORIAS #1: Aplicar normalização de lotes nos filtros
-        function applyFilters() {
-          const loteFilter = normalizeLote(filterLote.value);
-          const statusFilter = filterStatus.value;
-          const tipoFilter = filterTipo.value;
-          const codigoFilter = filterCodigo.value.toLowerCase();
-
-          // Processar datas para filtro
-          let startDateValue = startDate.value
-            ? parseComplexDate(startDate.value)
-            : null;
-          let endDateValue = endDate.value
-            ? parseComplexDate(endDate.value)
-            : null;
-
-          // Ajustar horário da data final para incluir o dia inteiro
-          if (endDateValue) {
-            endDateValue.setHours(23, 59, 59, 999);
+        const dmyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (dmyMatch) {
+          const day = parseInt(dmyMatch[1], 10);
+          const month = parseInt(dmyMatch[2], 10) - 1;
+          const year = parseInt(dmyMatch[3], 10);
+          if (detectedDateFormat === "MM/DD/YYYY") {
+            return new Date(year, day - 1, month + 1);
           }
-
-          const filteredData = processedData.filter((message) => {
-            // Filtros de texto com normalização de lote
-            const matchesText =
-              (loteFilter === "" ||
-                normalizeLote(message.lote) === loteFilter) &&
-              (statusFilter === "" ||
-                normalizeStatus(message.status) === statusFilter) &&
-              (tipoFilter === "" ||
-                normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
-              (codigoFilter === "" ||
-                (message.codigoOAE &&
-                  message.codigoOAE.toLowerCase().includes(codigoFilter)));
-
-            // Filtros de data
-            let matchesDate = true;
-
-            if (startDateValue || endDateValue) {
-              const messageDate = extractDateFromMessage(message.data);
-
-              if (messageDate) {
-                if (startDateValue && messageDate < startDateValue) {
-                  matchesDate = false;
-                }
-
-                if (endDateValue && messageDate > endDateValue) {
-                  matchesDate = false;
-                }
-              } else {
-                matchesDate = false;
-              }
-            }
-
-            return matchesText && matchesDate;
-          });
-
-          console.log(
-            `Filtrados ${filteredData.length} de ${processedData.length} registros`
-          );
-          updateTable(filteredData);
+          return new Date(year, month, day);
         }
 
-        // MELHORIAS #1: Modificar a função updateFilterOptions para agrupar lotes normalizados
-        function updateFilterOptions() {
-          // Limpar opções atuais
-          filterLote.innerHTML = '<option value="">Todos os Lotes</option>';
-          filterStatus.innerHTML = '<option value="">Todos os Status</option>';
-          filterTipo.innerHTML = '<option value="">Todos os Tipos</option>';
+        const dmyShortMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+        if (dmyShortMatch) {
+          const day = parseInt(dmyShortMatch[1], 10);
+          const month = parseInt(dmyShortMatch[2], 10) - 1;
+          let year = parseInt(dmyShortMatch[3], 10);
+          year = year < 50 ? 2000 + year : 1900 + year;
+          if (detectedDateFormat === "MM/DD/YYYY") {
+            return new Date(year, day - 1, month + 1);
+          }
+          return new Date(year, month, day);
+        }
 
-          // Mapa para lotes normalizados e originais
+        const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (isoMatch) {
+          return new Date(parseInt(isoMatch[1], 10), parseInt(isoMatch[2], 10) - 1, parseInt(isoMatch[3], 10));
+        }
+
+        return null;
+      }
+
+      function extractDateFromMessage(dateString) {
+        if (!dateString) return null;
+
+        let datePart = null;
+        const bracketMatch = dateString.match(/\[(\d{1,2}\/\d{1,2}\/\d{2,4}),/);
+        if (bracketMatch) {
+          datePart = bracketMatch[1];
+        } else if (dateString.includes("/")) {
+          datePart = dateString.split(" ")[0];
+        }
+
+        if (datePart) {
+          return parseComplexDate(datePart);
+        }
+        return null;
+      }
+
+      function formatDateBR(dateStr) {
+        if (!dateStr) return "";
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const parts = dateStr.split("-");
+          return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+      }
+
+      function formatDateBrazilian(dateObj) {
+        if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) return "";
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const year = dateObj.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+
+      function formatMessageDateBrazilian(dateString) {
+        if (!dateString) return "";
+
+        let datePart = "";
+        let timePart = "";
+
+        const bracketMatch = dateString.match(/\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]/);
+        if (bracketMatch) {
+          datePart = bracketMatch[1];
+          timePart = bracketMatch[2];
+        } else if (dateString.includes("/")) {
+          const parts = dateString.split(" ");
+          datePart = parts[0];
+          timePart = parts.length > 1 ? parts[1] : "";
+        }
+
+        if (datePart) {
+          const parts = datePart.split("/");
+          if (parts.length === 3) {
+            if (detectedDateFormat === "MM/DD/YYYY") {
+              const month = parts[0];
+              const day = parts[1];
+              const year = parts[2].length === 2 
+                ? (parseInt(parts[2]) < 50 ? "20" + parts[2] : "19" + parts[2]) 
+                : parts[2];
+              return `${day}/${month}/${year}${timePart ? " " + timePart : ""}`;
+            }
+          }
+        }
+        return dateString;
+      }
+
+      function sortMessagesByDate(messages) {
+        return messages.sort((a, b) => {
+          const dateA = extractDateFromMessage(a.data);
+          const dateB = extractDateFromMessage(b.data);
+          if (dateA && dateB) return dateB - dateA;
+          return (b.data || "").localeCompare(a.data || "");
+        });
+      }
+
+      // ==========================================
+      // PROCESSAMENTO DE MENSAGENS
+      // ==========================================
+
+      function processMessages() {
+        const text = document.getElementById("whatsappText").value.trim();
+        if (!text) {
+          alert("Por favor, cole o texto das conversas do WhatsApp.");
+          return;
+        }
+
+        processedData = [];
+        irregularData = [];
+        oaeGroupedData = {};
+
+        document.querySelector("#resultTable tbody").innerHTML =
+          '<tr><td colspan="9" style="text-align: center;">Processando...</td></tr>';
+
+        const lines = text.split("\n");
+        let currentMessage = null;
+        let currentText = "";
+        let isProcessingMessage = false;
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line || isSystemMessage(line)) continue;
+
+          const bracketDateMatch = line.match(
+            /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.+?):\s*(.*)$/
+          );
+
+          const standardDateMatch = line.match(
+            /^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*(.+?):\s*(.*)$/
+          );
+
+          if (bracketDateMatch || standardDateMatch) {
+            if (isProcessingMessage && currentMessage) {
+              checkAndSaveMessage(currentMessage, currentText);
+            }
+
+            const match = bracketDateMatch || standardDateMatch;
+            currentMessage = {
+              data: `${match[1]} ${match[2]}`,
+              remetente: match[3],
+              lote: "",
+              codigoOAE: "",
+              tipoInspecao: "",
+              dataEntrega: "",
+              dataRecebimento: "",
+              dataDevolucao: "",
+              status: "",
+            };
+
+            currentText = match[4];
+            isProcessingMessage = true;
+            extractData(match[4], currentMessage);
+          } else if (isProcessingMessage && currentMessage) {
+            currentText += "\n" + line;
+            extractData(line, currentMessage);
+          }
+        }
+
+        if (isProcessingMessage && currentMessage) {
+          checkAndSaveMessage(currentMessage, currentText);
+        }
+
+        detectedDateFormat = detectDateFormat(processedData);
+        processedData = sortMessagesByDate(processedData);
+
+        // Agrupar dados por OAE
+        groupDataByOAE();
+
+        // Atualizar interface
+        updateTable();
+        updateFilterOptions();
+        updateIrregularMessages();
+        initializeDateFilters();
+        initializeStatsFilters();
+        initializeReavFilters();
+
+        // Habilitar botões de exportação
+        document.getElementById("exportBtn").disabled = processedData.length === 0;
+        document.getElementById("exportReavBtn").disabled = processedData.length === 0;
+
+        console.log(`Processadas: ${processedData.length}, Irregulares: ${irregularData.length}, OAEs: ${Object.keys(oaeGroupedData).length}`);
+      }
+
+      function isSystemMessage(line) {
+        return (
+          line.includes("As mensagens e ligações são protegidas") ||
+          line.includes("criou o grupo") ||
+          line.includes("adicionou você") ||
+          line.includes("mudou a descrição do grupo") ||
+          line.includes("mudou o assunto") ||
+          line.match(/^‎/) !== null
+        );
+      }
+
+      function extractData(text, message) {
+        extractLote(text, message);
+        extractCodigoOAE(text, message);
+        extractTipoInspecao(text, message);
+        extractDatas(text, message);
+        extractStatus(text, message);
+      }
+
+      function extractLote(text, message) {
+        const loteMatch = text.match(/Lote:?\s*(\d+)/i) || text.match(/Lote\s*(\d+)/i);
+        if (loteMatch) {
+          message.lote = normalizeLote(loteMatch[1]);
+        }
+      }
+
+      function extractCodigoOAE(text, message) {
+        const codigoMatch =
+          text.match(/Código OAE:?\s*([0-9\/]+)/i) ||
+          text.match(/Código\s*(?:da)?\s*OAE:?\s*([0-9\/]+)/i) ||
+          text.match(/OAE:?\s*([0-9\/]+)/i);
+        if (codigoMatch) {
+          message.codigoOAE = codigoMatch[1].trim();
+        }
+      }
+
+      function extractTipoInspecao(text, message) {
+        const tipoMatch =
+          text.match(/Tipo de Inspeção:?\s*([A-Za-zÀ-ú\s]+)/i) ||
+          text.match(/Tipo\s*(?:de)?\s*Inspeção:?\s*([A-Za-zÀ-ú\s]+)/i);
+
+        if (tipoMatch) {
+          message.tipoInspecao = normalizeTipoInspecao(tipoMatch[1].trim());
+        } else if (text.includes("Cadastral") || text.includes("CADASTRAL") || text.includes("Cdastral")) {
+          message.tipoInspecao = "CADASTRAL";
+        } else if (text.includes("Rotineira") || text.includes("ROTINEIRA")) {
+          message.tipoInspecao = "ROTINEIRA";
+        } else if (text.includes("Correção de Cadastro") || text.includes("CORREÇÃO DE CADASTRO")) {
+          message.tipoInspecao = "CORREÇÃO DE CADASTRO";
+        }
+      }
+
+      function extractDatas(text, message) {
+        const dataEntregaMatch =
+          text.match(/Data de [Ee]ntrega:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
+          text.match(/Data de [Ee]nvio:?\s*(\d{2}\/\d{2}\/\d{4})/);
+        if (dataEntregaMatch) message.dataEntrega = dataEntregaMatch[1];
+
+        const dataRecebimentoMatch = text.match(/Data de [Rr]ecebimento:?\s*(\d{2}\/\d{2}\/\d{4})/);
+        if (dataRecebimentoMatch) message.dataRecebimento = dataRecebimentoMatch[1];
+
+        const dataDevolucaoMatch =
+          text.match(/Data de [Dd]evolução:?\s*(\d{2}\/\d{2}\/\d{4})/) ||
+          text.match(/Data de [Rr]etorno:?\s*(\d{2}\/\d{2}\/\d{4})/);
+        if (dataDevolucaoMatch) message.dataDevolucao = dataDevolucaoMatch[1];
+      }
+
+      function extractStatus(text, message) {
+        const statusMatch = text.match(/Status:?\s*([A-Za-zÀ-ú\s0-9ª°<>-]+)(?:<|$)/i);
+
+        if (statusMatch) {
+          message.status = normalizeStatus(statusMatch[1].trim());
+        } else if (text.toUpperCase().includes("APROVADA")) {
+          message.status = "APROVADA";
+        } else if (text.toUpperCase().includes("REPROVADA")) {
+          message.status = "REPROVADA";
+        } else if (text.toUpperCase().includes("AVALIAÇÃO") || text.includes("Avaliação")) {
+          message.status = "AVALIAÇÃO";
+        } else if (text.toUpperCase().includes("REAVALIAÇÃO") || text.includes("Reavaliação")) {
+          message.status = normalizeStatus(text);
+        } else if (text.match(/(\d+)[ªa°]?\s*[re]*avalia[cç][aã]o/i)) {
+          message.status = normalizeStatus(text);
+        }
+      }
+
+      function checkAndSaveMessage(message, text) {
+        message.textoOriginal = text;
+
+        const missingFields = [];
+        let fieldsCount = 0;
+
+        if (message.lote) fieldsCount++; else missingFields.push("Lote");
+        if (message.codigoOAE) fieldsCount++; else missingFields.push("Código OAE");
+        if (message.tipoInspecao) fieldsCount++; else missingFields.push("Tipo de Inspeção");
+        if (message.status) fieldsCount++; else missingFields.push("Status");
+
+        if (fieldsCount >= 3) {
+          processedData.push(message);
+        }
+
+        if (fieldsCount < 3) {
+          irregularData.push({
+            data: message.data,
+            remetente: message.remetente,
+            texto: text,
+            camposFaltantes: missingFields.join(", "),
+          });
+        }
+      }
+
+      // ==========================================
+      // AGRUPAMENTO POR OAE
+      // ==========================================
+
+      function groupDataByOAE() {
+        oaeGroupedData = {};
+
+        processedData.forEach((message) => {
+          if (!message.codigoOAE) return;
+
+          const codigo = message.codigoOAE.trim();
+
+          if (!oaeGroupedData[codigo]) {
+            oaeGroupedData[codigo] = {
+              codigoOAE: codigo,
+              lote: message.lote || "",
+              tipoInspecao: message.tipoInspecao || "",
+              historico: [],
+              totalReavaliacoes: 0,
+              statusFinal: "",
+              primeiraData: null,
+              ultimaData: null
+            };
+          }
+
+          // Adicionar ao histórico
+          const dateObj = extractDateFromMessage(message.data);
+          oaeGroupedData[codigo].historico.push({
+            data: message.data,
+            dateObj: dateObj,
+            status: message.status,
+            remetente: message.remetente,
+            tipoInspecao: message.tipoInspecao
+          });
+
+          // Atualizar lote e tipo se não tiver
+          if (!oaeGroupedData[codigo].lote && message.lote) {
+            oaeGroupedData[codigo].lote = message.lote;
+          }
+          if (!oaeGroupedData[codigo].tipoInspecao && message.tipoInspecao) {
+            oaeGroupedData[codigo].tipoInspecao = message.tipoInspecao;
+          }
+        });
+
+        // Ordenar histórico e calcular estatísticas para cada OAE
+        Object.values(oaeGroupedData).forEach((oae) => {
+          // Ordenar histórico por data (mais antiga primeiro)
+          oae.historico.sort((a, b) => {
+            if (a.dateObj && b.dateObj) return a.dateObj - b.dateObj;
+            return 0;
+          });
+
+          // Calcular total de reavaliações
+          oae.totalReavaliacoes = oae.historico.filter((h) => isReavaliacao(h.status)).length;
+
+          // Também contar o maior número de reavaliação encontrado
+          let maxReav = 0;
+          oae.historico.forEach((h) => {
+            const num = extractNumeroReavaliacao(h.status);
+            if (num > maxReav) maxReav = num;
+          });
+          oae.maiorReavaliacao = maxReav;
+
+          // Determinar status final (última entrada)
+          if (oae.historico.length > 0) {
+            oae.statusFinal = oae.historico[oae.historico.length - 1].status;
+            oae.primeiraData = oae.historico[0].data;
+            oae.ultimaData = oae.historico[oae.historico.length - 1].data;
+          }
+        });
+      }
+
+      // ==========================================
+      // ATUALIZAÇÃO DA INTERFACE
+      // ==========================================
+
+      function updateTable(dataToShow = processedData) {
+        const tbody = document.querySelector("#resultTable tbody");
+        tbody.innerHTML = "";
+
+        if (dataToShow.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Nenhum dado encontrado.</td></tr>';
+          document.getElementById("dataSummary").innerHTML = "";
+          return;
+        }
+
+        const summary = calculateSummary(dataToShow);
+        updateSummaryDisplay(summary);
+
+        const sortedData = sortMessagesByDate([...dataToShow]);
+
+        sortedData.forEach((message) => {
+          const row = document.createElement("tr");
+
+          const isAprovacaoInvalida = normalizeLote(message.lote) === "1" && 
+            normalizeStatus(message.status || "").includes("APROVADA");
+
+          const statusLower = (message.status || "").toLowerCase();
+          if (isAprovacaoInvalida) {
+            row.classList.add("status-invalida");
+          } else if (statusLower.includes("avaliação") || statusLower.includes("avaliacao")) {
+            row.classList.add("status-avaliacao");
+          } else if (statusLower.includes("aprovada")) {
+            row.classList.add("status-aprovada");
+          } else if (statusLower.includes("reprovada")) {
+            row.classList.add("status-reprovada");
+          } else if (statusLower.includes("reavaliação") || statusLower.includes("reavaliacao")) {
+            row.classList.add("status-reavaliacao");
+          }
+
+          const formattedMessageDate = formatMessageDateBrazilian(message.data);
+          const tipoInspecao = normalizeTipoInspecao(message.tipoInspecao || "");
+
+          let statusDisplay = message.status || "";
+          if (isAprovacaoInvalida) {
+            statusDisplay += ' <span class="invalid-badge">INVÁLIDA</span>';
+          }
+
+          row.innerHTML = `
+            <td>${formattedMessageDate || ""}</td>
+            <td>${message.remetente || ""}</td>
+            <td>${message.lote || ""}</td>
+            <td>${message.codigoOAE || ""}</td>
+            <td>${tipoInspecao || ""}</td>
+            <td>${formatDateBR(message.dataEntrega) || ""}</td>
+            <td>${formatDateBR(message.dataRecebimento) || ""}</td>
+            <td>${formatDateBR(message.dataDevolucao) || ""}</td>
+            <td>${statusDisplay}</td>
+          `;
+
+          tbody.appendChild(row);
+        });
+      }
+
+      function calculateSummary(dataToShow) {
+        const summary = {
+          total: dataToShow.length,
+          porStatus: {},
+          porTipo: {},
+          porLote: {},
+          aprovacaoInvalida: 0,
+        };
+
+        dataToShow.forEach((message) => {
+          const isAprovacaoInvalida = normalizeLote(message.lote) === "1" && 
+            normalizeStatus(message.status || "").includes("APROVADA");
+
+          if (isAprovacaoInvalida) summary.aprovacaoInvalida++;
+
+          if (message.status) {
+            if (isAprovacaoInvalida) {
+              const invalidStatus = "APROVAÇÃO INVÁLIDA (LOTE 1)";
+              summary.porStatus[invalidStatus] = (summary.porStatus[invalidStatus] || 0) + 1;
+            } else {
+              const status = normalizeStatus(message.status);
+              summary.porStatus[status] = (summary.porStatus[status] || 0) + 1;
+            }
+          }
+
+          if (message.tipoInspecao) {
+            const tipo = normalizeTipoInspecao(message.tipoInspecao);
+            summary.porTipo[tipo] = (summary.porTipo[tipo] || 0) + 1;
+          }
+
+          if (message.lote) {
+            const normalizedLote = normalizeLote(message.lote);
+            summary.porLote[normalizedLote] = (summary.porLote[normalizedLote] || 0) + 1;
+          }
+        });
+
+        return summary;
+      }
+
+      function updateSummaryDisplay(summary) {
+        const summaryContainer = document.getElementById("dataSummary");
+
+        let html = `<p><strong>Total de Registros:</strong> ${summary.total}</p>`;
+
+        if (summary.aprovacaoInvalida > 0) {
+          html += `<p class="invalid-approval-warning"><strong>Atenção:</strong> ${summary.aprovacaoInvalida} aprovações inválidas do Lote 1</p>`;
+        }
+
+        if (Object.keys(summary.porStatus).length > 0) {
+          html += '<div class="summary-section"><strong>Por Status:</strong><ul>';
+          Object.entries(summary.porStatus).forEach(([status, count]) => {
+            if (status === "APROVAÇÃO INVÁLIDA (LOTE 1)") {
+              html += `<li class="invalid-approval">${status}: ${count}</li>`;
+            } else {
+              html += `<li>${status}: ${count}</li>`;
+            }
+          });
+          html += "</ul></div>";
+        }
+
+        if (Object.keys(summary.porTipo).length > 0) {
+          html += '<div class="summary-section"><strong>Por Tipo de Inspeção:</strong><ul>';
+          Object.entries(summary.porTipo).forEach(([tipo, count]) => {
+            html += `<li>${tipo}: ${count}</li>`;
+          });
+          html += "</ul></div>";
+        }
+
+        if (Object.keys(summary.porLote).length > 0) {
+          html += '<div class="summary-section"><strong>Por Lote:</strong><ul>';
+          const lotesOrdenados = Object.entries(summary.porLote).sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10));
+          lotesOrdenados.forEach(([lote, count]) => {
+            html += `<li>Lote ${lote}: ${count}</li>`;
+          });
+          html += "</ul></div>";
+        }
+
+        summaryContainer.innerHTML = html;
+      }
+
+      function updateFilterOptions() {
+        const filterLote = document.getElementById("filterLote");
+        const filterStatus = document.getElementById("filterStatus");
+        const filterTipo = document.getElementById("filterTipo");
+
+        filterLote.innerHTML = '<option value="">Todos os Lotes</option>';
+        filterStatus.innerHTML = '<option value="">Todos os Status</option>';
+        filterTipo.innerHTML = '<option value="">Todos os Tipos</option>';
+
+        const lotesMap = new Map();
+        const status = new Set();
+        const tipos = new Set();
+
+        processedData.forEach((message) => {
+          if (message.lote) {
+            const normalizedLote = normalizeLote(message.lote);
+            if (!lotesMap.has(normalizedLote)) {
+              lotesMap.set(normalizedLote, message.lote);
+            }
+          }
+          if (message.status) status.add(normalizeStatus(message.status));
+          if (message.tipoInspecao) tipos.add(normalizeTipoInspecao(message.tipoInspecao));
+        });
+
+        Array.from(lotesMap.keys())
+          .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+          .forEach((lote) => {
+            const option = document.createElement("option");
+            option.value = lote;
+            option.textContent = `Lote ${lote}`;
+            filterLote.appendChild(option);
+          });
+
+        const statusOrdem = ["APROVADA", "REPROVADA", "AVALIAÇÃO", "REAVALIAÇÃO", 
+          "1ª REAVALIAÇÃO", "2ª REAVALIAÇÃO", "3ª REAVALIAÇÃO", "4ª REAVALIAÇÃO", 
+          "5ª REAVALIAÇÃO", "6ª REAVALIAÇÃO"];
+        
+        statusOrdem.forEach((st) => {
+          if (status.has(st)) {
+            const option = document.createElement("option");
+            option.value = st;
+            option.textContent = st;
+            filterStatus.appendChild(option);
+            status.delete(st);
+          }
+        });
+
+        status.forEach((st) => {
+          const option = document.createElement("option");
+          option.value = st;
+          option.textContent = st;
+          filterStatus.appendChild(option);
+        });
+
+        const tiposOrdem = ["CADASTRAL", "ROTINEIRA", "CORREÇÃO DE CADASTRO"];
+        tiposOrdem.forEach((tipo) => {
+          if (tipos.has(tipo)) {
+            const option = document.createElement("option");
+            option.value = tipo;
+            option.textContent = tipo;
+            filterTipo.appendChild(option);
+            tipos.delete(tipo);
+          }
+        });
+
+        tipos.forEach((tipo) => {
+          const option = document.createElement("option");
+          option.value = tipo;
+          option.textContent = tipo;
+          filterTipo.appendChild(option);
+        });
+      }
+
+      function updateIrregularMessages() {
+        const container = document.getElementById("irregularMessages");
+        container.innerHTML = "";
+
+        if (irregularData.length === 0) {
+          container.innerHTML = "<p>Nenhuma mensagem irregular encontrada.</p>";
+          return;
+        }
+
+        irregularData.forEach((message) => {
+          const messageElement = document.createElement("div");
+          messageElement.className = "message-card";
+          messageElement.innerHTML = `
+            <div class="message-header">
+              <span>${message.data} - ${message.remetente}</span>
+              <span class="missing-fields">Campos faltantes: ${message.camposFaltantes}</span>
+            </div>
+            <div class="message-content">${message.texto}</div>
+          `;
+          container.appendChild(messageElement);
+        });
+      }
+
+      function initializeDateFilters() {
+        if (processedData.length === 0) return;
+
+        let earliestDate = new Date();
+        let latestDate = new Date(0);
+
+        processedData.forEach((message) => {
+          if (message.data) {
+            const messageDate = extractDateFromMessage(message.data);
+            if (messageDate) {
+              if (messageDate < earliestDate) earliestDate = messageDate;
+              if (messageDate > latestDate) latestDate = messageDate;
+            }
+          }
+        });
+
+        document.getElementById("startDate").value = formatDateBrazilian(earliestDate);
+        document.getElementById("endDate").value = formatDateBrazilian(latestDate);
+      }
+
+      function initializeStatsFilters() {
+        const statsLoteFilter = document.getElementById("statsLoteFilter");
+        if (statsLoteFilter) {
+          statsLoteFilter.innerHTML = '<option value="">Todos os Lotes</option>';
           const lotesMap = new Map();
-          const status = new Set();
-          const tipos = new Set();
-
-          // Coletar valores únicos
           processedData.forEach((message) => {
             if (message.lote) {
               const normalizedLote = normalizeLote(message.lote);
-              // Guardar o lote original junto com o normalizado
-              if (
-                !lotesMap.has(normalizedLote) ||
-                message.lote.length < lotesMap.get(normalizedLote).length
-              ) {
+              if (!lotesMap.has(normalizedLote)) {
                 lotesMap.set(normalizedLote, message.lote);
               }
             }
-
-            if (message.status) status.add(normalizeStatus(message.status));
-            if (message.tipoInspecao)
-              tipos.add(normalizeTipoInspecao(message.tipoInspecao));
           });
 
-          // Adicionar opções de lote ordenadas numericamente
           Array.from(lotesMap.keys())
             .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
             .forEach((lote) => {
               const option = document.createElement("option");
               option.value = lote;
               option.textContent = `Lote ${lote}`;
-              filterLote.appendChild(option);
+              statsLoteFilter.appendChild(option);
             });
-
-          // Status - ordenados conforme definido
-          const statusOrdem = [
-            "APROVADA",
-            "REPROVADA",
-            "AVALIAÇÃO",
-            "1ª REAVALIAÇÃO",
-            "2ª REAVALIAÇÃO",
-            "3ª REAVALIAÇÃO",
-            "4ª REAVALIAÇÃO",
-            "5ª REAVALIAÇÃO",
-            "OBRA AGUARDANDO DRONE",
-            "CORREÇÃO CADASTRAL",
-          ];
-
-          statusOrdem.forEach((st) => {
-            if (status.has(st)) {
-              const option = document.createElement("option");
-              option.value = st;
-              option.textContent = st;
-              filterStatus.appendChild(option);
-              status.delete(st);
-            }
-          });
-
-          // Adicionar outros status não previstos
-          status.forEach((st) => {
-            const option = document.createElement("option");
-            option.value = st;
-            option.textContent = st;
-            filterStatus.appendChild(option);
-          });
-
-          // Tipos de Inspeção
-          const tiposOrdem = ["CADASTRAL", "ROTINEIRA", "CORREÇÃO DE CADASTRO"];
-
-          tiposOrdem.forEach((tipo) => {
-            if (tipos.has(tipo)) {
-              const option = document.createElement("option");
-              option.value = tipo;
-              option.textContent = tipo;
-              filterTipo.appendChild(option);
-              tipos.delete(tipo);
-            }
-          });
-
-          // Adicionar outros tipos não previstos
-          tipos.forEach((tipo) => {
-            const option = document.createElement("option");
-            option.value = tipo;
-            option.textContent = tipo;
-            filterTipo.appendChild(option);
-          });
         }
+      }
 
-        // MELHORIAS #2: Atualizar a função applyStatsFilters para usar normalização de lote
-        function applyStatsFilters() {
-          const tipoFilter = document.getElementById("statsTipoFilter").value;
-          const loteFilter = normalizeLote(
-            document.getElementById("statsLoteFilter").value
-          );
-
-          // Filtrar dados
-          const filteredData = processedData.filter((message) => {
-            return (
-              (tipoFilter === "" ||
-                normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
-              (loteFilter === "" || normalizeLote(message.lote) === loteFilter)
-            );
-          });
-
-          // Atualizar gráficos com dados filtrados
-          updateCharts(filteredData);
-        }
-
-        // MELHORIAS #1: Modificar a função initializeStatsFilters para usar normalização de lote
-        function initializeStatsFilters() {
-          // Adicionar opções de lote ao filtro de estatísticas
-          const statsLoteFilter = document.getElementById("statsLoteFilter");
-          if (statsLoteFilter) {
-            statsLoteFilter.innerHTML =
-              '<option value="">Todos os Lotes</option>';
-
-            // Obter lotes únicos normalizados
-            const lotesMap = new Map();
-            processedData.forEach((message) => {
-              if (message.lote) {
-                const normalizedLote = normalizeLote(message.lote);
-                if (
-                  !lotesMap.has(normalizedLote) ||
-                  message.lote.length < lotesMap.get(normalizedLote).length
-                ) {
-                  lotesMap.set(normalizedLote, message.lote);
-                }
-              }
-            });
-
-            // Adicionar opções ordenadas numericamente
-            Array.from(lotesMap.keys())
-              .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
-              .forEach((lote) => {
-                const option = document.createElement("option");
-                option.value = lote;
-                option.textContent = `Lote ${lote}`;
-                statsLoteFilter.appendChild(option);
-              });
-          }
-
-          // Adicionar opções para filtrar por tipo de inspeção
-          const statsTipoFilter = document.getElementById("statsTipoFilter");
-          if (statsTipoFilter) {
-            // Limpar as opções existentes e manter a opção "Todos"
-            statsTipoFilter.innerHTML =
-              '<option value="">Todos os Tipos de Inspeção</option>';
-
-            // Obter tipos únicos
-            const tipos = new Set();
-            processedData.forEach((message) => {
-              if (message.tipoInspecao) {
-                tipos.add(normalizeTipoInspecao(message.tipoInspecao));
-              }
-            });
-
-            // Ordem predefinida para tipos
-            const tiposOrdem = [
-              "CADASTRAL",
-              "ROTINEIRA",
-              "CORREÇÃO DE CADASTRO",
-            ];
-
-            // Adicionar na ordem predefinida
-            tiposOrdem.forEach((tipo) => {
-              if (tipos.has(tipo)) {
-                const option = document.createElement("option");
-                option.value = tipo;
-                option.textContent = tipo;
-                statsTipoFilter.appendChild(option);
-                tipos.delete(tipo);
-              }
-            });
-
-            // Adicionar outros tipos não previstos
-            tipos.forEach((tipo) => {
-              const option = document.createElement("option");
-              option.value = tipo;
-              option.textContent = tipo;
-              statsTipoFilter.appendChild(option);
-            });
-          }
-        }
-
-        // Função para limpar filtros de estatísticas
-        function clearStatsFilters() {
-          document.getElementById("statsTipoFilter").value = "";
-          document.getElementById("statsLoteFilter").value = "";
-          updateCharts(processedData); // Atualizar com todos os dados
-        }
-
-        // MELHORIAS #2: Modificar a função updateCharts para aceitar dados filtrados
-        function updateCharts(dataToShow = processedData) {
-          if (dataToShow.length === 0) return;
-
-          // Mostrar gráficos apenas se a aba estatísticas estiver ativa
-          if (
-            !document
-              .getElementById("estatisticas-tab")
-              .classList.contains("active")
-          ) {
-            return;
-          }
-
-          // 1. Status counts
-          const statusCounts = {};
-          dataToShow.forEach((item) => {
-            if (item.status) {
-              const status = normalizeStatus(item.status);
-              statusCounts[status] = (statusCounts[status] || 0) + 1;
-            }
-          });
-
-          // 2. Reprovações por código
-          const reprovacoesPorCodigo = {};
-          dataToShow.forEach((item) => {
-            if (
-              normalizeStatus(item.status) === "REPROVADA" &&
-              item.codigoOAE
-            ) {
-              reprovacoesPorCodigo[item.codigoOAE] =
-                (reprovacoesPorCodigo[item.codigoOAE] || 0) + 1;
-            }
-          });
-
-          // Ordenar e limitar a 10
-          const topReprovados = Object.fromEntries(
-            Object.entries(reprovacoesPorCodigo)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-          );
-
-          // 3. Quem mais aprova
-          const aprovadoresPorRemetente = {};
-          dataToShow.forEach((item) => {
-            if (normalizeStatus(item.status) === "APROVADA" && item.remetente) {
-              aprovadoresPorRemetente[item.remetente] =
-                (aprovadoresPorRemetente[item.remetente] || 0) + 1;
-            }
-          });
-
-          // Ordenar e limitar a 10
-          const topAprovadores = Object.fromEntries(
-            Object.entries(aprovadoresPorRemetente)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-          );
-
-          // 4. Quem mais reprova
-          const reprovadoresPorRemetente = {};
-          dataToShow.forEach((item) => {
-            if (
-              normalizeStatus(item.status) === "REPROVADA" &&
-              item.remetente
-            ) {
-              reprovadoresPorRemetente[item.remetente] =
-                (reprovadoresPorRemetente[item.remetente] || 0) + 1;
-            }
-          });
-
-          // Ordenar e limitar a 10
-          const topReprovadores = Object.fromEntries(
-            Object.entries(reprovadoresPorRemetente)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 10)
-          );
-
-          // 5. Tempo médio por tipo
-          const diasPorTipo = {
-            CADASTRAL: [],
-            ROTINEIRA: [],
-            "CORREÇÃO DE CADASTRO": [],
-          };
-
-          dataToShow.forEach((item) => {
-            if (
-              item.tipoInspecao &&
-              item.dataEntrega &&
-              (item.dataDevolucao || item.dataRecebimento)
-            ) {
-              const tipo = normalizeTipoInspecao(item.tipoInspecao);
-              const dataInicio = parseComplexDate(item.dataEntrega);
-              const dataFim = parseComplexDate(
-                item.dataDevolucao || item.dataRecebimento
-              );
-
-              if (dataInicio && dataFim && diasPorTipo[tipo]) {
-                const dias = Math.round(
-                  (dataFim - dataInicio) / (1000 * 60 * 60 * 24)
-                );
-                if (dias >= 0) {
-                  diasPorTipo[tipo].push(dias);
-                }
-              }
-            }
-          });
-
-          // Calcular médias
-          const mediaDiasPorTipo = {};
-          Object.entries(diasPorTipo).forEach(([tipo, dias]) => {
-            if (dias.length > 0) {
-              mediaDiasPorTipo[tipo] =
-                dias.reduce((sum, val) => sum + val, 0) / dias.length;
-            } else {
-              mediaDiasPorTipo[tipo] = 0;
-            }
-          });
-
-          // 6. Contagem por tipo
-          const tipoInspecaoCounts = {};
-          dataToShow.forEach((item) => {
-            if (item.tipoInspecao) {
-              const tipo = normalizeTipoInspecao(item.tipoInspecao);
-              tipoInspecaoCounts[tipo] = (tipoInspecaoCounts[tipo] || 0) + 1;
-            }
-          });
-
-          // Criar gráficos
-          createStatusChart(statusCounts);
-          createReprovacaoChart(topReprovados);
-          createAprovadorChart(topAprovadores);
-          createReprovadorChart(topReprovadores);
-          createTempoChart(mediaDiasPorTipo);
-          createTipoChart(tipoInspecaoCounts);
-
-          // Adicionar título com informações do filtro
-          updateStatsFilterInfo(dataToShow.length);
-        }
-
-        // Função para mostrar informações do filtro aplicado nas estatísticas
-        function updateStatsFilterInfo(filteredCount) {
-          const tipoFilter = document.getElementById("statsTipoFilter").value;
-          const loteFilter = document.getElementById("statsLoteFilter").value;
-
-          let filterInfo = `<h3>Estatísticas`;
-
-          if (tipoFilter || loteFilter) {
-            filterInfo += ` - Filtro: `;
-            if (tipoFilter) {
-              filterInfo += `Tipo ${tipoFilter}`;
-            }
-            if (tipoFilter && loteFilter) {
-              filterInfo += ` / `;
-            }
-            if (loteFilter) {
-              filterInfo += `Lote ${loteFilter}`;
-            }
-          }
-
-          filterInfo += ` (${filteredCount} registros)</h3>`;
-
-          const filterInfoContainer =
-            document.getElementById("statsFilterInfo");
-          if (filterInfoContainer) {
-            filterInfoContainer.innerHTML = filterInfo;
-          }
-        }
-
-        // MELHORIAS #1 e #3: Cálculo e exibição de sumário atualizado
-        function calculateSummary(dataToShow) {
-          const summary = {
-            total: dataToShow.length,
-            porStatus: {},
-            porTipo: {},
-            porLote: {},
-            aprovacaoInvalida: 0,
-          };
-
-          dataToShow.forEach((message) => {
-            // Verificar se é uma aprovação inválida (Lote 1)
-            const isAprovacaoInvalida =
-              normalizeLote(message.lote) === "1" &&
-              normalizeStatus(message.status || "").includes("APROVADA");
-
-            if (isAprovacaoInvalida) {
-              summary.aprovacaoInvalida = (summary.aprovacaoInvalida || 0) + 1;
-            }
-
-            // Contar por Status (destacando APROVADA para Lote 1 como INVÁLIDA)
-            if (message.status) {
-              if (isAprovacaoInvalida) {
-                // Adicionar a uma categoria especial
-                const invalidStatus = "APROVAÇÃO INVÁLIDA (LOTE 1)";
-                summary.porStatus[invalidStatus] =
-                  (summary.porStatus[invalidStatus] || 0) + 1;
-              } else {
-                const status = normalizeStatus(message.status);
-                summary.porStatus[status] =
-                  (summary.porStatus[status] || 0) + 1;
-              }
-            }
-
-            // Contar por Tipo de Inspeção (normalizado)
-            if (message.tipoInspecao) {
-              const tipo = normalizeTipoInspecao(message.tipoInspecao);
-              summary.porTipo[tipo] = (summary.porTipo[tipo] || 0) + 1;
-            }
-
-            // Contar por Lote (normalizado)
+      function initializeReavFilters() {
+        const reavLoteFilter = document.getElementById("reavLoteFilter");
+        if (reavLoteFilter) {
+          reavLoteFilter.innerHTML = '<option value="">Todos os Lotes</option>';
+          const lotesMap = new Map();
+          processedData.forEach((message) => {
             if (message.lote) {
               const normalizedLote = normalizeLote(message.lote);
-              summary.porLote[normalizedLote] =
-                (summary.porLote[normalizedLote] || 0) + 1;
-            }
-          });
-
-          return summary;
-        }
-
-        function updateSummaryDisplay(summary) {
-          const summaryContainer = document.getElementById("dataSummary");
-
-          let html = `<p><strong>Total de Registros:</strong> ${summary.total}</p>`;
-
-          // Mostrar aprovações inválidas se houver
-          if (summary.aprovacaoInvalida > 0) {
-            html += `<p class="invalid-approval-warning"><strong>Atenção:</strong> ${summary.aprovacaoInvalida} aprovações inválidas do Lote 1 foram encontradas</p>`;
-          }
-
-          // Por Status
-          if (Object.keys(summary.porStatus).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Status:</strong><ul>';
-            Object.entries(summary.porStatus).forEach(([status, count]) => {
-              if (status === "APROVAÇÃO INVÁLIDA (LOTE 1)") {
-                html += `<li class="invalid-approval">${status}: ${count}</li>`;
-              } else {
-                html += `<li>${status}: ${count}</li>`;
+              if (!lotesMap.has(normalizedLote)) {
+                lotesMap.set(normalizedLote, message.lote);
               }
-            });
-            html += "</ul></div>";
-          }
-
-          // Por Tipo
-          if (Object.keys(summary.porTipo).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Tipo de Inspeção:</strong><ul>';
-            Object.entries(summary.porTipo).forEach(([tipo, count]) => {
-              html += `<li>${tipo}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          // Por Lote
-          if (Object.keys(summary.porLote).length > 0) {
-            html +=
-              '<div class="summary-section"><strong>Por Lote:</strong><ul>';
-
-            // Ordenar lotes numericamente
-            const lotesOrdenados = Object.entries(summary.porLote).sort(
-              ([a], [b]) => parseInt(a, 10) - parseInt(b, 10)
-            );
-
-            lotesOrdenados.forEach(([lote, count]) => {
-              html += `<li>Lote ${lote}: ${count}</li>`;
-            });
-            html += "</ul></div>";
-          }
-
-          summaryContainer.innerHTML = html;
-        }
-
-        // MELHORIAS #4: Atualização de tabela com ordenação por data
-        function updateTable(dataToShow = processedData) {
-          const tbody = resultTable.querySelector("tbody");
-          tbody.innerHTML = "";
-
-          if (dataToShow.length === 0) {
-            tbody.innerHTML =
-              '<tr><td colspan="9" style="text-align: center;">Nenhum dado processado. Cole as mensagens e clique em "Processar".</td></tr>';
-            document.getElementById("dataSummary").innerHTML = "";
-            return;
-          }
-
-          // Calcular e exibir sumário
-          const summary = calculateSummary(dataToShow);
-          updateSummaryDisplay(summary);
-
-          // Ordenar por data (mais recente primeiro)
-          const sortedData = sortMessagesByDate([...dataToShow]);
-
-          sortedData.forEach((message) => {
-            const row = document.createElement("tr");
-
-            // Verificar se é uma aprovação inválida (Lote 1)
-            const isAprovacaoInvalida =
-              normalizeLote(message.lote) === "1" &&
-              normalizeStatus(message.status || "").includes("APROVADA");
-
-            // Definir classe baseada no status
-            const statusLower = (message.status || "").toLowerCase();
-            if (isAprovacaoInvalida) {
-              row.classList.add("status-invalida");
-            } else if (
-              statusLower.includes("avaliação") ||
-              statusLower.includes("avaliaçã") ||
-              statusLower.includes("avaliacao")
-            ) {
-              row.classList.add("status-avaliacao");
-            } else if (
-              statusLower.includes("aprovada") ||
-              statusLower.includes("aprovado")
-            ) {
-              row.classList.add("status-aprovada");
-            } else if (
-              statusLower.includes("reprovada") ||
-              statusLower.includes("reprovado")
-            ) {
-              row.classList.add("status-reprovada");
-            } else if (
-              statusLower.includes("reavaliação") ||
-              statusLower.includes("reavaliacao")
-            ) {
-              row.classList.add("status-reavaliacao");
             }
-
-            // Formatar todas as datas para o formato brasileiro
-            // Converter a data da mensagem para formato brasileiro (DD/MM/AAAA)
-            const formattedMessageDate = formatMessageDateBrazilian(
-              message.data
-            );
-            const dataEntrega = formatDateBR(message.dataEntrega);
-            const dataRecebimento = formatDateBR(message.dataRecebimento);
-            const dataDevolucao = formatDateBR(message.dataDevolucao);
-
-            // Normalizar o tipo de inspeção
-            const tipoInspecao = normalizeTipoInspecao(
-              message.tipoInspecao || ""
-            );
-
-            // Ajustar o status para indicar invalidez se necessário
-            let statusDisplay = message.status || "";
-            if (isAprovacaoInvalida) {
-              statusDisplay += ' <span class="invalid-badge">INVÁLIDA</span>';
-            }
-
-            row.innerHTML = `
-        <td>${formattedMessageDate || ""}</td>
-        <td>${message.remetente || ""}</td>
-        <td>${message.lote || ""}</td>
-        <td>${message.codigoOAE || ""}</td>
-        <td>${tipoInspecao || ""}</td>
-        <td>${dataEntrega || ""}</td>
-        <td>${dataRecebimento || ""}</td>
-        <td>${dataDevolucao || ""}</td>
-        <td>${statusDisplay}</td>
-      `;
-
-            tbody.appendChild(row);
           });
+
+          Array.from(lotesMap.keys())
+            .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+            .forEach((lote) => {
+              const option = document.createElement("option");
+              option.value = lote;
+              option.textContent = `Lote ${lote}`;
+              reavLoteFilter.appendChild(option);
+            });
+        }
+      }
+
+      // ==========================================
+      // FILTROS
+      // ==========================================
+
+      function applyFilters() {
+        const loteFilter = normalizeLote(document.getElementById("filterLote").value);
+        const statusFilter = document.getElementById("filterStatus").value;
+        const tipoFilter = document.getElementById("filterTipo").value;
+        const codigoFilter = document.getElementById("filterCodigo").value.toLowerCase();
+        const startDateStr = document.getElementById("startDate").value;
+        const endDateStr = document.getElementById("endDate").value;
+
+        let startDateValue = startDateStr ? parseComplexDate(startDateStr) : null;
+        let endDateValue = endDateStr ? parseComplexDate(endDateStr) : null;
+
+        if (endDateValue) {
+          endDateValue.setHours(23, 59, 59, 999);
         }
 
-        // Função para formatar a data da mensagem para o formato brasileiro
-        function formatMessageDateBrazilian(dateString) {
-          if (!dateString) return "";
+        const filteredData = processedData.filter((message) => {
+          const matchesText =
+            (loteFilter === "" || normalizeLote(message.lote) === loteFilter) &&
+            (statusFilter === "" || normalizeStatus(message.status) === statusFilter) &&
+            (tipoFilter === "" || normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
+            (codigoFilter === "" || (message.codigoOAE && message.codigoOAE.toLowerCase().includes(codigoFilter)));
 
-          // Se a data já tem o formato DD/MM/YYYY HH:MM ou [DD/MM/YYYY, HH:MM]
-          // Extrair apenas a parte da data e converter para o formato brasileiro
-          let datePart = "";
-          let timePart = "";
+          let matchesDate = true;
+          if (startDateValue || endDateValue) {
+            const messageDate = extractDateFromMessage(message.data);
+            if (messageDate) {
+              if (startDateValue && messageDate < startDateValue) matchesDate = false;
+              if (endDateValue && messageDate > endDateValue) matchesDate = false;
+            } else {
+              matchesDate = false;
+            }
+          }
 
-          // Formato com colchetes [MM/DD/YY, HH:MM:SS]
-          const bracketMatch = dateString.match(
-            /\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]/
+          return matchesText && matchesDate;
+        });
+
+        updateTable(filteredData);
+      }
+
+      function clearFilters() {
+        document.getElementById("filterLote").value = "";
+        document.getElementById("filterStatus").value = "";
+        document.getElementById("filterTipo").value = "";
+        document.getElementById("filterCodigo").value = "";
+        document.getElementById("startDate").value = "";
+        document.getElementById("endDate").value = "";
+        updateTable(processedData);
+      }
+
+      function applyStatsFilters() {
+        const tipoFilter = document.getElementById("statsTipoFilter").value;
+        const loteFilter = normalizeLote(document.getElementById("statsLoteFilter").value);
+
+        const filteredData = processedData.filter((message) => {
+          return (
+            (tipoFilter === "" || normalizeTipoInspecao(message.tipoInspecao) === tipoFilter) &&
+            (loteFilter === "" || normalizeLote(message.lote) === loteFilter)
           );
-          if (bracketMatch) {
-            datePart = bracketMatch[1];
-            timePart = bracketMatch[2];
-          }
-          // Formato padrão MM/DD/YYYY HH:MM
-          else if (dateString.includes("/")) {
-            const parts = dateString.split(" ");
-            datePart = parts[0];
-            timePart = parts.length > 1 ? parts[1] : "";
-          }
+        });
 
-          // Se encontramos uma parte de data, formatar para DD/MM/YYYY
-          if (datePart) {
-            const parts = datePart.split("/");
-            if (parts.length === 3) {
-              // Verificar se está no formato MM/DD/YYYY (formato americano)
-              if (detectedDateFormat === "MM/DD/YYYY") {
-                // Inverter mês e dia
-                const month = parts[0];
-                const day = parts[1];
-                const year =
-                  parts[2].length === 2
-                    ? parseInt(parts[2]) < 50
-                      ? "20" + parts[2]
-                      : "19" + parts[2]
-                    : parts[2];
+        updateCharts(filteredData);
+      }
 
-                // Retornar no formato brasileiro com a hora original
-                return `${day}/${month}/${year}${
-                  timePart ? " " + timePart : ""
-                }`;
-              } else {
-                // Já está no formato brasileiro, retornar como está
-                return dateString;
-              }
+      function clearStatsFilters() {
+        document.getElementById("statsTipoFilter").value = "";
+        document.getElementById("statsLoteFilter").value = "";
+        updateCharts(processedData);
+      }
+
+      function applyReavFilters() {
+        updateReavaliacoesTab();
+      }
+
+      function clearReavFilters() {
+        document.getElementById("reavStartDate").value = "";
+        document.getElementById("reavEndDate").value = "";
+        document.getElementById("reavLoteFilter").value = "";
+        document.querySelectorAll(".period-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelector('.period-btn[data-period="all"]').classList.add("active");
+        updateReavaliacoesTab();
+      }
+
+      function applyPeriodFilter(period) {
+        const now = new Date();
+        let startDate = null;
+
+        switch (period) {
+          case "week":
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case "month":
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+            break;
+          case "quarter":
+            startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+            break;
+          case "year":
+            startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+            break;
+          default:
+            startDate = null;
+        }
+
+        if (startDate) {
+          document.getElementById("reavStartDate").value = formatDateBrazilian(startDate);
+          document.getElementById("reavEndDate").value = formatDateBrazilian(now);
+        } else {
+          document.getElementById("reavStartDate").value = "";
+          document.getElementById("reavEndDate").value = "";
+        }
+
+        updateReavaliacoesTab();
+      }
+
+      // ==========================================
+      // TAB REAVALIAÇÕES
+      // ==========================================
+
+      function updateReavaliacoesTab() {
+        if (Object.keys(oaeGroupedData).length === 0) return;
+
+        // Aplicar filtros
+        const startDateStr = document.getElementById("reavStartDate").value;
+        const endDateStr = document.getElementById("reavEndDate").value;
+        const loteFilter = normalizeLote(document.getElementById("reavLoteFilter").value);
+
+        let startDateValue = startDateStr ? parseComplexDate(startDateStr) : null;
+        let endDateValue = endDateStr ? parseComplexDate(endDateStr) : null;
+
+        if (endDateValue) {
+          endDateValue.setHours(23, 59, 59, 999);
+        }
+
+        // Filtrar dados agrupados
+        const filteredOAEs = Object.values(oaeGroupedData).filter((oae) => {
+          // Filtro de lote
+          if (loteFilter && normalizeLote(oae.lote) !== loteFilter) return false;
+
+          // Filtro de data (baseado na última data do histórico)
+          if (startDateValue || endDateValue) {
+            const lastDate = oae.historico.length > 0 ? oae.historico[oae.historico.length - 1].dateObj : null;
+            if (lastDate) {
+              if (startDateValue && lastDate < startDateValue) return false;
+              if (endDateValue && lastDate > endDateValue) return false;
             }
           }
 
-          // Se não conseguir formatar, retornar a string original
-          return dateString;
-        }
+          return true;
+        });
 
-        function updateIrregularMessages() {
-          irregularMessages.innerHTML = "";
+        // Calcular estatísticas
+        const stats = calculateReavaliacaoStats(filteredOAEs);
 
-          if (irregularData.length === 0) {
-            irregularMessages.innerHTML =
-              "<p>Nenhuma mensagem irregular encontrada.</p>";
-            return;
+        // Atualizar cards
+        document.getElementById("totalObrasAvaliadas").textContent = stats.totalObras;
+        document.getElementById("totalObrasReavaliadas").textContent = stats.obrasComReavaliacao;
+        document.getElementById("totalReavaliacoes").textContent = stats.totalReavaliacoes;
+        document.getElementById("mediaReavPorObra").textContent = stats.mediaReavPorObra.toFixed(2);
+        document.getElementById("taxaAprovacaoFinal").textContent = stats.taxaAprovacaoFinal.toFixed(1) + "%";
+
+        // Atualizar gráficos
+        updateReavaliacaoCharts(filteredOAEs, stats);
+
+        // Atualizar tabela
+        updateReavaliacaoTable(filteredOAEs);
+      }
+
+      function calculateReavaliacaoStats(oaes) {
+        const stats = {
+          totalObras: oaes.length,
+          obrasComReavaliacao: 0,
+          totalReavaliacoes: 0,
+          distribuicaoReavaliacoes: {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0},
+          aprovadosPorCiclo: {},
+          totalPorCiclo: {},
+          reavPorLote: {},
+          reavPorMes: {},
+          mediaReavPorObra: 0,
+          taxaAprovacaoFinal: 0,
+          obrasAprovadas: 0
+        };
+
+        oaes.forEach((oae) => {
+          // Contar reavaliações (usando o maior número encontrado)
+          const numReav = oae.maiorReavaliacao || oae.totalReavaliacoes;
+          
+          if (numReav > 0) {
+            stats.obrasComReavaliacao++;
+            stats.totalReavaliacoes += numReav;
           }
 
-          irregularData.forEach((message) => {
-            const messageElement = document.createElement("div");
-            messageElement.className = "message-card";
+          // Distribuição
+          if (numReav >= 6) {
+            stats.distribuicaoReavaliacoes['6+']++;
+          } else {
+            stats.distribuicaoReavaliacoes[numReav]++;
+          }
 
-            messageElement.innerHTML = `
-        <div class="message-header">
-          <span>${message.data} - ${message.remetente}</span>
-          <span class="missing-fields">Campos faltantes: ${message.camposFaltantes}</span>
-        </div>
-        <div class="message-content">${message.texto}</div>
-      `;
+          // Por lote
+          if (oae.lote) {
+            const lote = normalizeLote(oae.lote);
+            if (!stats.reavPorLote[lote]) stats.reavPorLote[lote] = 0;
+            stats.reavPorLote[lote] += numReav;
+          }
 
-            irregularMessages.appendChild(messageElement);
-          });
-        }
+          // Por mês (baseado na última data)
+          if (oae.historico.length > 0) {
+            const lastEntry = oae.historico[oae.historico.length - 1];
+            if (lastEntry.dateObj) {
+              const monthKey = `${lastEntry.dateObj.getFullYear()}-${String(lastEntry.dateObj.getMonth() + 1).padStart(2, '0')}`;
+              if (!stats.reavPorMes[monthKey]) stats.reavPorMes[monthKey] = 0;
+              stats.reavPorMes[monthKey] += numReav;
+            }
+          }
 
-        function initializeDateFilters() {
-          if (processedData.length === 0) return;
+          // Status final
+          const statusFinal = normalizeStatus(oae.statusFinal);
+          if (statusFinal.includes("APROVADA")) {
+            stats.obrasAprovadas++;
+          }
 
-          // Encontrar datas extremas
-          let earliestDate = new Date();
-          let latestDate = new Date(0); // 1970-01-01
-
-          processedData.forEach((message) => {
-            if (message.data) {
-              // Extrair a data da mensagem
-              const messageDate = extractDateFromMessage(message.data);
-
-              if (messageDate) {
-                if (messageDate < earliestDate) earliestDate = messageDate;
-                if (messageDate > latestDate) latestDate = messageDate;
+          // Taxa de aprovação por ciclo
+          oae.historico.forEach((h) => {
+            const numCiclo = extractNumeroReavaliacao(h.status);
+            if (numCiclo > 0) {
+              if (!stats.totalPorCiclo[numCiclo]) {
+                stats.totalPorCiclo[numCiclo] = 0;
+                stats.aprovadosPorCiclo[numCiclo] = 0;
               }
+              stats.totalPorCiclo[numCiclo]++;
             }
           });
+        });
 
-          // Formatar para input de data no formato brasileiro (DD/MM/YYYY)
-          startDate.value = formatDateBrazilian(earliestDate);
-          endDate.value = formatDateBrazilian(latestDate);
-        }
+        // Calcular médias
+        stats.mediaReavPorObra = stats.obrasComReavaliacao > 0 
+          ? stats.totalReavaliacoes / stats.obrasComReavaliacao 
+          : 0;
+        
+        stats.taxaAprovacaoFinal = stats.totalObras > 0 
+          ? (stats.obrasAprovadas / stats.totalObras) * 100 
+          : 0;
 
-        // Funções para formatação de datas no formato brasileiro (DD/MM/YYYY)
-        function formatDateForInput(date) {
-          if (!date || isNaN(date.getTime())) return "";
-          // Sempre retornar no formato DD/MM/YYYY para inputs brasileiros
-          return `${String(date.getDate()).padStart(
-            2,
-            "0"
-          )}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
-        }
+        return stats;
+      }
 
-        function clearFilters() {
-          filterLote.value = "";
-          filterStatus.value = "";
-          filterTipo.value = "";
-          filterCodigo.value = "";
+      function updateReavaliacaoCharts(oaes, stats) {
+        // 1. Gráfico de distribuição
+        createDistribuicaoReavChart(stats.distribuicaoReavaliacoes);
 
-          // Limpar os campos de data
-          startDate.value = "";
-          endDate.value = "";
+        // 2. Gráfico de funil
+        createFunilReavChart(stats.distribuicaoReavaliacoes);
 
-          // Atualizar a tabela com todos os dados
-          updateTable(processedData);
-        }
+        // 3. Top obras mais reavaliadas
+        createTopObrasReavChart(oaes);
 
+        // 4. Taxa de aprovação por ciclo
+        createTaxaAprovacaoCicloChart(oaes);
 
+        // 5. Evolução por mês
+        createEvolucaoReavChart(stats.reavPorMes);
 
+        // 6. Reavaliações por lote
+        createReavPorLoteChart(stats.reavPorLote);
+      }
 
-        // Versão: 2.0
-function exportToCSV() {
-  if (processedData.length === 0) {
-    alert("Não há dados para exportar.");
-    return;
-  }
+      function createDistribuicaoReavChart(distribuicao) {
+        const canvas = document.getElementById("distribuicaoReavChart");
+        if (!canvas) return;
 
-  // Obter a data atual
-  const now = new Date();
-  
-  // Formatar a data e hora no padrão desejado
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  
-  // Montar o nome do arquivo
-  const fileName = `HISTORICO_MENSAGENS_ESCRITORIO_${day}${month}${year}_${hours}${minutes}`;
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
 
-  // Cabeçalhos
-  const headers = [
-    "Data",
-    "Remetente",
-    "Lote",
-    "Código OAE",
-    "Tipo de Inspeção",
-    "Data de Entrega/Envio",
-    "Data de Recebimento",
-    "Data de Devolução/Retorno",
-    "Status",
-  ];
+        const labels = ["Sem Reav", "1 Reav", "2 Reav", "3 Reav", "4 Reav", "5 Reav", "6+ Reav"];
+        const data = [
+          distribuicao[0] || 0,
+          distribuicao[1] || 0,
+          distribuicao[2] || 0,
+          distribuicao[3] || 0,
+          distribuicao[4] || 0,
+          distribuicao[5] || 0,
+          distribuicao['6+'] || 0
+        ];
 
-  // Linhas de dados
-  const rows = processedData.map((message) => [
-    message.data || "",
-    message.remetente || "",
-    message.lote || "",
-    message.codigoOAE || "",
-    message.tipoInspecao || "",
-    message.dataEntrega || "",
-    message.dataRecebimento || "",
-    message.dataDevolucao || "",
-    message.status || "",
-  ]);
+        const colors = [
+          'rgba(39, 174, 96, 0.7)',   // Verde - sem reav
+          'rgba(52, 152, 219, 0.7)',   // Azul claro
+          'rgba(243, 156, 18, 0.7)',   // Amarelo
+          'rgba(230, 126, 34, 0.7)',   // Laranja
+          'rgba(231, 76, 60, 0.7)',    // Vermelho claro
+          'rgba(155, 89, 182, 0.7)',   // Roxo
+          'rgba(192, 57, 43, 0.7)'     // Vermelho escuro
+        ];
 
-  // Montar CSV
-  const csvContent = [
-    headers.join(","),
-    ...rows.map((row) =>
-      row
-        .map((cell) => `"${(cell || "").replace(/"/g, '""')}"`)
-        .join(",")
-    ),
-  ].join("\n");
-
-  // Download
-  const blob = new Blob([csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.setAttribute("href", url);
-  link.setAttribute("download", `${fileName}.csv`);
-  link.style.display = "none";
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-
-
-
-        // Funções Auxiliares
-        function normalizeText(text) {
-          if (!text) return "";
-          return text
-            .toString()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .trim();
-        }
-
-        function parseDate(dateStr) {
-          return parseComplexDate(dateStr);
-        }
-
-        // Funções de Gráficos
-        function createStatusChart(data) {
-          createChart("statusChart", data, "bar", {
-            indexAxis: "x",
-            backgroundColor: (ctx) => {
-              const label = ctx.chart.data.labels[ctx.dataIndex].toLowerCase();
-              if (label.includes("aprovada")) return "rgba(39, 174, 96, 0.7)";
-              if (label.includes("reprovada")) return "rgba(231, 76, 60, 0.7)";
-              if (label.includes("avaliação")) return "rgba(243, 156, 18, 0.7)";
-              if (label.includes("reavaliação"))
-                return "rgba(52, 152, 219, 0.7)";
-              return "rgba(149, 165, 166, 0.7)";
-            },
-          });
-        }
-
-        function createReprovacaoChart(data) {
-          createChart("reprovacaoChart", data, "bar", {
-            indexAxis: "y",
-            backgroundColor: "rgba(231, 76, 60, 0.7)",
-            borderColor: "rgba(231, 76, 60, 1)",
-          });
-        }
-
-        function createAprovadorChart(data) {
-          createChart("aprovadorChart", data, "bar", {
-            indexAxis: "y",
-            backgroundColor: "rgba(39, 174, 96, 0.7)",
-            borderColor: "rgba(39, 174, 96, 1)",
-          });
-        }
-
-        function createReprovadorChart(data) {
-          createChart("reprovadorChart", data, "bar", {
-            indexAxis: "y",
-            backgroundColor: "rgba(231, 76, 60, 0.7)",
-            borderColor: "rgba(231, 76, 60, 1)",
-          });
-        }
-
-        function createTempoChart(data) {
-          createChart("tempoChart", data, "bar", {
-            indexAxis: "x",
-            backgroundColor: "rgba(52, 152, 219, 0.7)",
-            borderColor: "rgba(52, 152, 219, 1)",
-            formatter: (value) => `${value.toFixed(1)} dias`,
-          });
-        }
-
-        function createTipoChart(data) {
-          const colors = [
-            "rgba(52, 152, 219, 0.7)", // Azul
-            "rgba(46, 204, 113, 0.7)", // Verde
-            "rgba(155, 89, 182, 0.7)", // Roxo
-            "rgba(241, 196, 15, 0.7)", // Amarelo
-            "rgba(230, 126, 34, 0.7)", // Laranja
-          ];
-
-          createChart("tipoChart", data, "doughnut", {
-            backgroundColor: Object.keys(data).map(
-              (_, i) => colors[i % colors.length]
-            ),
-            borderColor: Object.keys(data).map((_, i) =>
-              colors[i % colors.length].replace("0.7", "1")
-            ),
-            formatter: (value, ctx) => {
-              const dataset = ctx.chart.data.datasets[0];
-              const total = dataset.data.reduce((acc, val) => acc + val, 0);
-              const percentage = ((value / total) * 100).toFixed(1);
-              return `${
-                ctx.chart.data.labels[ctx.dataIndex]
-              }: ${value} (${percentage}%)`;
-            },
-          });
-        }
-
-        function createChart(canvasId, data, type, options = {}) {
-          const canvas = document.getElementById(canvasId);
-          if (!canvas) return; // Segurança extra
-
-          const ctx = canvas.getContext("2d");
-
-          // Destruir gráfico anterior se existir
-          const existingChart = Chart.getChart(canvas);
-          if (existingChart) {
-            existingChart.destroy();
-          }
-
-          // Preparar dados
-          const labels = Object.keys(data);
-          const values = Object.values(data);
-
-          let datasets = [
-            {
-              label: options.label || "Quantidade",
-              data: values,
-              backgroundColor:
-                options.backgroundColor || "rgba(52, 152, 219, 0.7)",
-              borderColor: options.borderColor || "rgba(52, 152, 219, 1)",
-              borderWidth: 1,
-            },
-          ];
-
-          // Configurações para tipos específicos
-          const chartOptions = {
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Quantidade de Obras',
+              data: data,
+              backgroundColor: colors,
+              borderColor: colors.map(c => c.replace('0.7', '1')),
+              borderWidth: 1
+            }]
+          },
+          options: {
             responsive: true,
-            maintainAspectRatio: false, // Importante para controlar altura
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.raw} obras`
+                }
+              }
+            },
+            scales: {
+              x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+              y: { 
+                beginAtZero: true,
+                ticks: { color: '#ffffff', stepSize: 1 }, 
+                grid: { color: 'rgba(255,255,255,0.1)' } 
+              }
+            }
+          }
+        });
+      }
+
+      function createFunilReavChart(distribuicao) {
+        const canvas = document.getElementById("funilReavChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        // Calcular acumulados (quantas obras passaram por cada etapa)
+        const total = Object.values(distribuicao).reduce((a, b) => a + b, 0);
+        const comReav = total - (distribuicao[0] || 0);
+        const com2Reav = comReav - (distribuicao[1] || 0);
+        const com3Reav = com2Reav - (distribuicao[2] || 0);
+        const com4Reav = com3Reav - (distribuicao[3] || 0);
+        const com5Reav = com4Reav - (distribuicao[4] || 0);
+        const com6Reav = com5Reav - (distribuicao[5] || 0);
+
+        const labels = ["Total Obras", "Com 1+ Reav", "Com 2+ Reav", "Com 3+ Reav", "Com 4+ Reav", "Com 5+ Reav", "Com 6+ Reav"];
+        const data = [total, comReav, com2Reav, com3Reav, com4Reav, com5Reav, com6Reav];
+
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Obras',
+              data: data,
+              backgroundColor: 'rgba(155, 89, 182, 0.7)',
+              borderColor: 'rgba(155, 89, 182, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                    return `${ctx.raw} obras (${pct}%)`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { 
+                beginAtZero: true,
+                ticks: { color: '#ffffff' }, 
+                grid: { color: 'rgba(255,255,255,0.1)' } 
+              },
+              y: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+            }
+          }
+        });
+      }
+
+      function createTopObrasReavChart(oaes) {
+        const canvas = document.getElementById("topObrasReavChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        // Top 10 obras com mais reavaliações
+        const topObras = [...oaes]
+          .filter(o => (o.maiorReavaliacao || o.totalReavaliacoes) > 0)
+          .sort((a, b) => (b.maiorReavaliacao || b.totalReavaliacoes) - (a.maiorReavaliacao || a.totalReavaliacoes))
+          .slice(0, 10);
+
+        const labels = topObras.map(o => o.codigoOAE.substring(0, 15));
+        const data = topObras.map(o => o.maiorReavaliacao || o.totalReavaliacoes);
+
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Reavaliações',
+              data: data,
+              backgroundColor: 'rgba(231, 76, 60, 0.7)',
+              borderColor: 'rgba(231, 76, 60, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { 
+                beginAtZero: true,
+                ticks: { color: '#ffffff', stepSize: 1 }, 
+                grid: { color: 'rgba(255,255,255,0.1)' } 
+              },
+              y: { ticks: { color: '#ffffff', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.1)' } }
+            }
+          }
+        });
+      }
+
+      function createTaxaAprovacaoCicloChart(oaes) {
+        const canvas = document.getElementById("taxaAprovacaoCicloChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        // Calcular taxa de aprovação após cada ciclo
+        const aprovacaoPorCiclo = {};
+        const totalPorCiclo = {};
+
+        oaes.forEach(oae => {
+          const numReav = oae.maiorReavaliacao || oae.totalReavaliacoes;
+          const statusFinal = normalizeStatus(oae.statusFinal);
+          const foiAprovada = statusFinal.includes("APROVADA");
+
+          if (numReav > 0) {
+            if (!totalPorCiclo[numReav]) {
+              totalPorCiclo[numReav] = 0;
+              aprovacaoPorCiclo[numReav] = 0;
+            }
+            totalPorCiclo[numReav]++;
+            if (foiAprovada) {
+              aprovacaoPorCiclo[numReav]++;
+            }
+          }
+        });
+
+        const labels = Object.keys(totalPorCiclo).sort((a, b) => a - b).map(n => `Após ${n}ª Reav`);
+        const data = Object.keys(totalPorCiclo).sort((a, b) => a - b).map(n => {
+          return totalPorCiclo[n] > 0 ? (aprovacaoPorCiclo[n] / totalPorCiclo[n]) * 100 : 0;
+        });
+
+        new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Taxa de Aprovação (%)',
+              data: data,
+              borderColor: 'rgba(39, 174, 96, 1)',
+              backgroundColor: 'rgba(39, 174, 96, 0.2)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.raw.toFixed(1)}%`
+                }
+              }
+            },
+            scales: {
+              x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+              y: { 
+                beginAtZero: true,
+                max: 100,
+                ticks: { color: '#ffffff', callback: (v) => v + '%' }, 
+                grid: { color: 'rgba(255,255,255,0.1)' } 
+              }
+            }
+          }
+        });
+      }
+
+      function createEvolucaoReavChart(reavPorMes) {
+        const canvas = document.getElementById("evolucaoReavChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        const sortedMonths = Object.keys(reavPorMes).sort();
+        const labels = sortedMonths.map(m => {
+          const [year, month] = m.split('-');
+          return `${month}/${year}`;
+        });
+        const data = sortedMonths.map(m => reavPorMes[m]);
+
+        new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Reavaliações',
+              data: data,
+              borderColor: 'rgba(52, 152, 219, 1)',
+              backgroundColor: 'rgba(52, 152, 219, 0.2)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+              y: { 
+                beginAtZero: true,
+                ticks: { color: '#ffffff', stepSize: 1 }, 
+                grid: { color: 'rgba(255,255,255,0.1)' } 
+              }
+            }
+          }
+        });
+      }
+
+      function createReavPorLoteChart(reavPorLote) {
+        const canvas = document.getElementById("reavPorLoteChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        const sortedLotes = Object.keys(reavPorLote).sort((a, b) => parseInt(a) - parseInt(b));
+        const labels = sortedLotes.map(l => `Lote ${l}`);
+        const data = sortedLotes.map(l => reavPorLote[l]);
+
+        const colors = sortedLotes.map((_, i) => {
+          const hue = (i * 137.5) % 360;
+          return `hsla(${hue}, 70%, 50%, 0.7)`;
+        });
+
+        new Chart(canvas, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: colors,
+              borderColor: colors.map(c => c.replace('0.7', '1')),
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: {
               legend: {
-                display: type === "doughnut",
-                position: "bottom",
-                labels: {
-                  color: "#ffffff",
-                  boxWidth: 12,
-                  padding: 10,
-                },
+                display: true,
+                position: 'bottom',
+                labels: { color: '#ffffff', boxWidth: 12, padding: 8 }
               },
               tooltip: {
-                callbacks: {},
-              },
-            },
-            scales: {},
-          };
-
-          // Adicionar formatter se fornecido
-          if (options.formatter) {
-            chartOptions.plugins.tooltip.callbacks.label = function (context) {
-              return options.formatter(context.raw, context);
-            };
+                callbacks: {
+                  label: (ctx) => {
+                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                    return `${ctx.label}: ${ctx.raw} reav (${pct}%)`;
+                  }
+                }
+              }
+            }
           }
+        });
+      }
 
-          // Configurações específicas para gráficos de barras
-          if (type === "bar") {
-            chartOptions.indexAxis = options.indexAxis || "x";
+      function updateReavaliacaoTable(oaes) {
+        const tbody = document.querySelector("#reavTable tbody");
+        tbody.innerHTML = "";
 
-            chartOptions.scales = {
-              x: {
-                beginAtZero: true,
-                ticks: {
-                  color: "#ffffff",
-                },
-                grid: {
-                  color: "rgba(255, 255, 255, 0.1)",
-                },
-              },
-              y: {
-                ticks: {
-                  color: "#ffffff",
-                },
-                grid: {
-                  color: "rgba(255, 255, 255, 0.1)",
-                },
-              },
-            };
-          }
-
-          // Limitar o número de ticks no eixo Y para barras horizontais
-          if (type === "bar" && options.indexAxis === "y") {
-            chartOptions.scales.y.ticks.autoSkip = true;
-            chartOptions.scales.y.ticks.maxTicksLimit = 8;
-          }
-
-          // Criar gráfico
-          try {
-            new Chart(ctx, {
-              type: type,
-              data: {
-                labels: labels,
-                datasets: datasets,
-              },
-              options: chartOptions,
-            });
-          } catch (error) {
-            console.error(`Erro ao criar gráfico ${canvasId}:`, error);
-          }
+        if (oaes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Nenhum dado encontrado.</td></tr>';
+          return;
         }
-      });
 
+        // Ordenar por número de reavaliações (decrescente)
+        const sortedOAEs = [...oaes].sort((a, b) => {
+          const reavsA = a.maiorReavaliacao || a.totalReavaliacoes;
+          const reavsB = b.maiorReavaliacao || b.totalReavaliacoes;
+          return reavsB - reavsA;
+        });
 
+        sortedOAEs.forEach((oae) => {
+          const row = document.createElement("tr");
 
-      // Versão: 1.0
-// Função para identificar a mensagem mais recente nos dados processados
-function getMostRecentMessage(processedData) {
-  if (!processedData || processedData.length === 0) {
-    return null; // Retorna null se não houver dados
-  }
+          const numReav = oae.maiorReavaliacao || oae.totalReavaliacoes;
+          const statusFinal = normalizeStatus(oae.statusFinal);
 
-  // Criar uma cópia dos dados para não modificar o original
-  const dataToSort = [...processedData];
+          let statusClass = "status-final-andamento";
+          if (statusFinal.includes("APROVADA")) statusClass = "status-final-aprovada";
+          else if (statusFinal.includes("REPROVADA")) statusClass = "status-final-reprovada";
 
-  // Função para converter uma string de data em objeto Date
-  function extractDateFromMessageString(dateString) {
-    if (!dateString) return null;
+          // Badge de reavaliação
+          let badgeClass = "reav-badge-1";
+          if (numReav >= 6) badgeClass = "reav-badge-6";
+          else if (numReav >= 5) badgeClass = "reav-badge-5";
+          else if (numReav >= 4) badgeClass = "reav-badge-4";
+          else if (numReav >= 3) badgeClass = "reav-badge-3";
+          else if (numReav >= 2) badgeClass = "reav-badge-2";
 
-    // Formato com colchetes [DD/MM/YY, HH:MM:SS]
-    const bracketMatch = dateString.match(/\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]/);
-    if (bracketMatch) {
-      const datePart = bracketMatch[1];
-      const timePart = bracketMatch[2];
-      
-      // Converter para formato que o Date possa interpretar
-      const parts = datePart.split('/');
-      
-      // Determinar se está no formato DD/MM/YYYY ou MM/DD/YYYY baseado no formato detectado
-      if (detectedDateFormat === "MM/DD/YYYY") {
-        // Formato americano MM/DD/YYYY
-        const month = parseInt(parts[0], 10) - 1;
-        const day = parseInt(parts[1], 10);
-        const year = parts[2].length === 2 ? (parseInt(parts[2]) < 50 ? 2000 + parseInt(parts[2]) : 1900 + parseInt(parts[2])) : parseInt(parts[2]);
-        
-        const timeParts = timePart.split(':');
-        const hour = parseInt(timeParts[0], 10);
-        const minute = parseInt(timeParts[1], 10);
-        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
-        
-        return new Date(year, month, day, hour, minute, second);
-      } else {
-        // Formato brasileiro DD/MM/YYYY
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parts[2].length === 2 ? (parseInt(parts[2]) < 50 ? 2000 + parseInt(parts[2]) : 1900 + parseInt(parts[2])) : parseInt(parts[2]);
-        
-        const timeParts = timePart.split(':');
-        const hour = parseInt(timeParts[0], 10);
-        const minute = parseInt(timeParts[1], 10);
-        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
-        
-        return new Date(year, month, day, hour, minute, second);
+          const primeiraDataFormatted = oae.primeiraData ? formatMessageDateBrazilian(oae.primeiraData).split(' ')[0] : "-";
+          const ultimaDataFormatted = oae.ultimaData ? formatMessageDateBrazilian(oae.ultimaData).split(' ')[0] : "-";
+
+          row.innerHTML = `
+            <td><strong>${oae.codigoOAE}</strong></td>
+            <td>${oae.lote || "-"}</td>
+            <td>${oae.tipoInspecao || "-"}</td>
+            <td>${oae.historico.length}</td>
+            <td><span class="reav-badge ${badgeClass}">${numReav}</span></td>
+            <td class="${statusClass}">${statusFinal || "-"}</td>
+            <td>${primeiraDataFormatted}</td>
+            <td>${ultimaDataFormatted}</td>
+            <td>
+              <button onclick="showOAEHistory('${oae.codigoOAE}')" style="padding: 5px 10px; font-size: 12px;">
+                Ver Histórico
+              </button>
+            </td>
+          `;
+
+          tbody.appendChild(row);
+        });
       }
-    }
-    
-    // Formato padrão DD/MM/YYYY HH:MM ou MM/DD/YYYY HH:MM
-    const standardMatch = dateString.match(/(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?)/);
-    if (standardMatch) {
-      const datePart = standardMatch[1];
-      const timePart = standardMatch[2];
-      
-      // Converter para formato que o Date possa interpretar
-      const parts = datePart.split('/');
-      
-      // Determinar formato baseado no formato detectado
-      if (detectedDateFormat === "MM/DD/YYYY") {
-        // Formato americano
-        const month = parseInt(parts[0], 10) - 1;
-        const day = parseInt(parts[1], 10);
-        const year = parseInt(parts[2], 10);
-        
-        const timeParts = timePart.split(':');
-        const hour = parseInt(timeParts[0], 10);
-        const minute = parseInt(timeParts[1], 10);
-        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
-        
-        return new Date(year, month, day, hour, minute, second);
-      } else {
-        // Formato brasileiro
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
-        
-        const timeParts = timePart.split(':');
-        const hour = parseInt(timeParts[0], 10);
-        const minute = parseInt(timeParts[1], 10);
-        const second = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
-        
-        return new Date(year, month, day, hour, minute, second);
+
+      // Função global para mostrar histórico da OAE
+      window.showOAEHistory = function(codigoOAE) {
+        const oae = oaeGroupedData[codigoOAE];
+        if (!oae) return;
+
+        const modal = document.getElementById("oaeHistoryModal");
+        const title = document.getElementById("modalOAETitle");
+        const info = document.getElementById("modalOAEInfo");
+        const history = document.getElementById("modalOAEHistory");
+
+        title.textContent = `Histórico: ${oae.codigoOAE}`;
+
+        const numReav = oae.maiorReavaliacao || oae.totalReavaliacoes;
+        const statusFinal = normalizeStatus(oae.statusFinal);
+
+        info.innerHTML = `
+          <p><strong>Lote:</strong> ${oae.lote || "-"}</p>
+          <p><strong>Tipo:</strong> ${oae.tipoInspecao || "-"}</p>
+          <p><strong>Total de Registros:</strong> ${oae.historico.length}</p>
+          <p><strong>Número de Reavaliações:</strong> ${numReav}</p>
+          <p><strong>Status Final:</strong> <span style="color: ${statusFinal.includes('APROVADA') ? 'var(--success)' : statusFinal.includes('REPROVADA') ? 'var(--danger)' : 'var(--warning)'}">${statusFinal}</span></p>
+        `;
+
+        history.innerHTML = "";
+
+        oae.historico.forEach((h, index) => {
+          const item = document.createElement("div");
+          item.className = "timeline-item";
+
+          const status = normalizeStatus(h.status);
+          if (status.includes("APROVADA")) item.classList.add("status-aprovada-item");
+          else if (status.includes("REPROVADA")) item.classList.add("status-reprovada-item");
+          else if (status.includes("REAVALIAÇÃO")) item.classList.add("status-reavaliacao-item");
+
+          const dateFormatted = formatMessageDateBrazilian(h.data);
+
+          item.innerHTML = `
+            <div class="timeline-date">${dateFormatted}</div>
+            <div class="timeline-status">${status}</div>
+            <div class="timeline-sender">Por: ${h.remetente || "-"}</div>
+          `;
+
+          history.appendChild(item);
+        });
+
+        modal.style.display = "block";
+      };
+
+      // ==========================================
+      // GRÁFICOS DA ABA ESTATÍSTICAS
+      // ==========================================
+
+      function updateCharts(dataToShow = processedData) {
+        if (dataToShow.length === 0) return;
+
+        const statusCounts = {};
+        dataToShow.forEach((item) => {
+          if (item.status) {
+            const status = normalizeStatus(item.status);
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+          }
+        });
+
+        const reprovacoesPorCodigo = {};
+        dataToShow.forEach((item) => {
+          if (normalizeStatus(item.status) === "REPROVADA" && item.codigoOAE) {
+            reprovacoesPorCodigo[item.codigoOAE] = (reprovacoesPorCodigo[item.codigoOAE] || 0) + 1;
+          }
+        });
+
+        const topReprovados = Object.fromEntries(
+          Object.entries(reprovacoesPorCodigo).sort(([, a], [, b]) => b - a).slice(0, 10)
+        );
+
+        const aprovadoresPorRemetente = {};
+        dataToShow.forEach((item) => {
+          if (normalizeStatus(item.status) === "APROVADA" && item.remetente) {
+            aprovadoresPorRemetente[item.remetente] = (aprovadoresPorRemetente[item.remetente] || 0) + 1;
+          }
+        });
+
+        const topAprovadores = Object.fromEntries(
+          Object.entries(aprovadoresPorRemetente).sort(([, a], [, b]) => b - a).slice(0, 10)
+        );
+
+        const reprovadoresPorRemetente = {};
+        dataToShow.forEach((item) => {
+          if (normalizeStatus(item.status) === "REPROVADA" && item.remetente) {
+            reprovadoresPorRemetente[item.remetente] = (reprovadoresPorRemetente[item.remetente] || 0) + 1;
+          }
+        });
+
+        const topReprovadores = Object.fromEntries(
+          Object.entries(reprovadoresPorRemetente).sort(([, a], [, b]) => b - a).slice(0, 10)
+        );
+
+        const diasPorTipo = { CADASTRAL: [], ROTINEIRA: [], "CORREÇÃO DE CADASTRO": [] };
+        dataToShow.forEach((item) => {
+          if (item.tipoInspecao && item.dataEntrega && (item.dataDevolucao || item.dataRecebimento)) {
+            const tipo = normalizeTipoInspecao(item.tipoInspecao);
+            const dataInicio = parseComplexDate(item.dataEntrega);
+            const dataFim = parseComplexDate(item.dataDevolucao || item.dataRecebimento);
+            if (dataInicio && dataFim && diasPorTipo[tipo]) {
+              const dias = Math.round((dataFim - dataInicio) / (1000 * 60 * 60 * 24));
+              if (dias >= 0) diasPorTipo[tipo].push(dias);
+            }
+          }
+        });
+
+        const mediaDiasPorTipo = {};
+        Object.entries(diasPorTipo).forEach(([tipo, dias]) => {
+          mediaDiasPorTipo[tipo] = dias.length > 0 ? dias.reduce((sum, val) => sum + val, 0) / dias.length : 0;
+        });
+
+        const tipoInspecaoCounts = {};
+        dataToShow.forEach((item) => {
+          if (item.tipoInspecao) {
+            const tipo = normalizeTipoInspecao(item.tipoInspecao);
+            tipoInspecaoCounts[tipo] = (tipoInspecaoCounts[tipo] || 0) + 1;
+          }
+        });
+
+        createStatusChart(statusCounts);
+        createReprovacaoChart(topReprovados);
+        createAprovadorChart(topAprovadores);
+        createReprovadorChart(topReprovadores);
+        createTempoChart(mediaDiasPorTipo);
+        createTipoChart(tipoInspecaoCounts);
+
+        updateStatsFilterInfo(dataToShow.length);
       }
-    }
-    
-    // Se não conseguir extrair a data, retorna null
-    return null;
-  }
 
-  // Ordenar as mensagens por data (mais recente para mais antiga)
-  dataToSort.sort((a, b) => {
-    const dateA = extractDateFromMessageString(a.data);
-    const dateB = extractDateFromMessageString(b.data);
-    
-    // Se conseguiu extrair as datas, comparar
-    if (dateA && dateB) {
-      return dateB - dateA; // Ordenar do mais recente para o mais antigo
-    }
-    
-    // Se não conseguiu extrair alguma das datas, considerar como menor
-    if (dateA && !dateB) return -1;
-    if (!dateA && dateB) return 1;
-    
-    // Se não conseguiu extrair ambas as datas, manter a ordem original
-    return 0;
-  });
+      function updateStatsFilterInfo(filteredCount) {
+        const tipoFilter = document.getElementById("statsTipoFilter").value;
+        const loteFilter = document.getElementById("statsLoteFilter").value;
 
-  // Retorna a mensagem mais recente (primeira após ordenação)
-  return dataToSort.length > 0 ? dataToSort[0] : null;
-}
+        let filterInfo = `<h3>Estatísticas`;
+        if (tipoFilter || loteFilter) {
+          filterInfo += ` - Filtro: `;
+          if (tipoFilter) filterInfo += `Tipo ${tipoFilter}`;
+          if (tipoFilter && loteFilter) filterInfo += ` / `;
+          if (loteFilter) filterInfo += `Lote ${loteFilter}`;
+        }
+        filterInfo += ` (${filteredCount} registros)</h3>`;
 
-// Função auxiliar para formatar a data para exibição
-function formatDateTimeForDisplay(dateObj) {
-  if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
-    return "";
-  }
-  
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const year = dateObj.getFullYear();
-  const hours = String(dateObj.getHours()).padStart(2, '0');
-  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-  
-  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-}
+        document.getElementById("statsFilterInfo").innerHTML = filterInfo;
+      }
 
+      function createStatusChart(data) {
+        createChart("statusChart", data, "bar", {
+          backgroundColor: (ctx) => {
+            const label = ctx.chart.data.labels[ctx.dataIndex].toLowerCase();
+            if (label.includes("aprovada")) return "rgba(39, 174, 96, 0.7)";
+            if (label.includes("reprovada")) return "rgba(231, 76, 60, 0.7)";
+            if (label.includes("avaliação") && !label.includes("reav")) return "rgba(243, 156, 18, 0.7)";
+            if (label.includes("reavaliação")) return "rgba(52, 152, 219, 0.7)";
+            return "rgba(149, 165, 166, 0.7)";
+          },
+        });
+      }
 
-// Versão: 1.1
-// Adicionar o botão na interface HTML - Colocar este código após o botão "exportBtn" existente
+      function createReprovacaoChart(data) {
+        createChart("reprovacaoChart", data, "bar", {
+          indexAxis: "y",
+          backgroundColor: "rgba(231, 76, 60, 0.7)",
+          borderColor: "rgba(231, 76, 60, 1)",
+        });
+      }
 
-function addMostRecentExportButton() {
-  // Encontrar o grupo de botões existente
-  const buttonGroup = document.querySelector('.button-group');
-  
-  // Verificar se o grupo de botões existe
-  if (!buttonGroup) {
-    console.error('Grupo de botões não encontrado');
-    return;
-  }
-  
-  // Verificar se o botão já existe para evitar duplicação
-  if (document.getElementById('exportMostRecentBtn')) {
-    return;
-  }
-  
-  // Criar o novo botão
-  const exportMostRecentBtn = document.createElement('button');
-  exportMostRecentBtn.id = 'exportMostRecentBtn';
-  exportMostRecentBtn.disabled = true; // Inicialmente desabilitado
-  
-  // Adicionar o evento de clique
-  exportMostRecentBtn.addEventListener('click', exportMostRecentToCSV);
-  
-  // Adicionar o botão ao grupo
-  buttonGroup.appendChild(exportMostRecentBtn);
-  
-  // Atualizar o CSS para o novo botão
-  const style = document.createElement('style');
-  style.textContent = `
-    button#exportMostRecentBtn {
-      background-color: var(--info);
-      margin-left: 10px;
-    }
-    button#exportMostRecentBtn:hover {
-      opacity: 0.9;
-    }
-    button#exportMostRecentBtn:disabled {
-      background-color: #95a5a6;
-      cursor: not-allowed;
-    }
-  `;
-  document.head.appendChild(style);
-}
+      function createAprovadorChart(data) {
+        createChart("aprovadorChart", data, "bar", {
+          indexAxis: "y",
+          backgroundColor: "rgba(39, 174, 96, 0.7)",
+          borderColor: "rgba(39, 174, 96, 1)",
+        });
+      }
 
-// Adicionar esta linha ao final da função DOMContentLoaded existente
-document.addEventListener("DOMContentLoaded", function() {
-  // Código existente...
-  
-  // Adicionar o botão para exportar a mensagem mais recente
-  addMostRecentExportButton();
-});
+      function createReprovadorChart(data) {
+        createChart("reprovadorChart", data, "bar", {
+          indexAxis: "y",
+          backgroundColor: "rgba(231, 76, 60, 0.7)",
+          borderColor: "rgba(231, 76, 60, 1)",
+        });
+      }
 
+      function createTempoChart(data) {
+        createChart("tempoChart", data, "bar", {
+          backgroundColor: "rgba(52, 152, 219, 0.7)",
+          borderColor: "rgba(52, 152, 219, 1)",
+          formatter: (value) => `${value.toFixed(1)} dias`,
+        });
+      }
 
-function updateProcessMessages() {
-  // Localizar o final da função processMessages existente e adicionar:
-  
-  // Habilitar o botão de exportar mensagem mais recente se houver dados
-  const exportMostRecentBtn = document.getElementById('exportMostRecentBtn');
-  if (exportMostRecentBtn) {
-    exportMostRecentBtn.disabled = processedData.length === 0;
-  }
-}
+      function createTipoChart(data) {
+        const colors = [
+          "rgba(52, 152, 219, 0.7)",
+          "rgba(46, 204, 113, 0.7)",
+          "rgba(155, 89, 182, 0.7)",
+          "rgba(241, 196, 15, 0.7)",
+          "rgba(230, 126, 34, 0.7)",
+        ];
 
+        createChart("tipoChart", data, "doughnut", {
+          backgroundColor: Object.keys(data).map((_, i) => colors[i % colors.length]),
+          borderColor: Object.keys(data).map((_, i) => colors[i % colors.length].replace("0.7", "1")),
+        });
+      }
 
+      function createChart(canvasId, data, type, options = {}) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
 
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
 
+        const labels = Object.keys(data);
+        const values = Object.values(data);
 
+        const chartOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: type === "doughnut",
+              position: "bottom",
+              labels: { color: "#ffffff", boxWidth: 12, padding: 10 },
+            },
+            tooltip: { callbacks: {} },
+          },
+          scales: {},
+        };
+
+        if (options.formatter) {
+          chartOptions.plugins.tooltip.callbacks.label = function (context) {
+            return options.formatter(context.raw, context);
+          };
+        }
+
+        if (type === "bar") {
+          chartOptions.indexAxis = options.indexAxis || "x";
+          chartOptions.scales = {
+            x: {
+              beginAtZero: true,
+              ticks: { color: "#ffffff" },
+              grid: { color: "rgba(255, 255, 255, 0.1)" },
+            },
+            y: {
+              ticks: { color: "#ffffff" },
+              grid: { color: "rgba(255, 255, 255, 0.1)" },
+            },
+          };
+        }
+
+        if (type === "bar" && options.indexAxis === "y") {
+          chartOptions.scales.y.ticks.autoSkip = true;
+          chartOptions.scales.y.ticks.maxTicksLimit = 8;
+        }
+
+        new Chart(canvas, {
+          type: type,
+          data: {
+            labels: labels,
+            datasets: [{
+              label: options.label || "Quantidade",
+              data: values,
+              backgroundColor: options.backgroundColor || "rgba(52, 152, 219, 0.7)",
+              borderColor: options.borderColor || "rgba(52, 152, 219, 1)",
+              borderWidth: 1,
+            }],
+          },
+          options: chartOptions,
+        });
+      }
+
+      // ==========================================
+      // EXPORTAÇÃO
+      // ==========================================
+
+      function exportToCSV() {
+        if (processedData.length === 0) {
+          alert("Não há dados para exportar.");
+          return;
+        }
+
+        const now = new Date();
+        const fileName = `HISTORICO_MENSAGENS_${formatDateFileName(now)}`;
+
+        const headers = [
+          "Data", "Remetente", "Lote", "Código OAE", "Tipo de Inspeção",
+          "Data de Entrega/Envio", "Data de Recebimento", "Data de Devolução/Retorno", "Status"
+        ];
+
+        const rows = processedData.map((message) => [
+          message.data || "",
+          message.remetente || "",
+          message.lote || "",
+          message.codigoOAE || "",
+          message.tipoInspecao || "",
+          message.dataEntrega || "",
+          message.dataRecebimento || "",
+          message.dataDevolucao || "",
+          message.status || "",
+        ]);
+
+        downloadCSV(headers, rows, fileName);
+      }
+
+      function exportReavaliacoesToCSV() {
+        if (Object.keys(oaeGroupedData).length === 0) {
+          alert("Não há dados de reavaliação para exportar.");
+          return;
+        }
+
+        const now = new Date();
+        const fileName = `REAVALIACOES_OAE_${formatDateFileName(now)}`;
+
+        const headers = [
+          "Código OAE", "Lote", "Tipo de Inspeção", "Total Registros",
+          "Número de Reavaliações", "Status Final", "Primeira Data", "Última Data"
+        ];
+
+        const rows = Object.values(oaeGroupedData).map((oae) => [
+          oae.codigoOAE,
+          oae.lote || "",
+          oae.tipoInspecao || "",
+          oae.historico.length,
+          oae.maiorReavaliacao || oae.totalReavaliacoes,
+          oae.statusFinal || "",
+          oae.primeiraData ? formatMessageDateBrazilian(oae.primeiraData).split(' ')[0] : "",
+          oae.ultimaData ? formatMessageDateBrazilian(oae.ultimaData).split(' ')[0] : "",
+        ]);
+
+        downloadCSV(headers, rows, fileName);
+      }
+
+      function formatDateFileName(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}${month}${year}_${hours}${minutes}`;
+      }
+
+      function downloadCSV(headers, rows, fileName) {
+        const csvContent = [
+          headers.join(","),
+          ...rows.map((row) => row.map((cell) => `"${(cell || "").toString().replace(/"/g, '""')}"`).join(","))
+        ].join("\n");
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${fileName}.csv`);
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     </script>
   </body>
 </html>
