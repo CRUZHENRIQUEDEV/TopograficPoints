@@ -1,4 +1,4 @@
-<!-- Versão: 7.0 - Sistema completo de estatísticas de reavaliação -->
+<!-- Versão: 7.1 - Sistema completo de estatísticas de reavaliação com filtro por tipo -->
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -729,6 +729,12 @@
               <input type="text" id="reavStartDate" placeholder="DD/MM/AAAA" />
               <label>Até:</label>
               <input type="text" id="reavEndDate" placeholder="DD/MM/AAAA" />
+              <select id="reavTipoFilter">
+                <option value="">Todos os Tipos</option>
+                <option value="CADASTRAL">CADASTRAL</option>
+                <option value="ROTINEIRA">ROTINEIRA</option>
+                <option value="CORREÇÃO DE CADASTRO">CORREÇÃO DE CADASTRO</option>
+              </select>
               <select id="reavLoteFilter">
                 <option value="">Todos os Lotes</option>
               </select>
@@ -795,6 +801,17 @@
             </div>
           </div>
 
+          <div class="charts-container">
+            <div class="chart-box large">
+              <div class="chart-title">Reavaliações por Tipo de Inspeção</div>
+              <canvas id="reavPorTipoChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title">Distribuição por Tipo (com Reavaliação)</div>
+              <canvas id="distribuicaoTipoReavChart"></canvas>
+            </div>
+          </div>
+
           <!-- Tabela detalhada -->
           <h3 style="margin-top: 30px; margin-bottom: 15px;">📋 Detalhamento por Obra</h3>
           <div class="table-container">
@@ -845,7 +862,7 @@
     </div>
 
     <script>
-      // Versão: 7.0 - Script completo com sistema de reavaliações
+      // Versão: 7.1 - Script completo com sistema de reavaliações e filtro por tipo
 
       // Variáveis globais
       let processedData = [];
@@ -1898,6 +1915,7 @@
         document.getElementById("reavStartDate").value = "";
         document.getElementById("reavEndDate").value = "";
         document.getElementById("reavLoteFilter").value = "";
+        document.getElementById("reavTipoFilter").value = "";
         document.querySelectorAll(".period-btn").forEach((b) => b.classList.remove("active"));
         document.querySelector('.period-btn[data-period="all"]').classList.add("active");
         updateReavaliacoesTab();
@@ -1946,6 +1964,7 @@
         const startDateStr = document.getElementById("reavStartDate").value;
         const endDateStr = document.getElementById("reavEndDate").value;
         const loteFilter = normalizeLote(document.getElementById("reavLoteFilter").value);
+        const tipoFilter = document.getElementById("reavTipoFilter").value;
 
         let startDateValue = startDateStr ? parseComplexDate(startDateStr) : null;
         let endDateValue = endDateStr ? parseComplexDate(endDateStr) : null;
@@ -1958,6 +1977,9 @@
         const filteredOAEs = Object.values(oaeGroupedData).filter((oae) => {
           // Filtro de lote
           if (loteFilter && normalizeLote(oae.lote) !== loteFilter) return false;
+
+          // Filtro de tipo de inspeção
+          if (tipoFilter && normalizeTipoInspecao(oae.tipoInspecao) !== tipoFilter) return false;
 
           // Filtro de data (baseado na última data do histórico)
           if (startDateValue || endDateValue) {
@@ -1998,6 +2020,9 @@
           totalPorCiclo: {},
           reavPorLote: {},
           reavPorMes: {},
+          reavPorTipo: {},
+          obrasPorTipo: {},
+          obrasComReavPorTipo: {},
           mediaReavPorObra: 0,
           taxaAprovacaoFinal: 0,
           obrasAprovadas: 0
@@ -2006,10 +2031,21 @@
         oaes.forEach((oae) => {
           // Contar reavaliações (usando o maior número encontrado)
           const numReav = oae.maiorReavaliacao || oae.totalReavaliacoes;
+          const tipo = normalizeTipoInspecao(oae.tipoInspecao) || "NÃO INFORMADO";
+          
+          // Contagem por tipo
+          if (!stats.obrasPorTipo[tipo]) {
+            stats.obrasPorTipo[tipo] = 0;
+            stats.obrasComReavPorTipo[tipo] = 0;
+            stats.reavPorTipo[tipo] = 0;
+          }
+          stats.obrasPorTipo[tipo]++;
           
           if (numReav > 0) {
             stats.obrasComReavaliacao++;
             stats.totalReavaliacoes += numReav;
+            stats.obrasComReavPorTipo[tipo]++;
+            stats.reavPorTipo[tipo] += numReav;
           }
 
           // Distribuição
@@ -2085,6 +2121,12 @@
 
         // 6. Reavaliações por lote
         createReavPorLoteChart(stats.reavPorLote);
+
+        // 7. Reavaliações por tipo de inspeção (NOVO)
+        createReavPorTipoChart(stats.reavPorTipo, stats.obrasPorTipo, stats.obrasComReavPorTipo);
+
+        // 8. Distribuição por tipo com reavaliação (NOVO)
+        createDistribuicaoTipoReavChart(stats.obrasComReavPorTipo);
       }
 
       function createDistribuicaoReavChart(distribuicao) {
@@ -2412,6 +2454,136 @@
                     const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                     const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
                     return `${ctx.label}: ${ctx.raw} reav (${pct}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Gráfico de reavaliações por tipo de inspeção (barras agrupadas)
+      function createReavPorTipoChart(reavPorTipo, obrasPorTipo, obrasComReavPorTipo) {
+        const canvas = document.getElementById("reavPorTipoChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        const tipos = Object.keys(obrasPorTipo).filter(t => t !== "NÃO INFORMADO");
+        if (tipos.length === 0) return;
+
+        const labels = tipos;
+        const totalObrasData = tipos.map(t => obrasPorTipo[t] || 0);
+        const obrasComReavData = tipos.map(t => obrasComReavPorTipo[t] || 0);
+        const totalReavData = tipos.map(t => reavPorTipo[t] || 0);
+
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Total de Obras',
+                data: totalObrasData,
+                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                borderWidth: 1
+              },
+              {
+                label: 'Obras com Reavaliação',
+                data: obrasComReavData,
+                backgroundColor: 'rgba(243, 156, 18, 0.7)',
+                borderColor: 'rgba(243, 156, 18, 1)',
+                borderWidth: 1
+              },
+              {
+                label: 'Total de Reavaliações',
+                data: totalReavData,
+                backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                borderColor: 'rgba(231, 76, 60, 1)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { color: '#ffffff', boxWidth: 12, padding: 10 }
+              }
+            },
+            scales: {
+              x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+              y: { 
+                beginAtZero: true,
+                ticks: { color: '#ffffff', stepSize: 1 }, 
+                grid: { color: 'rgba(255,255,255,0.1)' } 
+              }
+            }
+          }
+        });
+      }
+
+      // Gráfico de distribuição por tipo (apenas obras com reavaliação)
+      function createDistribuicaoTipoReavChart(obrasComReavPorTipo) {
+        const canvas = document.getElementById("distribuicaoTipoReavChart");
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        const tipos = Object.keys(obrasComReavPorTipo).filter(t => t !== "NÃO INFORMADO" && obrasComReavPorTipo[t] > 0);
+        if (tipos.length === 0) {
+          // Mostrar mensagem se não houver dados
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '14px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('Sem dados de reavaliação', canvas.width / 2, canvas.height / 2);
+          return;
+        }
+
+        const labels = tipos;
+        const data = tipos.map(t => obrasComReavPorTipo[t]);
+
+        const colors = {
+          'CADASTRAL': 'rgba(52, 152, 219, 0.7)',
+          'ROTINEIRA': 'rgba(46, 204, 113, 0.7)',
+          'CORREÇÃO DE CADASTRO': 'rgba(155, 89, 182, 0.7)'
+        };
+
+        const backgroundColors = tipos.map(t => colors[t] || 'rgba(149, 165, 166, 0.7)');
+
+        new Chart(canvas, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: backgroundColors,
+              borderColor: backgroundColors.map(c => c.replace('0.7', '1')),
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: { color: '#ffffff', boxWidth: 12, padding: 8 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                    return `${ctx.label}: ${ctx.raw} obras (${pct}%)`;
                   }
                 }
               }
