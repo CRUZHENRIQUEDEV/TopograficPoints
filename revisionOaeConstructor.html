@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGO - Ferramenta de Auditoria de Pontes</title>
+    <style>
+        :root {
+            --ui-accent: #5a6570;
+            --ui-accent-hover: #4a5560;
+            --ui-bg: #ffffff;
+            --ui-bg-secondary: #f8f9fa;
+            --ui-bg-tertiary: #f0f2f5;
+            --ui-card-bg: #ffffff;
+            --ui-input-bg: #ffffff;
+            --ui-text: #2d2d2d;
+            --ui-text-secondary: #4a4a4a;
+            --ui-text-muted: #6a6a6a;
+            --ui-border: #e0e0e0;
+            --ui-success: #28a745;
+            --ui-warning: #ffc107;
+            --ui-error: #dc3545;
+            --ui-info: #17a2b8;
+            --ui-spacing-xs: 4px;
+            --ui-spacing-sm: 8px;
+            --ui-spacing-md: 16px;
+            --ui-spacing-lg: 24px;
+            --ui-spacing-xl: 32px;
+            --ui-radius-sm: 4px;
+            --ui-radius-md: 6px;
+            --ui-radius-lg: 8px;
+            --ui-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --ui-font-size-xs: 11px;
+            --ui-font-size-sm: 12px;
+            --ui-font-size-md: 14px;
+            --ui-font-size-lg: 16px;
+            --ui-font-size-xl: 20px;
+            --ui-transition-fast: 0.15s ease;
+        }
+
+        [data-theme="dark"] {
+            --ui-accent: #8ec8ee;
+            --ui-accent-hover: #a8d8f4;
+            --ui-bg: #1e2a35;
+            --ui-bg-secondary: #263545;
+            --ui-bg-tertiary: #2d3e50;
+            --ui-card-bg: #2d3e50;
+            --ui-input-bg: #1e2a35;
+            --ui-text: #e8ebed;
+            --ui-text-secondary: #b0b8c0;
+            --ui-text-muted: #8090a0;
+            --ui-border: #3a4a5a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--ui-font-family);
+            font-size: var(--ui-font-size-md);
+            background: var(--ui-bg);
+            color: var(--ui-text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .app-container { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-report {
+            width: 400px;
+            background: var(--ui-bg-secondary);
+            border-left: 1px solid var(--ui-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--ui-bg-secondary);
+            border-bottom: 1px solid var(--ui-border);
+            padding: var(--ui-spacing-md) var(--ui-spacing-lg);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--ui-spacing-md);
+        }
+        .header-title-section { flex: 1; }
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            gap: var(--ui-spacing-md);
+            margin-bottom: var(--ui-spacing-sm);
+        }
+        .header-title {
+            font-size: var(--ui-font-size-xl);
+            font-weight: 600;
+            color: var(--ui-text);
+        }
+        .header-input {
+            background: var(--ui-input-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm);
+            padding: var(--ui-spacing-xs) var(--ui-spacing-sm);
+            color: var(--ui-text);
+            font-size: var(--ui-font-size-md);
+        }
+        .header-input:focus { outline: none; border-color: var(--ui-accent); }
+        .header-input.title-input { font-size: var(--ui-font-size-lg); font-weight: 600; min-width: 350px; }
+        .header-meta {
+            display: flex;
+            gap: var(--ui-spacing-lg);
+            font-size: var(--ui-font-size-sm);
+            color: var(--ui-text-secondary);
+            align-items: center;
+        }
+        .header-meta span { display: flex; align-items: center; gap: var(--ui-spacing-xs); }
+        .status-badge {
+            background: var(--ui-warning);
+            color: #000;
+            padding: 2px 10px;
+            border-radius: var(--ui-radius-sm);
+            font-size: var(--ui-font-size-xs);
+            font-weight: 600;
+        }
+        .btn-enviar {
+            background: var(--ui-accent);
+            color: #1e2a35;
+            border: none;
+            padding: var(--ui-spacing-sm) var(--ui-spacing-lg);
+            border-radius: var(--ui-radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--ui-transition-fast);
+        }
+        .btn-enviar:hover { background: var(--ui-accent-hover); }
+
+        /* TABS */
+        .tabs-container {
+            display: flex;
+            gap: var(--ui-spacing-xs);
+            background: var(--ui-bg-tertiary);
+            padding: var(--ui-spacing-xs);
+            border-radius: var(--ui-radius-md);
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            color: var(--ui-text-secondary);
+            font-size: var(--ui-font-size-sm);
+            cursor: pointer;
+            border-radius: var(--ui-radius-sm);
+            white-space: nowrap;
+            transition: var(--ui-transition-fast);
+            position: relative;
+        }
+        .tab-btn:hover { background: var(--ui-bg-secondary); color: var(--ui-text); }
+        .tab-btn.active { background: var(--ui-accent); color: #1e2a35; font-weight: 600; }
+        .tab-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--ui-error);
+            color: white;
+            font-size: 10px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* CONTENT */
+        .tab-content { flex: 1; overflow-y: auto; padding: var(--ui-spacing-lg); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* SECTIONS */
+        .section { margin-bottom: var(--ui-spacing-lg); }
+        .section-title {
+            color: var(--ui-accent);
+            font-size: var(--ui-font-size-md);
+            font-weight: 600;
+            margin-bottom: var(--ui-spacing-md);
+            padding-bottom: var(--ui-spacing-xs);
+            border-bottom: 1px solid var(--ui-border);
+        }
+
+        /* FORM GRID */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--ui-spacing-md);
+        }
+        .form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .form-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .form-grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+        .form-field { display: flex; flex-direction: column; gap: var(--ui-spacing-xs); }
+        .form-field.span-2 { grid-column: span 2; }
+        .form-field.span-3 { grid-column: span 3; }
+
+        .form-label {
+            font-size: var(--ui-font-size-xs);
+            color: var(--ui-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-wrapper { display: flex; align-items: stretch; }
+        .form-input {
+            flex: 1;
+            background: var(--ui-input-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm) 0 0 var(--ui-radius-sm);
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            color: var(--ui-text);
+            font-size: var(--ui-font-size-md);
+        }
+        .form-input:focus { outline: none; border-color: var(--ui-accent); }
+        .form-input.has-error { border-color: var(--ui-error); background: rgba(220, 53, 69, 0.15); }
+        .form-input.no-btn { border-radius: var(--ui-radius-sm); }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238090a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+            cursor: pointer;
+        }
+
+        /* ERROR BUTTON */
+        .error-btn {
+            background: var(--ui-bg-secondary);
+            border: 1px solid var(--ui-border);
+            border-left: none;
+            border-radius: 0 var(--ui-radius-sm) var(--ui-radius-sm) 0;
+            width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--ui-transition-fast);
+            color: var(--ui-text-muted);
+            font-size: 16px;
+        }
+        .error-btn:hover { background: var(--ui-warning); color: #000; border-color: var(--ui-warning); }
+        .error-btn.has-error { background: var(--ui-error); color: white; border-color: var(--ui-error); }
+
+        /* MODAL */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-backdrop.show { display: flex; }
+        .modal {
+            background: var(--ui-card-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-lg);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .modal-header {
+            padding: var(--ui-spacing-md) var(--ui-spacing-lg);
+            border-bottom: 1px solid var(--ui-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title { font-size: var(--ui-font-size-lg); font-weight: 600; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--ui-text-muted);
+            cursor: pointer;
+        }
+        .modal-close:hover { color: var(--ui-error); }
+        .modal-body { padding: var(--ui-spacing-lg); overflow-y: auto; flex: 1; }
+        .modal-field-info {
+            background: var(--ui-bg-tertiary);
+            padding: var(--ui-spacing-md);
+            border-radius: var(--ui-radius-md);
+            margin-bottom: var(--ui-spacing-md);
+        }
+        .modal-field-info p { margin: var(--ui-spacing-xs) 0; font-size: var(--ui-font-size-sm); }
+        .modal-field-info strong { color: var(--ui-accent); }
+
+        .error-options-title {
+            font-size: var(--ui-font-size-sm);
+            font-weight: 600;
+            margin-bottom: var(--ui-spacing-sm);
+        }
+        .error-options { display: flex; flex-direction: column; gap: var(--ui-spacing-sm); margin-bottom: var(--ui-spacing-lg); }
+        .error-option {
+            display: flex;
+            align-items: center;
+            gap: var(--ui-spacing-sm);
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            background: var(--ui-bg-secondary);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm);
+            cursor: pointer;
+            transition: var(--ui-transition-fast);
+        }
+        .error-option:hover { border-color: var(--ui-accent); }
+        .error-option.selected { border-color: var(--ui-error); background: rgba(220, 53, 69, 0.1); }
+        .error-option input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ui-error); cursor: pointer; }
+        .error-option label { flex: 1; cursor: pointer; font-size: var(--ui-font-size-md); }
+
+        .obs-section { margin-top: var(--ui-spacing-md); }
+        .obs-label { font-size: var(--ui-font-size-sm); color: var(--ui-text-muted); margin-bottom: var(--ui-spacing-xs); display: block; }
+        .obs-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: var(--ui-input-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm);
+            padding: var(--ui-spacing-md);
+            color: var(--ui-text);
+            font-size: var(--ui-font-size-md);
+            font-family: var(--ui-font-family);
+            resize: vertical;
+        }
+        .obs-textarea:focus { outline: none; border-color: var(--ui-accent); }
+
+        .modal-footer {
+            padding: var(--ui-spacing-md) var(--ui-spacing-lg);
+            border-top: 1px solid var(--ui-border);
+            display: flex;
+            gap: var(--ui-spacing-sm);
+            justify-content: flex-end;
+        }
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--ui-border);
+            color: var(--ui-text-secondary);
+            padding: var(--ui-spacing-sm) var(--ui-spacing-lg);
+            border-radius: var(--ui-radius-md);
+            cursor: pointer;
+        }
+        .btn-cancel:hover { background: var(--ui-bg-tertiary); }
+        .btn-apply {
+            background: var(--ui-error);
+            border: none;
+            color: white;
+            padding: var(--ui-spacing-sm) var(--ui-spacing-lg);
+            border-radius: var(--ui-radius-md);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-apply:hover { background: #c82333; }
+        .btn-clear-error {
+            background: transparent;
+            border: 1px solid var(--ui-warning);
+            color: var(--ui-warning);
+            padding: var(--ui-spacing-sm) var(--ui-spacing-lg);
+            border-radius: var(--ui-radius-md);
+            cursor: pointer;
+        }
+        .btn-clear-error:hover { background: var(--ui-warning); color: #000; }
+
+        /* TABLES */
+        .view-table { width: 100%; border-collapse: collapse; }
+        .view-table th {
+            text-align: left;
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            background: var(--ui-bg-tertiary);
+            color: var(--ui-text-muted);
+            font-size: var(--ui-font-size-xs);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--ui-border);
+        }
+        .view-table td {
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            border-bottom: 1px solid var(--ui-border);
+            vertical-align: middle;
+        }
+        .view-table tr:hover { background: rgba(142, 200, 238, 0.05); }
+        .view-table tr.has-error { background: rgba(220, 53, 69, 0.1); }
+        .table-error-btn {
+            background: var(--ui-bg-secondary);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm);
+            padding: var(--ui-spacing-xs) var(--ui-spacing-sm);
+            cursor: pointer;
+            color: var(--ui-text-muted);
+            transition: var(--ui-transition-fast);
+        }
+        .table-error-btn:hover { background: var(--ui-warning); color: #000; border-color: var(--ui-warning); }
+        .table-error-btn.has-error { background: var(--ui-error); color: white; border-color: var(--ui-error); }
+
+        /* ELEMENT SELECTOR */
+        .element-selector {
+            background: var(--ui-bg-tertiary);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-lg);
+            padding: var(--ui-spacing-lg);
+            margin-bottom: var(--ui-spacing-lg);
+        }
+        .element-selector-title {
+            font-size: var(--ui-font-size-md);
+            font-weight: 600;
+            color: var(--ui-accent);
+            margin-bottom: var(--ui-spacing-md);
+        }
+        .element-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--ui-spacing-md);
+        }
+        .element-selector-field { display: flex; flex-direction: column; gap: var(--ui-spacing-xs); }
+        .element-selector-field label { font-size: var(--ui-font-size-xs); color: var(--ui-text-muted); text-transform: uppercase; }
+        .element-selector-field select, .element-selector-field input {
+            background: var(--ui-input-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm);
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            color: var(--ui-text);
+            font-size: var(--ui-font-size-md);
+        }
+        .element-selector-field select:focus, .element-selector-field input:focus { outline: none; border-color: var(--ui-accent); }
+        .btn-add-element-error {
+            margin-top: var(--ui-spacing-md);
+            background: var(--ui-error);
+            color: white;
+            border: none;
+            padding: var(--ui-spacing-sm) var(--ui-spacing-lg);
+            border-radius: var(--ui-radius-md);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-add-element-error:hover { background: #c82333; }
+
+        /* TRAMO CONFIG */
+        .tramo-config {
+            background: var(--ui-bg-secondary);
+            border: 1px solid var(--ui-accent);
+            border-radius: var(--ui-radius-md);
+            padding: var(--ui-spacing-md);
+            margin-bottom: var(--ui-spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--ui-spacing-lg);
+        }
+        .tramo-config label { font-weight: 600; color: var(--ui-accent); }
+        .tramo-config input {
+            width: 80px;
+            background: var(--ui-input-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-sm);
+            padding: var(--ui-spacing-sm);
+            color: var(--ui-text);
+            text-align: center;
+            font-size: var(--ui-font-size-md);
+        }
+        .tramo-config input:focus { outline: none; border-color: var(--ui-accent); }
+        .tramo-info { color: var(--ui-text-muted); font-size: var(--ui-font-size-sm); }
+
+        /* MARKED ERRORS */
+        .marked-errors { margin-top: var(--ui-spacing-lg); }
+        .marked-errors-title { font-size: var(--ui-font-size-sm); font-weight: 600; color: var(--ui-error); margin-bottom: var(--ui-spacing-sm); }
+        .marked-error-item {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid var(--ui-error);
+            border-radius: var(--ui-radius-sm);
+            padding: var(--ui-spacing-sm) var(--ui-spacing-md);
+            margin-bottom: var(--ui-spacing-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .marked-error-info { font-size: var(--ui-font-size-sm); }
+        .marked-error-remove { background: none; border: none; color: var(--ui-error); cursor: pointer; font-size: 18px; }
+        .marked-error-remove:hover { color: #ff6b7a; }
+
+        /* ANEXOS */
+        .anexo-item {
+            display: flex;
+            align-items: center;
+            gap: var(--ui-spacing-md);
+            padding: var(--ui-spacing-md);
+            background: var(--ui-bg-tertiary);
+            border-radius: var(--ui-radius-md);
+            border: 1px solid var(--ui-border);
+            margin-bottom: var(--ui-spacing-sm);
+        }
+        .anexo-item.has-error { border-color: var(--ui-error); background: rgba(220, 53, 69, 0.1); }
+        .anexo-thumb {
+            width: 48px; height: 48px;
+            background: var(--ui-bg-secondary);
+            border-radius: var(--ui-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ui-text-muted);
+            font-size: 20px;
+        }
+        .anexo-info { flex: 1; }
+        .anexo-name { font-weight: 500; }
+        .anexo-size { color: var(--ui-text-muted); font-size: var(--ui-font-size-xs); margin-left: var(--ui-spacing-sm); }
+        .anexo-legend { font-size: var(--ui-font-size-sm); color: var(--ui-text-secondary); margin-top: var(--ui-spacing-xs); }
+
+        /* SIDEBAR */
+        .sidebar-header { padding: var(--ui-spacing-lg); border-bottom: 1px solid var(--ui-border); }
+        .sidebar-title { font-size: var(--ui-font-size-lg); font-weight: 600; display: flex; align-items: center; gap: var(--ui-spacing-sm); }
+        .error-counter {
+            background: var(--ui-error);
+            color: white;
+            padding: 2px 10px;
+            border-radius: var(--ui-radius-sm);
+            font-size: var(--ui-font-size-sm);
+            font-weight: 700;
+        }
+        .sidebar-body { flex: 1; overflow-y: auto; padding: var(--ui-spacing-md); }
+        .report-textarea {
+            width: 100%;
+            min-height: 400px;
+            background: var(--ui-input-bg);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-md);
+            padding: var(--ui-spacing-md);
+            color: var(--ui-text);
+            font-size: var(--ui-font-size-sm);
+            font-family: var(--ui-font-family);
+            line-height: 1.6;
+            resize: vertical;
+        }
+        .report-textarea:focus { outline: none; border-color: var(--ui-accent); }
+        .sidebar-footer {
+            padding: var(--ui-spacing-md);
+            border-top: 1px solid var(--ui-border);
+            display: flex;
+            flex-direction: column;
+            gap: var(--ui-spacing-sm);
+        }
+        .btn-copy {
+            background: var(--ui-accent);
+            color: #1e2a35;
+            border: none;
+            padding: var(--ui-spacing-md);
+            border-radius: var(--ui-radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--ui-transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--ui-spacing-sm);
+        }
+        .btn-copy:hover { background: var(--ui-accent-hover); }
+        .btn-copy.copied { background: var(--ui-success); }
+        .btn-clear {
+            background: transparent;
+            color: var(--ui-text-secondary);
+            border: 1px solid var(--ui-border);
+            padding: var(--ui-spacing-sm);
+            border-radius: var(--ui-radius-md);
+            cursor: pointer;
+        }
+        .btn-clear:hover { background: var(--ui-bg-tertiary); color: var(--ui-error); border-color: var(--ui-error); }
+
+        /* MENSAGENS */
+        .mensagem-item {
+            background: var(--ui-bg-tertiary);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-md);
+            padding: var(--ui-spacing-md);
+            margin-bottom: var(--ui-spacing-md);
+        }
+        .mensagem-header { display: flex; justify-content: space-between; margin-bottom: var(--ui-spacing-sm); }
+        .mensagem-autor { font-weight: 600; color: var(--ui-accent); }
+        .mensagem-data { font-size: var(--ui-font-size-sm); color: var(--ui-text-muted); }
+        .mensagem-texto { font-size: var(--ui-font-size-md); }
+
+        @media (max-width: 1200px) {
+            .sidebar-report { width: 350px; }
+            .element-selector-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 992px) {
+            .app-container { flex-direction: column; }
+            .sidebar-report { width: 100%; max-height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-content">
+            <!-- HEADER -->
+            <header class="header">
+                <div class="header-top">
+                    <div class="header-title-section">
+                        <div class="header-title-row">
+                            <span class="header-title">Obra:</span>
+                            <input type="text" class="header-input title-input" id="obraNome" placeholder="Nome da obra..." oninput="syncObraInfo()">
+                        </div>
+                        <div class="header-meta">
+                            <span>Código: <input type="text" class="header-input" id="obraCodigo" placeholder="000000" style="width: 80px;" oninput="syncObraInfo()"></span>
+                            <span>UF: 
+                                <select class="header-input" id="obraUF" style="width: 70px;">
+                                    <option value="">--</option>
+                                    <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                                    <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                                    <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                                    <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                                    <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                                    <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                                    <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                                    <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                                    <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                </select>
+                            </span>
+                            <span class="status-badge">Pendente de retificação</span>
+                        </div>
+                    </div>
+                    <button class="btn-enviar" onclick="copyReport()">📋 Copiar Auditoria</button>
+                </div>
+                
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="identificacao">Identificação</button>
+                    <button class="tab-btn" data-tab="caracteristicas">Características Funcionais</button>
+                    <button class="tab-btn" data-tab="elementos">Elementos Componentes</button>
+                    <button class="tab-btn" data-tab="aspectos">Aspectos Especiais</button>
+                    <button class="tab-btn" data-tab="deficiencias">Deficiências Funcionais</button>
+                    <button class="tab-btn" data-tab="rotas">Rotas Alternativas</button>
+                    <button class="tab-btn" data-tab="observacoes">Observações</button>
+                    <button class="tab-btn" data-tab="anexos">Arquivos Anexos</button>
+                    <button class="tab-btn" data-tab="mensagens">Mensagens</button>
+                </div>
+            </header>
+
+            <div class="tab-content">
+                <!-- IDENTIFICAÇÃO -->
+                <div class="tab-panel active" id="identificacao">
+                    <div class="section">
+                        <h2 class="section-title">Dados Básicos</h2>
+                        <div class="form-grid form-grid-6">
+                            <div class="form-field span-2">
+                                <span class="form-label">Identificação</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_identificacao" data-field="identificacao" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('identificacao', 'Identificação')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Comprimento (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_comprimento" data-field="comprimento" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('comprimento', 'Comprimento (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Largura (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_largura" data-field="largura" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('largura', 'Largura (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Trem-Tipo</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_trem_tipo" data-field="trem_tipo" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('trem_tipo', 'Trem-Tipo')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Ano de Construção</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_ano_construcao" data-field="ano_construcao" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('ano_construcao', 'Ano de Construção')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Natureza da Estrutura</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_natureza" data-field="natureza" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('natureza', 'Natureza da Estrutura')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Localização</h2>
+                        <div class="form-grid form-grid-4">
+                            <div class="form-field">
+                                <span class="form-label">UF</span>
+                                <div class="field-wrapper">
+                                    <select class="form-input form-select" id="field_uf" data-field="uf">
+                                        <option value="">Selecione</option>
+                                        <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+                                        <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+                                        <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+                                        <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+                                        <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+                                        <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+                                        <option>SP</option><option>SE</option><option>TO</option>
+                                    </select>
+                                    <button class="error-btn" onclick="openErrorModal('uf', 'UF')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Via</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_via" data-field="via" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('via', 'Via')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Local na Via (km)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_local_via" data-field="local_via" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('local_via', 'Local na Via (km)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Cidade mais próxima</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_cidade" data-field="cidade" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('cidade', 'Cidade mais próxima')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Coordenadas Geográficas SIRGAS 2000</h2>
+                        <div class="form-grid form-grid-3">
+                            <div class="form-field">
+                                <span class="form-label">Latitude</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_latitude" data-field="latitude" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('latitude', 'Latitude')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Longitude</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_longitude" data-field="longitude" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('longitude', 'Longitude')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Altitude Geométrica (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_altitude" data-field="altitude" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('altitude', 'Altitude Geométrica (m)')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">SNV</h2>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-field">
+                                <span class="form-label">Código SNV</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_snv_codigo" data-field="snv_codigo" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('snv_codigo', 'Código SNV')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Versão SNV</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_snv_versao" data-field="snv_versao" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('snv_versao', 'Versão SNV')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Responsáveis</h2>
+                        <div class="form-grid form-grid-3">
+                            <div class="form-field">
+                                <span class="form-label">Superintendência Regional</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_superintendencia" data-field="superintendencia" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('superintendencia', 'Superintendência Regional')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Unidade local</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_unidade_local" data-field="unidade_local" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('unidade_local', 'Unidade local')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Administração DNIT?</span>
+                                <div class="field-wrapper">
+                                    <select class="form-input form-select" id="field_adm_dnit" data-field="adm_dnit">
+                                        <option value="">Selecione</option>
+                                        <option>SIM</option>
+                                        <option>NÃO</option>
+                                    </select>
+                                    <button class="error-btn" onclick="openErrorModal('adm_dnit', 'Administração DNIT?')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Administrador</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_administrador" data-field="administrador" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('administrador', 'Administrador')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Projetista</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_projetista" data-field="projetista" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('projetista', 'Projetista')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Construtor</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_construtor" data-field="construtor" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('construtor', 'Construtor')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARACTERÍSTICAS FUNCIONAIS -->
+                <div class="tab-panel" id="caracteristicas">
+                    <div class="section">
+                        <h2 class="section-title">Características</h2>
+                        <div class="form-grid form-grid-4">
+                            <div class="form-field">
+                                <span class="form-label">Atendimento ao SNV</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_atendimento_snv" data-field="atendimento_snv" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('atendimento_snv', 'Atendimento ao SNV')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Tipo de Região</span>
+                                <div class="field-wrapper">
+                                    <select class="form-input form-select" id="field_tipo_regiao" data-field="tipo_regiao">
+                                        <option value="">Selecione</option>
+                                        <option>Montanhosa</option>
+                                        <option>Não Informado</option>
+                                        <option>Ondulada</option>
+                                        <option>Plana</option>
+                                    </select>
+                                    <button class="error-btn" onclick="openErrorModal('tipo_regiao', 'Tipo de Região')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Tipo de Traçado</span>
+                                <div class="field-wrapper">
+                                    <select class="form-input form-select" id="field_tipo_tracado" data-field="tipo_tracado">
+                                        <option value="">Selecione</option>
+                                        <option>Curva</option>
+                                        <option>Não Informado</option>
+                                        <option>Tangente</option>
+                                    </select>
+                                    <button class="error-btn" onclick="openErrorModal('tipo_tracado', 'Tipo de Traçado')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Rampa Máxima (%)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_rampa_maxima" data-field="rampa_maxima" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('rampa_maxima', 'Rampa Máxima (%)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Raio da Curva (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_raio_curva" data-field="raio_curva" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('raio_curva', 'Raio da Curva (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">VMDa</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_vmda" data-field="vmda" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('vmda', 'VMDa')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">VMDc</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_vmdc" data-field="vmdc" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('vmdc', 'VMDc')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Dimensões</h2>
+                        <div class="form-grid form-grid-4">
+                            <div class="form-field">
+                                <span class="form-label">Número de Faixas</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_num_faixas" data-field="num_faixas" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('num_faixas', 'Número de Faixas')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Largura da Faixa (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_largura_faixa" data-field="largura_faixa" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('largura_faixa', 'Largura da Faixa (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Acostamento Direito (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_acost_direito" data-field="acost_direito" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('acost_direito', 'Acostamento Direito (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Acostamento Esquerdo (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_acost_esquerdo" data-field="acost_esquerdo" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('acost_esquerdo', 'Acostamento Esquerdo (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Calçada Direita (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_calcada_direita" data-field="calcada_direita" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('calcada_direita', 'Calçada Direita (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Calçada Esquerda (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_calcada_esquerda" data-field="calcada_esquerda" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('calcada_esquerda', 'Calçada Esquerda (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Gabarito Horizontal (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_gabarito_horiz" data-field="gabarito_horiz" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('gabarito_horiz', 'Gabarito Horizontal (m)')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Gabarito Vertical (m)</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_gabarito_vert" data-field="gabarito_vert" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('gabarito_vert', 'Gabarito Vertical (m)')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">Caracterização dos Tramos</h2>
+                        <div class="tramo-config">
+                            <label>Número de Tramos:</label>
+                            <input type="number" id="numTramosCarac" min="1" max="50" value="1" onchange="updateTramosCarac()">
+                            <span class="tramo-info">+ Complementar (sempre incluso)</span>
+                        </div>
+                        <div id="tramosCaracContainer"></div>
+                    </div>
+                </div>
+
+                <!-- ELEMENTOS COMPONENTES -->
+                <div class="tab-panel" id="elementos">
+                    <div class="tramo-config">
+                        <label>Número de Tramos:</label>
+                        <input type="number" id="numTramosElem" min="1" max="50" value="1" onchange="updateTramosElem()">
+                        <span class="tramo-info">+ Complementar (sempre incluso)</span>
+                    </div>
+
+                    <div class="element-selector">
+                        <div class="element-selector-title">⚠️ Marcar Erro em Elemento</div>
+                        <div class="element-selector-grid">
+                            <div class="element-selector-field">
+                                <label>Tramo</label>
+                                <select id="elemTramo"></select>
+                            </div>
+                            <div class="element-selector-field">
+                                <label>Região</label>
+                                <select id="elemRegiao">
+                                    <option value="Transição">Transição</option>
+                                    <option value="Superestrutura">Superestrutura</option>
+                                    <option value="Apoio">Apoio</option>
+                                    <option value="Infraestrutura">Infraestrutura</option>
+                                </select>
+                            </div>
+                            <div class="element-selector-field">
+                                <label>Família de Elemento</label>
+                                <select id="elemElemento">
+                                    <option value="">Selecione</option>
+                                    <optgroup label="Apoio">
+                                        <option>Ala de concreto armado</option>
+                                        <option>Aparelho de apoio de neoprene fretado</option>
+                                        <option>Aparelho de apoio de placa de chumbo</option>
+                                        <option>Aparelho de apoio de rolo metálico</option>
+                                        <option>Aparelho de apoio de Teflon</option>
+                                        <option>Aparelho de apoio freyssinet</option>
+                                        <option>Aparelho de apoio oscilante</option>
+                                        <option>Aparelho de apoio pêndulo</option>
+                                        <option>Aparelho de apoio tipo 'pot bearing' direcional</option>
+                                        <option>Aparelho de apoio tipo 'pot bearing' Fixo</option>
+                                        <option>Articulação de aço</option>
+                                        <option>Aterro de acesso</option>
+                                        <option>Berço, elemento ou pilarete de nivelamento</option>
+                                        <option>Bloco ou Sapata de concreto armado</option>
+                                        <option>Bloco ou Sapata em alvenaria de pedra</option>
+                                        <option>Camisa metálica de revestimento para estaca</option>
+                                        <option>Consolo auxiliar de concreto armado</option>
+                                        <option>Contenção em cortina de estacas de concreto armado</option>
+                                        <option>Cortina de concreto armado</option>
+                                        <option>Escada de aço</option>
+                                        <option>Escada de concreto armado</option>
+                                        <option>Escada - Patamar de aço</option>
+                                        <option>Escada - Patamar de concreto armado</option>
+                                        <option>Estaca de aço</option>
+                                        <option>Estaca de concreto armado</option>
+                                        <option>Estaca de madeira</option>
+                                        <option>Parede de contraventamento de pilar de concreto armado</option>
+                                        <option>Pilar de aço</option>
+                                        <option>Pilar em colunas de concreto armado</option>
+                                        <option>Pilar parede de alvenaria de pedra</option>
+                                        <option>Pilar parede de concreto armado</option>
+                                        <option>Pilar vazado de concreto armado</option>
+                                        <option>Radier de alvenaria de pedra e de concreto armado</option>
+                                        <option>Reforço estaca - Encamisamento de trecho livre</option>
+                                        <option>Reforço pilar - Encamisamento de pilar</option>
+                                        <option>Revestimento de talude em concreto</option>
+                                        <option>Torre de concreto armado para estaiamento</option>
+                                        <option>Travessa de apoio de aço</option>
+                                        <option>Travessa de apoio de concreto armado</option>
+                                        <option>Travessa de apoio de concreto protendido</option>
+                                        <option>Tubulão ou estação de concreto armado</option>
+                                        <option>Viga de contraventamento de pilar de concreto armado</option>
+                                        <option>Viga de ligação de fundações</option>
+                                    </optgroup>
+                                    <optgroup label="Superestrutura">
+                                        <option>Ancoragens de estais</option>
+                                        <option>Arco celular de concreto armado</option>
+                                        <option>Arco de alvenaria de pedra</option>
+                                        <option>Arco de concreto armado</option>
+                                        <option>Arco de concreto protendido</option>
+                                        <option>Arco metálico</option>
+                                        <option>Banzo inferior de aço de treliça vertical</option>
+                                        <option>Banzo inferior de concreto de treliça vertical</option>
+                                        <option>Banzo superior de aço de treliça vertical</option>
+                                        <option>Banzo superior de concreto de treliça vertical</option>
+                                        <option>Contraventamento de aço</option>
+                                        <option>Dente Gerber de aço</option>
+                                        <option>Dente Gerber de concreto armado</option>
+                                        <option>Dente Gerber de concreto armado com protensão</option>
+                                        <option>Diagonal de aço de treliça vertical</option>
+                                        <option>Diagonal de aço horizontal de travamento</option>
+                                        <option>Diagonal de concreto de treliça vertical</option>
+                                        <option>Diagonal de concreto horizontal de travamento</option>
+                                        <option>Estais</option>
+                                        <option>Laje de concreto armado</option>
+                                        <option>Reforço viga III - Cabo de protensão externo</option>
+                                        <option>Reforço viga IV - Bloqueio de articulação Gerber</option>
+                                        <option>Revestimento em chapas corrugadas de aço</option>
+                                        <option>Transversina de aço de travamento</option>
+                                        <option>Transversina de ligação de aço</option>
+                                        <option>Transversina de ligação de concreto armado</option>
+                                        <option>Transversina de ligação de concreto protendido</option>
+                                        <option>Transversina portante de aço</option>
+                                        <option>Transversina portante de concreto armado</option>
+                                        <option>Transversina portante de concreto protendido</option>
+                                        <option>Treliça de aço</option>
+                                        <option>Treliça de concreto armado</option>
+                                        <option>Viga caixão de aço</option>
+                                        <option>Viga caixão de concreto armado</option>
+                                        <option>Viga caixão de concreto protendido</option>
+                                        <option>Viga I de aço</option>
+                                        <option>Viga I ou T de concreto armado</option>
+                                        <option>Viga I ou T de concreto protendido</option>
+                                        <option>Viga secundária</option>
+                                        <option>Viga U de concreto armado</option>
+                                    </optgroup>
+                                    <optgroup label="Transição">
+                                        <option>Muro de arrimo de alvenaria de pedra</option>
+                                        <option>Muro de arrimo de concreto</option>
+                                        <option>Muro de gabião</option>
+                                        <option>Muro de terra armada</option>
+                                    </optgroup>
+                                    <optgroup label="Infraestrutura">
+                                        <option>Aduelas pré-moldadas</option>
+                                        <option>Balanços progressivos c/articulações</option>
+                                        <option>Balanços progressivos c/continuidade</option>
+                                        <option>Estaiado em avanços progressivos</option>
+                                        <option>Moldado no local</option>
+                                        <option>Não informado</option>
+                                        <option>Ponte empurrada</option>
+                                        <option>Pré-moldado de concreto armado</option>
+                                        <option>Pré-moldado protendido (pós-tensão)</option>
+                                        <option>Pré-moldado protendido (pré-tensão)</option>
+                                        <option>Treliça metálica</option>
+                                        <option>Viga calha pré-moldada</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="element-selector-field">
+                                <label>Tipo de Erro</label>
+                                <select id="elemTipoErro">
+                                    <option value="Medidas inconsistentes com o croqui">Medidas inconsistentes com o croqui</option>
+                                    <option value="Quantidade errada">Quantidade errada</option>
+                                    <option value="Tipo de elemento errado">Tipo de elemento errado</option>
+                                    <option value="Material incorreto">Material incorreto</option>
+                                    <option value="Elemento não identificado nas fotos">Elemento não identificado nas fotos</option>
+                                    <option value="Elemento faltando no cadastro">Elemento faltando no cadastro</option>
+                                    <option value="Código do elemento incorreto">Código do elemento incorreto</option>
+                                    <option value="Localização incorreta">Localização incorreta</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top: var(--ui-spacing-md);">
+                            <label class="obs-label">Observação adicional (opcional):</label>
+                            <textarea class="obs-textarea" id="elemObservacao" placeholder="Descreva detalhes do erro encontrado..." style="min-height: 60px;"></textarea>
+                        </div>
+                        <button class="btn-add-element-error" onclick="addElementError()">+ Adicionar Erro de Elemento</button>
+                    </div>
+
+                    <div class="marked-errors" id="markedElementErrors">
+                        <div class="marked-errors-title">🔴 Erros Marcados em Elementos</div>
+                        <p style="color: var(--ui-text-muted); font-size: var(--ui-font-size-sm);">Nenhum erro de elemento marcado ainda.</p>
+                    </div>
+                </div>
+
+                <!-- ASPECTOS ESPECIAIS -->
+                <div class="tab-panel" id="aspectos">
+                    <div class="section">
+                        <h2 class="section-title">Aspectos Especiais</h2>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-field">
+                                <span class="form-label">Descrição</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_aspecto_desc" data-field="aspecto_desc" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('aspecto_desc', 'Aspecto Especial - Descrição')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Sigla</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_aspecto_sigla" data-field="aspecto_sigla" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('aspecto_sigla', 'Aspecto Especial - Sigla')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEFICIÊNCIAS FUNCIONAIS -->
+                <div class="tab-panel" id="deficiencias">
+                    <div class="section">
+                        <h2 class="section-title">Deficiências Funcionais</h2>
+                        <div class="form-field">
+                            <span class="form-label">Deficiências cadastradas</span>
+                            <div class="field-wrapper">
+                                <textarea class="form-input" id="field_deficiencias" data-field="deficiencias" rows="4" placeholder="" style="border-radius: var(--ui-radius-sm) 0 0 var(--ui-radius-sm);"></textarea>
+                                <button class="error-btn" style="align-self: stretch;" onclick="openErrorModal('deficiencias', 'Deficiências Funcionais')">⚠</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROTAS ALTERNATIVAS -->
+                <div class="tab-panel" id="rotas">
+                    <div class="section">
+                        <h2 class="section-title">Rotas Alternativas</h2>
+                        <div class="form-grid form-grid-3">
+                            <div class="form-field span-2">
+                                <span class="form-label">Rota Alternativa</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_rota" data-field="rota" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('rota', 'Rota Alternativa')">⚠</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <span class="form-label">Acréscimo de KM</span>
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="field_rota_km" data-field="rota_km" placeholder="">
+                                    <button class="error-btn" onclick="openErrorModal('rota_km', 'Acréscimo de KM')">⚠</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OBSERVAÇÕES -->
+                <div class="tab-panel" id="observacoes">
+                    <div class="section">
+                        <h2 class="section-title">Observações</h2>
+                        <div class="form-field">
+                            <span class="form-label">Observações gerais</span>
+                            <div class="field-wrapper">
+                                <textarea class="form-input" id="field_observacoes" data-field="observacoes" rows="6" placeholder="" style="border-radius: var(--ui-radius-sm) 0 0 var(--ui-radius-sm);"></textarea>
+                                <button class="error-btn" style="align-self: stretch;" onclick="openErrorModal('observacoes', 'Observações')">⚠</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ARQUIVOS ANEXOS -->
+                <div class="tab-panel" id="anexos">
+                    <div class="section">
+                        <h2 class="section-title">Arquivos Anexos</h2>
+                        <div class="form-grid form-grid-3" style="margin-bottom: var(--ui-spacing-lg);">
+                            <div class="form-field">
+                                <span class="form-label">Nome do Arquivo</span>
+                                <input type="text" class="form-input no-btn" id="anexoNome" placeholder="Ex: F-18.JPG">
+                            </div>
+                            <div class="form-field span-2">
+                                <span class="form-label">Legenda</span>
+                                <input type="text" class="form-input no-btn" id="anexoLegenda" placeholder="Ex: INFERIOR, DIAGONAL, LD, CRESCENTE...">
+                            </div>
+                        </div>
+                        <div class="form-field" style="margin-bottom: var(--ui-spacing-lg);">
+                            <span class="form-label">Tipo de Erro do Anexo</span>
+                            <select class="form-input form-select no-btn" id="anexoTipoErro" style="max-width: 400px;">
+                                <option value="Foto sem legenda adequada">Foto sem legenda adequada</option>
+                                <option value="Foto duplicada">Foto duplicada</option>
+                                <option value="Qualidade insuficiente">Qualidade insuficiente</option>
+                                <option value="Numeração incorreta">Numeração incorreta</option>
+                                <option value="Falta foto obrigatória">Falta foto obrigatória</option>
+                                <option value="Legenda incorreta">Legenda incorreta</option>
+                            </select>
+                        </div>
+                        <div class="form-field" style="margin-bottom: var(--ui-spacing-lg);">
+                            <span class="form-label">Observação do Anexo (opcional)</span>
+                            <textarea class="obs-textarea" id="anexoObs" placeholder="Descreva o problema..." style="min-height: 60px;"></textarea>
+                        </div>
+                        <button class="btn-add-element-error" onclick="addAnexoError()">+ Adicionar Erro de Anexo</button>
+
+                        <div class="marked-errors" id="markedAnexoErrors" style="margin-top: var(--ui-spacing-lg);">
+                            <div class="marked-errors-title">🔴 Erros Marcados em Anexos</div>
+                            <p style="color: var(--ui-text-muted); font-size: var(--ui-font-size-sm);">Nenhum erro de anexo marcado ainda.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MENSAGENS -->
+                <div class="tab-panel" id="mensagens">
+                    <div class="section">
+                        <h2 class="section-title">Mensagens</h2>
+                        <div class="form-field" style="margin-bottom: var(--ui-spacing-lg);">
+                            <span class="form-label">Nova Mensagem</span>
+                            <textarea class="obs-textarea" id="novaMensagem" placeholder="Digite sua mensagem..." style="min-height: 100px;"></textarea>
+                        </div>
+                        <button class="btn-enviar" onclick="addMensagem()">Adicionar Mensagem</button>
+                        
+                        <div id="mensagensContainer" style="margin-top: var(--ui-spacing-xl);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar-report">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">
+                    📋 Relatório de Auditoria
+                    <span class="error-counter" id="errorCounter">0</span>
+                </h2>
+            </div>
+            <div class="sidebar-body">
+                <textarea class="report-textarea" id="reportText" placeholder="Os erros marcados aparecerão aqui automaticamente..."></textarea>
+            </div>
+            <div class="sidebar-footer">
+                <button class="btn-copy" id="btnCopy" onclick="copyReport()">📋 Copiar Mensagem</button>
+                <button class="btn-clear" onclick="clearAllErrors()">🗑️ Limpar Todos os Erros</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-backdrop" id="errorModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚠️ Marcar Inconsistência</h3>
+                <button class="modal-close" onclick="closeErrorModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field-info">
+                    <p><strong>Campo:</strong> <span id="modalCampo">-</span></p>
+                    <p><strong>Valor informado:</strong> <span id="modalValor">-</span></p>
+                </div>
+                <div class="error-options-title">Selecione o(s) tipo(s) de erro:</div>
+                <div class="error-options" id="errorOptions"></div>
+                <div class="obs-section">
+                    <label class="obs-label">Observação adicional (opcional):</label>
+                    <textarea class="obs-textarea" id="modalObservacao" placeholder="Descreva detalhes do erro..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-clear-error" id="btnClearError" onclick="clearFieldError()" style="display: none;">Remover Erro</button>
+                <button class="btn-cancel" onclick="closeErrorModal()">Cancelar</button>
+                <button class="btn-apply" onclick="applyError()">Aplicar Erro</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TIPOS DE ERRO
+        const tiposErro = {
+            default: [
+                "Divergente do croqui",
+                "Divergente do relatório fotográfico",
+                "Erro de digitação",
+                "Valor inconsistente",
+                "Informação incompleta",
+                "Campo obrigatório não preenchido"
+            ],
+            medidas: [
+                "Medida divergente do croqui",
+                "Unidade de medida incorreta",
+                "Valor fora do padrão esperado",
+                "Cálculo incorreto"
+            ],
+            coordenadas: [
+                "Coordenada fora da região esperada",
+                "Formato incorreto",
+                "Ponto muito distante da estrutura"
+            ],
+            rotas: [
+                "Rota não existe/bloqueada",
+                "Acréscimo de km incorreto",
+                "Descrição da rota incompleta"
+            ],
+            aspectos: [
+                "Aspecto não se aplica à estrutura",
+                "Aspecto faltando",
+                "Classificação incorreta"
+            ],
+            tramos: [
+                "Tipo de estrutura incorreto",
+                "Sistema construtivo incorreto",
+                "Extensão divergente do croqui",
+                "Altura inconsistente",
+                "Continuidade incorreta"
+            ]
+        };
+
+        const fieldCategories = {
+            comprimento: 'medidas', largura: 'medidas', local_via: 'medidas',
+            latitude: 'coordenadas', longitude: 'coordenadas', altitude: 'coordenadas',
+            rota: 'rotas', rota_km: 'rotas',
+            aspecto_desc: 'aspectos', aspecto_sigla: 'aspectos',
+            num_faixas: 'medidas', largura_faixa: 'medidas', acost_direito: 'medidas',
+            acost_esquerdo: 'medidas', calcada_direita: 'medidas', calcada_esquerda: 'medidas',
+            gabarito_horiz: 'medidas', gabarito_vert: 'medidas', vmda: 'medidas', vmdc: 'medidas'
+        };
+
+        // ESTADO
+        let appState = {
+            errors: {},
+            elementErrors: [],
+            anexoErrors: [],
+            mensagens: [],
+            currentField: null,
+            currentFieldLabel: null
+        };
+
+        // TABS
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // SYNC OBRA INFO
+        function syncObraInfo() {
+            updateReport();
+        }
+
+        // TRAMOS
+        function updateTramosCarac() {
+            const num = parseInt(document.getElementById('numTramosCarac').value) || 1;
+            document.getElementById('numTramosElem').value = num;
+            renderTramosCarac(num);
+            updateTramosSelect(num);
+        }
+
+        function updateTramosElem() {
+            const num = parseInt(document.getElementById('numTramosElem').value) || 1;
+            document.getElementById('numTramosCarac').value = num;
+            renderTramosCarac(num);
+            updateTramosSelect(num);
+        }
+
+        function renderTramosCarac(num) {
+            const container = document.getElementById('tramosCaracContainer');
+            let html = `<table class="view-table">
+                <thead><tr>
+                    <th>Tramo</th><th>Tipo de Estrutura</th><th>Sistema Construtivo</th>
+                    <th>Extensão (m)</th><th>Alt. Mín.</th><th>Alt. Máx.</th><th>Continuidade</th><th></th>
+                </tr></thead><tbody>`;
+            
+            for (let i = 1; i <= num; i++) {
+                html += `<tr>
+                    <td><strong>${i}</strong></td>
+                    <td><input type="text" class="form-input no-btn" style="width:150px;" id="tramo_${i}_tipo" placeholder=""></td>
+                    <td><select class="form-input form-select no-btn" style="width:200px;" id="tramo_${i}_sistema">
+                        <option value="">Selecione</option>
+                        <option>Aduelas pré-moldadas</option>
+                        <option>Balanços progressivos c/articulações</option>
+                        <option>Balanços progressivos c/continuidade</option>
+                        <option>Estaiado em avanços progressivos</option>
+                        <option>Moldado no local</option>
+                        <option>Não informado</option>
+                        <option>Ponte empurrada</option>
+                        <option>Pré-moldado de concreto armado</option>
+                        <option>Pré-moldado protendido (pós-tensão)</option>
+                        <option>Pré-moldado protendido (pré-tensão)</option>
+                        <option>Treliça metálica</option>
+                        <option>Viga calha pré-moldada</option>
+                    </select></td>
+                    <td><input type="text" class="form-input no-btn" style="width:80px;" id="tramo_${i}_ext" placeholder=""></td>
+                    <td><input type="text" class="form-input no-btn" style="width:70px;" id="tramo_${i}_min" placeholder=""></td>
+                    <td><input type="text" class="form-input no-btn" style="width:70px;" id="tramo_${i}_max" placeholder=""></td>
+                    <td><input type="text" class="form-input no-btn" style="width:100px;" id="tramo_${i}_cont" placeholder=""></td>
+                    <td><button class="table-error-btn" onclick="openErrorModal('tramo_${i}', 'Tramo ${i}')">⚠</button></td>
+                </tr>`;
+            }
+            
+            // Complementar
+            html += `<tr style="background: var(--ui-bg-secondary);">
+                <td><strong>C</strong></td>
+                <td><input type="text" class="form-input no-btn" style="width:150px;" id="tramo_C_tipo" placeholder=""></td>
+                <td><select class="form-input form-select no-btn" style="width:200px;" id="tramo_C_sistema">
+                    <option value="">Selecione</option>
+                    <option>Aduelas pré-moldadas</option>
+                    <option>Balanços progressivos c/articulações</option>
+                    <option>Balanços progressivos c/continuidade</option>
+                    <option>Estaiado em avanços progressivos</option>
+                    <option>Moldado no local</option>
+                    <option>Não informado</option>
+                    <option>Ponte empurrada</option>
+                    <option>Pré-moldado de concreto armado</option>
+                    <option>Pré-moldado protendido (pós-tensão)</option>
+                    <option>Pré-moldado protendido (pré-tensão)</option>
+                    <option>Treliça metálica</option>
+                    <option>Viga calha pré-moldada</option>
+                </select></td>
+                <td><input type="text" class="form-input no-btn" style="width:80px;" id="tramo_C_ext" placeholder=""></td>
+                <td><input type="text" class="form-input no-btn" style="width:70px;" id="tramo_C_min" placeholder=""></td>
+                <td><input type="text" class="form-input no-btn" style="width:70px;" id="tramo_C_max" placeholder=""></td>
+                <td><input type="text" class="form-input no-btn" style="width:100px;" id="tramo_C_cont" placeholder=""></td>
+                <td><button class="table-error-btn" onclick="openErrorModal('tramo_C', 'Tramo Complementar')">⚠</button></td>
+            </tr>`;
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateTramosSelect(num) {
+            const select = document.getElementById('elemTramo');
+            let html = '';
+            for (let i = 1; i <= num; i++) {
+                html += `<option value="${i}">${i}</option>`;
+            }
+            html += '<option value="C">C - Complementar</option>';
+            select.innerHTML = html;
+        }
+
+        // MODAL
+        function openErrorModal(fieldId, fieldLabel) {
+            appState.currentField = fieldId;
+            appState.currentFieldLabel = fieldLabel;
+
+            document.getElementById('modalCampo').textContent = fieldLabel;
+            
+            const fieldEl = document.getElementById('field_' + fieldId) || document.getElementById(fieldId);
+            const valor = fieldEl ? (fieldEl.value || '(vazio)') : '(vazio)';
+            document.getElementById('modalValor').textContent = valor;
+
+            const category = fieldCategories[fieldId] || (fieldId.startsWith('tramo_') ? 'tramos' : 'default');
+            const erros = tiposErro[category];
+
+            document.getElementById('errorOptions').innerHTML = erros.map(erro => `
+                <div class="error-option" onclick="toggleErrorOption(this)">
+                    <input type="checkbox" value="${erro}">
+                    <label>${erro}</label>
+                </div>
+            `).join('');
+
+            const existing = appState.errors[fieldId];
+            if (existing) {
+                existing.tipos.forEach(tipo => {
+                    const cb = document.querySelector(`#errorOptions input[value="${tipo}"]`);
+                    if (cb) { cb.checked = true; cb.closest('.error-option').classList.add('selected'); }
+                });
+                document.getElementById('modalObservacao').value = existing.observacao || '';
+                document.getElementById('btnClearError').style.display = 'block';
+            } else {
+                document.getElementById('modalObservacao').value = '';
+                document.getElementById('btnClearError').style.display = 'none';
+            }
+
+            document.getElementById('errorModal').classList.add('show');
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').classList.remove('show');
+        }
+
+        function toggleErrorOption(el) {
+            const cb = el.querySelector('input[type="checkbox"]');
+            cb.checked = !cb.checked;
+            el.classList.toggle('selected', cb.checked);
+        }
+
+        function applyError() {
+            const tipos = Array.from(document.querySelectorAll('#errorOptions input:checked')).map(cb => cb.value);
+            const obs = document.getElementById('modalObservacao').value.trim();
+
+            if (tipos.length === 0 && !obs) {
+                alert('Selecione pelo menos um tipo de erro ou adicione uma observação.');
+                return;
+            }
+
+            const fieldEl = document.getElementById('field_' + appState.currentField) || document.getElementById(appState.currentField);
+            const valor = fieldEl ? fieldEl.value : '';
+
+            appState.errors[appState.currentField] = {
+                fieldLabel: appState.currentFieldLabel,
+                valor: valor,
+                tipos: tipos,
+                observacao: obs
+            };
+
+            updateFieldVisual(appState.currentField, true);
+            updateReport();
+            updateTabBadges();
+            closeErrorModal();
+        }
+
+        function clearFieldError() {
+            delete appState.errors[appState.currentField];
+            updateFieldVisual(appState.currentField, false);
+            updateReport();
+            updateTabBadges();
+            closeErrorModal();
+        }
+
+        function updateFieldVisual(fieldId, hasError) {
+            document.querySelectorAll('.error-btn, .table-error-btn').forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes(fieldId)) {
+                    btn.classList.toggle('has-error', hasError);
+                }
+            });
+            const input = document.getElementById('field_' + fieldId);
+            if (input) input.classList.toggle('has-error', hasError);
+        }
+
+        // ELEMENT ERRORS
+        function addElementError() {
+            const tramo = document.getElementById('elemTramo').value;
+            const regiao = document.getElementById('elemRegiao').value;
+            const elemento = document.getElementById('elemElemento').value;
+            const tipoErro = document.getElementById('elemTipoErro').value;
+            const obs = document.getElementById('elemObservacao').value.trim();
+
+            if (!elemento) { alert('Selecione um elemento.'); return; }
+
+            appState.elementErrors.push({
+                id: 'elem_' + Date.now(),
+                tramo, regiao, elemento, tipoErro, observacao: obs
+            });
+
+            document.getElementById('elemObservacao').value = '';
+            renderElementErrors();
+            updateReport();
+            updateTabBadges();
+        }
+
+        function removeElementError(id) {
+            appState.elementErrors = appState.elementErrors.filter(e => e.id !== id);
+            renderElementErrors();
+            updateReport();
+            updateTabBadges();
+        }
+
+        function renderElementErrors() {
+            const container = document.getElementById('markedElementErrors');
+            if (appState.elementErrors.length === 0) {
+                container.innerHTML = `<div class="marked-errors-title">🔴 Erros Marcados em Elementos</div>
+                    <p style="color: var(--ui-text-muted); font-size: var(--ui-font-size-sm);">Nenhum erro de elemento marcado ainda.</p>`;
+                return;
+            }
+            container.innerHTML = `<div class="marked-errors-title">🔴 Erros Marcados em Elementos (${appState.elementErrors.length})</div>` +
+                appState.elementErrors.map(e => `
+                    <div class="marked-error-item">
+                        <div class="marked-error-info">
+                            <strong>Tramo ${e.tramo}</strong> | ${e.regiao} | ${e.elemento}<br>
+                            <span style="color: var(--ui-error);">${e.tipoErro}</span>
+                            ${e.observacao ? `<br><em style="color: var(--ui-text-muted);">${e.observacao}</em>` : ''}
+                        </div>
+                        <button class="marked-error-remove" onclick="removeElementError('${e.id}')">×</button>
+                    </div>
+                `).join('');
+        }
+
+        // ANEXO ERRORS
+        function addAnexoError() {
+            const nome = document.getElementById('anexoNome').value.trim();
+            const legenda = document.getElementById('anexoLegenda').value.trim();
+            const tipoErro = document.getElementById('anexoTipoErro').value;
+            const obs = document.getElementById('anexoObs').value.trim();
+
+            if (!nome) { alert('Informe o nome do arquivo.'); return; }
+
+            appState.anexoErrors.push({
+                id: 'anexo_' + Date.now(),
+                nome, legenda, tipoErro, observacao: obs
+            });
+
+            document.getElementById('anexoNome').value = '';
+            document.getElementById('anexoLegenda').value = '';
+            document.getElementById('anexoObs').value = '';
+            renderAnexoErrors();
+            updateReport();
+            updateTabBadges();
+        }
+
+        function removeAnexoError(id) {
+            appState.anexoErrors = appState.anexoErrors.filter(e => e.id !== id);
+            renderAnexoErrors();
+            updateReport();
+            updateTabBadges();
+        }
+
+        function renderAnexoErrors() {
+            const container = document.getElementById('markedAnexoErrors');
+            if (appState.anexoErrors.length === 0) {
+                container.innerHTML = `<div class="marked-errors-title">🔴 Erros Marcados em Anexos</div>
+                    <p style="color: var(--ui-text-muted); font-size: var(--ui-font-size-sm);">Nenhum erro de anexo marcado ainda.</p>`;
+                return;
+            }
+            container.innerHTML = `<div class="marked-errors-title">🔴 Erros Marcados em Anexos (${appState.anexoErrors.length})</div>` +
+                appState.anexoErrors.map(e => `
+                    <div class="marked-error-item">
+                        <div class="marked-error-info">
+                            <strong>${e.nome}</strong> ${e.legenda ? `| ${e.legenda}` : ''}<br>
+                            <span style="color: var(--ui-error);">${e.tipoErro}</span>
+                            ${e.observacao ? `<br><em style="color: var(--ui-text-muted);">${e.observacao}</em>` : ''}
+                        </div>
+                        <button class="marked-error-remove" onclick="removeAnexoError('${e.id}')">×</button>
+                    </div>
+                `).join('');
+        }
+
+        // MENSAGENS
+        function addMensagem() {
+            const texto = document.getElementById('novaMensagem').value.trim();
+            if (!texto) { alert('Digite uma mensagem.'); return; }
+
+            appState.mensagens.push({
+                id: 'msg_' + Date.now(),
+                texto,
+                data: new Date().toLocaleString('pt-BR')
+            });
+
+            document.getElementById('novaMensagem').value = '';
+            renderMensagens();
+            updateReport();
+        }
+
+        function renderMensagens() {
+            const container = document.getElementById('mensagensContainer');
+            if (appState.mensagens.length === 0) {
+                container.innerHTML = '<p style="color: var(--ui-text-muted); text-align: center;">Nenhuma mensagem adicionada.</p>';
+                return;
+            }
+            container.innerHTML = appState.mensagens.map(m => `
+                <div class="mensagem-item">
+                    <div class="mensagem-header">
+                        <span class="mensagem-autor">Auditor</span>
+                        <span class="mensagem-data">${m.data}</span>
+                    </div>
+                    <div class="mensagem-texto">${m.texto}</div>
+                </div>
+            `).join('');
+        }
+
+        // REPORT
+        function updateReport() {
+            const nome = document.getElementById('obraNome').value.trim();
+            const codigo = document.getElementById('obraCodigo').value.trim();
+            const uf = document.getElementById('obraUF').value;
+
+            const fieldCount = Object.keys(appState.errors).length;
+            const elemCount = appState.elementErrors.length;
+            const anexoCount = appState.anexoErrors.length;
+            const total = fieldCount + elemCount + anexoCount;
+
+            document.getElementById('errorCounter').textContent = total;
+
+            if (total === 0 && appState.mensagens.length === 0) {
+                document.getElementById('reportText').value = '';
+                return;
+            }
+
+            let report = `RELATÓRIO DE AUDITORIA\n`;
+            if (nome) report += `Obra: ${nome}\n`;
+            if (codigo) report += `Código: ${codigo}`;
+            if (uf) report += ` | UF: ${uf}`;
+            report += `\nData: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}\n`;
+            report += `${'═'.repeat(50)}\n\n`;
+
+            // Field errors
+            if (fieldCount > 0) {
+                report += `📌 CAMPOS COM INCONSISTÊNCIAS\n${'-'.repeat(40)}\n`;
+                Object.entries(appState.errors).forEach(([key, err], idx) => {
+                    report += `\n${idx + 1}. Campo: [${err.fieldLabel}]\n`;
+                    if (err.valor) report += `   Valor: "${err.valor}"\n`;
+                    if (err.tipos.length) report += `   Erro(s): ${err.tipos.join('; ')}\n`;
+                    if (err.observacao) report += `   Obs: ${err.observacao}\n`;
+                });
+                report += '\n';
+            }
+
+            // Element errors
+            if (elemCount > 0) {
+                report += `📌 ELEMENTOS COMPONENTES\n${'-'.repeat(40)}\n`;
+                appState.elementErrors.forEach((e, idx) => {
+                    report += `\n${idx + 1}. Tramo ${e.tramo} | ${e.regiao}\n`;
+                    report += `   Elemento: ${e.elemento}\n`;
+                    report += `   Erro: ${e.tipoErro}\n`;
+                    if (e.observacao) report += `   Obs: ${e.observacao}\n`;
+                });
+                report += '\n';
+            }
+
+            // Anexo errors
+            if (anexoCount > 0) {
+                report += `📌 ARQUIVOS ANEXOS\n${'-'.repeat(40)}\n`;
+                appState.anexoErrors.forEach((e, idx) => {
+                    report += `\n${idx + 1}. Arquivo: ${e.nome}\n`;
+                    if (e.legenda) report += `   Legenda: ${e.legenda}\n`;
+                    report += `   Erro: ${e.tipoErro}\n`;
+                    if (e.observacao) report += `   Obs: ${e.observacao}\n`;
+                });
+                report += '\n';
+            }
+
+            // Mensagens
+            if (appState.mensagens.length > 0) {
+                report += `📌 MENSAGENS\n${'-'.repeat(40)}\n`;
+                appState.mensagens.forEach((m, idx) => {
+                    report += `\n${idx + 1}. [${m.data}]\n   ${m.texto}\n`;
+                });
+                report += '\n';
+            }
+
+            report += `${'═'.repeat(50)}\n`;
+            report += `TOTAL DE INCONSISTÊNCIAS: ${total}`;
+
+            document.getElementById('reportText').value = report;
+        }
+
+        // TAB BADGES
+        function updateTabBadges() {
+            document.querySelectorAll('.tab-badge').forEach(b => b.remove());
+
+            const tabCounts = { identificacao: 0, caracteristicas: 0, elementos: 0, aspectos: 0, deficiencias: 0, rotas: 0, observacoes: 0, anexos: 0 };
+
+            Object.keys(appState.errors).forEach(key => {
+                if (['identificacao','comprimento','largura','trem_tipo','ano_construcao','natureza','uf','via','local_via','cidade','latitude','longitude','altitude','snv_codigo','snv_versao','superintendencia','unidade_local','adm_dnit','administrador','projetista','construtor'].includes(key)) tabCounts.identificacao++;
+                else if (['atendimento_snv','tipo_regiao','tipo_tracado','rampa_maxima','raio_curva','vmda','vmdc','num_faixas','largura_faixa','acost_direito','acost_esquerdo','calcada_direita','calcada_esquerda','gabarito_horiz','gabarito_vert'].includes(key) || key.startsWith('tramo_')) tabCounts.caracteristicas++;
+                else if (['aspecto_desc','aspecto_sigla'].includes(key)) tabCounts.aspectos++;
+                else if (key === 'deficiencias') tabCounts.deficiencias++;
+                else if (['rota','rota_km'].includes(key)) tabCounts.rotas++;
+                else if (key === 'observacoes') tabCounts.observacoes++;
+            });
+
+            tabCounts.elementos += appState.elementErrors.length;
+            tabCounts.anexos += appState.anexoErrors.length;
+
+            Object.entries(tabCounts).forEach(([tab, count]) => {
+                if (count > 0) {
+                    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+                    if (btn) {
+                        const badge = document.createElement('span');
+                        badge.className = 'tab-badge';
+                        badge.textContent = count;
+                        btn.appendChild(badge);
+                    }
+                }
+            });
+        }
+
+        // COPY & CLEAR
+        function copyReport() {
+            const text = document.getElementById('reportText').value;
+            if (!text) { alert('Nenhum erro para copiar.'); return; }
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('btnCopy');
+                btn.classList.add('copied');
+                btn.innerHTML = '✓ Copiado!';
+                setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 Copiar Mensagem'; }, 2000);
+            });
+        }
+
+        function clearAllErrors() {
+            if (Object.keys(appState.errors).length === 0 && appState.elementErrors.length === 0 && appState.anexoErrors.length === 0) return;
+            if (!confirm('Limpar TODOS os erros marcados?')) return;
+
+            Object.keys(appState.errors).forEach(k => updateFieldVisual(k, false));
+            appState.errors = {};
+            appState.elementErrors = [];
+            appState.anexoErrors = [];
+
+            renderElementErrors();
+            renderAnexoErrors();
+            updateReport();
+            updateTabBadges();
+        }
+
+        // INIT
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTramosCarac();
+            renderMensagens();
+        });
+    </script>
+</body>
+</html>
