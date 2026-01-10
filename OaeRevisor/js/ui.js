@@ -35,6 +35,9 @@ const UI = {
             const num = parseInt(e.target.value) || 1;
             Sync.updateTramos(num);
         });
+
+        // Tramo switch refresh families
+        document.getElementById('bulkTramo')?.addEventListener('change', () => this.renderFamilies());
     },
 
     updateRoleUI() {
@@ -105,8 +108,8 @@ const UI = {
             html += renderRow(i, i);
         }
 
-        // Sempre adicionar tramo C (Complementar) ao final
-        html += renderRow('C', 'C (Complementar)');
+        // Tramo C (Complementar) não é exibido na tabela de características funcionais
+        // mas continua existindo internamente e disponível para elementos.
 
         html += `</tbody></table>`;
         container.innerHTML = html;
@@ -133,16 +136,44 @@ const UI = {
     renderFamilies(filterRegion = null) {
         const select = document.getElementById('bulkFamilia');
         let html = '<option value="">Selecione</option>';
+        const bulkTramo = document.getElementById('bulkTramo')?.value;
+        const regionSelect = document.getElementById('bulkRegiaoFiltro');
+        const regionContainer = regionSelect?.closest('.form-field');
 
-        const regions = filterRegion ? [filterRegion] : Object.keys(ELEMENT_FAMILIES);
-
-        regions.forEach(region => {
-            html += `<optgroup label="${region}">`;
-            ELEMENT_FAMILIES[region].forEach(element => {
-                html += `<option>${element}</option>`;
+        if (bulkTramo === 'C') {
+            // Se for tramo C, bloquear região como 'Complementar'
+            if (regionSelect) {
+                // Adiciona opção complementar se não existir
+                if (![...regionSelect.options].some(o => o.value === 'Complementar')) {
+                    const opt = new Option('Complementar', 'Complementar');
+                    regionSelect.add(opt);
+                }
+                regionSelect.value = 'Complementar';
+                regionSelect.disabled = true;
+            }
+            
+            COMPLEMENTARY_ELEMENTS.forEach(element => {
+                html += `<option value="${element}">${element}</option>`;
             });
-            html += `</optgroup>`;
-        });
+        } else {
+            // Comportamento normal para tramos numéricos
+            if (regionSelect) {
+                regionSelect.disabled = false;
+                // Remove opção complementar se existir
+                const compOpt = [...regionSelect.options].find(o => o.value === 'Complementar');
+                if (compOpt) regionSelect.remove(compOpt.index);
+                if (regionSelect.value === 'Complementar') regionSelect.value = '';
+            }
+            
+            const regions = filterRegion ? [filterRegion] : Object.keys(ELEMENT_FAMILIES);
+            regions.forEach(region => {
+                html += `<optgroup label="${region}">`;
+                ELEMENT_FAMILIES[region].forEach(element => {
+                    html += `<option value="${element}">${element}</option>`;
+                });
+                html += `</optgroup>`;
+            });
+        }
 
         select.innerHTML = html;
     },
@@ -175,10 +206,14 @@ const UI = {
 
         // Auto-detectar região pela família selecionada
         let regiao = '';
-        for (const [reg, elementos] of Object.entries(ELEMENT_FAMILIES)) {
-            if (elementos.includes(familia)) {
-                regiao = reg;
-                break;
+        if (tramo === 'C') {
+            regiao = 'Complementar';
+        } else {
+            for (const [reg, elementos] of Object.entries(ELEMENT_FAMILIES)) {
+                if (elementos.includes(familia)) {
+                    regiao = reg;
+                    break;
+                }
             }
         }
 
@@ -263,71 +298,97 @@ const UI = {
     },
 
     editElementError(id) {
-        const elem = appState.elementErrors.find(e => e.id === id);
-        if (!elem) return;
+    const elem = appState.elementErrors.find(e => e.id === id);
+    if (!elem) return;
 
-        const card = document.getElementById('elem_card_' + id);
-        if (!card) return;
+    const card = document.getElementById('elem_card_' + id);
+    if (!card) return;
 
-        // Build options for tramo (incluindo C)
-        const tramoOptions = [];
-        for (let i = 1; i <= appState.work.numTramos; i++) {
-            tramoOptions.push(`<option value="${i}" ${elem.tramo == i ? 'selected' : ''}>${i}</option>`);
-        }
-        tramoOptions.push(`<option value="C" ${elem.tramo === 'C' ? 'selected' : ''}>C (Complementar)</option>`);
+    const renderEditOptions = (currentTramo) => {
+        let regiaoHtml = '';
+        let familiaHtml = '<option value="">Selecione</option>';
 
-        // Build options for regiao
-        const regioes = ['Apoio', 'Superestrutura', 'Transição'];
-        const regiaoOptions = regioes.map(r =>
-            `<option value="${r}" ${elem.regiao === r ? 'selected' : ''}>${r}</option>`
-        ).join('');
-
-        // Build options for familia (all elements from selected region)
-        let familiaOptions = '<option value="">Selecione</option>';
-        Object.keys(ELEMENT_FAMILIES).forEach(region => {
-            familiaOptions += `<optgroup label="${region}">`;
-            ELEMENT_FAMILIES[region].forEach(el => {
-                familiaOptions += `<option ${elem.familia === el ? 'selected' : ''}>${el}</option>`;
+        if (currentTramo === 'C') {
+            regiaoHtml = `<option value="Complementar" selected>Complementar</option>`;
+            COMPLEMENTARY_ELEMENTS.forEach(el => {
+                familiaHtml += `<option value="${el}" ${elem.familia === el ? 'selected' : ''}>${el}</option>`;
             });
-            familiaOptions += `</optgroup>`;
-        });
+        } else {
+            const regioes = ['Apoio', 'Superestrutura', 'Transição'];
+            regiaoHtml = regioes.map(r =>
+                `<option value="${r}" ${elem.regiao === r ? 'selected' : ''}>${r}</option>`
+            ).join('');
 
-        // Build options for erro
-        const erroOptions = ELEMENT_ERROR_TYPES.map(tipo =>
-            `<option ${elem.erro === tipo ? 'selected' : ''}>${tipo}</option>`
-        ).join('');
+            Object.keys(ELEMENT_FAMILIES).forEach(region => {
+                familiaHtml += `<optgroup label="${region}">`;
+                ELEMENT_FAMILIES[region].forEach(el => {
+                    familiaHtml += `<option value="${el}" ${elem.familia === el ? 'selected' : ''}>${el}</option>`;
+                });
+                familiaHtml += `</optgroup>`;
+            });
+        }
+        return { regiaoHtml, familiaHtml };
+    };
 
-        card.innerHTML = `
-            <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px;">
-                <div style="font-weight: 700; margin-bottom: 10px; color: var(--primary);">✏️ Editando Elemento</div>
-                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="form-field">
-                        <label class="form-label">Tramo</label>
-                        <select class="form-input no-btn" id="edit_tramo_${id}">${tramoOptions.join('')}</select>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">Região</label>
-                        <select class="form-input no-btn" id="edit_regiao_${id}">${regiaoOptions}</select>
-                    </div>
-                    <div class="form-field" style="grid-column: span 2;">
-                        <label class="form-label">Família de Elemento</label>
-                        <select class="form-input no-btn" id="edit_familia_${id}" style="max-height: 150px;">${familiaOptions}</select>
-                    </div>
-                    <div class="form-field" style="grid-column: span 2;">
-                        <label class="form-label">Inconsistência</label>
-                        <select class="form-input no-btn" id="edit_erro_${id}">${erroOptions}</select>
-                    </div>
-                    <div class="form-field" style="grid-column: span 2;">
-                        <label class="form-label">Observação</label>
-                        <textarea class="form-input no-btn" id="edit_obs_${id}" style="height: 80px;">${elem.obs || ''}</textarea>
-                    </div>
+    const initial = renderEditOptions(elem.tramo);
+
+    // Build options for tramo (incluindo C)
+    const tramoOptions = [];
+    for (let i = 1; i <= appState.work.numTramos; i++) {
+        tramoOptions.push(`<option value="${i}" ${elem.tramo == i ? 'selected' : ''}>${i}</option>`);
+    }
+    tramoOptions.push(`<option value="C" ${elem.tramo === 'C' ? 'selected' : ''}>C (Complementar)</option>`);
+
+    // Build options for erro
+    const erroOptions = ELEMENT_ERROR_TYPES.map(tipo =>
+        `<option ${elem.erro === tipo ? 'selected' : ''}>${tipo}</option>`
+    ).join('');
+
+    card.innerHTML = `
+        <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px;">
+            <div style="font-weight: 700; margin-bottom: 10px; color: var(--primary);">✏️ Editando Elemento</div>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-field">
+                    <label class="form-label">Tramo</label>
+                    <select class="form-input no-btn" id="edit_tramo_${id}">${tramoOptions.join('')}</select>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;">
-                    <button class="btn btn-secondary" onclick="UI.renderElementsList()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="UI.updateElementError('${id}')">💾 Salvar</button>
+                <div class="form-field">
+                    <label class="form-label">Região</label>
+                    <select class="form-input no-btn" id="edit_regiao_${id}">${initial.regiaoHtml}</select>
+                </div>
+                <div class="form-field" style="grid-column: span 2;">
+                    <label class="form-label">Família de Elemento</label>
+                    <select class="form-input no-btn" id="edit_familia_${id}" style="max-height: 150px;">${initial.familiaHtml}</select>
+                </div>
+                <div class="form-field" style="grid-column: span 2;">
+                    <label class="form-label">Inconsistência</label>
+                    <select class="form-input no-btn" id="edit_erro_${id}">${erroOptions}</select>
+                </div>
+                <div class="form-field" style="grid-column: span 2;">
+                    <label class="form-label">Observação</label>
+                    <textarea class="form-input no-btn" id="edit_obs_${id}" style="height: 80px;">${elem.obs || ''}</textarea>
                 </div>
             </div>
-        `;
+            <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="UI.renderElementsList()">Cancelar</button>
+                <button class="btn btn-primary" onclick="UI.updateElementError('${id}')">💾 Salvar</button>
+            </div>
+        </div>
+    `;
+
+    // Add listener for tramo change in edit view
+    document.getElementById(`edit_tramo_${id}`).addEventListener('change', (e) => {
+        const tramoVal = e.target.value;
+        const options = renderEditOptions(tramoVal);
+        const regiaoSelect = document.getElementById(`edit_regiao_${id}`);
+        const familiaSelect = document.getElementById(`edit_familia_${id}`);
+        regiaoSelect.innerHTML = options.regiaoHtml;
+        familiaSelect.innerHTML = options.familiaHtml;
+        regiaoSelect.disabled = (tramoVal === 'C');
+    });
+    
+    // Disable region if initially C
+    if (elem.tramo === 'C') document.getElementById(`edit_regiao_${id}`).disabled = true;
     },
 
     updateElementError(id) {
@@ -1040,9 +1101,111 @@ const UI = {
         Export.all(); // Shortcut for now
     },
 
-    showToast(msg) {
+    // --- WORK MANAGEMENT ---
+    async showWorksModal() {
+        const works = await DB.listAllWorks();
+        const modal = document.createElement('div');
+        modal.className = 'modal-backdrop show';
+        modal.id = 'worksManagementModal';
+        
+        let html = `
+            <div class="modal" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">📂 Gerenciar Obras Salvas</h3>
+                    <button class="modal-close" onclick="document.getElementById('worksManagementModal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn btn-secondary" onclick="Export.all()">📥 Exportar Todas (Backup)</button>
+                    </div>
+                    <table class="view-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome da Obra</th>
+                                <th>Avaliador</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${works.length === 0 ? '<tr><td colspan="4" style="text-align:center">Nenhuma obra salva.</td></tr>' : ''}
+                            ${works.map(w => `
+                                <tr>
+                                    <td><strong>${w.work?.codigo || w.codigo}</strong></td>
+                                    <td>${w.work?.nome || '-'}</td>
+                                    <td>${w.work?.avaliador || '-'}</td>
+                                    <td style="display: flex; gap: 8px;">
+                                        <button class="btn-success" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;" onclick="UI.loadWork('${w.work?.codigo || w.codigo}')">Abrir</button>
+                                        <button class="btn-primary" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;" onclick="UI.exportSpecific('${w.work?.codigo || w.codigo}')">Exportar</button>
+                                        <button class="btn-danger" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;" onclick="UI.deleteWork('${w.work?.codigo || w.codigo}')">Excluir</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="document.getElementById('worksManagementModal').remove()">Fechar</button>
+                </div>
+            </div>`;
+        
+        modal.innerHTML = html;
+        document.body.appendChild(modal);
+    },
+
+    async loadWork(codigo) {
+        try {
+            const data = await DB.loadObra(codigo);
+            if (data) {
+                Sync.syncFromDB(data);
+                document.getElementById('worksManagementModal')?.remove();
+                this.showToast(`✅ Obra "${codigo}" carregada com sucesso!`);
+            }
+        } catch (err) {
+            console.error('Failed to load work:', err);
+            alert('Erro ao carregar a obra.');
+        }
+    },
+
+    async deleteWork(codigo) {
+        if (!confirm(`Tem certeza que deseja excluir permanentemente a obra "${codigo}"?`)) return;
+        
+        try {
+            // Se for a obra atual, limpar appState
+            if (appState.work.codigo === codigo) {
+                // Poderia resetar o state aqui se desejado
+            }
+            
+            // Deletar do IndexedDB
+            const transaction = DB.db.transaction(['obras'], 'readwrite');
+            const store = transaction.objectStore('obras');
+            store.delete(codigo);
+            
+            this.showToast(`🗑️ Obra "${codigo}" excluída.`);
+            document.getElementById('worksManagementModal')?.remove();
+            this.showWorksModal(); // Refresh list
+        } catch (err) {
+            console.error('Delete failed:', err);
+            alert('Erro ao excluir obra.');
+        }
+    },
+
+    async exportSpecific(codigo) {
+        try {
+            const data = await DB.loadObra(codigo);
+            if (!data) return;
+            
+            const fileName = `OAE_${codigo}_${new Date().toISOString().split('T')[0]}.json`;
+            Export.downloadFile(fileName, JSON.stringify(data, null, 2), 'application/json');
+        } catch (err) {
+            console.error('Export specific failed:', err);
+            alert('Erro ao exportar obra.');
+        }
+    },
+
+    showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
-        toast.textContent = msg;
+        toast.textContent = message; // Changed from msg to message
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
