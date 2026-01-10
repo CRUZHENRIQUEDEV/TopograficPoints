@@ -251,6 +251,46 @@ const ELEMENT_ERROR_TYPES = [
     "Localização incorreta"
 ];
 
+// Functional Deficiencies - standardized list
+const FUNCTIONAL_DEFICIENCIES = [
+    { desc: "Alça de acesso inadequada", unit: "und" },
+    { desc: "Aparelho de apoio não identificado", unit: "und" },
+    { desc: "Calçada para pedestres inexistente", unit: "m" },
+    { desc: "Concordância horizontal ruim", unit: "und" },
+    { desc: "Concordância vertical ruim", unit: "und" },
+    { desc: "Drenagem de pista insuficiente", unit: "und" },
+    { desc: "Gabarito horizontal insuficiente", unit: "m" },
+    { desc: "Gabarito vertical de navegação insuficiente", unit: "m" },
+    { desc: "Gabarito vertical sobre ferrovia insuficiente", unit: "m" },
+    { desc: "Gabarito vertical sobre rodovia insuficiente", unit: "m" },
+    { desc: "Gabarito vertical sobre via urbana insuficiente", unit: "m" },
+    { desc: "Guarda-rodas obsoleto", unit: "m" },
+    { desc: "Junta longitudinal de dilatação", unit: "m" },
+    { desc: "Laje de aproximação inexistente", unit: "und" },
+    { desc: "Pilar em canal de navegação sem proteção", unit: "und" },
+    { desc: "Pingadeira inexistente", unit: "m" },
+    { desc: "Ponte estreita (larg pista < 7,20m)", unit: "und" },
+    { desc: "Ponte muito estreita (em mão única)", unit: "und" },
+    { desc: "Ponte sem acostamento", unit: "-" },
+    { desc: "Seção hidráulica (greide baixo)", unit: "und" },
+    { desc: "Seção hidráulica (ponte curta)", unit: "und" },
+    { desc: "Trem tipo de cálculo TB 24tf", unit: "-" },
+    { desc: "Trem tipo de cálculo TB 36tf", unit: "-" },
+    { desc: "Viga caixão com interior inacessível", unit: "und" }
+];
+
+// Special Aspects - standardized list
+const SPECIAL_ASPECTS = [
+    { desc: "Desnível elevado entre greide e terreno", sigla: "Desnível Greide" },
+    { desc: "Frequência elevada de carga pesada", sigla: "Carga Pesada" },
+    { desc: "Fundação em solo mole", sigla: "Solo Mole" },
+    { desc: "Grande variação do NA do rio na cheia", sigla: "Variação NA" },
+    { desc: "Leito do rio erodível", sigla: "Rio Erodível" },
+    { desc: "Meio ambiente agressivo", sigla: "Meio Agressivo" },
+    { desc: "Nível de vibração elevado", sigla: "Vibração Alta" },
+    { desc: "Rio com lâmina dágua normal profunda", sigla: "Rio Profundo" }
+];
+
 // Tab-to-Field Mapping for Badge Counting
 const TAB_FIELD_MAP = {
     ident: ['ident_orig', 'comprimento', 'largura', 'trem_tipo', 'ano', 'natureza',
@@ -260,8 +300,8 @@ const TAB_FIELD_MAP = {
     carac: ['atend_snv', 'tipo_regiao', 'tipo_tracado', 'rampa', 'raio',
             'faixas', 'larg_faixa', 'acost_dir', 'acost_esq', 'calc_dir', 'calc_esq',
             'gab_hor', 'gab_ver', 'vmda', 'vmdc'],
-    aspect: ['aspecto_desc', 'aspecto_sigla'],
-    defic: ['deficiencias'],
+    aspect: [], // Dynamic list
+    defic: [], // Separated array
     rotas: ['rota', 'rota_km'],
     obs: ['observacoes']
 };
@@ -285,8 +325,11 @@ let appState = {
             'C': { tipo: '', sistema: '', ext: '', min: '', max: '', cont: '' }
         },
 
-        // Aspects: { id: { checked: true/false, comment: "" } }
-        aspects: {}
+        // Aspects: [ { id, desc, sigla, comment } ]
+        aspects: [],
+
+        // Functional Deficiencies: [ { id, desc, unit, value } ]
+        functionalDeficiencies: []
     },
 
     // Auditor Markings

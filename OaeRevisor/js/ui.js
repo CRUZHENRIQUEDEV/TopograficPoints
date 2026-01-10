@@ -55,6 +55,7 @@ const UI = {
         this.renderTramosTable();
         this.renderElementsList();
         this.renderAspects();
+        this.renderFunctionalDeficiencies();
         this.renderAttachments();
         this.renderMessages();
         this.updateReport();
@@ -87,20 +88,48 @@ const UI = {
             return `
                 <tr>
                     <td><strong>${label}</strong></td>
-                    <td><input type="text" class="form-input no-btn" id="t_${id}_tipo" data-tramo-field="${id}_tipo" value="${appState.work.tramos[id]?.tipo || ''}"></td>
                     <td>
-                        <select class="form-input no-btn" id="t_${id}_sistema" data-tramo-field="${id}_sistema">
-                            <option value="">Selecione</option>
-                            ${CONSTRUCTION_SYSTEMS.map(sys =>
-                                `<option ${appState.work.tramos[id]?.sistema === sys ? 'selected' : ''}>${sys}</option>`
-                            ).join('')}
-                        </select>
+                        <div class="field-wrapper">
+                            <input type="text" class="form-input" id="t_${id}_tipo" data-tramo-field="${id}_tipo" value="${appState.work.tramos[id]?.tipo || ''}">
+                            <button class="error-btn" onclick="UI.openErrorModal('t_${id}_tipo', 'Tipo Estrutura (Tramo ${label})')">⚠</button>
+                        </div>
                     </td>
-                    <td><input type="text" class="form-input no-btn" id="t_${id}_ext" data-tramo-field="${id}_ext" value="${appState.work.tramos[id]?.ext || ''}"></td>
-                    <td><input type="text" class="form-input no-btn" id="t_${id}_min" data-tramo-field="${id}_min" value="${appState.work.tramos[id]?.min || ''}"></td>
-                    <td><input type="text" class="form-input no-btn" id="t_${id}_max" data-tramo-field="${id}_max" value="${appState.work.tramos[id]?.max || ''}"></td>
-                    <td><input type="text" class="form-input no-btn" id="t_${id}_cont" data-tramo-field="${id}_cont" value="${appState.work.tramos[id]?.cont || ''}"></td>
-                    <td><button class="error-btn ${appState.errors['tramo_'+id] ? 'has-error' : ''}" onclick="UI.openErrorModal('tramo_${id}', 'Tramo ${label}')">⚠</button></td>
+                    <td>
+                        <div class="field-wrapper">
+                            <select class="form-input" id="t_${id}_sistema" data-tramo-field="${id}_sistema">
+                                <option value="">Selecione</option>
+                                ${CONSTRUCTION_SYSTEMS.map(sys =>
+                                    `<option ${appState.work.tramos[id]?.sistema === sys ? 'selected' : ''}>${sys}</option>`
+                                ).join('')}
+                            </select>
+                            <button class="error-btn" onclick="UI.openErrorModal('t_${id}_sistema', 'Sistema Construtivo (Tramo ${label})')">⚠</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="field-wrapper">
+                            <input type="text" class="form-input" id="t_${id}_ext" data-tramo-field="${id}_ext" value="${appState.work.tramos[id]?.ext || ''}">
+                            <button class="error-btn" onclick="UI.openErrorModal('t_${id}_ext', 'Extensão (Tramo ${label})')">⚠</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="field-wrapper">
+                            <input type="text" class="form-input" id="t_${id}_min" data-tramo-field="${id}_min" value="${appState.work.tramos[id]?.min || ''}">
+                            <button class="error-btn" onclick="UI.openErrorModal('t_${id}_min', 'H Min (Tramo ${label})')">⚠</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="field-wrapper">
+                            <input type="text" class="form-input" id="t_${id}_max" data-tramo-field="${id}_max" value="${appState.work.tramos[id]?.max || ''}">
+                            <button class="error-btn" onclick="UI.openErrorModal('t_${id}_max', 'H Max (Tramo ${label})')">⚠</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="field-wrapper">
+                            <input type="text" class="form-input" id="t_${id}_cont" data-tramo-field="${id}_cont" value="${appState.work.tramos[id]?.cont || ''}">
+                            <button class="error-btn" onclick="UI.openErrorModal('t_${id}_cont', 'Continuidade (Tramo ${label})')">⚠</button>
+                        </div>
+                    </td>
+                    <td></td>
                 </tr>`;
         };
 
@@ -425,41 +454,171 @@ const UI = {
 
     // --- ASPECTS ---
     renderAspects() {
-        const container = document.getElementById('aspectosList');
-        const aspects = [
-            { id: "vandalismo", label: "Vandalismo / Pichação" },
-            { id: "carga_pesada", label: "Carga Pesada / Tráfego Intenso" },
-            { id: "ambiente_marinho", label: "Ambiente Marinho / Agressivo" },
-            { id: "eucaliptos", label: "Vegetação Próxima (Eucaliptos/etc)" },
-            { id: "enchente", label: "Risco de Enchente / Inundação" },
-            { id: "vibracao", label: "Vibrações Excessivas" },
-            { id: "desnivel", label: "Desnível Elevado na Pista" }
-        ];
+        const container = document.getElementById('aspectosContainer');
+        if (!container) return;
 
-        container.innerHTML = aspects.map(a => `
-            <div class="message-card" style="margin-bottom: 0;">
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <input type="checkbox" id="asp_${a.id}" ${appState.work.aspects[a.id]?.checked ? 'checked' : ''} 
-                        onchange="UI.toggleAspect('${a.id}', this.checked)" style="margin-top: 5px;">
-                    <div style="flex: 1;">
-                        <label for="asp_${a.id}" style="font-weight: 600; cursor: pointer;">${a.label}</label>
-                        <textarea class="form-input no-btn" style="margin-top: 8px; font-size: 0.8rem; min-height: 50px;" 
-                            placeholder="Comentário..." oninput="UI.updateAspectComment('${a.id}', this.value)">${appState.work.aspects[a.id]?.comment || ''}</textarea>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        if (appState.work.aspects.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum aspecto especial registrado.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="view-table">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th style="width: 150px;">Sigla</th>
+                        <th>Comentário</th>
+                        <th style="width: 50px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${appState.work.aspects.map(a => `
+                        <tr>
+                            <td>${a.desc}</td>
+                            <td>${a.sigla}</td>
+                            <td>
+                                <input type="text" class="form-input no-btn" value="${a.comment || ''}" 
+                                    oninput="UI.updateAspectComment('${a.id}', this.value)" placeholder="Adicionar nota...">
+                            </td>
+                            <td>
+                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAspect('${a.id}')">×</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
     },
 
-    toggleAspect(id, checked) {
-        if (!appState.work.aspects[id]) appState.work.aspects[id] = {};
-        appState.work.aspects[id].checked = checked;
+    openAspectModal() {
+        const select = document.getElementById('modalAspectSelect');
+        select.innerHTML = '<option value="">Selecione</option>' + 
+            SPECIAL_ASPECTS.map(s => `<option value="${s.desc}">${s.desc}</option>`).join('');
+        
+        document.getElementById('aspectModal').style.display = 'flex';
+    },
+
+    closeAspectModal() {
+        document.getElementById('aspectModal').style.display = 'none';
+        document.getElementById('modalAspectSelect').value = '';
+    },
+
+    addAspectFromModal() {
+        const desc = document.getElementById('modalAspectSelect').value;
+        if (!desc) return;
+
+        const info = SPECIAL_ASPECTS.find(s => s.desc === desc);
+        const id = 'aspect_' + Date.now();
+
+        appState.work.aspects.push({
+            id,
+            desc: info.desc,
+            sigla: info.sigla,
+            comment: ""
+        });
+
+        this.closeAspectModal();
+        this.renderAspects();
         AutoSave.trigger();
     },
 
     updateAspectComment(id, value) {
-        if (!appState.work.aspects[id]) appState.work.aspects[id] = {};
-        appState.work.aspects[id].comment = value;
+        const aspect = appState.work.aspects.find(a => a.id === id);
+        if (aspect) {
+            aspect.comment = value;
+            AutoSave.trigger();
+        }
+    },
+
+    removeAspect(id) {
+        appState.work.aspects = appState.work.aspects.filter(a => a.id !== id);
+        this.renderAspects();
+        AutoSave.trigger();
+    },
+
+    // --- FUNCTIONAL DEFICIENCIES ---
+    renderFunctionalDeficiencies() {
+        const container = document.getElementById('deficienciasContainer');
+        if (!container) return;
+
+        if (appState.work.functionalDeficiencies.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma deficiência funcional registrada.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="view-table">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th style="width: 150px;">Unidade</th>
+                        <th style="width: 100px;">Valor/Qtd</th>
+                        <th style="width: 50px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${appState.work.functionalDeficiencies.map(d => `
+                        <tr>
+                            <td>${d.desc}</td>
+                            <td>${d.unit}</td>
+                            <td>
+                                <input type="number" class="form-input no-btn" value="${d.value || 0}" 
+                                    onchange="UI.updateDeficValue('${d.id}', this.value)">
+                            </td>
+                            <td>
+                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeDefic('${d.id}')">×</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    },
+
+    openDeficModal() {
+        const select = document.getElementById('modalDeficSelect');
+        select.innerHTML = '<option value="">Selecione</option>' + 
+            FUNCTIONAL_DEFICIENCIES.map(d => `<option value="${d.desc}">${d.desc}</option>`).join('');
+        
+        document.getElementById('deficModal').style.display = 'flex';
+    },
+
+    closeDeficModal() {
+        document.getElementById('deficModal').style.display = 'none';
+        document.getElementById('modalDeficSelect').value = '';
+    },
+
+    addDeficFromModal() {
+        const desc = document.getElementById('modalDeficSelect').value;
+        if (!desc) return;
+
+        const info = FUNCTIONAL_DEFICIENCIES.find(f => f.desc === desc);
+        const id = 'defic_' + Date.now();
+
+        appState.work.functionalDeficiencies.push({
+            id,
+            desc: info.desc,
+            unit: info.unit,
+            value: 0
+        });
+
+        this.closeDeficModal();
+        this.renderFunctionalDeficiencies();
+        AutoSave.trigger();
+    },
+
+    updateDeficValue(id, value) {
+        const defic = appState.work.functionalDeficiencies.find(d => d.id === id);
+        if (defic) {
+            defic.value = value;
+            AutoSave.trigger();
+        }
+    },
+
+    removeDefic(id) {
+        appState.work.functionalDeficiencies = appState.work.functionalDeficiencies.filter(d => d.id !== id);
+        this.renderFunctionalDeficiencies();
         AutoSave.trigger();
     },
 
@@ -499,7 +658,10 @@ const UI = {
                     <div class="message-card">
                         <div class="message-header">
                             <span><strong>${e.tipo}:</strong> ${e.nome}</span>
-                            <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAnexoError('${e.id}')">×</button>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.openEditAnexo('${e.id}')">✎</button>
+                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAnexoError('${e.id}')">×</button>
+                            </div>
                         </div>
                         <div style="color: var(--danger); font-size: 0.85rem; font-weight: 600;">${e.inconsist}</div>
                         ${e.obs ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">${e.obs}</div>` : ''}
@@ -768,7 +930,7 @@ const UI = {
     // --- ERROR MODAL ---
     openErrorModal(fieldId, fieldLabel) {
         appState.currentField = fieldId;
-        const fieldEl = document.getElementById('f_' + fieldId);
+        const fieldEl = document.getElementById(fieldId) || document.getElementById('f_' + fieldId);
         const valor = fieldEl ? (fieldEl.value || '(vazio)') : '(vazio)';
 
         const existing = appState.errors[fieldId];
@@ -831,12 +993,13 @@ const UI = {
             return;
         }
 
-        const label = document.querySelector(`button[onclick*="'${fieldId}'"]`).getAttribute('onclick').match(/'([^']+)',\s*'([^']+)'/)[2];
+        const labelMatch = document.querySelector(`button[onclick*="'${fieldId}'"]`).getAttribute('onclick').match(/'([^']+)',\s*'([^']+)'/);
+        const label = labelMatch ? labelMatch[2] : 'Campo';
 
         appState.errors[fieldId] = {
             id: fieldId,
             label,
-            value: document.getElementById('f_'+fieldId)?.value || '(vazio)',
+            value: (document.getElementById(fieldId) || document.getElementById('f_'+fieldId))?.value || '(vazio)',
             types,
             obs
         };
@@ -908,6 +1071,12 @@ const UI = {
 
         // Add anexo errors
         tabCounts.anexos += appState.anexoErrors.length;
+
+        // Add functional deficiencies
+        tabCounts.defic += appState.work.functionalDeficiencies.length;
+
+        // Add aspects
+        tabCounts.aspect += appState.work.aspects.length;
 
         // Apply badges to tabs
         Object.entries(tabCounts).forEach(([tab, count]) => {
@@ -1046,7 +1215,33 @@ const UI = {
             });
         }
 
-        const total = Object.keys(errors).length + elemErrors.length + anexoErrors.length;
+        // Deficiências Funcionais
+        if (work.functionalDeficiencies && work.functionalDeficiencies.length > 0) {
+            report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            report += `⚠️ DEFICIÊNCIAS FUNCIONAIS ENCONTRADAS\n`;
+            report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+            work.functionalDeficiencies.forEach((d, idx) => {
+                report += `${idx + 1}. ${d.desc}\n`;
+                report += `   Valor: ${d.value} ${d.unit}\n\n`;
+            });
+        }
+
+        // Aspectos Especiais
+        if (work.aspects && work.aspects.length > 0) {
+            report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            report += `💎 ASPECTOS ESPECIAIS ENCONTRADOS\n`;
+            report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+            work.aspects.forEach((a, idx) => {
+                report += `${idx + 1}. ${a.desc} (${a.sigla})\n`;
+                if (a.comment) report += `   Nota: ${a.comment}\n`;
+                report += `\n`;
+            });
+        }
+
+        const total = Object.keys(errors).length + elemErrors.length + anexoErrors.length + 
+                      work.functionalDeficiencies.length + work.aspects.length;
         document.getElementById('totalErrorBadge').textContent = total;
         document.getElementById('reportText').value = report;
     },

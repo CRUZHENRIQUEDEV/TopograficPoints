@@ -54,15 +54,24 @@
                         <div class="form-grid-3">
                             <div class="form-field">
                                 <label class="form-label" for="avaliadorNome">Nome do Avaliador</label>
-                                <input type="text" class="form-input no-btn" id="avaliadorNome" data-sync="avaliador" placeholder="Seu nome...">
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="avaliadorNome" data-sync="avaliador" placeholder="Seu nome...">
+                                    <button class="error-btn" onclick="UI.openErrorModal('avaliador', 'Nome do Avaliador')">⚠</button>
+                                </div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="obraNome">Obra (Nome)</label>
-                                <input type="text" class="form-input no-btn" id="obraNome" data-sync="nome" placeholder="Nome da OAE">
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="obraNome" data-sync="nome" placeholder="Nome da OAE">
+                                    <button class="error-btn" onclick="UI.openErrorModal('nome', 'Obra (Nome)')">⚠</button>
+                                </div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="obraCodigo">Código (Ex: OAE-123)</label>
-                                <input type="text" class="form-input no-btn" id="obraCodigo" data-sync="codigo" placeholder="000.000">
+                                <div class="field-wrapper">
+                                    <input type="text" class="form-input" id="obraCodigo" data-sync="codigo" placeholder="000.000">
+                                    <button class="error-btn" onclick="UI.openErrorModal('codigo', 'Código OAE')">⚠</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -130,28 +139,28 @@
                         <div class="section-title">📍 Localização</div>
                         <div class="form-grid-4">
                             <div class="form-field">
-                                <label class="form-label">UF *</label>
+                                <label class="form-label" for="f_uf">UF *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_uf" data-field="uf">
                                     <button class="error-btn" onclick="UI.openErrorModal('uf', 'UF')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Via *</label>
+                                <label class="form-label" for="f_via">Via *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_via" data-field="via">
                                     <button class="error-btn" onclick="UI.openErrorModal('via', 'Via')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Local na Via (km) *</label>
+                                <label class="form-label" for="f_local_via">Local na Via (km) *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_local_via" data-field="local_via">
                                     <button class="error-btn" onclick="UI.openErrorModal('local_via', 'Local na Via (km)')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Cidade mais próxima *</label>
+                                <label class="form-label" for="f_cidade">Cidade mais próxima *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_cidade" data-field="cidade">
                                     <button class="error-btn" onclick="UI.openErrorModal('cidade', 'Cidade mais próxima')">⚠</button>
@@ -164,21 +173,21 @@
                         <div class="section-title">🌍 Coordenadas Geográficas SIRCAS 2000</div>
                         <div class="form-grid-3">
                             <div class="form-field">
-                                <label class="form-label">Latitude *</label>
+                                <label class="form-label" for="f_latitude">Latitude *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_latitude" data-field="latitude">
                                     <button class="error-btn" onclick="UI.openErrorModal('latitude', 'Latitude')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Longitude *</label>
+                                <label class="form-label" for="f_longitude">Longitude *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_longitude" data-field="longitude">
                                     <button class="error-btn" onclick="UI.openErrorModal('longitude', 'Longitude')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Altitude Geométrica (m) *</label>
+                                <label class="form-label" for="f_altitude">Altitude Geométrica (m) *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_altitude" data-field="altitude">
                                     <button class="error-btn" onclick="UI.openErrorModal('altitude', 'Altitude')">⚠</button>
@@ -191,14 +200,14 @@
                         <div class="section-title">🔢 SNV</div>
                         <div class="form-grid-2">
                             <div class="form-field">
-                                <label class="form-label">Código *</label>
+                                <label class="form-label" for="f_snv_codigo">Código *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_snv_codigo" data-field="snv_codigo">
                                     <button class="error-btn" onclick="UI.openErrorModal('snv_codigo', 'Código SNV')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Versão *</label>
+                                <label class="form-label" for="f_snv_versao">Versão *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_snv_versao" data-field="snv_versao">
                                     <button class="error-btn" onclick="UI.openErrorModal('snv_versao', 'Versão SNV')">⚠</button>
@@ -211,63 +220,63 @@
                         <div class="section-title">🏢 Responsáveis e Gestão</div>
                         <div class="form-grid">
                             <div class="form-field">
-                                <label class="form-label">Superintendência Regional *</label>
+                                <label class="form-label" for="f_superintendencia">Superintendência Regional *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_superintendencia" data-field="superintendencia">
                                     <button class="error-btn" onclick="UI.openErrorModal('superintendencia', 'Superintendência')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Unidade Local *</label>
+                                <label class="form-label" for="f_unidade_local">Unidade Local *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_unidade_local" data-field="unidade_local">
                                     <button class="error-btn" onclick="UI.openErrorModal('unidade_local', 'Unidade Local')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Administração DNIT? *</label>
+                                <label class="form-label" for="f_adm_dnit">Administração DNIT? *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_adm_dnit" data-field="adm_dnit">
                                     <button class="error-btn" onclick="UI.openErrorModal('adm_dnit', 'Adm DNIT?')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Administrador *</label>
+                                <label class="form-label" for="f_administrador">Administrador *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_administrador" data-field="administrador">
                                     <button class="error-btn" onclick="UI.openErrorModal('administrador', 'Administrador')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Projetista *</label>
+                                <label class="form-label" for="f_projetista">Projetista *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_projetista" data-field="projetista">
                                     <button class="error-btn" onclick="UI.openErrorModal('projetista', 'Projetista')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Construtor *</label>
+                                <label class="form-label" for="f_construtor">Construtor *</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_construtor" data-field="construtor">
                                     <button class="error-btn" onclick="UI.openErrorModal('construtor', 'Construtor')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Localização do projeto</label>
+                                <label class="form-label" for="f_loc_projeto">Localização do projeto</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_loc_projeto" data-field="loc_projeto">
                                     <button class="error-btn" onclick="UI.openErrorModal('loc_projeto', 'Loc. Projeto')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Loc. de documentos de Construção</label>
+                                <label class="form-label" for="f_loc_docs_constr">Loc. de documentos de Construção</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_loc_docs_constr" data-field="loc_docs_constr">
                                     <button class="error-btn" onclick="UI.openErrorModal('loc_docs_constr', 'Loc. Docs Constr.')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Loc. de documentos diversos</label>
+                                <label class="form-label" for="f_loc_docs_diversos">Loc. de documentos diversos</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_loc_docs_diversos" data-field="loc_docs_diversos">
                                     <button class="error-btn" onclick="UI.openErrorModal('loc_docs_diversos', 'Loc. Docs Diversos')">⚠</button>
@@ -433,8 +442,11 @@
                     <div class="section">
                         <div class="section-title">🧱 Tramos da OAE</div>
                         <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; background: var(--bg-tertiary); padding: 15px; border-radius: var(--radius-md);">
-                            <label style="font-weight: 700; color: var(--primary);">Número de Tramos:</label>
-                            <input type="number" id="numTramosGlobal" min="1" max="50" value="1" style="width: 70px; padding: 5px; border-radius: 4px; border: 1px solid var(--border);">
+                            <label style="font-weight: 700; color: var(--primary);" for="numTramosGlobal">Número de Tramos:</label>
+                            <div class="field-wrapper" style="width: auto;">
+                                <input type="number" id="numTramosGlobal" min="1" max="50" value="1" style="width: 70px; padding: 5px; border-radius: 4px; border: 1px solid var(--border);" data-sync="numTramos">
+                                <button class="error-btn" onclick="UI.openErrorModal('numTramos', 'Número de Tramos')">⚠</button>
+                            </div>
                             <span style="font-size: 0.8rem; color: var(--text-muted);">+ Tramo Complementar (C)</span>
                         </div>
                         <div id="tramosCaracContainer"></div>
@@ -482,8 +494,12 @@
                 <div class="tab-panel" id="aspect">
                     <div class="section">
                         <div class="section-title">💎 Aspectos Especiais</div>
-                        <!-- Checkbox list of aspects rendered by JS -->
-                        <div id="aspectosList" class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
+                        <div class="evaluator-only" style="margin-bottom: 15px;">
+                            <button class="btn btn-primary" onclick="UI.openAspectModal()">➕ Adicionar Aspecto Especial</button>
+                        </div>
+                        <div id="aspectosContainer">
+                            <!-- List will be rendered here -->
+                        </div>
                     </div>
                 </div>
 
@@ -491,12 +507,11 @@
                 <div class="tab-panel" id="defic">
                     <div class="section">
                         <div class="section-title">⚠️ Deficiências Funcionais</div>
-                        <div class="form-field">
-                            <label class="form-label">Relato de Deficiências</label>
-                            <div class="field-wrapper">
-                                <textarea class="form-input" id="f_deficiencias" data-field="deficiencias" style="height: 200px;"></textarea>
-                                <button class="error-btn" onclick="UI.openErrorModal('deficiencias', 'Deficiências Funcionais')">⚠</button>
-                            </div>
+                        <div class="evaluator-only" style="margin-bottom: 15px;">
+                            <button class="btn btn-primary" onclick="UI.openDeficModal()">➕ Adicionar Deficiência Funcional</button>
+                        </div>
+                        <div id="deficienciasContainer">
+                            <!-- Table will be rendered here -->
                         </div>
                     </div>
                 </div>
@@ -641,6 +656,89 @@
                 <button class="btn btn-danger" id="btnRemoveError" onclick="UI.clearFieldError()">Limpar Erro</button>
                 <button class="btn btn-secondary" onclick="UI.closeErrorModal()">Cancelar</button>
                 <button class="btn btn-primary" onclick="UI.applyError()">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deficiencia Modal -->
+    <div class="modal-backdrop" id="deficModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Adicionar Deficiência Funcional</h3>
+                <button class="modal-close" onclick="UI.closeDeficModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label class="form-label">Selecione a Deficiência</label>
+                    <select class="form-input no-btn" id="modalDeficSelect">
+                        <option value="">Selecione</option>
+                        <!-- List populated via JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="UI.closeDeficModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="UI.addDeficFromModal()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aspecto Especial Modal -->
+    <div class="modal-backdrop" id="aspectModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Adicionar Aspecto Especial</h3>
+                <button class="modal-close" onclick="UI.closeAspectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label class="form-label">Selecione o Aspecto</label>
+                    <select class="form-input no-btn" id="modalAspectSelect">
+                        <option value="">Selecione</option>
+                        <!-- List populated via JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="UI.closeAspectModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="UI.addAspectFromModal()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Anexo Modal -->
+    <div class="modal-backdrop" id="editAnexoModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Editar Erro em Anexo</h3>
+                <button class="modal-close" onclick="UI.closeEditAnexoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editAnexoId">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="form-label">Nome do Arquivo</label>
+                        <input type="text" class="form-input no-btn" id="editAnexoNome">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Inconsistência</label>
+                        <select class="form-input no-btn" id="editAnexoTipoErro">
+                            <option>Legenda divergente do conteúdo</option>
+                            <option>Qualidade insuficiente</option>
+                            <option>Foto duplicada</option>
+                            <option>Não corresponde ao local</option>
+                            <option>Falta arquivo obrigatório</option>
+                        </select>
+                    </div>
+                    <div class="form-field" style="grid-column: span 2;">
+                        <label class="form-label">Observação</label>
+                        <textarea class="form-input no-btn" id="editAnexoObs" style="height: 80px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="UI.closeEditAnexoModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="UI.saveAnexoEdit()">Salvar Alterações</button>
             </div>
         </div>
     </div>
