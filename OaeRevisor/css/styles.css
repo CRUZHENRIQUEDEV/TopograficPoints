@@ -207,9 +207,9 @@ body {
     .form-grid-2 { grid-template-columns: repeat(2, 1fr) !important; }
     .form-grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
     .form-grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
-    .form-grid-6 { grid-template-columns: repeat(6, 1fr) !important; }
-    .form-grid-8 { grid-template-columns: repeat(8, 1fr) !important; }
-    .form-grid-10 { grid-template-columns: repeat(10, 1fr) !important; }
+    .form-grid-6 { grid-template-columns: repeat(3, 1fr) !important; }
+    .form-grid-8 { grid-template-columns: repeat(4, 1fr) !important; }
+    .form-grid-10 { grid-template-columns: repeat(5, 1fr) !important; }
 }
 
 /* Tablet view: semi-compact */
@@ -225,9 +225,9 @@ body {
     }
 }
 
-/* Base form-grid (flexible but tight) */
+/* Base form-grid (flexible but robust) */
 .form-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
 }
 
 .form-field { display: flex; flex-direction: column; gap: 4px; }
@@ -242,6 +242,8 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
+    width: 100%;
 }
 
 .field-wrapper { display: flex; align-items: stretch; }

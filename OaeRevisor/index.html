@@ -218,7 +218,7 @@
 
                     <div class="section">
                         <div class="section-title">🏢 Responsáveis e Gestão</div>
-                        <div class="form-grid">
+                        <div class="form-grid-3">
                             <div class="form-field">
                                 <label class="form-label" for="f_superintendencia">Superintendência Regional *</label>
                                 <div class="field-wrapper">
@@ -522,14 +522,14 @@
                         <div class="section-title">🔄 Rotas Alternativas</div>
                         <div class="form-grid">
                             <div class="form-field" style="grid-column: span 2;">
-                                <label class="form-label">Rota Sugerida</label>
+                                <label class="form-label" for="f_rota">Rota Sugerida</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_rota" data-field="rota">
                                     <button class="error-btn" onclick="UI.openErrorModal('rota', 'Rota Alternativa')">⚠</button>
                                 </div>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Acréscimo de KM</label>
+                                <label class="form-label" for="f_rota_km">Acréscimo de KM</label>
                                 <div class="field-wrapper">
                                     <input type="text" class="form-input" id="f_rota_km" data-field="rota_km">
                                     <button class="error-btn" onclick="UI.openErrorModal('rota_km', 'Acréscimo KM')">⚠</button>
@@ -544,7 +544,7 @@
                     <div class="section">
                         <div class="section-title">📝 Observações Gerais</div>
                         <div class="form-field">
-                            <label class="form-label">Texto das Observações</label>
+                            <label class="form-label" for="f_observacoes">Texto das Observações</label>
                             <div class="field-wrapper">
                                 <textarea class="form-input" id="f_observacoes" data-field="observacoes" style="height: 300px;"></textarea>
                                 <button class="error-btn" onclick="UI.openErrorModal('observacoes', 'Observações')">⚠</button>
@@ -559,11 +559,11 @@
                         <div class="section-title">📎 Apontar Erro em Anexo / Foto</div>
                         <div class="form-grid">
                             <div class="form-field">
-                                <label class="form-label">Nome do Arquivo (Ex: F-01)</label>
+                                <label class="form-label" for="anexoNome">Nome do Arquivo (Ex: F-01)</label>
                                 <input type="text" class="form-input no-btn" id="anexoNome">
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Tipo de Arquivo</label>
+                                <label class="form-label" for="anexoTipo">Tipo de Arquivo</label>
                                 <select class="form-input no-btn" id="anexoTipo">
                                     <option>Foto</option>
                                     <option>PDF (Relatório/Croqui)</option>
@@ -573,7 +573,7 @@
                                 </select>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Tipo de Inconsistência</label>
+                                <label class="form-label" for="anexoTipoErro">Tipo de Inconsistência</label>
                                 <select class="form-input no-btn" id="anexoTipoErro">
                                     <option>Legenda divergente do conteúdo</option>
                                     <option>Qualidade insuficiente</option>
@@ -583,7 +583,7 @@
                                 </select>
                             </div>
                             <div class="form-field">
-                                <label class="form-label">Observação</label>
+                                <label class="form-label" for="anexoObs">Observação</label>
                                 <input type="text" class="form-input no-btn" id="anexoObs">
                             </div>
                         </div>
