@@ -1256,3 +1256,50 @@ window.filterWorks = filterWorks;
 window.showSaveReminder = showSaveReminder;
 window.startSaveReminders = startSaveReminders;
 window.initTabSystem = initTabSystem;
+
+// Controlar campo ALTURA TRANSIÇÃO baseado no TIPO ENCONTRO
+function updateAlturaTransicaoField() {
+  try {
+    const tipoEncontroField = document.getElementById("tipo-encontro");
+    const alturaTransicaoField = document.getElementById("altura-transicao");
+    const alturaTransicaoLabel = document.getElementById("altura-transicao-label");
+    const alturaTransicaoError = document.getElementById("altura-transicao-error");
+
+    if (!tipoEncontroField || !alturaTransicaoField) return;
+
+    const tipoEncontro = tipoEncontroField.value;
+
+    // Se for "Nenhum" ou vazio, bloquear campo e definir como 1 metro
+    if (tipoEncontro === "Nenhum" || tipoEncontro === "") {
+      alturaTransicaoField.disabled = true;
+      alturaTransicaoField.value = "1";
+      
+      // Remover classe required do label
+      if (alturaTransicaoLabel) {
+        alturaTransicaoLabel.classList.remove("required");
+      }
+      
+      // Esconder mensagem de erro
+      if (alturaTransicaoError) {
+        alturaTransicaoError.classList.remove("visible");
+      }
+    } else {
+      // Se for diferente de "Nenhum", desbloquear campo
+      alturaTransicaoField.disabled = false;
+      
+      // Adicionar classe required ao label
+      if (alturaTransicaoLabel) {
+        alturaTransicaoLabel.classList.add("required");
+      }
+    }
+
+    // Atualizar validação
+    if (typeof validateForm === "function") {
+      validateForm();
+    }
+  } catch (error) {
+    console.error("Erro ao atualizar campo altura transição:", error);
+  }
+}
+
+window.updateAlturaTransicaoField = updateAlturaTransicaoField;

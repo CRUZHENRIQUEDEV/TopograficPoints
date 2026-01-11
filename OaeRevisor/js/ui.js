@@ -1604,16 +1604,21 @@ const UI = {
           createdAt: new Date().toISOString(),
           lastModifiedBy: AuthSystem.currentUser?.email || "unknown",
           lastModifiedAt: new Date().toISOString(),
+          lote: AuthSystem.currentUser?.lote || "Admin", // Vincula ao lote do usuário
           sharedWith: [],
           isPublic: false,
           version: 1,
           tags: [],
-          status: "draft",
+          status: OBRA_STATUS.CADASTRO, // Status inicial
         };
       } else {
         // Atualiza última modificação
         appState.work.metadata.lastModifiedBy = AuthSystem.currentUser?.email || "unknown";
         appState.work.metadata.lastModifiedAt = new Date().toISOString();
+        // Garante que lote está definido
+        if (!appState.work.metadata.lote) {
+          appState.work.metadata.lote = AuthSystem.currentUser?.lote || "Admin";
+        }
       }
 
       await DB.saveObra(appState.work.codigo, {
@@ -1630,6 +1635,9 @@ const UI = {
         `✅ Obra "${appState.work.codigo}" salva com sucesso no banco de dados!`
       );
       console.log("Manual save to database successful:", appState.work.codigo);
+
+      // Atualiza título com status
+      this.updateWorkTitle();
     } catch (err) {
       console.error("Save to database failed:", err);
       alert("❌ Erro ao salvar no banco de dados: " + err.message);
@@ -2092,10 +2100,11 @@ const UI = {
                                 <label class="form-label">Status</label>
                                 <select class="form-input" id="filterStatus" onchange="UI.applyWorkFilters()">
                                     <option value="">Todos os status</option>
-                                    <option value="draft">Rascunho</option>
-                                    <option value="in_progress">Em Andamento</option>
-                                    <option value="completed">Concluída</option>
-                                    <option value="archived">Arquivada</option>
+                                    <option value="cadastro">📝 Cadastro</option>
+                                    <option value="publicado_avaliacao">📤 Publicado p/ Avaliação</option>
+                                    <option value="em_avaliacao">🔍 Em Avaliação</option>
+                                    <option value="pendente_retificacao">⚠️ Pendente Retificação</option>
+                                    <option value="aprovado">✅ Aprovado</option>
                                 </select>
                             </div>
                             <div class="form-field">
@@ -2148,6 +2157,7 @@ const UI = {
                             <tr>
                                 <th>Código</th>
                                 <th>Nome da Obra</th>
+                                <th>Lote</th>
                                 <th>Avaliador</th>
                                 <th>Status</th>
                                 <th>Criação</th>
@@ -2160,7 +2170,7 @@ const UI = {
                         <tbody>
                             ${
                               works.length === 0
-                                ? '<tr><td colspan="9" style="text-align:center; padding: 40px;">Nenhuma obra encontrada com os filtros atuais.</td></tr>'
+                                ? '<tr><td colspan="10" style="text-align:center; padding: 40px;">Nenhuma obra encontrada com os filtros atuais.</td></tr>'
                                 : ""
                             }
                             ${works
@@ -2171,17 +2181,21 @@ const UI = {
                                     w.work?.codigo
                                   );
                                 const statusColors = {
-                                  draft: "var(--warning)",
-                                  in_progress: "var(--primary)",
-                                  completed: "var(--success)",
-                                  archived: "var(--text-muted)",
+                                  cadastro: "#9b59b6",
+                                  publicado_avaliacao: "#3498db",
+                                  em_avaliacao: "#f39c12",
+                                  pendente_retificacao: "#e74c3c",
+                                  aprovado: "#27ae60",
                                 };
                                 const statusLabels = {
-                                  draft: "Rascunho",
-                                  in_progress: "Em Andamento",
-                                  completed: "Concluída",
-                                  archived: "Arquivada",
+                                  cadastro: "📝 Cadastro",
+                                  publicado_avaliacao: "📤 Publicado",
+                                  em_avaliacao: "🔍 Em Avaliação",
+                                  pendente_retificacao: "⚠️ Pendente",
+                                  aprovado: "✅ Aprovado",
                                 };
+
+                                const lote = metadata.lote || "Sem Lote";
 
                                 return `
                                     <tr>
@@ -2189,57 +2203,18 @@ const UI = {
                                           w.work?.codigo || w.codigo
                                         }</strong></td>
                                         <td>${w.work?.nome || "-"}</td>
+                                        <td>
+                                          <span style="background: var(--bg-accent); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+                                            ${lote}
+                                          </span>
+                                        </td>
                                         <td>${w.work?.avaliador || "-"}</td>
                                         <td>
-                                            ${
-                                              permissions.canEdit
-                                                ? `<select 
-                                                    class="form-input" 
-                                                    style="padding: 2px 4px; font-size: 0.75rem; border-radius: 4px; width: auto; background: ${
-                                                      statusColors[
-                                                        metadata.status
-                                                      ] || "var(--bg-secondary)"
-                                                    }; color: white; border: none; font-weight: 600;"
-                                                    onchange="UI.updateWorkStatus('${
-                                                      w.work?.codigo || w.codigo
-                                                    }', this.value)"
-                                                  >
-                                                    <option value="draft" ${
-                                                      metadata.status === "draft"
-                                                        ? "selected"
-                                                        : ""
-                                                    }>Rascunho</option>
-                                                    <option value="in_progress" ${
-                                                      metadata.status ===
-                                                      "in_progress"
-                                                        ? "selected"
-                                                        : ""
-                                                    }>Em Andamento</option>
-                                                    <option value="completed" ${
-                                                      metadata.status ===
-                                                      "completed"
-                                                        ? "selected"
-                                                        : ""
-                                                    }>Concluída</option>
-                                                    <option value="archived" ${
-                                                      metadata.status ===
-                                                      "archived"
-                                                        ? "selected"
-                                                        : ""
-                                                    }>Arquivada</option>
-                                                  </select>`
-                                                : `<span style="background: ${
-                                                    statusColors[
-                                                      metadata.status
-                                                    ] || "var(--bg-secondary)"
-                                                  }; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
-                                                    ${
-                                                      statusLabels[
-                                                        metadata.status
-                                                      ] || "N/A"
-                                                    }
-                                                  </span>`
-                                            }
+                                            <span style="background: ${
+                                              statusColors[metadata.status] || "#95a5a6"
+                                            }; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                                              ${statusLabels[metadata.status] || "N/A"}
+                                            </span>
                                         </td>
                                         <td style="font-size: 0.85rem;">${
                                           metadata.createdAt
@@ -2338,6 +2313,9 @@ const UI = {
         Sync.syncFromDB(data);
         document.getElementById("worksManagementModal")?.remove();
         this.showToast(`✅ Obra "${codigo}" carregada com sucesso!`);
+
+        // Atualiza título com status
+        this.updateWorkTitle();
       }
     } catch (err) {
       console.error("Failed to load work:", err);
@@ -3259,16 +3237,21 @@ const UI = {
   },
 
   /**
-   * Inicializa o toggle de lote (apenas admin)
+   * Inicializa o toggle de lote (admin e avaliadores)
    */
   initLoteToggle() {
     const currentUser = AuthSystem.currentUser;
     const loteToggle = document.getElementById("loteToggle");
 
-    if (loteToggle && currentUser?.lote === "Admin") {
+    if (!loteToggle) return;
+
+    // Mostra toggle para Admin e Avaliadores
+    const canViewAllLotes = currentUser?.role === "admin" || currentUser?.role === "avaliador";
+
+    if (canViewAllLotes) {
       loteToggle.style.display = "flex";
       loteToggle.style.alignItems = "center";
-    } else if (loteToggle) {
+    } else {
       loteToggle.style.display = "none";
     }
   },
@@ -3289,6 +3272,34 @@ const UI = {
 
     const loteText = selectedLote || "Todos os Lotes";
     this.showNotification(`Filtro alterado: ${loteText}`, "info");
+  },
+
+  /**
+   * Atualiza o título da obra no header com status e lote
+   */
+  updateWorkTitle() {
+    const workTitleEl = document.getElementById("workTitle");
+    if (!workTitleEl) return;
+
+    const obra = appState.work;
+    if (!obra || !obra.codigo) {
+      workTitleEl.textContent = "";
+      return;
+    }
+
+    const status = obra.metadata?.status || OBRA_STATUS.CADASTRO;
+    const statusLabel = OBRA_STATUS_LABELS[status] || status;
+    const lote = obra.metadata?.lote || "Sem Lote";
+
+    workTitleEl.innerHTML = `
+      <span style="color: var(--text-color);">${obra.codigo}</span>
+      <span style="background: var(--bg-accent); padding: 2px 8px; margin-left: 10px; border-radius: 4px; font-size: 0.75rem;">
+        ${lote}
+      </span>
+      <span style="background: var(--primary); color: white; padding: 2px 8px; margin-left: 5px; border-radius: 4px; font-size: 0.75rem;">
+        ${statusLabel}
+      </span>
+    `;
   },
 
   /**
@@ -3335,6 +3346,155 @@ const UI = {
     `;
 
     document.body.appendChild(modal);
+  },
+
+  /**
+   * Publica/Envia obra para próxima etapa do workflow
+   */
+  async publicarObra() {
+    const obra = appState.work;
+    if (!obra || !obra.codigo) {
+      this.showNotification("Nenhuma obra carregada", "error");
+      return;
+    }
+
+    const currentUser = AuthSystem.currentUser;
+    const currentStatus = obra.metadata?.status || OBRA_STATUS.CADASTRO;
+
+    let newStatus, message, confirmMessage;
+
+    // Define próximo status baseado no role e status atual
+    if (currentUser.role === "inspetor") {
+      if (currentStatus === OBRA_STATUS.CADASTRO || currentStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
+        newStatus = OBRA_STATUS.PUBLICADO_AVALIACAO;
+        confirmMessage = "Tem certeza que deseja publicar esta obra para avaliação?";
+        message = "Obra publicada para avaliação com sucesso!";
+      } else {
+        this.showNotification("Obra já foi publicada ou está em avaliação", "warning");
+        return;
+      }
+    } else if (currentUser.role === "avaliador") {
+      if (currentStatus === OBRA_STATUS.PUBLICADO_AVALIACAO || currentStatus === OBRA_STATUS.EM_AVALIACAO) {
+        // Pergunta se aprova ou reprova
+        const opcao = await this.showApprovalDialog();
+        if (opcao === null) return; // Cancelou
+
+        if (opcao === "aprovar") {
+          newStatus = OBRA_STATUS.APROVADO;
+          message = "Obra aprovada com sucesso!";
+        } else {
+          newStatus = OBRA_STATUS.PENDENTE_RETIFICACAO;
+          message = "Obra enviada para retificação. O inspetor será notificado.";
+        }
+      } else {
+        this.showNotification("Esta obra não está disponível para avaliação", "warning");
+        return;
+      }
+    } else {
+      this.showNotification("Apenas inspetores e avaliadores podem publicar obras", "error");
+      return;
+    }
+
+    // Confirmação
+    if (confirmMessage && !confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      // Atualiza status
+      obra.metadata.status = newStatus;
+      obra.metadata.publishedBy = currentUser.email;
+      obra.metadata.publishedAt = new Date().toISOString();
+
+      if (newStatus === OBRA_STATUS.APROVADO || newStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
+        obra.metadata.evaluatedBy = currentUser.email;
+        obra.metadata.evaluatedAt = new Date().toISOString();
+      }
+
+      // Salva no banco
+      await DB.saveObra(obra.codigo, {
+        work: obra,
+        errors: appState.errors,
+        elementErrors: appState.elementErrors,
+        anexoErrors: appState.anexoErrors,
+        mensagens: appState.mensagens,
+        completionStates: appState.completionStates,
+        messageResponses: appState.messageResponses,
+      });
+
+      // Registra no audit trail
+      if (window.AuditSystem) {
+        AuditSystem.logChange("status_changed", {
+          oldStatus: currentStatus,
+          newStatus: newStatus,
+          publishedBy: currentUser.email,
+        });
+      }
+
+      this.showNotification(message, "success");
+
+      // Atualiza título com novo status
+      this.updateWorkTitle();
+
+      // Atualiza cache do WorkManager
+      if (window.WorkManager) {
+        await WorkManager.loadAllWorks();
+      }
+    } catch (error) {
+      console.error("Erro ao publicar obra:", error);
+      this.showNotification("Erro ao publicar obra: " + error.message, "error");
+    }
+  },
+
+  /**
+   * Exibe diálogo para avaliador aprovar ou reprovar obra
+   */
+  showApprovalDialog() {
+    return new Promise((resolve) => {
+      const modal = document.createElement("div");
+      modal.className = "modal-backdrop show";
+      modal.id = "approvalDialog";
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 500px;">
+          <div class="modal-header">
+            <h2>🔍 Avaliar Obra</h2>
+          </div>
+          <div class="modal-body" style="text-align: center; padding: 30px;">
+            <p style="font-size: 1.1rem; margin-bottom: 30px;">
+              Selecione a ação para esta obra:
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+              <button class="btn btn-success" id="btnAprovar" style="padding: 15px 30px; font-size: 1rem;">
+                ✅ Aprovar
+              </button>
+              <button class="btn btn-danger" id="btnReprovar" style="padding: 15px 30px; font-size: 1rem;">
+                ❌ Reprovar
+              </button>
+            </div>
+            <button class="btn btn-secondary" id="btnCancelar" style="margin-top: 20px;">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      document.getElementById("btnAprovar").onclick = () => {
+        modal.remove();
+        resolve("aprovar");
+      };
+
+      document.getElementById("btnReprovar").onclick = () => {
+        modal.remove();
+        resolve("reprovar");
+      };
+
+      document.getElementById("btnCancelar").onclick = () => {
+        modal.remove();
+        resolve(null);
+      };
+    });
   },
 
   /**

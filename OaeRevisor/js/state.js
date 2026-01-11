@@ -2,6 +2,24 @@
  * State Management Module - OAE Revisor
  */
 
+// Status do Workflow das Obras
+const OBRA_STATUS = {
+  CADASTRO: "cadastro",                    // Inspetor criou, está editando
+  PUBLICADO_AVALIACAO: "publicado_avaliacao", // Inspetor publicou para avaliador
+  EM_AVALIACAO: "em_avaliacao",            // Avaliador está avaliando
+  PENDENTE_RETIFICACAO: "pendente_retificacao", // Avaliador reprovou, inspetor precisa corrigir
+  APROVADO: "aprovado",                     // Avaliador aprovou
+};
+
+// Labels dos status para exibição
+const OBRA_STATUS_LABELS = {
+  [OBRA_STATUS.CADASTRO]: "📝 Cadastro (Inspetor)",
+  [OBRA_STATUS.PUBLICADO_AVALIACAO]: "📤 Publicado para Avaliação",
+  [OBRA_STATUS.EM_AVALIACAO]: "🔍 Em Avaliação",
+  [OBRA_STATUS.PENDENTE_RETIFICACAO]: "⚠️ Pendente de Retificação",
+  [OBRA_STATUS.APROVADO]: "✅ Aprovado",
+};
+
 // Error Type Taxonomy - contextualized by field category
 const ERROR_TYPES = {
   default: [
@@ -358,11 +376,16 @@ function getDefaultAppState() {
                 createdAt: null, // Timestamp de criação
                 lastModifiedAt: null, // Timestamp da última modificação
                 lastModifiedBy: null, // Email do último modificador
+                lote: null, // Lote da obra (Lote 01, Lote 02, Admin)
                 sharedWith: [], // Lista de emails com quem foi compartilhado
                 isPublic: false, // Se é visível para todos
                 version: 1, // Versão do documento
                 tags: [], // Tags para busca/filtro
-                status: "draft", // draft, in_progress, completed, archived
+                status: OBRA_STATUS.CADASTRO, // Status do workflow
+                publishedBy: null, // Quem publicou a obra
+                publishedAt: null, // Quando foi publicada
+                evaluatedBy: null, // Quem avaliou a obra
+                evaluatedAt: null, // Quando foi avaliada
             },
 
             // Audit trail - registro de todas as alterações

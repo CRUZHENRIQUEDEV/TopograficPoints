@@ -225,16 +225,26 @@ const AuthSystem = {
 
   /**
    * Verifica se usuário pode ver obra específica
+   * REGRAS:
+   * - Admin: vê tudo
+   * - Avaliador: vê obras de todos os lotes
+   * - Inspetor: vê apenas obras do próprio lote
    */
   canViewWork(work) {
     // Admin pode ver tudo
     if (this.hasPermission("view_all_works")) return true;
 
-    // Verifica se obra pertence ao mesmo lote
-    if (this.currentUser.lote !== "Admin") {
-      const workLote = work.work?.metadata?.lote || work.metadata?.lote;
+    const workLote = work.work?.metadata?.lote || work.metadata?.lote;
+
+    // Avaliador vê obras de qualquer lote
+    if (this.currentUser.role === this.ROLES.AVALIADOR) {
+      return true;
+    }
+
+    // Inspetor só vê obras do próprio lote
+    if (this.currentUser.role === this.ROLES.INSPETOR) {
       if (workLote && workLote !== this.currentUser.lote) {
-        return false; // Lotes diferentes não podem ver obras uns dos outros
+        return false;
       }
     }
 

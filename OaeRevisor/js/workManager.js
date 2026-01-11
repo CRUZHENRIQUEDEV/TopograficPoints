@@ -125,28 +125,35 @@ const WorkManager = {
 
   /**
    * Aplica filtros e retorna obras filtradas
+   * REGRAS DE ACESSO:
+   * - Admin: vê tudo, pode filtrar por lote
+   * - Avaliador: vê obras de todos os lotes, pode filtrar por lote
+   * - Inspetor: vê APENAS obras do próprio lote
    */
   getFilteredWorks() {
     let works = Array.from(this.worksCache.values());
 
     // Get current user info
     const currentUser = window.AuthSystem?.currentUser;
-    const isAdmin = currentUser?.lote === "Admin";
+    const isAdmin = currentUser?.role === "admin";
+    const isAvaliador = currentUser?.role === "avaliador";
+    const isInspetor = currentUser?.role === "inspetor";
 
     // Filtro por lote (controle de acesso)
-    if (!isAdmin && currentUser?.lote) {
-      // Usuários não-admin só veem obras do próprio lote
+    if (isInspetor) {
+      // Inspetor SÓ vê obras do próprio lote
       works = works.filter((work) => {
         const workLote = work.work?.metadata?.lote || work.work?.lote;
         return !workLote || workLote === currentUser.lote;
       });
-    } else if (isAdmin && this.activeFilters.lote) {
-      // Admin pode filtrar por lote específico usando o toggle
+    } else if ((isAdmin || isAvaliador) && this.activeFilters.lote) {
+      // Admin e Avaliador podem filtrar por lote específico usando o toggle
       works = works.filter((work) => {
         const workLote = work.work?.metadata?.lote || work.work?.lote;
         return workLote === this.activeFilters.lote;
       });
     }
+    // Avaliador sem filtro ativo vê TODOS os lotes
 
     // Filtro de busca textual
     if (this.activeFilters.search) {
