@@ -1,0 +1,145 @@
+/* PeerJS Connection Styles */
+
+.connection-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.connection-status.connected {
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+.connection-status.disconnected {
+  background: var(--danger);
+}
+
+.connection-status.connecting {
+  background: var(--warning);
+  animation: pulse 1.5s infinite;
+}
+
+.connection-status.error {
+  background: var(--danger);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Typing indicator */
+#remoteTypingIndicator {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toast notification styles */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 10000;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 300px;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast.success {
+  background: var(--success);
+}
+
+.toast.error {
+  background: var(--danger);
+}
+
+.toast.warning {
+  background: var(--warning);
+  color: var(--text-primary);
+}
+
+.toast.info {
+  background: var(--primary);
+}
+
+/* Modal backdrop fix for PeerJS modal */
+.modal-backdrop.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Connection code styling */
+#myConnectionCode {
+  letter-spacing: 2px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+#connectionCode {
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+/* Connection status in modal */
+#connectionStatus {
+  transition: all 0.3s ease;
+}
+
+#connectionStatus[style*="var(--success)"] {
+  border: 1px solid var(--success);
+}
+
+#connectionStatus[style*="var(--danger)"] {
+  border: 1px solid var(--danger);
+}
+
+#connectionStatus[style*="var(--warning)"] {
+  border: 1px solid var(--warning);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .toast {
+    right: 10px;
+    bottom: 10px;
+    max-width: calc(100vw - 40px);
+  }
+
+  .modal {
+    margin: 20px;
+    max-width: calc(100vw - 40px) !important;
+  }
+}

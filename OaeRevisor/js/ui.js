@@ -3,72 +3,90 @@
  */
 
 const UI = {
-    init() {
-        this.setupEventListeners();
+  init() {
+    this.setupEventListeners();
+    this.updateRoleUI();
+    this.renderFamilies();
+    this.renderElementErrorTypes();
+    this.renderAspects();
+  },
+
+  setupEventListeners() {
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        const targetPanel = document.getElementById(btn.dataset.tab);
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+
+    // Role switching
+    document.querySelectorAll(".role-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        appState.role = btn.dataset.role;
         this.updateRoleUI();
-        this.renderFamilies();
-        this.renderElementErrorTypes();
-        this.renderAspects();
-    },
+      });
+    });
 
-    setupEventListeners() {
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab).classList.add('active');
-            });
-        });
+    // Tramos change
+    document
+      .getElementById("numTramosGlobal")
+      .addEventListener("change", (e) => {
+        const num = parseInt(e.target.value) || 1;
+        Sync.updateTramos(num);
+      });
 
-        // Role switching
-        document.querySelectorAll('.role-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                appState.role = btn.dataset.role;
-                this.updateRoleUI();
-            });
-        });
+    // Tramo switch refresh families
+    document
+      .getElementById("bulkTramo")
+      ?.addEventListener("change", () => this.renderFamilies());
+  },
 
-        // Tramos change
-        document.getElementById('numTramosGlobal').addEventListener('change', (e) => {
-            const num = parseInt(e.target.value) || 1;
-            Sync.updateTramos(num);
-        });
+  updateRoleUI() {
+    document.body.setAttribute("data-role", appState.role);
+    document.querySelectorAll(".role-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.role === appState.role);
+    });
 
-        // Tramo switch refresh families
-        document.getElementById('bulkTramo')?.addEventListener('change', () => this.renderFamilies());
-    },
+    // Visual toggle for evaluator-only elements
+    const evalOnly = document.querySelectorAll(".evaluator-only");
+    evalOnly.forEach(
+      (el) =>
+        (el.style.display = appState.role === "avaliador" ? "block" : "none")
+    );
 
-    updateRoleUI() {
-        document.body.setAttribute('data-role', appState.role);
-        document.querySelectorAll('.role-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.role === appState.role);
-        });
-        
-        // Visual toggle for evaluator-only elements
-        const evalOnly = document.querySelectorAll('.evaluator-only');
-        evalOnly.forEach(el => el.style.display = appState.role === 'avaliador' ? 'block' : 'none');
-    },
+    // Re-renderizar aspectos e deficiências para atualizar botões de erro
+    this.renderAspects();
+    this.renderFunctionalDeficiencies();
+  },
 
-    renderAll() {
-        this.renderTramosTable();
-        this.renderElementsList();
-        this.renderAspects();
-        this.renderFunctionalDeficiencies();
-        this.renderAttachments();
-        this.renderMessages();
-        this.updateReport();
-        this.updateFieldVisuals();
-        this.updateTabBadges();
-    },
+  renderAll() {
+    this.renderTramosTable();
+    this.renderElementsList();
+    this.renderAspects();
+    this.renderFunctionalDeficiencies();
+    this.renderAttachments();
+    this.renderMessages();
+    this.updateReport();
+    this.updateFieldVisuals();
+    this.updateTabBadges();
+  },
 
-    // --- TRAMOS TABLE ---
-    renderTramosTable() {
-        const container = document.getElementById('tramosCaracContainer');
-        const num = appState.work.numTramos || 1;
-        
-        let html = `
+  // --- TRAMOS TABLE ---
+  renderTramosTable() {
+    const container = document.getElementById("tramosCaracContainer");
+    const num = appState.work.numTramos || 1;
+
+    let html = `
             <table class="view-table">
                 <thead>
                     <tr>
@@ -84,13 +102,15 @@ const UI = {
                 </thead>
                 <tbody>`;
 
-        const renderRow = (id, label) => {
-            return `
+    const renderRow = (id, label) => {
+      return `
                 <tr>
                     <td><strong>${label}</strong></td>
                     <td>
                         <div class="field-wrapper">
-                            <input type="text" class="form-input" id="t_${id}_tipo" data-tramo-field="${id}_tipo" value="${appState.work.tramos[id]?.tipo || ''}">
+                            <input type="text" class="form-input" id="t_${id}_tipo" data-tramo-field="${id}_tipo" value="${
+        appState.work.tramos[id]?.tipo || ""
+      }">
                             <button class="error-btn" onclick="UI.openErrorModal('t_${id}_tipo', 'Tipo Estrutura (Tramo ${label})')">⚠</button>
                         </div>
                     </td>
@@ -98,265 +118,354 @@ const UI = {
                         <div class="field-wrapper">
                             <select class="form-input" id="t_${id}_sistema" data-tramo-field="${id}_sistema">
                                 <option value="">Selecione</option>
-                                ${CONSTRUCTION_SYSTEMS.map(sys =>
-                                    `<option ${appState.work.tramos[id]?.sistema === sys ? 'selected' : ''}>${sys}</option>`
-                                ).join('')}
+                                ${CONSTRUCTION_SYSTEMS.map(
+                                  (sys) =>
+                                    `<option ${
+                                      appState.work.tramos[id]?.sistema === sys
+                                        ? "selected"
+                                        : ""
+                                    }>${sys}</option>`
+                                ).join("")}
                             </select>
                             <button class="error-btn" onclick="UI.openErrorModal('t_${id}_sistema', 'Sistema Construtivo (Tramo ${label})')">⚠</button>
                         </div>
                     </td>
                     <td>
                         <div class="field-wrapper">
-                            <input type="text" class="form-input" id="t_${id}_ext" data-tramo-field="${id}_ext" value="${appState.work.tramos[id]?.ext || ''}">
+                            <input type="text" class="form-input" id="t_${id}_ext" data-tramo-field="${id}_ext" value="${
+        appState.work.tramos[id]?.ext || ""
+      }">
                             <button class="error-btn" onclick="UI.openErrorModal('t_${id}_ext', 'Extensão (Tramo ${label})')">⚠</button>
                         </div>
                     </td>
                     <td>
                         <div class="field-wrapper">
-                            <input type="text" class="form-input" id="t_${id}_min" data-tramo-field="${id}_min" value="${appState.work.tramos[id]?.min || ''}">
+                            <input type="text" class="form-input" id="t_${id}_min" data-tramo-field="${id}_min" value="${
+        appState.work.tramos[id]?.min || ""
+      }">
                             <button class="error-btn" onclick="UI.openErrorModal('t_${id}_min', 'H Min (Tramo ${label})')">⚠</button>
                         </div>
                     </td>
                     <td>
                         <div class="field-wrapper">
-                            <input type="text" class="form-input" id="t_${id}_max" data-tramo-field="${id}_max" value="${appState.work.tramos[id]?.max || ''}">
+                            <input type="text" class="form-input" id="t_${id}_max" data-tramo-field="${id}_max" value="${
+        appState.work.tramos[id]?.max || ""
+      }">
                             <button class="error-btn" onclick="UI.openErrorModal('t_${id}_max', 'H Max (Tramo ${label})')">⚠</button>
                         </div>
                     </td>
                     <td>
                         <div class="field-wrapper">
-                            <input type="text" class="form-input" id="t_${id}_cont" data-tramo-field="${id}_cont" value="${appState.work.tramos[id]?.cont || ''}">
+                            <input type="text" class="form-input" id="t_${id}_cont" data-tramo-field="${id}_cont" value="${
+        appState.work.tramos[id]?.cont || ""
+      }">
                             <button class="error-btn" onclick="UI.openErrorModal('t_${id}_cont', 'Continuidade (Tramo ${label})')">⚠</button>
                         </div>
                     </td>
                     <td></td>
                 </tr>`;
-        };
+    };
 
-        for (let i = 1; i <= num; i++) {
-            html += renderRow(i, i);
-        }
+    for (let i = 1; i <= num; i++) {
+      html += renderRow(i, i);
+    }
 
-        // Tramo C (Complementar) não é exibido na tabela de características funcionais
-        // mas continua existindo internamente e disponível para elementos.
+    // Tramo C (Complementar) não é exibido na tabela de características funcionais
+    // mas continua existindo internamente e disponível para elementos.
 
-        html += `</tbody></table>`;
-        container.innerHTML = html;
+    html += `</tbody></table>`;
+    container.innerHTML = html;
 
-        // Re-attach data-tramo-field listeners
-        document.querySelectorAll('[data-tramo-field]').forEach(el => {
-            el.addEventListener('input', (e) => {
-                const [id, field] = e.target.dataset.tramoField.split('_');
-                if (!appState.work.tramos[id]) appState.work.tramos[id] = {};
-                appState.work.tramos[id][field] = e.target.value;
-                AutoSave.trigger();
-            });
-        });
-
-        // Update bulk tramo select (incluindo C para elementos)
-        const bulkSelect = document.getElementById('bulkTramo');
-        let bulkHtml = '';
-        for (let i = 1; i <= num; i++) bulkHtml += `<option value="${i}">${i}</option>`;
-        bulkHtml += `<option value="C">C (Complementar)</option>`;
-        bulkSelect.innerHTML = bulkHtml;
-    },
-
-    // --- ELEMENTS ---
-    renderFamilies(filterRegion = null) {
-        const select = document.getElementById('bulkFamilia');
-        let html = '<option value="">Selecione</option>';
-        const bulkTramo = document.getElementById('bulkTramo')?.value;
-        const regionSelect = document.getElementById('bulkRegiaoFiltro');
-        const regionContainer = regionSelect?.closest('.form-field');
-
-        if (bulkTramo === 'C') {
-            // Se for tramo C, bloquear região como 'Complementar'
-            if (regionSelect) {
-                // Adiciona opção complementar se não existir
-                if (![...regionSelect.options].some(o => o.value === 'Complementar')) {
-                    const opt = new Option('Complementar', 'Complementar');
-                    regionSelect.add(opt);
-                }
-                regionSelect.value = 'Complementar';
-                regionSelect.disabled = true;
-            }
-            
-            COMPLEMENTARY_ELEMENTS.forEach(element => {
-                html += `<option value="${element}">${element}</option>`;
-            });
-        } else {
-            // Comportamento normal para tramos numéricos
-            if (regionSelect) {
-                regionSelect.disabled = false;
-                // Remove opção complementar se existir
-                const compOpt = [...regionSelect.options].find(o => o.value === 'Complementar');
-                if (compOpt) regionSelect.remove(compOpt.index);
-                if (regionSelect.value === 'Complementar') regionSelect.value = '';
-            }
-            
-            const regions = filterRegion ? [filterRegion] : Object.keys(ELEMENT_FAMILIES);
-            regions.forEach(region => {
-                html += `<optgroup label="${region}">`;
-                ELEMENT_FAMILIES[region].forEach(element => {
-                    html += `<option value="${element}">${element}</option>`;
-                });
-                html += `</optgroup>`;
-            });
-        }
-
-        select.innerHTML = html;
-    },
-
-    filterElementsByRegion() {
-        const filterValue = document.getElementById('bulkRegiaoFiltro').value;
-        UI.renderFamilies(filterValue || null);
-    },
-
-    renderElementErrorTypes() {
-        const select = document.getElementById('bulkErro');
-        let html = '<option value="">Selecione</option>';
-
-        ELEMENT_ERROR_TYPES.forEach(tipo => {
-            html += `<option>${tipo}</option>`;
-        });
-
-        select.innerHTML = html;
-    },
-
-    addBulkElements() {
-        const tramo = document.getElementById('bulkTramo').value;
-        const familia = document.getElementById('bulkFamilia').value;
-        const erro = document.getElementById('bulkErro').value;
-        const obs = document.getElementById('bulkObs').value;
-
-        if (!tramo) { alert('Selecione um tramo.'); return; }
-        if (!familia) { alert('Selecione uma família de elemento.'); return; }
-        if (!erro) { alert('Selecione uma inconsistência.'); return; }
-
-        // Auto-detectar região pela família selecionada
-        let regiao = '';
-        if (tramo === 'C') {
-            regiao = 'Complementar';
-        } else {
-            for (const [reg, elementos] of Object.entries(ELEMENT_FAMILIES)) {
-                if (elementos.includes(familia)) {
-                    regiao = reg;
-                    break;
-                }
-            }
-        }
-
-        if (!regiao) {
-            alert('Não foi possível determinar a região deste elemento.');
-            return;
-        }
-
-        appState.elementErrors.push({
-            id: 'elem_' + Date.now() + Math.random(),
-            tramo, regiao, familia, erro, obs,
-            responses: []
-        });
-
-        document.getElementById('bulkObs').value = '';
-        this.renderElementsList();
-        this.updateReport();
-        this.updateTabBadges();
+    // Re-attach data-tramo-field listeners
+    document.querySelectorAll("[data-tramo-field]").forEach((el) => {
+      el.addEventListener("input", (e) => {
+        const [id, field] = e.target.dataset.tramoField.split("_");
+        if (!appState.work.tramos[id]) appState.work.tramos[id] = {};
+        appState.work.tramos[id][field] = e.target.value;
         AutoSave.trigger();
-    },
+      });
+    });
 
-    renderElementsList() {
-        const container = document.getElementById('elementsContainer');
-        if (appState.elementErrors.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum erro de elemento apontado.</p>';
-            return;
+    // Update bulk tramo select (incluindo C para elementos)
+    const bulkSelect = document.getElementById("bulkTramo");
+    let bulkHtml = "";
+    for (let i = 1; i <= num; i++)
+      bulkHtml += `<option value="${i}">${i}</option>`;
+    bulkHtml += `<option value="C">C (Complementar)</option>`;
+    bulkSelect.innerHTML = bulkHtml;
+  },
+
+  // --- ELEMENTS ---
+  renderFamilies(filterRegion = null) {
+    const select = document.getElementById("bulkFamilia");
+    let html = '<option value="">Selecione</option>';
+    const bulkTramo = document.getElementById("bulkTramo")?.value;
+    const regionSelect = document.getElementById("bulkRegiaoFiltro");
+    const regionContainer = regionSelect?.closest(".form-field");
+
+    if (bulkTramo === "C") {
+      // Se for tramo C, bloquear região como 'Complementar'
+      if (regionSelect) {
+        // Adiciona opção complementar se não existir
+        if (
+          ![...regionSelect.options].some((o) => o.value === "Complementar")
+        ) {
+          const opt = new Option("Complementar", "Complementar");
+          regionSelect.add(opt);
         }
+        regionSelect.value = "Complementar";
+        regionSelect.disabled = true;
+      }
 
-        // Group by tramo
-        const grouped = {};
-        appState.elementErrors.forEach(err => {
-            if (!grouped[err.tramo]) grouped[err.tramo] = [];
-            grouped[err.tramo].push(err);
+      COMPLEMENTARY_ELEMENTS.forEach((element) => {
+        html += `<option value="${element}">${element}</option>`;
+      });
+    } else {
+      // Comportamento normal para tramos numéricos
+      if (regionSelect) {
+        regionSelect.disabled = false;
+        // Remove opção complementar se existir
+        const compOpt = [...regionSelect.options].find(
+          (o) => o.value === "Complementar"
+        );
+        if (compOpt) regionSelect.remove(compOpt.index);
+        if (regionSelect.value === "Complementar") regionSelect.value = "";
+      }
+
+      const regions = filterRegion
+        ? [filterRegion]
+        : Object.keys(ELEMENT_FAMILIES);
+      regions.forEach((region) => {
+        html += `<optgroup label="${region}">`;
+        ELEMENT_FAMILIES[region].forEach((element) => {
+          html += `<option value="${element}">${element}</option>`;
         });
+        html += `</optgroup>`;
+      });
+    }
 
-        let html = '';
-        Object.keys(grouped).sort().forEach(tramo => {
-            html += `
+    select.innerHTML = html;
+  },
+
+  filterElementsByRegion() {
+    const filterValue = document.getElementById("bulkRegiaoFiltro").value;
+    UI.renderFamilies(filterValue || null);
+  },
+
+  renderElementErrorTypes() {
+    const select = document.getElementById("bulkErro");
+    let html = '<option value="">Selecione</option>';
+
+    ELEMENT_ERROR_TYPES.forEach((tipo) => {
+      html += `<option>${tipo}</option>`;
+    });
+
+    select.innerHTML = html;
+  },
+
+  addBulkElements() {
+    const tramo = document.getElementById("bulkTramo").value;
+    const familia = document.getElementById("bulkFamilia").value;
+    const erro = document.getElementById("bulkErro").value;
+    const obs = document.getElementById("bulkObs").value;
+
+    if (!tramo) {
+      alert("Selecione um tramo.");
+      return;
+    }
+    if (!familia) {
+      alert("Selecione uma família de elemento.");
+      return;
+    }
+    if (!erro) {
+      alert("Selecione uma inconsistência.");
+      return;
+    }
+
+    // Auto-detectar região pela família selecionada
+    let regiao = "";
+    if (tramo === "C") {
+      regiao = "Complementar";
+    } else {
+      for (const [reg, elementos] of Object.entries(ELEMENT_FAMILIES)) {
+        if (elementos.includes(familia)) {
+          regiao = reg;
+          break;
+        }
+      }
+    }
+
+    if (!regiao) {
+      alert("Não foi possível determinar a região deste elemento.");
+      return;
+    }
+
+    const elementError = {
+      id: "elem_" + Date.now() + Math.random(),
+      tramo,
+      regiao,
+      familia,
+      erro,
+      obs,
+      responses: [],
+    };
+
+    appState.elementErrors.push(elementError);
+
+    // Envia notificação via MultiPeerSync se conectado
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastErrorAdded({
+        ...elementError,
+        type: "element",
+        label: `Tramo ${tramo} - ${regiao} | ${familia}`,
+        timestamp: Date.now(),
+      });
+    }
+
+    document.getElementById("bulkObs").value = "";
+    this.renderElementsList();
+    this.updateReport();
+    this.updateTabBadges();
+    AutoSave.trigger();
+  },
+
+  renderElementsList() {
+    const container = document.getElementById("elementsContainer");
+    if (appState.elementErrors.length === 0) {
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum erro de elemento apontado.</p>';
+      return;
+    }
+
+    // Group by tramo
+    const grouped = {};
+    appState.elementErrors.forEach((err) => {
+      if (!grouped[err.tramo]) grouped[err.tramo] = [];
+      grouped[err.tramo].push(err);
+    });
+
+    let html = "";
+    Object.keys(grouped)
+      .sort()
+      .forEach((tramo) => {
+        html += `
                 <div class="section">
                     <div class="section-title">📦 Tramo ${tramo}</div>
                     <div class="elements-grid">
-                        ${grouped[tramo].map(e => `
+                        ${grouped[tramo]
+                          .map(
+                            (e) => `
                             <div class="message-card" id="elem_card_${e.id}">
                                 <div class="message-header">
-                                    <span><strong>${e.regiao}</strong> | ${e.familia}</span>
-                                    <div class="evaluator-only" style="display: ${appState.role === 'avaliador' ? 'flex' : 'none'}; gap: 5px;">
-                                        <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.editElementError('${e.id}')">✏️</button>
-                                        <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeElementError('${e.id}')">×</button>
+                                    <span><strong>${e.regiao}</strong> | ${
+                              e.familia
+                            }</span>
+                                    <div class="evaluator-only" style="display: ${
+                                      appState.role === "avaliador"
+                                        ? "flex"
+                                        : "none"
+                                    }; gap: 5px;">
+                                        <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.editElementError('${
+                                          e.id
+                                        }')">✏️</button>
+                                        <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeElementError('${
+                                          e.id
+                                        }')">×</button>
                                     </div>
                                 </div>
-                                <div style="color: var(--danger); font-weight: 600; font-size: 0.9rem; margin-bottom: 5px;">${e.erro}</div>
-                                ${e.obs ? `<div style="font-size: 0.85rem; color: var(--text-secondary); border-left: 2px solid var(--border); padding-left: 10px; margin: 10px 0;">${e.obs}</div>` : ''}
+                                <div style="color: var(--danger); font-weight: 600; font-size: 0.9rem; margin-bottom: 5px;">${
+                                  e.erro
+                                }</div>
+                                ${
+                                  e.obs
+                                    ? `<div style="font-size: 0.85rem; color: var(--text-secondary); border-left: 2px solid var(--border); padding-left: 10px; margin: 10px 0;">${e.obs}</div>`
+                                    : ""
+                                }
                                 
                                 <div class="inspector-section">
                                     <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 5px;">RESPOSTAS DA INSPEÇÃO:</div>
                                     <div id="responses_${e.id}">
-                                        ${e.responses.map(r => `
+                                        ${e.responses
+                                          .map(
+                                            (r) => `
                                             <div style="font-size: 0.8rem; background: var(--bg-tertiary); padding: 5px 10px; border-radius: 4px; margin-bottom: 4px;">
                                                 <strong>Inspetor:</strong> ${r.text} <small>(${r.date})</small>
                                             </div>
-                                        `).join('')}
+                                        `
+                                          )
+                                          .join("")}
                                     </div>
-                                    <div class="inspector-only" style="display: ${appState.role === 'inspetor' ? 'flex' : 'none'}; gap: 5px; margin-top: 10px;">
-                                        <input type="text" class="form-input no-btn" style="padding: 5px 10px; font-size: 0.8rem;" id="resp_input_${e.id}" placeholder="Escrever resposta...">
-                                        <button class="btn btn-primary" style="padding: 5px 15px;" onclick="UI.addResponse('${e.id}')">Enviar</button>
+                                    <div class="inspector-only" style="display: ${
+                                      appState.role === "inspetor"
+                                        ? "flex"
+                                        : "none"
+                                    }; gap: 5px; margin-top: 10px;">
+                                        <input type="text" class="form-input no-btn" style="padding: 5px 10px; font-size: 0.8rem;" id="resp_input_${
+                                          e.id
+                                        }" placeholder="Escrever resposta...">
+                                        <button class="btn btn-primary" style="padding: 5px 15px;" onclick="UI.addResponse('${
+                                          e.id
+                                        }')">Enviar</button>
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `
+                          )
+                          .join("")}
                     </div>
                 </div>`;
-        });
-        container.innerHTML = html;
-    },
+      });
+    container.innerHTML = html;
+  },
 
-    removeElementError(id) {
-        appState.elementErrors = appState.elementErrors.filter(e => e.id !== id);
-        this.renderElementsList();
-        this.updateReport();
-        this.updateTabBadges();
-        AutoSave.trigger();
-    },
+  removeElementError(id) {
+    appState.elementErrors = appState.elementErrors.filter((e) => e.id !== id);
+    this.renderElementsList();
+    this.updateReport();
+    this.updateTabBadges();
+    AutoSave.trigger();
+  },
 
-    editElementError(id) {
-    const elem = appState.elementErrors.find(e => e.id === id);
+  editElementError(id) {
+    const elem = appState.elementErrors.find((e) => e.id === id);
     if (!elem) return;
 
-    const card = document.getElementById('elem_card_' + id);
+    const card = document.getElementById("elem_card_" + id);
     if (!card) return;
 
     const renderEditOptions = (currentTramo) => {
-        let regiaoHtml = '';
-        let familiaHtml = '<option value="">Selecione</option>';
+      let regiaoHtml = "";
+      let familiaHtml = '<option value="">Selecione</option>';
 
-        if (currentTramo === 'C') {
-            regiaoHtml = `<option value="Complementar" selected>Complementar</option>`;
-            COMPLEMENTARY_ELEMENTS.forEach(el => {
-                familiaHtml += `<option value="${el}" ${elem.familia === el ? 'selected' : ''}>${el}</option>`;
-            });
-        } else {
-            const regioes = ['Apoio', 'Superestrutura', 'Transição'];
-            regiaoHtml = regioes.map(r =>
-                `<option value="${r}" ${elem.regiao === r ? 'selected' : ''}>${r}</option>`
-            ).join('');
+      if (currentTramo === "C") {
+        regiaoHtml = `<option value="Complementar" selected>Complementar</option>`;
+        COMPLEMENTARY_ELEMENTS.forEach((el) => {
+          familiaHtml += `<option value="${el}" ${
+            elem.familia === el ? "selected" : ""
+          }>${el}</option>`;
+        });
+      } else {
+        const regioes = ["Apoio", "Superestrutura", "Transição"];
+        regiaoHtml = regioes
+          .map(
+            (r) =>
+              `<option value="${r}" ${
+                elem.regiao === r ? "selected" : ""
+              }>${r}</option>`
+          )
+          .join("");
 
-            Object.keys(ELEMENT_FAMILIES).forEach(region => {
-                familiaHtml += `<optgroup label="${region}">`;
-                ELEMENT_FAMILIES[region].forEach(el => {
-                    familiaHtml += `<option value="${el}" ${elem.familia === el ? 'selected' : ''}>${el}</option>`;
-                });
-                familiaHtml += `</optgroup>`;
-            });
-        }
-        return { regiaoHtml, familiaHtml };
+        Object.keys(ELEMENT_FAMILIES).forEach((region) => {
+          familiaHtml += `<optgroup label="${region}">`;
+          ELEMENT_FAMILIES[region].forEach((el) => {
+            familiaHtml += `<option value="${el}" ${
+              elem.familia === el ? "selected" : ""
+            }>${el}</option>`;
+          });
+          familiaHtml += `</optgroup>`;
+        });
+      }
+      return { regiaoHtml, familiaHtml };
     };
 
     const initial = renderEditOptions(elem.tramo);
@@ -364,14 +473,23 @@ const UI = {
     // Build options for tramo (incluindo C)
     const tramoOptions = [];
     for (let i = 1; i <= appState.work.numTramos; i++) {
-        tramoOptions.push(`<option value="${i}" ${elem.tramo == i ? 'selected' : ''}>${i}</option>`);
+      tramoOptions.push(
+        `<option value="${i}" ${
+          elem.tramo == i ? "selected" : ""
+        }>${i}</option>`
+      );
     }
-    tramoOptions.push(`<option value="C" ${elem.tramo === 'C' ? 'selected' : ''}>C (Complementar)</option>`);
+    tramoOptions.push(
+      `<option value="C" ${
+        elem.tramo === "C" ? "selected" : ""
+      }>C (Complementar)</option>`
+    );
 
     // Build options for erro
-    const erroOptions = ELEMENT_ERROR_TYPES.map(tipo =>
-        `<option ${elem.erro === tipo ? 'selected' : ''}>${tipo}</option>`
-    ).join('');
+    const erroOptions = ELEMENT_ERROR_TYPES.map(
+      (tipo) =>
+        `<option ${elem.erro === tipo ? "selected" : ""}>${tipo}</option>`
+    ).join("");
 
     card.innerHTML = `
         <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px;">
@@ -379,15 +497,21 @@ const UI = {
             <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
                 <div class="form-field">
                     <label class="form-label">Tramo</label>
-                    <select class="form-input no-btn" id="edit_tramo_${id}">${tramoOptions.join('')}</select>
+                    <select class="form-input no-btn" id="edit_tramo_${id}">${tramoOptions.join(
+      ""
+    )}</select>
                 </div>
                 <div class="form-field">
                     <label class="form-label">Região</label>
-                    <select class="form-input no-btn" id="edit_regiao_${id}">${initial.regiaoHtml}</select>
+                    <select class="form-input no-btn" id="edit_regiao_${id}">${
+      initial.regiaoHtml
+    }</select>
                 </div>
                 <div class="form-field" style="grid-column: span 2;">
                     <label class="form-label">Família de Elemento</label>
-                    <select class="form-input no-btn" id="edit_familia_${id}" style="max-height: 150px;">${initial.familiaHtml}</select>
+                    <select class="form-input no-btn" id="edit_familia_${id}" style="max-height: 150px;">${
+      initial.familiaHtml
+    }</select>
                 </div>
                 <div class="form-field" style="grid-column: span 2;">
                     <label class="form-label">Inconsistência</label>
@@ -395,7 +519,9 @@ const UI = {
                 </div>
                 <div class="form-field" style="grid-column: span 2;">
                     <label class="form-label">Observação</label>
-                    <textarea class="form-input no-btn" id="edit_obs_${id}" style="height: 80px;">${elem.obs || ''}</textarea>
+                    <textarea class="form-input no-btn" id="edit_obs_${id}" style="height: 80px;">${
+      elem.obs || ""
+    }</textarea>
                 </div>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;">
@@ -406,487 +532,635 @@ const UI = {
     `;
 
     // Add listener for tramo change in edit view
-    document.getElementById(`edit_tramo_${id}`).addEventListener('change', (e) => {
+    document
+      .getElementById(`edit_tramo_${id}`)
+      .addEventListener("change", (e) => {
         const tramoVal = e.target.value;
         const options = renderEditOptions(tramoVal);
         const regiaoSelect = document.getElementById(`edit_regiao_${id}`);
         const familiaSelect = document.getElementById(`edit_familia_${id}`);
         regiaoSelect.innerHTML = options.regiaoHtml;
         familiaSelect.innerHTML = options.familiaHtml;
-        regiaoSelect.disabled = (tramoVal === 'C');
-    });
-    
+        regiaoSelect.disabled = tramoVal === "C";
+      });
+
     // Disable region if initially C
-    if (elem.tramo === 'C') document.getElementById(`edit_regiao_${id}`).disabled = true;
-    },
+    if (elem.tramo === "C")
+      document.getElementById(`edit_regiao_${id}`).disabled = true;
+  },
 
-    updateElementError(id) {
-        const elem = appState.elementErrors.find(e => e.id === id);
-        if (!elem) return;
+  updateElementError(id) {
+    const elem = appState.elementErrors.find((e) => e.id === id);
+    if (!elem) return;
 
-        elem.tramo = document.getElementById('edit_tramo_' + id).value;
-        elem.regiao = document.getElementById('edit_regiao_' + id).value;
-        elem.familia = document.getElementById('edit_familia_' + id).value;
-        elem.erro = document.getElementById('edit_erro_' + id).value;
-        elem.obs = document.getElementById('edit_obs_' + id).value;
+    elem.tramo = document.getElementById("edit_tramo_" + id).value;
+    elem.regiao = document.getElementById("edit_regiao_" + id).value;
+    elem.familia = document.getElementById("edit_familia_" + id).value;
+    elem.erro = document.getElementById("edit_erro_" + id).value;
+    elem.obs = document.getElementById("edit_obs_" + id).value;
 
-        this.renderElementsList();
-        this.updateReport();
-        AutoSave.trigger();
-    },
+    this.renderElementsList();
+    this.updateReport();
+    AutoSave.trigger();
+  },
 
-    addResponse(id) {
-        const input = document.getElementById('resp_input_' + id);
-        const text = input.value.trim();
-        if (!text) return;
+  addResponse(id) {
+    const input = document.getElementById("resp_input_" + id);
+    const text = input.value.trim();
+    if (!text) return;
 
-        const err = appState.elementErrors.find(e => e.id === id);
-        if (err) {
-            err.responses.push({
-                text,
-                date: new Date().toLocaleString('pt-BR')
-            });
-            input.value = '';
-            this.renderElementsList();
-            AutoSave.trigger();
-        }
-    },
+    const err = appState.elementErrors.find((e) => e.id === id);
+    if (err) {
+      err.responses.push({
+        text,
+        date: new Date().toLocaleString("pt-BR"),
+      });
+      input.value = "";
+      this.renderElementsList();
+      AutoSave.trigger();
+    }
+  },
 
-    // --- ASPECTS ---
-    renderAspects() {
-        const container = document.getElementById('aspectosContainer');
-        if (!container) return;
+  // --- ASPECTS ---
+  renderAspects() {
+    const container = document.getElementById("aspectosContainer");
+    if (!container) return;
 
-        if (appState.work.aspects.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum aspecto especial registrado.</p>';
-            return;
-        }
+    if (appState.work.aspects.length === 0) {
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum aspecto especial registrado.</p>';
+      return;
+    }
 
-        container.innerHTML = `
+    container.innerHTML = `
             <table class="view-table">
                 <thead>
                     <tr>
                         <th>Descrição</th>
                         <th style="width: 150px;">Sigla</th>
                         <th>Comentário</th>
-                        <th style="width: 50px;">Ações</th>
+                        <th style="width: 80px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${appState.work.aspects.map(a => `
+                    ${appState.work.aspects
+                      .map(
+                        (a) => `
                         <tr>
                             <td>${a.desc}</td>
                             <td>${a.sigla}</td>
                             <td>
-                                <input type="text" class="form-input no-btn" value="${a.comment || ''}" 
-                                    oninput="UI.updateAspectComment('${a.id}', this.value)" placeholder="Adicionar nota...">
+                                <input type="text" class="form-input no-btn" value="${
+                                  a.comment || ""
+                                }" 
+                                    oninput="UI.updateAspectComment('${
+                                      a.id
+                                    }', this.value)" placeholder="Adicionar nota...">
                             </td>
                             <td>
-                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAspect('${a.id}')">×</button>
+                                <div class="evaluator-only" style="display: ${
+                                  appState.role === "avaliador"
+                                    ? "flex"
+                                    : "none"
+                                }; gap: 5px;">
+                                    <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.openErrorModal('aspect_${
+                                      a.id
+                                    }', 'Aspecto: ${a.desc}')">⚠</button>
+                                    <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAspect('${
+                                      a.id
+                                    }')">×</button>
+                                </div>
                             </td>
                         </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                 </tbody>
             </table>
         `;
-    },
+  },
 
-    openAspectModal() {
-        const select = document.getElementById('modalAspectSelect');
-        select.innerHTML = '<option value="">Selecione</option>' + 
-            SPECIAL_ASPECTS.map(s => `<option value="${s.desc}">${s.desc}</option>`).join('');
-        
-        document.getElementById('aspectModal').style.display = 'flex';
-    },
+  openAspectModal() {
+    const select = document.getElementById("modalAspectSelect");
+    select.innerHTML =
+      '<option value="">Selecione</option>' +
+      SPECIAL_ASPECTS.map(
+        (s) => `<option value="${s.desc}">${s.desc}</option>`
+      ).join("");
 
-    closeAspectModal() {
-        document.getElementById('aspectModal').style.display = 'none';
-        document.getElementById('modalAspectSelect').value = '';
-    },
+    document.getElementById("aspectModal").style.display = "flex";
+  },
 
-    addAspectFromModal() {
-        const desc = document.getElementById('modalAspectSelect').value;
-        if (!desc) return;
+  closeAspectModal() {
+    document.getElementById("aspectModal").style.display = "none";
+    document.getElementById("modalAspectSelect").value = "";
+  },
 
-        const info = SPECIAL_ASPECTS.find(s => s.desc === desc);
-        const id = 'aspect_' + Date.now();
+  addAspectFromModal() {
+    const desc = document.getElementById("modalAspectSelect").value;
+    if (!desc) return;
 
-        appState.work.aspects.push({
-            id,
-            desc: info.desc,
-            sigla: info.sigla,
-            comment: ""
-        });
+    const info = SPECIAL_ASPECTS.find((s) => s.desc === desc);
+    const id = "aspect_" + Date.now();
 
-        this.closeAspectModal();
-        this.renderAspects();
-        AutoSave.trigger();
-    },
+    appState.work.aspects.push({
+      id,
+      desc: info.desc,
+      sigla: info.sigla,
+      comment: "",
+    });
 
-    updateAspectComment(id, value) {
-        const aspect = appState.work.aspects.find(a => a.id === id);
-        if (aspect) {
-            aspect.comment = value;
-            AutoSave.trigger();
-        }
-    },
+    this.closeAspectModal();
+    this.renderAspects();
+    AutoSave.trigger();
+  },
 
-    removeAspect(id) {
-        appState.work.aspects = appState.work.aspects.filter(a => a.id !== id);
-        this.renderAspects();
-        AutoSave.trigger();
-    },
+  updateAspectComment(id, value) {
+    const aspect = appState.work.aspects.find((a) => a.id === id);
+    if (aspect) {
+      aspect.comment = value;
+      AutoSave.trigger();
+    }
+  },
 
-    // --- FUNCTIONAL DEFICIENCIES ---
-    renderFunctionalDeficiencies() {
-        const container = document.getElementById('deficienciasContainer');
-        if (!container) return;
+  removeAspect(id) {
+    appState.work.aspects = appState.work.aspects.filter((a) => a.id !== id);
+    this.renderAspects();
+    AutoSave.trigger();
+  },
 
-        if (appState.work.functionalDeficiencies.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma deficiência funcional registrada.</p>';
-            return;
-        }
+  // --- FUNCTIONAL DEFICIENCIES ---
+  renderFunctionalDeficiencies() {
+    const container = document.getElementById("deficienciasContainer");
+    if (!container) return;
 
-        container.innerHTML = `
+    if (appState.work.functionalDeficiencies.length === 0) {
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma deficiência funcional registrada.</p>';
+      return;
+    }
+
+    container.innerHTML = `
             <table class="view-table">
                 <thead>
                     <tr>
                         <th>Descrição</th>
                         <th style="width: 150px;">Unidade</th>
                         <th style="width: 100px;">Valor/Qtd</th>
-                        <th style="width: 50px;">Ações</th>
+                        <th style="width: 80px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${appState.work.functionalDeficiencies.map(d => `
+                    ${appState.work.functionalDeficiencies
+                      .map(
+                        (d) => `
                         <tr>
                             <td>${d.desc}</td>
                             <td>${d.unit}</td>
                             <td>
-                                <input type="number" class="form-input no-btn" value="${d.value || 0}" 
-                                    onchange="UI.updateDeficValue('${d.id}', this.value)">
+                                <input type="number" class="form-input no-btn" value="${
+                                  d.value || 0
+                                }" 
+                                    onchange="UI.updateDeficValue('${
+                                      d.id
+                                    }', this.value)">
                             </td>
                             <td>
-                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeDefic('${d.id}')">×</button>
+                                <div class="evaluator-only" style="display: ${
+                                  appState.role === "avaliador"
+                                    ? "flex"
+                                    : "none"
+                                }; gap: 5px;">
+                                    <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.openErrorModal('defic_${
+                                      d.id
+                                    }', 'Deficiência: ${d.desc}')">⚠</button>
+                                    <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeDefic('${
+                                      d.id
+                                    }')">×</button>
+                                </div>
                             </td>
                         </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                 </tbody>
             </table>
         `;
-    },
+  },
 
-    openDeficModal() {
-        const select = document.getElementById('modalDeficSelect');
-        select.innerHTML = '<option value="">Selecione</option>' + 
-            FUNCTIONAL_DEFICIENCIES.map(d => `<option value="${d.desc}">${d.desc}</option>`).join('');
-        
-        document.getElementById('deficModal').style.display = 'flex';
-    },
+  openDeficModal() {
+    const select = document.getElementById("modalDeficSelect");
+    select.innerHTML =
+      '<option value="">Selecione</option>' +
+      FUNCTIONAL_DEFICIENCIES.map(
+        (d) => `<option value="${d.desc}">${d.desc}</option>`
+      ).join("");
 
-    closeDeficModal() {
-        document.getElementById('deficModal').style.display = 'none';
-        document.getElementById('modalDeficSelect').value = '';
-    },
+    document.getElementById("deficModal").style.display = "flex";
+  },
 
-    addDeficFromModal() {
-        const desc = document.getElementById('modalDeficSelect').value;
-        if (!desc) return;
+  closeDeficModal() {
+    document.getElementById("deficModal").style.display = "none";
+    document.getElementById("modalDeficSelect").value = "";
+  },
 
-        const info = FUNCTIONAL_DEFICIENCIES.find(f => f.desc === desc);
-        const id = 'defic_' + Date.now();
+  addDeficFromModal() {
+    const desc = document.getElementById("modalDeficSelect").value;
+    if (!desc) return;
 
-        appState.work.functionalDeficiencies.push({
-            id,
-            desc: info.desc,
-            unit: info.unit,
-            value: 0
-        });
+    const info = FUNCTIONAL_DEFICIENCIES.find((f) => f.desc === desc);
+    const id = "defic_" + Date.now();
 
-        this.closeDeficModal();
-        this.renderFunctionalDeficiencies();
-        AutoSave.trigger();
-    },
+    appState.work.functionalDeficiencies.push({
+      id,
+      desc: info.desc,
+      unit: info.unit,
+      value: 0,
+    });
 
-    updateDeficValue(id, value) {
-        const defic = appState.work.functionalDeficiencies.find(d => d.id === id);
-        if (defic) {
-            defic.value = value;
-            AutoSave.trigger();
-        }
-    },
+    this.closeDeficModal();
+    this.renderFunctionalDeficiencies();
+    AutoSave.trigger();
+  },
 
-    removeDefic(id) {
-        appState.work.functionalDeficiencies = appState.work.functionalDeficiencies.filter(d => d.id !== id);
-        this.renderFunctionalDeficiencies();
-        AutoSave.trigger();
-    },
+  updateDeficValue(id, value) {
+    const defic = appState.work.functionalDeficiencies.find((d) => d.id === id);
+    if (defic) {
+      defic.value = value;
+      AutoSave.trigger();
+    }
+  },
 
-    // --- ATTACHMENTS ---
-    addAnexoError() {
-        const nome = document.getElementById('anexoNome').value.trim();
-        const tipo = document.getElementById('anexoTipo').value;
-        const inconsist = document.getElementById('anexoTipoErro').value;
-        const obs = document.getElementById('anexoObs').value.trim();
+  removeDefic(id) {
+    appState.work.functionalDeficiencies =
+      appState.work.functionalDeficiencies.filter((d) => d.id !== id);
+    this.renderFunctionalDeficiencies();
+    AutoSave.trigger();
+  },
 
-        if (!nome) return;
+  // --- ATTACHMENTS ---
+  addAnexoError() {
+    const nome = document.getElementById("anexoNome").value.trim();
+    const tipo = document.getElementById("anexoTipo").value;
+    const inconsist = document.getElementById("anexoTipoErro").value;
+    const obs = document.getElementById("anexoObs").value.trim();
 
-        appState.anexoErrors.push({
-            id: 'anexo_' + Date.now(),
-            nome, tipo, inconsist, obs
-        });
+    if (!nome) return;
 
-        document.getElementById('anexoNome').value = '';
-        document.getElementById('anexoObs').value = '';
-        this.renderAttachments();
-        this.updateReport();
-        this.updateTabBadges();
-        AutoSave.trigger();
-    },
+    appState.anexoErrors.push({
+      id: "anexo_" + Date.now(),
+      nome,
+      tipo,
+      inconsist,
+      obs,
+    });
 
-    renderAttachments() {
-        const container = document.getElementById('attachmentsContainer');
-        if (appState.anexoErrors.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhum erro de anexo apontado.</p>';
-            return;
-        }
+    document.getElementById("anexoNome").value = "";
+    document.getElementById("anexoObs").value = "";
+    this.renderAttachments();
+    this.updateReport();
+    this.updateTabBadges();
+    AutoSave.trigger();
+  },
 
-        container.innerHTML = `
+  renderAttachments() {
+    const container = document.getElementById("attachmentsContainer");
+    if (appState.anexoErrors.length === 0) {
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--text-muted);">Nenhum erro de anexo apontado.</p>';
+      return;
+    }
+
+    container.innerHTML = `
             <div class="section-title">🔴 Erros em Anexos/Fotos</div>
             <div class="elements-grid">
-                ${appState.anexoErrors.map(e => `
+                ${appState.anexoErrors
+                  .map(
+                    (e) => `
                     <div class="message-card">
                         <div class="message-header">
                             <span><strong>${e.tipo}:</strong> ${e.nome}</span>
                             <div style="display: flex; gap: 5px;">
-                                <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.openEditAnexo('${e.id}')">✎</button>
-                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAnexoError('${e.id}')">×</button>
+                                <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="UI.openEditAnexo('${
+                                  e.id
+                                }')">✎</button>
+                                <button class="btn btn-danger" style="padding: 2px 8px;" onclick="UI.removeAnexoError('${
+                                  e.id
+                                }')">×</button>
                             </div>
                         </div>
-                        <div style="color: var(--danger); font-size: 0.85rem; font-weight: 600;">${e.inconsist}</div>
-                        ${e.obs ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">${e.obs}</div>` : ''}
+                        <div style="color: var(--danger); font-size: 0.85rem; font-weight: 600;">${
+                          e.inconsist
+                        }</div>
+                        ${
+                          e.obs
+                            ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">${e.obs}</div>`
+                            : ""
+                        }
                     </div>
-                `).join('')}
+                `
+                  )
+                  .join("")}
             </div>`;
-    },
+  },
 
-    removeAnexoError(id) {
-        appState.anexoErrors = appState.anexoErrors.filter(e => e.id !== id);
-        this.renderAttachments();
-        this.updateReport();
-        this.updateTabBadges();
-        AutoSave.trigger();
-    },
+  removeAnexoError(id) {
+    appState.anexoErrors = appState.anexoErrors.filter((e) => e.id !== id);
+    this.renderAttachments();
+    this.updateReport();
+    this.updateTabBadges();
+    AutoSave.trigger();
+  },
 
-    // --- MESSAGES ---
-    addMensagem() {
-        const input = document.getElementById('novaMensagem');
-        const text = input.value.trim();
-        if (!text) return;
+  // --- MESSAGES ---
+  addMensagem() {
+    const input = document.getElementById("novaMensagem");
+    const text = input.value.trim();
+    if (!text) return;
 
-        appState.mensagens.push({
-            id: 'msg_' + Date.now(),
-            author: appState.role === 'avaliador' ? 'Auditor/Avaliador' : 'Inspetor de Campo',
-            text,
-            date: new Date().toLocaleString('pt-BR')
-        });
+    const messageData = {
+      id: "msg_" + Date.now(),
+      author:
+        appState.role === "avaliador"
+          ? "Auditor/Avaliador"
+          : "Inspetor de Campo",
+      text,
+      date: new Date().toLocaleString("pt-BR"),
+    };
 
-        input.value = '';
-        this.renderMessages();
-        AutoSave.trigger();
-    },
+    appState.mensagens.push(messageData);
 
-    renderMessages() {
-        const container = document.getElementById('mensagensContainer');
+    // Envia mensagem via MultiPeerSync se conectado
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastMessage(messageData);
+    }
 
-        // Convert all errors to message format
-        const allMessages = [];
+    input.value = "";
+    this.renderMessages();
+    AutoSave.trigger();
+  },
 
-        // Add field errors as messages
-        Object.values(appState.errors).forEach(err => {
-            const typesText = err.types.join('; ');
-            allMessages.push({
-                id: err.id,
-                type: 'field',
-                text: `Campo [${err.label}]: ${typesText}${err.obs ? ' - ' + err.obs : ''}`,
-                author: appState.work.avaliador || 'Avaliador',
-                role: 'Avaliador',
-                date: new Date().toLocaleString('pt-BR'),
-                isOwn: true
-            });
-        });
+  renderMessages() {
+    const container = document.getElementById("mensagensContainer");
 
-        // Add element errors as messages
-        appState.elementErrors.forEach(err => {
-            allMessages.push({
-                id: err.id,
-                type: 'element',
-                text: `Tramo ${err.tramo} - ${err.regiao} | ${err.familia}: ${err.erro}${err.obs ? ' - ' + err.obs : ''}`,
-                author: appState.work.avaliador || 'Avaliador',
-                role: 'Avaliador',
-                date: new Date().toLocaleString('pt-BR'),
-                isOwn: true
-            });
-        });
+    // Convert all errors to message format
+    const allMessages = [];
 
-        // Add anexo errors as messages
-        appState.anexoErrors.forEach(err => {
-            allMessages.push({
-                id: err.id,
-                type: 'anexo',
-                text: `Anexo [${err.nome}]: ${err.inconsist}${err.obs ? ' - ' + err.obs : ''}`,
-                author: appState.work.avaliador || 'Avaliador',
-                role: 'Avaliador',
-                date: new Date().toLocaleString('pt-BR'),
-                isOwn: true
-            });
-        });
+    // Add field errors as messages
+    Object.values(appState.errors).forEach((err) => {
+      const typesText = err.types.join("; ");
+      allMessages.push({
+        id: err.id,
+        type: "field",
+        text: `Campo [${err.label}]: ${typesText}${
+          err.obs ? " - " + err.obs : ""
+        }`,
+        author: appState.work.avaliador || "Avaliador",
+        role: "Avaliador",
+        date: new Date().toLocaleString("pt-BR"),
+        isOwn: true,
+      });
+    });
 
-        // Add custom messages
-        appState.mensagens.forEach(m => {
-            allMessages.push({
-                id: m.id,
-                type: 'message',
-                text: m.text,
-                author: m.author,
-                role: m.author.includes('Auditor') ? 'Avaliador' : 'Inspetor',
-                date: m.date,
-                isOwn: m.author.includes('Auditor') || m.author.includes('Avaliador')
-            });
-        });
+    // Add element errors as messages
+    appState.elementErrors.forEach((err) => {
+      allMessages.push({
+        id: err.id,
+        type: "element",
+        text: `Tramo ${err.tramo} - ${err.regiao} | ${err.familia}: ${
+          err.erro
+        }${err.obs ? " - " + err.obs : ""}`,
+        author: appState.work.avaliador || "Avaliador",
+        role: "Avaliador",
+        date: new Date().toLocaleString("pt-BR"),
+        isOwn: true,
+      });
+    });
 
-        if (allMessages.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhuma inconsistência ou mensagem registrada.</p>';
-            this.updateMessageCounters(0, 0, 0);
-            return;
+    // Add anexo errors as messages
+    appState.anexoErrors.forEach((err) => {
+      allMessages.push({
+        id: err.id,
+        type: "anexo",
+        text: `Anexo [${err.nome}]: ${err.inconsist}${
+          err.obs ? " - " + err.obs : ""
+        }`,
+        author: appState.work.avaliador || "Avaliador",
+        role: "Avaliador",
+        date: new Date().toLocaleString("pt-BR"),
+        isOwn: true,
+      });
+    });
+
+    // Add custom messages
+    appState.mensagens.forEach((m) => {
+      allMessages.push({
+        id: m.id,
+        type: "message",
+        text: m.text,
+        author: m.author,
+        role: m.author.includes("Auditor") ? "Avaliador" : "Inspetor",
+        date: m.date,
+        isOwn: m.author.includes("Auditor") || m.author.includes("Avaliador"),
+      });
+    });
+
+    if (allMessages.length === 0) {
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Nenhuma inconsistência ou mensagem registrada.</p>';
+      this.updateMessageCounters(0, 0, 0);
+      return;
+    }
+
+    let totalCount = 0;
+    let pendingCount = 0;
+    let completedCount = 0;
+
+    const html = allMessages
+      .map((msg) => {
+        const isCompleted = appState.completionStates.get(msg.id) || false;
+        const savedResponse = appState.messageResponses.get(msg.id);
+
+        if (msg.isOwn) {
+          totalCount++;
+          if (isCompleted) completedCount++;
+          else pendingCount++;
         }
 
-        let totalCount = 0;
-        let pendingCount = 0;
-        let completedCount = 0;
+        const cardClasses = msg.isOwn
+          ? "message-card own-message"
+          : "message-card other-message";
+        const completedClass = msg.isOwn && isCompleted ? " completed" : "";
 
-        const html = allMessages.map(msg => {
-            const isCompleted = appState.completionStates.get(msg.id) || false;
-            const savedResponse = appState.messageResponses.get(msg.id);
-
-            if (msg.isOwn) {
-                totalCount++;
-                if (isCompleted) completedCount++;
-                else pendingCount++;
-            }
-
-            const cardClasses = msg.isOwn ? 'message-card own-message' : 'message-card other-message';
-            const completedClass = (msg.isOwn && isCompleted) ? ' completed' : '';
-
-            return `
-                <div class="${cardClasses}${completedClass}" data-message-id="${msg.id}">
+        return `
+                <div class="${cardClasses}${completedClass}" data-message-id="${
+          msg.id
+        }">
                     <div class="message-header">
-                        ${msg.isOwn ? `
+                        ${
+                          msg.isOwn
+                            ? `
                             <div class="checkbox-container">
                                 <input type="checkbox" class="message-checkbox"
-                                    ${isCompleted ? 'checked' : ''}
+                                    ${isCompleted ? "checked" : ""}
                                     onchange="UI.toggleCompletion('${msg.id}')">
                             </div>
-                        ` : ''}
+                        `
+                            : ""
+                        }
                         <div class="message-content">
                             <div class="message-text">${msg.text}</div>
                             <div class="message-meta">
                                 <div>
-                                    <strong>${msg.author}</strong> - ${msg.role}<br>
+                                    <strong>${msg.author}</strong> - ${
+          msg.role
+        }<br>
                                     <small>${msg.date}</small>
                                 </div>
-                                ${msg.isOwn ? `
-                                    <span style="background: ${isCompleted ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)'};
-                                          color: ${isCompleted ? 'var(--success)' : 'var(--warning)'};
+                                ${
+                                  msg.isOwn
+                                    ? `
+                                    <span style="background: ${
+                                      isCompleted
+                                        ? "rgba(34, 197, 94, 0.2)"
+                                        : "rgba(234, 179, 8, 0.2)"
+                                    };
+                                          color: ${
+                                            isCompleted
+                                              ? "var(--success)"
+                                              : "var(--warning)"
+                                          };
                                           padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                                        ${isCompleted ? '✅ Corrigido' : '⏳ Pendente'}
+                                        ${
+                                          isCompleted
+                                            ? "✅ Corrigido"
+                                            : "⏳ Pendente"
+                                        }
                                     </span>
-                                ` : `
+                                `
+                                    : `
                                     <span style="background: rgba(100, 116, 139, 0.2); color: var(--text-muted);
                                           padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                         📤 Sua Mensagem
                                     </span>
-                                `}
+                                `
+                                }
                             </div>
-                            ${msg.isOwn ? `
+                            ${
+                              msg.isOwn
+                                ? `
                                 <div class="response-section" style="margin-top: 15px;">
-                                    ${savedResponse ? `
+                                    ${
+                                      savedResponse
+                                        ? `
                                         <div class="saved-response">
                                             <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 5px;">
                                                 RESPOSTA DA INSPEÇÃO:
                                             </div>
-                                            <div style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 8px;">${savedResponse.text}</div>
+                                            <div style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 8px;">${
+                                              savedResponse.text
+                                            }</div>
                                             <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                                <small>${savedResponse.date}</small>
+                                                <small>${
+                                                  savedResponse.date
+                                                }</small>
                                             </div>
-                                            <div class="inspector-only" style="display: ${appState.role === 'inspetor' ? 'flex' : 'none'}; gap: 8px; margin-top: 10px;">
+                                            <div class="inspector-only" style="display: ${
+                                              appState.role === "inspetor"
+                                                ? "flex"
+                                                : "none"
+                                            }; gap: 8px; margin-top: 10px;">
                                                 <button class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.85rem;"
-                                                    onclick="UI.editResponse('${msg.id}')">✏️ Editar</button>
+                                                    onclick="UI.editResponse('${
+                                                      msg.id
+                                                    }')">✏️ Editar</button>
                                                 <button class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.85rem;"
-                                                    onclick="UI.copyResponse('${msg.id}')">📋 Copiar</button>
+                                                    onclick="UI.copyResponse('${
+                                                      msg.id
+                                                    }')">📋 Copiar</button>
                                             </div>
                                         </div>
-                                    ` : `
-                                        <div class="inspector-only" style="display: ${appState.role === 'inspetor' ? 'block' : 'none'};">
-                                            <textarea class="response-textarea" id="response_input_${msg.id}"
+                                    `
+                                        : `
+                                        <div class="inspector-only" style="display: ${
+                                          appState.role === "inspetor"
+                                            ? "block"
+                                            : "none"
+                                        };">
+                                            <textarea class="response-textarea" id="response_input_${
+                                              msg.id
+                                            }"
                                                 placeholder="Escrever resposta..."></textarea>
                                             <button class="btn btn-primary" style="margin-top: 8px; padding: 6px 16px;"
-                                                onclick="UI.saveResponse('${msg.id}')">💾 Salvar Resposta</button>
+                                                onclick="UI.saveResponse('${
+                                                  msg.id
+                                                }')">💾 Salvar Resposta</button>
                                         </div>
-                                    `}
+                                    `
+                                    }
                                 </div>
-                            ` : ''}
+                            `
+                                : ""
+                            }
                         </div>
                     </div>
                 </div>
             `;
-        }).join('');
+      })
+      .join("");
 
-        container.innerHTML = html;
-        this.updateMessageCounters(totalCount, pendingCount, completedCount);
-    },
+    container.innerHTML = html;
+    this.updateMessageCounters(totalCount, pendingCount, completedCount);
+  },
 
-    updateMessageCounters(total, pending, completed) {
-        document.getElementById('msgsTotalCount').textContent = total;
-        document.getElementById('msgsPendingCount').textContent = pending;
-        document.getElementById('msgsCompletedCount').textContent = completed;
-    },
+  updateMessageCounters(total, pending, completed) {
+    document.getElementById("msgsTotalCount").textContent = total;
+    document.getElementById("msgsPendingCount").textContent = pending;
+    document.getElementById("msgsCompletedCount").textContent = completed;
+  },
 
-    toggleCompletion(id) {
-        const currentState = appState.completionStates.get(id) || false;
-        appState.completionStates.set(id, !currentState);
-        this.renderMessages();
-        AutoSave.trigger();
-    },
+  toggleCompletion(id) {
+    const currentState = appState.completionStates.get(id) || false;
+    const newState = !currentState;
+    appState.completionStates.set(id, newState);
 
-    saveResponse(id) {
-        const textarea = document.getElementById('response_input_' + id);
-        const text = textarea.value.trim();
-        if (!text) {
-            alert('Digite uma resposta antes de salvar.');
-            return;
-        }
+    // Envia notificação via MultiPeerSync se conectado e se foi marcado como resolvido
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections() && newState) {
+      MultiPeerSync.broadcastErrorResolved(id);
+    }
 
-        appState.messageResponses.set(id, {
-            text,
-            date: new Date().toLocaleString('pt-BR')
-        });
+    this.renderMessages();
+    AutoSave.trigger();
+  },
 
-        this.renderMessages();
-        AutoSave.trigger();
-    },
+  saveResponse(id) {
+    const textarea = document.getElementById("response_input_" + id);
+    const text = textarea.value.trim();
+    if (!text) {
+      alert("Digite uma resposta antes de salvar.");
+      return;
+    }
 
-    editResponse(id) {
-        const savedResponse = appState.messageResponses.get(id);
-        if (!savedResponse) return;
+    appState.messageResponses.set(id, {
+      text,
+      date: new Date().toLocaleString("pt-BR"),
+    });
 
-        const card = document.querySelector(`[data-message-id="${id}"]`);
-        if (!card) return;
+    this.renderMessages();
+    AutoSave.trigger();
+  },
 
-        const responseSection = card.querySelector('.saved-response');
-        if (!responseSection) return;
+  editResponse(id) {
+    const savedResponse = appState.messageResponses.get(id);
+    if (!savedResponse) return;
 
-        responseSection.innerHTML = `
+    const card = document.querySelector(`[data-message-id="${id}"]`);
+    if (!card) return;
+
+    const responseSection = card.querySelector(".saved-response");
+    if (!responseSection) return;
+
+    responseSection.innerHTML = `
             <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 5px;">
                 EDITANDO RESPOSTA:
             </div>
@@ -896,47 +1170,52 @@ const UI = {
                 <button class="btn btn-primary" style="padding: 6px 16px;" onclick="UI.updateResponse('${id}')">💾 Salvar</button>
             </div>
         `;
-    },
+  },
 
-    updateResponse(id) {
-        const textarea = document.getElementById('edit_response_' + id);
-        const text = textarea.value.trim();
-        if (!text) {
-            alert('Digite uma resposta antes de salvar.');
-            return;
-        }
+  updateResponse(id) {
+    const textarea = document.getElementById("edit_response_" + id);
+    const text = textarea.value.trim();
+    if (!text) {
+      alert("Digite uma resposta antes de salvar.");
+      return;
+    }
 
-        appState.messageResponses.set(id, {
-            text,
-            date: new Date().toLocaleString('pt-BR')
-        });
+    appState.messageResponses.set(id, {
+      text,
+      date: new Date().toLocaleString("pt-BR"),
+    });
 
-        this.renderMessages();
-        AutoSave.trigger();
-    },
+    this.renderMessages();
+    AutoSave.trigger();
+  },
 
-    copyResponse(id) {
-        const savedResponse = appState.messageResponses.get(id);
-        if (!savedResponse) return;
+  copyResponse(id) {
+    const savedResponse = appState.messageResponses.get(id);
+    if (!savedResponse) return;
 
-        navigator.clipboard.writeText(savedResponse.text).then(() => {
-            alert('Resposta copiada para a área de transferência!');
-        }).catch(err => {
-            console.error('Erro ao copiar:', err);
-            alert('Não foi possível copiar a resposta.');
-        });
-    },
+    navigator.clipboard
+      .writeText(savedResponse.text)
+      .then(() => {
+        alert("Resposta copiada para a área de transferência!");
+      })
+      .catch((err) => {
+        console.error("Erro ao copiar:", err);
+        alert("Não foi possível copiar a resposta.");
+      });
+  },
 
-    // --- ERROR MODAL ---
-    openErrorModal(fieldId, fieldLabel) {
-        appState.currentField = fieldId;
-        const fieldEl = document.getElementById(fieldId) || document.getElementById('f_' + fieldId);
-        const valor = fieldEl ? (fieldEl.value || '(vazio)') : '(vazio)';
+  // --- ERROR MODAL ---
+  openErrorModal(fieldId, fieldLabel) {
+    appState.currentField = fieldId;
+    const fieldEl =
+      document.getElementById(fieldId) ||
+      document.getElementById("f_" + fieldId);
+    const valor = fieldEl ? fieldEl.value || "(vazio)" : "(vazio)";
 
-        const existing = appState.errors[fieldId];
-        
-        const modalBody = document.getElementById('modalBody');
-        modalBody.innerHTML = `
+    const existing = appState.errors[fieldId];
+
+    const modalBody = document.getElementById("modalBody");
+    modalBody.innerHTML = `
             <div style="margin-bottom: 20px;">
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Campo</div>
                 <div style="font-size: 1.1rem; font-weight: 700;">${fieldLabel}</div>
@@ -949,393 +1228,1009 @@ const UI = {
             <div style="margin-bottom: 15px;">
                 <label class="form-label" style="display: block; margin-bottom: 8px;">Tipo de Inconsistência</label>
                 <div id="modalTipos" style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                    ${this.getErrorTypes(fieldId).map(t => `
+                    ${this.getErrorTypes(fieldId)
+                      .map(
+                        (t) => `
                         <label style="display: flex; gap: 10px; align-items: center; padding: 10px; background: var(--bg-tertiary); border-radius: 4px; cursor: pointer;">
-                            <input type="checkbox" name="err_tipo" value="${t}" ${existing?.types?.includes(t) ? 'checked' : ''}>
+                            <input type="checkbox" name="err_tipo" value="${t}" ${
+                          existing?.types?.includes(t) ? "checked" : ""
+                        }>
                             <span style="font-size: 14px;">${t}</span>
                         </label>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                 </div>
             </div>
 
             <div class="form-field">
                 <label class="form-label">Observação detalhada</label>
-                <textarea class="form-input no-btn" id="modalObs" style="height: 80px;">${existing?.obs || ''}</textarea>
+                <textarea class="form-input no-btn" id="modalObs" style="height: 80px;">${
+                  existing?.obs || ""
+                }</textarea>
             </div>
         `;
 
-        document.getElementById('btnRemoveError').style.display = existing ? 'block' : 'none';
-        document.getElementById('errorModal').classList.add('show');
-    },
+    document.getElementById("btnRemoveError").style.display = existing
+      ? "block"
+      : "none";
+    document.getElementById("errorModal").classList.add("show");
+  },
 
-    getErrorTypes(fieldId) {
-        // Determine category - check for tramo fields first
-        if (fieldId.startsWith('tramo_')) {
-            return ERROR_TYPES.tramos;
+  getErrorTypes(fieldId) {
+    // Determine category - check for tramo fields first
+    if (fieldId.startsWith("tramo_")) {
+      return ERROR_TYPES.tramos;
+    }
+
+    // Check if field has a mapped category
+    const category = FIELD_CATEGORIES[fieldId] || "default";
+    return ERROR_TYPES[category];
+  },
+
+  closeErrorModal() {
+    document.getElementById("errorModal").classList.remove("show");
+  },
+
+  applyError() {
+    const fieldId = appState.currentField;
+    const types = Array.from(
+      document.querySelectorAll('input[name="err_tipo"]:checked')
+    ).map((i) => i.value);
+    const obs = document.getElementById("modalObs").value.trim();
+
+    if (types.length === 0 && !obs) {
+      this.clearFieldError();
+      return;
+    }
+
+    const labelMatch = document
+      .querySelector(`button[onclick*="'${fieldId}'"]`)
+      .getAttribute("onclick")
+      .match(/'([^']+)',\s*'([^']+)'/);
+    const label = labelMatch ? labelMatch[2] : "Campo";
+
+    const fieldError = {
+      id: fieldId,
+      label,
+      value:
+        (
+          document.getElementById(fieldId) ||
+          document.getElementById("f_" + fieldId)
+        )?.value || "(vazio)",
+      types,
+      obs,
+    };
+
+    appState.errors[fieldId] = fieldError;
+
+    // Envia notificação via MultiPeerSync se conectado
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastErrorAdded({
+        ...fieldError,
+        type: "field",
+        fieldId,
+        timestamp: Date.now(),
+      });
+    }
+
+    this.closeErrorModal();
+    this.updateFieldVisuals();
+    this.updateReport();
+    this.updateTabBadges();
+    AutoSave.trigger();
+  },
+
+  clearFieldError() {
+    delete appState.errors[appState.currentField];
+    this.closeErrorModal();
+    this.updateFieldVisuals();
+    this.updateReport();
+    this.updateTabBadges();
+    AutoSave.trigger();
+  },
+
+  updateFieldVisuals() {
+    document.querySelectorAll(".error-btn").forEach((btn) => {
+      const onclick = btn.getAttribute("onclick");
+      if (!onclick) return;
+      const match = onclick.match(/'([^']+)'/);
+      if (match) {
+        const fieldId = match[1];
+        btn.classList.toggle("has-error", !!appState.errors[fieldId]);
+      }
+    });
+  },
+
+  // --- TAB BADGES ---
+  updateTabBadges() {
+    // Remove all existing badges
+    document.querySelectorAll(".tab-badge").forEach((b) => b.remove());
+
+    // Count errors per tab
+    const tabCounts = {
+      ident: 0,
+      carac: 0,
+      elem: 0,
+      aspect: 0,
+      defic: 0,
+      rotas: 0,
+      obs: 0,
+      anexos: 0,
+    };
+
+    // Count field errors
+    Object.keys(appState.errors).forEach((fieldId) => {
+      // Check for tramos
+      if (fieldId.startsWith("tramo_")) {
+        tabCounts.carac++;
+        return;
+      }
+
+      // Check mapped fields
+      for (const [tab, fields] of Object.entries(TAB_FIELD_MAP)) {
+        if (fields.includes(fieldId)) {
+          tabCounts[tab]++;
+          return;
         }
+      }
+    });
 
-        // Check if field has a mapped category
-        const category = FIELD_CATEGORIES[fieldId] || 'default';
-        return ERROR_TYPES[category];
-    },
+    // Add element errors
+    tabCounts.elem += appState.elementErrors.length;
 
-    closeErrorModal() {
-        document.getElementById('errorModal').classList.remove('show');
-    },
+    // Add anexo errors
+    tabCounts.anexos += appState.anexoErrors.length;
 
-    applyError() {
-        const fieldId = appState.currentField;
-        const types = Array.from(document.querySelectorAll('input[name="err_tipo"]:checked')).map(i => i.value);
-        const obs = document.getElementById('modalObs').value.trim();
+    // Add functional deficiencies
+    tabCounts.defic += appState.work.functionalDeficiencies.length;
 
-        if (types.length === 0 && !obs) {
-            this.clearFieldError();
-            return;
+    // Add aspects
+    tabCounts.aspect += appState.work.aspects.length;
+
+    // Apply badges to tabs
+    Object.entries(tabCounts).forEach(([tab, count]) => {
+      if (count > 0) {
+        const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+        if (tabBtn) {
+          const badge = document.createElement("span");
+          badge.className = "tab-badge";
+          badge.textContent = count;
+          tabBtn.style.position = "relative";
+          tabBtn.appendChild(badge);
         }
+      }
+    });
+  },
 
-        const labelMatch = document.querySelector(`button[onclick*="'${fieldId}'"]`).getAttribute('onclick').match(/'([^']+)',\s*'([^']+)'/);
-        const label = labelMatch ? labelMatch[2] : 'Campo';
+  // --- REPORT & TOOLS ---
+  updateReport() {
+    const work = appState.work;
+    const errors = appState.errors;
+    const elemErrors = appState.elementErrors;
+    const anexoErrors = appState.anexoErrors;
 
-        appState.errors[fieldId] = {
-            id: fieldId,
-            label,
-            value: (document.getElementById(fieldId) || document.getElementById('f_'+fieldId))?.value || '(vazio)',
-            types,
-            obs
-        };
+    let report = `RELATÓRIO DE AUDITORIA DE OAE\n`;
+    report += `════════════════════════════════════════════\n`;
+    report += `OAE: ${work.nome || "N/A"}\n`;
+    report += `CÓDIGO: ${work.codigo || "N/A"}\n`;
+    report += `AUDITOR: ${work.avaliador || "N/A"}\n`;
+    report += `DATA: ${new Date().toLocaleDateString(
+      "pt-BR"
+    )} ${new Date().toLocaleTimeString("pt-BR")}\n`;
+    report += `════════════════════════════════════════════\n\n`;
 
-        this.closeErrorModal();
-        this.updateFieldVisuals();
-        this.updateReport();
-        this.updateTabBadges();
-        AutoSave.trigger();
-    },
+    // Organizar erros por aba
+    const errorsByTab = {
+      IDENTIFICAÇÃO: [],
+      "CARACTERÍSTICAS FUNCIONAIS": [],
+      "ASPECTOS ESPECIAIS": [],
+      "DEFICIÊNCIAS FUNCIONAIS": [],
+      "ROTAS ALTERNATIVAS": [],
+      OBSERVAÇÕES: [],
+    };
 
-    clearFieldError() {
-        delete appState.errors[appState.currentField];
-        this.closeErrorModal();
-        this.updateFieldVisuals();
-        this.updateReport();
-        this.updateTabBadges();
-        AutoSave.trigger();
-    },
+    // Classificar field errors por aba
+    Object.keys(errors).forEach((key) => {
+      const e = errors[key];
+      let tabName = "OUTROS";
 
-    updateFieldVisuals() {
-        document.querySelectorAll('.error-btn').forEach(btn => {
-            const onclick = btn.getAttribute('onclick');
-            if (!onclick) return;
-            const match = onclick.match(/'([^']+)'/);
-            if (match) {
-                const fieldId = match[1];
-                btn.classList.toggle('has-error', !!appState.errors[fieldId]);
-            }
+      if (key.startsWith("tramo_")) {
+        tabName = "CARACTERÍSTICAS FUNCIONAIS";
+      } else if (TAB_FIELD_MAP.ident.includes(key)) {
+        tabName = "IDENTIFICAÇÃO";
+      } else if (TAB_FIELD_MAP.carac.includes(key)) {
+        tabName = "CARACTERÍSTICAS FUNCIONAIS";
+      } else if (TAB_FIELD_MAP.aspect.includes(key)) {
+        tabName = "ASPECTOS ESPECIAIS";
+      } else if (TAB_FIELD_MAP.defic.includes(key)) {
+        tabName = "DEFICIÊNCIAS FUNCIONAIS";
+      } else if (TAB_FIELD_MAP.rotas.includes(key)) {
+        tabName = "ROTAS ALTERNATIVAS";
+      } else if (TAB_FIELD_MAP.obs.includes(key)) {
+        tabName = "OBSERVAÇÕES";
+      }
+
+      if (!errorsByTab[tabName]) errorsByTab[tabName] = [];
+      errorsByTab[tabName].push(e);
+    });
+
+    // Imprimir erros por aba
+    Object.keys(errorsByTab).forEach((tabName) => {
+      const tabErrors = errorsByTab[tabName];
+      if (tabErrors.length > 0) {
+        report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        report += `📋 ${tabName}\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+        tabErrors.forEach((e, idx) => {
+          report += `${idx + 1}. Campo: ${e.label}\n`;
+          report += `   Valor Atual: ${e.value}\n`;
+          if (e.types.length) report += `   Motivo: ${e.types.join("; ")}\n`;
+          if (e.obs) report += `   Observação: ${e.obs}\n`;
+          report += `\n`;
         });
-    },
+      }
+    });
 
-    // --- TAB BADGES ---
-    updateTabBadges() {
-        // Remove all existing badges
-        document.querySelectorAll('.tab-badge').forEach(b => b.remove());
+    // Element errors - agrupar por tramo
+    if (elemErrors.length > 0) {
+      report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      report += `🔧 ELEMENTOS COMPONENTES\n`;
+      report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-        // Count errors per tab
-        const tabCounts = {
-            ident: 0,
-            carac: 0,
-            elem: 0,
-            aspect: 0,
-            defic: 0,
-            rotas: 0,
-            obs: 0,
-            anexos: 0
-        };
+      // Agrupar por tramo
+      const elemsByTramo = {};
+      elemErrors.forEach((e) => {
+        if (!elemsByTramo[e.tramo]) elemsByTramo[e.tramo] = [];
+        elemsByTramo[e.tramo].push(e);
+      });
 
-        // Count field errors
-        Object.keys(appState.errors).forEach(fieldId => {
-            // Check for tramos
-            if (fieldId.startsWith('tramo_')) {
-                tabCounts.carac++;
-                return;
-            }
+      // Ordenar tramos (C no final)
+      const tramos = Object.keys(elemsByTramo).sort((a, b) => {
+        if (a === "C") return 1;
+        if (b === "C") return -1;
+        return parseInt(a) - parseInt(b);
+      });
 
-            // Check mapped fields
-            for (const [tab, fields] of Object.entries(TAB_FIELD_MAP)) {
-                if (fields.includes(fieldId)) {
-                    tabCounts[tab]++;
-                    return;
-                }
-            }
+      tramos.forEach((tramo) => {
+        report += `╔═══ TRAMO ${tramo} ═══════════════════════════════════╗\n\n`;
+
+        elemsByTramo[tramo].forEach((e, idx) => {
+          report += `  ${idx + 1}. Região: ${e.regiao}\n`;
+          report += `     Elemento: ${e.familia}\n`;
+          report += `     Inconsistência: ${e.erro}\n`;
+          if (e.obs) report += `     Observação: ${e.obs}\n`;
+          if (e.responses.length) {
+            report += `     Respostas da Inspeção:\n`;
+            e.responses.forEach(
+              (r) => (report += `       → ${r.text} (${r.date})\n`)
+            );
+          }
+          report += `\n`;
         });
 
-        // Add element errors
-        tabCounts.elem += appState.elementErrors.length;
+        report += `╚═════════════════════════════════════════════════╝\n\n`;
+      });
+    }
 
-        // Add anexo errors
-        tabCounts.anexos += appState.anexoErrors.length;
+    // Anexo errors
+    if (anexoErrors.length > 0) {
+      report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      report += `📎 ARQUIVOS ANEXOS\n`;
+      report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-        // Add functional deficiencies
-        tabCounts.defic += appState.work.functionalDeficiencies.length;
+      anexoErrors.forEach((e, idx) => {
+        report += `${idx + 1}. Tipo: ${e.tipo}\n`;
+        report += `   Nome: ${e.nome}\n`;
+        report += `   Inconsistência: ${e.inconsist}\n`;
+        if (e.obs) report += `   Observação: ${e.obs}\n`;
+        report += `\n`;
+      });
+    }
 
-        // Add aspects
-        tabCounts.aspect += appState.work.aspects.length;
+    // Deficiências Funcionais
+    if (work.functionalDeficiencies && work.functionalDeficiencies.length > 0) {
+      report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      report += `⚠️ DEFICIÊNCIAS FUNCIONAIS ENCONTRADAS\n`;
+      report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-        // Apply badges to tabs
-        Object.entries(tabCounts).forEach(([tab, count]) => {
-            if (count > 0) {
-                const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-                if (tabBtn) {
-                    const badge = document.createElement('span');
-                    badge.className = 'tab-badge';
-                    badge.textContent = count;
-                    tabBtn.style.position = 'relative';
-                    tabBtn.appendChild(badge);
-                }
-            }
+      work.functionalDeficiencies.forEach((d, idx) => {
+        report += `${idx + 1}. ${d.desc}\n`;
+        report += `   Valor: ${d.value} ${d.unit}\n\n`;
+      });
+    }
+
+    // Aspectos Especiais
+    if (work.aspects && work.aspects.length > 0) {
+      report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      report += `💎 ASPECTOS ESPECIAIS ENCONTRADOS\n`;
+      report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+      work.aspects.forEach((a, idx) => {
+        report += `${idx + 1}. ${a.desc} (${a.sigla})\n`;
+        if (a.comment) report += `   Nota: ${a.comment}\n`;
+        report += `\n`;
+      });
+    }
+
+    const total =
+      Object.keys(errors).length +
+      elemErrors.length +
+      anexoErrors.length +
+      work.functionalDeficiencies.length +
+      work.aspects.length;
+    document.getElementById("totalErrorBadge").textContent = total;
+    document.getElementById("reportText").value = report;
+  },
+
+  copyReport() {
+    const text = document.getElementById("reportText").value;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('button[onclick="UI.copyReport()"]');
+      const original = btn.innerHTML;
+      btn.innerHTML = "✓ Copiado!";
+      setTimeout(() => (btn.innerHTML = original), 2000);
+    });
+  },
+
+  clearAll() {
+    if (confirm("Deseja limpar todos os apontamentos desta obra?")) {
+      appState.errors = {};
+      appState.elementErrors = [];
+      appState.anexoErrors = [];
+      this.renderAll();
+      this.updateTabBadges();
+      AutoSave.trigger();
+    }
+  },
+
+  async saveToDatabase() {
+    if (!appState.work.codigo) {
+      alert(
+        "⚠️ Por favor, informe o código da obra antes de salvar no banco de dados."
+      );
+      return;
+    }
+
+    try {
+      await DB.saveObra(appState.work.codigo, {
+        work: appState.work,
+        errors: appState.errors,
+        elementErrors: appState.elementErrors,
+        anexoErrors: appState.anexoErrors,
+        mensagens: appState.mensagens,
+        completionStates: appState.completionStates,
+        messageResponses: appState.messageResponses,
+      });
+
+      this.showToast(
+        `✅ Obra "${appState.work.codigo}" salva com sucesso no banco de dados!`
+      );
+      console.log("Manual save to database successful:", appState.work.codigo);
+    } catch (err) {
+      console.error("Save to database failed:", err);
+      alert("❌ Erro ao salvar no banco de dados: " + err.message);
+    }
+  },
+
+  showExportModal() {
+    Export.all(); // Shortcut for now
+  },
+
+  async generateFormattedPDF() {
+    try {
+      // Verifica se há código para exportar
+      if (!appState.work.codigo) {
+        alert("Preencha o código da obra antes de exportar o PDF.");
+        return;
+      }
+
+      // Importa jsPDF dinamicamente
+      if (typeof window.jspdf === "undefined") {
+        // Carrega jsPDF se não estiver disponível
+        await this.loadJsPDF();
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      // Configurações de estilo
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      let yPosition = margin;
+
+      // Função para adicionar nova página se necessário
+      function checkPageBreak(requiredHeight) {
+        if (yPosition + requiredHeight > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin;
+        }
+      }
+
+      // Função para adicionar texto com quebra automática
+      function addText(text, fontSize = 12, fontStyle = "normal") {
+        doc.setFontSize(fontSize);
+        doc.setFont("helvetica", fontStyle);
+        const lines = doc.splitTextToSize(text, pageWidth - 2 * margin);
+
+        lines.forEach((line) => {
+          checkPageBreak(fontSize * 0.5);
+          doc.text(line, margin, yPosition);
+          yPosition += fontSize * 0.5;
         });
-    },
 
-    // --- REPORT & TOOLS ---
-    updateReport() {
-        const work = appState.work;
-        const errors = appState.errors;
-        const elemErrors = appState.elementErrors;
-        const anexoErrors = appState.anexoErrors;
+        return yPosition;
+      }
 
-        let report = `RELATÓRIO DE AUDITORIA DE OAE\n`;
-        report += `════════════════════════════════════════════\n`;
-        report += `OAE: ${work.nome || 'N/A'}\n`;
-        report += `CÓDIGO: ${work.codigo || 'N/A'}\n`;
-        report += `AUDITOR: ${work.avaliador || 'N/A'}\n`;
-        report += `DATA: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}\n`;
-        report += `════════════════════════════════════════════\n\n`;
+      // 1. CAPA DO RELATÓRIO
+      doc.setFillColor(41, 128, 185);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-        // Organizar erros por aba
-        const errorsByTab = {
-            'IDENTIFICAÇÃO': [],
-            'CARACTERÍSTICAS FUNCIONAIS': [],
-            'ASPECTOS ESPECIAIS': [],
-            'DEFICIÊNCIAS FUNCIONAIS': [],
-            'ROTAS ALTERNATIVAS': [],
-            'OBSERVAÇÕES': []
-        };
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
+      doc.setFont("helvetica", "bold");
+      doc.text("RELATÓRIO DE OBRA", pageWidth / 2, 60, { align: "center" });
 
-        // Classificar field errors por aba
-        Object.keys(errors).forEach(key => {
-            const e = errors[key];
-            let tabName = 'OUTROS';
+      doc.setFontSize(20);
+      doc.text(appState.work.nome || "Sem Nome", pageWidth / 2, 80, {
+        align: "center",
+      });
 
-            if (key.startsWith('tramo_')) {
-                tabName = 'CARACTERÍSTICAS FUNCIONAIS';
-            } else if (TAB_FIELD_MAP.ident.includes(key)) {
-                tabName = 'IDENTIFICAÇÃO';
-            } else if (TAB_FIELD_MAP.carac.includes(key)) {
-                tabName = 'CARACTERÍSTICAS FUNCIONAIS';
-            } else if (TAB_FIELD_MAP.aspect.includes(key)) {
-                tabName = 'ASPECTOS ESPECIAIS';
-            } else if (TAB_FIELD_MAP.defic.includes(key)) {
-                tabName = 'DEFICIÊNCIAS FUNCIONAIS';
-            } else if (TAB_FIELD_MAP.rotas.includes(key)) {
-                tabName = 'ROTAS ALTERNATIVAS';
-            } else if (TAB_FIELD_MAP.obs.includes(key)) {
-                tabName = 'OBSERVAÇÕES';
-            }
+      doc.setFontSize(16);
+      doc.text(`Código: ${appState.work.codigo || "N/A"}`, pageWidth / 2, 100, {
+        align: "center",
+      });
 
-            if (!errorsByTab[tabName]) errorsByTab[tabName] = [];
-            errorsByTab[tabName].push(e);
+      // Informações do usuário
+      if (AuthSystem.currentUser) {
+        doc.setFontSize(12);
+        doc.text(
+          `Gerado por: ${AuthSystem.currentUser.name} (${AuthSystem.currentUser.email})`,
+          pageWidth / 2,
+          120,
+          { align: "center" }
+        );
+        doc.text(
+          `Perfil: ${AuthSystem.getRoleDisplayName(
+            AuthSystem.currentUser.role
+          )}`,
+          pageWidth / 2,
+          130,
+          { align: "center" }
+        );
+      }
+
+      doc.text(
+        `Data: ${new Date().toLocaleString("pt-BR")}`,
+        pageWidth / 2,
+        140,
+        { align: "center" }
+      );
+
+      // Nova página para o conteúdo
+      doc.addPage();
+      yPosition = margin;
+      doc.setTextColor(0, 0, 0);
+
+      // 2. SUMÁRIO EXECUTIVO
+      addText("SUMÁRIO EXECUTIVO", 18, "bold");
+      yPosition += 5;
+
+      const summary = [
+        `Obra: ${appState.work.nome || "N/A"}`,
+        `Código: ${appState.work.codigo || "N/A"}`,
+        `Avaliador: ${appState.work.avaliador || "N/A"}`,
+        `Tipo: ${appState.work.tipo || "cadastral"}`,
+        `Data de Geração: ${new Date().toLocaleString("pt-BR")}`,
+        `Total de Erros: ${Object.keys(appState.errors || {}).length}`,
+        `Total de Elementos: ${
+          Object.keys(appState.elementErrors || {}).length
+        }`,
+        `Total de Mensagens: ${(appState.mensagens || []).length}`,
+      ];
+
+      summary.forEach((line) => {
+        addText(`• ${line}`, 11, "normal");
+      });
+
+      yPosition += 10;
+
+      // 3. DADOS DE IDENTIFICAÇÃO
+      addText("DADOS DE IDENTIFICAÇÃO", 16, "bold");
+      yPosition += 5;
+
+      const identificationData = [
+        { label: "Nome da Obra", value: appState.work.nome || "N/A" },
+        { label: "Código", value: appState.work.codigo || "N/A" },
+        { label: "Avaliador", value: appState.work.avaliador || "N/A" },
+        { label: "Tipo de Obra", value: appState.work.tipo || "cadastral" },
+        { label: "Fiscal", value: appState.work.fiscal || "N/A" },
+        { label: "Data Início", value: appState.work.dataInicio || "N/A" },
+        { label: "Data Término", value: appState.work.dataTermino || "N/A" },
+        { label: "Localização", value: appState.work.localizacao || "N/A" },
+      ];
+
+      identificationData.forEach((item) => {
+        addText(`${item.label}: ${item.value}`, 11, "normal");
+      });
+
+      yPosition += 10;
+
+      // 4. ERROS DE CAMPO (ABA CAMPOS)
+      if (Object.keys(appState.errors || {}).length > 0) {
+        addText("ERROS DE CAMPO", 16, "bold");
+        yPosition += 5;
+
+        Object.entries(appState.errors).forEach(([fieldId, error]) => {
+          checkPageBreak(20);
+
+          // Cabeçalho do erro
+          doc.setFillColor(255, 0, 0);
+          doc.rect(margin, yPosition - 3, pageWidth - 2 * margin, 8, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text(`Campo: ${fieldId}`, margin + 2, yPosition + 2);
+
+          yPosition += 10;
+          doc.setTextColor(0, 0, 0);
+
+          // Detalhes do erro
+          const errorDetails = [
+            `Erro: ${error.error || "N/A"}`,
+            `Descrição: ${error.description || "N/A"}`,
+            `Data: ${
+              error.date ? new Date(error.date).toLocaleString("pt-BR") : "N/A"
+            }`,
+          ];
+
+          errorDetails.forEach((detail) => {
+            addText(`  ${detail}`, 10, "normal");
+          });
+
+          yPosition += 5;
         });
 
-        // Imprimir erros por aba
-        Object.keys(errorsByTab).forEach(tabName => {
-            const tabErrors = errorsByTab[tabName];
-            if (tabErrors.length > 0) {
-                report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-                report += `📋 ${tabName}\n`;
-                report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+        yPosition += 10;
+      }
 
-                tabErrors.forEach((e, idx) => {
-                    report += `${idx + 1}. Campo: ${e.label}\n`;
-                    report += `   Valor Atual: ${e.value}\n`;
-                    if (e.types.length) report += `   Motivo: ${e.types.join('; ')}\n`;
-                    if (e.obs) report += `   Observação: ${e.obs}\n`;
-                    report += `\n`;
-                });
-            }
+      // 5. ERROS DE ELEMENTO (ABA ELEMENTOS)
+      if (Object.keys(appState.elementErrors || {}).length > 0) {
+        addText("ERROS DE ELEMENTO", 16, "bold");
+        yPosition += 5;
+
+        Object.entries(appState.elementErrors).forEach(([elementId, error]) => {
+          checkPageBreak(20);
+
+          // Cabeçalho do elemento
+          doc.setFillColor(255, 165, 0);
+          doc.rect(margin, yPosition - 3, pageWidth - 2 * margin, 8, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text(`Elemento: ${elementId}`, margin + 2, yPosition + 2);
+
+          yPosition += 10;
+          doc.setTextColor(0, 0, 0);
+
+          // Detalhes do elemento
+          const elementDetails = [
+            `Tramo: ${error.tramo || "N/A"}`,
+            `Região: ${error.regiao || "N/A"}`,
+            `Família: ${error.familia || "N/A"}`,
+            `Erro: ${error.error || "N/A"}`,
+            `Observação: ${error.observacao || "N/A"}`,
+            `Data: ${
+              error.date ? new Date(error.date).toLocaleString("pt-BR") : "N/A"
+            }`,
+          ];
+
+          elementDetails.forEach((detail) => {
+            addText(`  ${detail}`, 10, "normal");
+          });
+
+          yPosition += 5;
         });
 
-        // Element errors - agrupar por tramo
-        if (elemErrors.length > 0) {
-            report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            report += `🔧 ELEMENTOS COMPONENTES\n`;
-            report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+        yPosition += 10;
+      }
 
-            // Agrupar por tramo
-            const elemsByTramo = {};
-            elemErrors.forEach(e => {
-                if (!elemsByTramo[e.tramo]) elemsByTramo[e.tramo] = [];
-                elemsByTramo[e.tramo].push(e);
-            });
+      // 6. MENSAGENS (ABA MENSAGENS)
+      if (appState.mensagens && appState.mensagens.length > 0) {
+        addText("MENSAGENS E COMUNICAÇÃO", 16, "bold");
+        yPosition += 5;
 
-            // Ordenar tramos (C no final)
-            const tramos = Object.keys(elemsByTramo).sort((a, b) => {
-                if (a === 'C') return 1;
-                if (b === 'C') return -1;
-                return parseInt(a) - parseInt(b);
-            });
+        appState.mensagens.forEach((message, index) => {
+          checkPageBreak(15);
 
-            tramos.forEach(tramo => {
-                report += `╔═══ TRAMO ${tramo} ═══════════════════════════════════╗\n\n`;
+          // Cabeçalho da mensagem
+          doc.setFillColor(0, 128, 255);
+          doc.rect(margin, yPosition - 3, pageWidth - 2 * margin, 8, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            `Mensagem #${index + 1} - ${message.author || "N/A"}`,
+            margin + 2,
+            yPosition + 2
+          );
 
-                elemsByTramo[tramo].forEach((e, idx) => {
-                    report += `  ${idx + 1}. Região: ${e.regiao}\n`;
-                    report += `     Elemento: ${e.familia}\n`;
-                    report += `     Inconsistência: ${e.erro}\n`;
-                    if (e.obs) report += `     Observação: ${e.obs}\n`;
-                    if (e.responses.length) {
-                        report += `     Respostas da Inspeção:\n`;
-                        e.responses.forEach(r => report += `       → ${r.text} (${r.date})\n`);
-                    }
-                    report += `\n`;
-                });
+          yPosition += 10;
+          doc.setTextColor(0, 0, 0);
 
-                report += `╚═════════════════════════════════════════════════╝\n\n`;
-            });
-        }
+          // Conteúdo da mensagem
+          addText(`Data: ${message.date || "N/A"}`, 10, "normal");
+          addText(`Conteúdo: ${message.text || "N/A"}`, 10, "normal");
 
-        // Anexo errors
-        if (anexoErrors.length > 0) {
-            report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            report += `📎 ARQUIVOS ANEXOS\n`;
-            report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+          // Status de conclusão
+          const isCompleted =
+            appState.completionStates &&
+            appState.completionStates.get(message.id);
+          if (isCompleted !== undefined) {
+            addText(
+              `Status: ${isCompleted ? "✅ Concluído" : "⏳ Pendente"}`,
+              10,
+              "normal"
+            );
+          }
 
-            anexoErrors.forEach((e, idx) => {
-                report += `${idx + 1}. Tipo: ${e.tipo}\n`;
-                report += `   Nome: ${e.nome}\n`;
-                report += `   Inconsistência: ${e.inconsist}\n`;
-                if (e.obs) report += `   Observação: ${e.obs}\n`;
-                report += `\n`;
-            });
-        }
-
-        // Deficiências Funcionais
-        if (work.functionalDeficiencies && work.functionalDeficiencies.length > 0) {
-            report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            report += `⚠️ DEFICIÊNCIAS FUNCIONAIS ENCONTRADAS\n`;
-            report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-            work.functionalDeficiencies.forEach((d, idx) => {
-                report += `${idx + 1}. ${d.desc}\n`;
-                report += `   Valor: ${d.value} ${d.unit}\n\n`;
-            });
-        }
-
-        // Aspectos Especiais
-        if (work.aspects && work.aspects.length > 0) {
-            report += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            report += `💎 ASPECTOS ESPECIAIS ENCONTRADOS\n`;
-            report += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-            work.aspects.forEach((a, idx) => {
-                report += `${idx + 1}. ${a.desc} (${a.sigla})\n`;
-                if (a.comment) report += `   Nota: ${a.comment}\n`;
-                report += `\n`;
-            });
-        }
-
-        const total = Object.keys(errors).length + elemErrors.length + anexoErrors.length + 
-                      work.functionalDeficiencies.length + work.aspects.length;
-        document.getElementById('totalErrorBadge').textContent = total;
-        document.getElementById('reportText').value = report;
-    },
-
-    copyReport() {
-        const text = document.getElementById('reportText').value;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('button[onclick="UI.copyReport()"]');
-            const original = btn.innerHTML;
-            btn.innerHTML = '✓ Copiado!';
-            setTimeout(() => btn.innerHTML = original, 2000);
+          yPosition += 5;
         });
-    },
 
-    clearAll() {
-        if (confirm('Deseja limpar todos os apontamentos desta obra?')) {
-            appState.errors = {};
-            appState.elementErrors = [];
-            appState.anexoErrors = [];
-            this.renderAll();
-            this.updateTabBadges();
-            AutoSave.trigger();
-        }
-    },
+        yPosition += 10;
+      }
 
-    async saveToDatabase() {
-        if (!appState.work.codigo) {
-            alert('⚠️ Por favor, informe o código da obra antes de salvar no banco de dados.');
-            return;
-        }
+      // 7. AUDITORIA (ABA AUDITORIA)
+      if (appState.work.auditTrail && appState.work.auditTrail.length > 0) {
+        addText("HISTÓRICO DE AUDITORIA", 16, "bold");
+        yPosition += 5;
 
-        try {
-            await DB.saveObra(appState.work.codigo, {
-                work: appState.work,
-                errors: appState.errors,
-                elementErrors: appState.elementErrors,
-                anexoErrors: appState.anexoErrors,
-                mensagens: appState.mensagens,
-                completionStates: appState.completionStates,
-                messageResponses: appState.messageResponses
-            });
+        appState.work.auditTrail.forEach((audit, index) => {
+          checkPageBreak(15);
 
-            this.showToast(`✅ Obra "${appState.work.codigo}" salva com sucesso no banco de dados!`);
-            console.log('Manual save to database successful:', appState.work.codigo);
-        } catch (err) {
-            console.error('Save to database failed:', err);
-            alert('❌ Erro ao salvar no banco de dados: ' + err.message);
-        }
-    },
+          // Cabeçalho da auditoria
+          doc.setFillColor(128, 0, 128);
+          doc.rect(margin, yPosition - 3, pageWidth - 2 * margin, 8, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            `Auditoria #${index + 1} - ${audit.action || "N/A"}`,
+            margin + 2,
+            yPosition + 2
+          );
 
-    showExportModal() {
-        Export.all(); // Shortcut for now
-    },
+          yPosition += 10;
+          doc.setTextColor(0, 0, 0);
 
-    // --- WORK MANAGEMENT ---
-    async showWorksModal() {
-        const works = await DB.listAllWorks();
-        const modal = document.createElement('div');
-        modal.className = 'modal-backdrop show';
-        modal.id = 'worksManagementModal';
-        
-        let html = `
-            <div class="modal" style="max-width: 800px;">
+          // Detalhes da auditoria
+          const auditDetails = [
+            `Usuário: ${audit.user?.name || audit.user?.email || "N/A"}`,
+            `Data: ${
+              audit.timestamp
+                ? new Date(audit.timestamp).toLocaleString("pt-BR")
+                : "N/A"
+            }`,
+            `Ação: ${audit.action || "N/A"}`,
+            `Detalhes: ${JSON.stringify(audit.details || {}) || "N/A"}`,
+          ];
+
+          auditDetails.forEach((detail) => {
+            addText(`  ${detail}`, 10, "normal");
+          });
+
+          yPosition += 5;
+        });
+      }
+
+      // 8. RODAPÉ
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Página ${i} de ${totalPages}`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: "center" }
+        );
+        doc.text(
+          `Gerado por OAE Revisor em ${new Date().toLocaleString("pt-BR")}`,
+          margin,
+          pageHeight - 10
+        );
+      }
+
+      // Salva o PDF
+      const fileName = `Relatorio_Obra_${appState.work.codigo || "SemCodigo"}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      doc.save(fileName);
+
+      console.log("PDF gerado com sucesso:", fileName);
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      alert("Erro ao gerar PDF: " + error.message);
+    }
+  },
+
+  /**
+   * Carrega a biblioteca jsPDF dinamicamente
+   */
+  async loadJsPDF() {
+    return new Promise((resolve, reject) => {
+      if (window.jspdf) {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  },
+
+  // --- WORK MANAGEMENT ---
+  async showWorksModal() {
+    await WorkManager.loadAllWorks(); // Atualiza cache
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "worksManagementModal";
+
+    const works = WorkManager.getFilteredWorks();
+    const stats = WorkManager.getGeneralStats();
+    const authors = WorkManager.getUniqueAuthors();
+    const tags = WorkManager.getUniqueTags();
+
+    let html = `
+            <div class="modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
-                    <h3 class="modal-title">📂 Gerenciar Obras Salvas</h3>
+                    <h3 class="modal-title">📂 Gerenciamento Avançado de Obras</h3>
                     <button class="modal-close" onclick="document.getElementById('worksManagementModal').remove()">×</button>
                 </div>
                 <div class="modal-body">
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px;">
-                        <button class="btn btn-secondary" onclick="Export.all()">📥 Exportar Todas (Backup)</button>
+                    <!-- Estatísticas Gerais -->
+                    <div class="section">
+                        <div class="section-title">📊 Estatísticas Gerais</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                            <div style="text-align: center; padding: 15px; background: var(--bg-secondary); border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${
+                                  stats.total
+                                }</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Total de Obras</div>
+                            </div>
+                            <div style="text-align: center; padding: 15px; background: var(--bg-secondary); border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${
+                                  stats.byStatus.completed || 0
+                                }</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Concluídas</div>
+                            </div>
+                            <div style="text-align: center; padding: 15px; background: var(--bg-secondary); border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">${
+                                  stats.byStatus.in_progress || 0
+                                }</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Em Andamento</div>
+                            </div>
+                            <div style="text-align: center; padding: 15px; background: var(--bg-secondary); border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);">${
+                                  stats.public
+                                }</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Públicas</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Filtros Avançados -->
+                    <div class="section">
+                        <div class="section-title">🔍 Filtros Avançados</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div class="form-field">
+                                <label class="form-label">Busca Rápida</label>
+                                <input type="text" class="form-input" id="filterSearch" placeholder="Código, nome ou avaliador..." oninput="UI.applyWorkFilters()">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Autor</label>
+                                <select class="form-input" id="filterAuthor" onchange="UI.applyWorkFilters()">
+                                    <option value="">Todos os autores</option>
+                                    ${authors
+                                      .map(
+                                        (author) =>
+                                          `<option value="${author}">${author}</option>`
+                                      )
+                                      .join("")}
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Status</label>
+                                <select class="form-input" id="filterStatus" onchange="UI.applyWorkFilters()">
+                                    <option value="">Todos os status</option>
+                                    <option value="draft">Rascunho</option>
+                                    <option value="in_progress">Em Andamento</option>
+                                    <option value="completed">Concluída</option>
+                                    <option value="archived">Arquivada</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Tags</label>
+                                <select class="form-input" id="filterTags" onchange="UI.applyWorkFilters()">
+                                    <option value="">Todas as tags</option>
+                                    ${tags
+                                      .map(
+                                        (tag) =>
+                                          `<option value="${tag}">${tag}</option>`
+                                      )
+                                      .join("")}
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Período</label>
+                                <div style="display: flex; gap: 5px;">
+                                    <input type="date" class="form-input" id="filterDateFrom" onchange="UI.applyWorkFilters()" style="flex: 1;">
+                                    <input type="date" class="form-input" id="filterDateTo" onchange="UI.applyWorkFilters()" style="flex: 1;">
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Visibilidade</label>
+                                <select class="form-input" id="filterVisibility" onchange="UI.applyWorkFilters()">
+                                    <option value="">Todas</option>
+                                    <option value="public">Apenas Públicas</option>
+                                    <option value="shared">Compartilhadas Comigo</option>
+                                    <option value="mine">Minhas Obras</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <button class="btn btn-secondary" onclick="UI.clearWorkFilters()">🗑️ Limpar Filtros</button>
+                            <button class="btn btn-primary" onclick="UI.exportFilteredWorks()">📥 Exportar Filtradas</button>
+                            <button class="btn btn-secondary" onclick="Export.all()">📥 Exportar Todas (Backup)</button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Obras -->
+                    <div class="section">
+                        <div class="section-title">📋 Lista de Obras (${
+                          works.length
+                        } encontradas)</div>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding-top: 0;">
                     <table class="view-table">
                         <thead>
                             <tr>
                                 <th>Código</th>
                                 <th>Nome da Obra</th>
                                 <th>Avaliador</th>
+                                <th>Status</th>
+                                <th>Criação</th>
+                                <th>Modificação</th>
+                                <th>Autor</th>
+                                <th>Visibilidade</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${works.length === 0 ? '<tr><td colspan="4" style="text-align:center">Nenhuma obra salva.</td></tr>' : ''}
-                            ${works.map(w => `
-                                <tr>
-                                    <td><strong>${w.work?.codigo || w.codigo}</strong></td>
-                                    <td>${w.work?.nome || '-'}</td>
-                                    <td>${w.work?.avaliador || '-'}</td>
-                                    <td style="display: flex; gap: 8px;">
-                                        <button class="btn-success" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;" onclick="UI.loadWork('${w.work?.codigo || w.codigo}')">Abrir</button>
-                                        <button class="btn-primary" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;" onclick="UI.exportSpecific('${w.work?.codigo || w.codigo}')">Exportar</button>
-                                        <button class="btn-danger" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;" onclick="UI.deleteWork('${w.work?.codigo || w.codigo}')">Excluir</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
+                            ${
+                              works.length === 0
+                                ? '<tr><td colspan="9" style="text-align:center; padding: 40px;">Nenhuma obra encontrada com os filtros atuais.</td></tr>'
+                                : ""
+                            }
+                            ${works
+                              .map((w) => {
+                                const metadata = w.work?.metadata || {};
+                                const permissions =
+                                  WorkManager.getUserPermissions(
+                                    w.work?.codigo
+                                  );
+                                const statusColors = {
+                                  draft: "var(--warning)",
+                                  in_progress: "var(--primary)",
+                                  completed: "var(--success)",
+                                  archived: "var(--text-muted)",
+                                };
+                                const statusLabels = {
+                                  draft: "Rascunho",
+                                  in_progress: "Em Andamento",
+                                  completed: "Concluída",
+                                  archived: "Arquivada",
+                                };
+
+                                return `
+                                    <tr>
+                                        <td><strong>${
+                                          w.work?.codigo || w.codigo
+                                        }</strong></td>
+                                        <td>${w.work?.nome || "-"}</td>
+                                        <td>${w.work?.avaliador || "-"}</td>
+                                        <td>
+                                            <span style="background: ${
+                                              statusColors[metadata.status] ||
+                                              "var(--bg-secondary)"
+                                            }; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                                ${
+                                                  statusLabels[
+                                                    metadata.status
+                                                  ] || "N/A"
+                                                }
+                                            </span>
+                                        </td>
+                                        <td style="font-size: 0.85rem;">${
+                                          metadata.createdAt
+                                            ? new Date(
+                                                metadata.createdAt
+                                              ).toLocaleDateString("pt-BR")
+                                            : "-"
+                                        }</td>
+                                        <td style="font-size: 0.85rem;">${
+                                          metadata.lastModifiedAt
+                                            ? new Date(
+                                                metadata.lastModifiedAt
+                                              ).toLocaleDateString("pt-BR")
+                                            : "-"
+                                        }</td>
+                                        <td style="font-size: 0.85rem; color: var(--text-muted);">${
+                                          metadata.createdBy || "-"
+                                        }</td>
+                                        <td>
+                                            ${
+                                              metadata.isPublic
+                                                ? '<span style="color: var(--success);">🌐 Pública</span>'
+                                                : metadata.sharedWith?.length >
+                                                  0
+                                                ? `<span style="color: var(--primary);">👥 ${metadata.sharedWith.length}</span>`
+                                                : '<span style="color: var(--text-muted);">🔒 Privada</span>'
+                                            }
+                                        </td>
+                                        <td style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                            ${
+                                              permissions.canView
+                                                ? `<button class="btn-success" style="padding: 2px 6px; font-size: 11px;" onclick="UI.loadWork('${
+                                                    w.work?.codigo || w.codigo
+                                                  }')" title="Abrir obra">📂</button>`
+                                                : ""
+                                            }
+                                            ${
+                                              permissions.canEdit
+                                                ? `<button class="btn-primary" style="padding: 2px 6px; font-size: 11px;" onclick="UI.editWorkMetadata('${
+                                                    w.work?.codigo || w.codigo
+                                                  }')" title="Editar metadados">✏️</button>`
+                                                : ""
+                                            }
+                                            ${
+                                              permissions.canShare
+                                                ? `<button class="btn-secondary" style="padding: 2px 6px; font-size: 11px;" onclick="UI.shareWork('${
+                                                    w.work?.codigo || w.codigo
+                                                  }')" title="Compartilhar">🔗</button>`
+                                                : ""
+                                            }
+                                            <button class="btn-info" style="padding: 2px 6px; font-size: 11px;" onclick="UI.viewWorkAudit('${
+                                              w.work?.codigo || w.codigo
+                                            }')" title="Ver auditoria">📋</button>
+                                            <button class="btn-primary" style="padding: 2px 6px; font-size: 11px;" onclick="UI.exportSpecific('${
+                                              w.work?.codigo || w.codigo
+                                            }')" title="Exportar">📥</button>
+                                            ${
+                                              permissions.canDelete
+                                                ? `<button class="btn-danger" style="padding: 2px 6px; font-size: 11px;" onclick="UI.deleteWorkWithConfirmation('${
+                                                    w.work?.codigo || w.codigo
+                                                  }')" title="Excluir">🗑️</button>`
+                                                : ""
+                                            }
+                                        </td>
+                                    </tr>
+                                `;
+                              })
+                              .join("")}
                         </tbody>
                     </table>
                 </div>
@@ -1343,65 +2238,880 @@ const UI = {
                     <button class="btn-cancel" onclick="document.getElementById('worksManagementModal').remove()">Fechar</button>
                 </div>
             </div>`;
-        
-        modal.innerHTML = html;
-        document.body.appendChild(modal);
-    },
 
-    async loadWork(codigo) {
-        try {
-            const data = await DB.loadObra(codigo);
-            if (data) {
-                Sync.syncFromDB(data);
-                document.getElementById('worksManagementModal')?.remove();
-                this.showToast(`✅ Obra "${codigo}" carregada com sucesso!`);
-            }
-        } catch (err) {
-            console.error('Failed to load work:', err);
-            alert('Erro ao carregar a obra.');
-        }
-    },
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+  },
 
-    async deleteWork(codigo) {
-        if (!confirm(`Tem certeza que deseja excluir permanentemente a obra "${codigo}"?`)) return;
-        
-        try {
-            // Se for a obra atual, limpar appState
-            if (appState.work.codigo === codigo) {
-                // Poderia resetar o state aqui se desejado
-            }
-            
-            // Deletar do IndexedDB
-            const transaction = DB.db.transaction(['obras'], 'readwrite');
-            const store = transaction.objectStore('obras');
-            store.delete(codigo);
-            
-            this.showToast(`🗑️ Obra "${codigo}" excluída.`);
-            document.getElementById('worksManagementModal')?.remove();
-            this.showWorksModal(); // Refresh list
-        } catch (err) {
-            console.error('Delete failed:', err);
-            alert('Erro ao excluir obra.');
-        }
-    },
-
-    async exportSpecific(codigo) {
-        try {
-            const data = await DB.loadObra(codigo);
-            if (!data) return;
-            
-            const fileName = `OAE_${codigo}_${new Date().toISOString().split('T')[0]}.json`;
-            Export.downloadFile(fileName, JSON.stringify(data, null, 2), 'application/json');
-        } catch (err) {
-            console.error('Export specific failed:', err);
-            alert('Erro ao exportar obra.');
-        }
-    },
-
-    showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message; // Changed from msg to message
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
+  async loadWork(codigo) {
+    try {
+      const data = await DB.loadObra(codigo);
+      if (data) {
+        Sync.syncFromDB(data);
+        document.getElementById("worksManagementModal")?.remove();
+        this.showToast(`✅ Obra "${codigo}" carregada com sucesso!`);
+      }
+    } catch (err) {
+      console.error("Failed to load work:", err);
+      alert("Erro ao carregar a obra.");
     }
+  },
+
+  async deleteWorkWithConfirmation(codigo) {
+    // Confirmação 1: Aviso básico
+    const confirm1 = confirm(
+      `⚠️ ATENÇÃO: Você está prestes a EXCLUIR PERMANENTEMENTE a obra "${codigo}".\n\nEsta ação NÃO PODERÁ ser desfeita!\n\nDeseja continuar?`
+    );
+    if (!confirm1) return;
+
+    // Confirmação 2: Detalhes do impacto
+    const work = WorkManager.worksCache.get(codigo);
+    const obraInfo = work
+      ? `\n• Nome: ${work.work?.nome || "N/A"}\n• Avaliador: ${
+          work.work?.avaliador || "N/A"
+        }\n• Criada em: ${
+          work.work?.metadata?.createdAt
+            ? new Date(work.work.metadata.createdAt).toLocaleDateString("pt-BR")
+            : "N/A"
+        }`
+      : "";
+
+    const confirm2 = confirm(
+      `🚨 CONFIRMAÇÃO 2/3: Obra a ser excluída:\n${obraInfo}\n\nTodos os dados, inconsistências, mensagens e histórico serão PERDIDOS PARA SEMPRE.\n\nTem ABSOLUTA certeza que deseja continuar?`
+    );
+    if (!confirm2) return;
+
+    // Confirmação 3: Digitação do código
+    const codigoConfirm = prompt(
+      `💀 CONFIRMAÇÃO FINAL 3/3: Para confirmar a exclusão PERMANENTE da obra "${codigo}",\ndigite exatamente o código da obra:`
+    );
+
+    if (codigoConfirm !== codigo) {
+      alert("❌ Código não confere. Exclusão cancelada por segurança.");
+      return;
+    }
+
+    try {
+      // Se for a obra atual, limpar appState
+      if (appState.work.codigo === codigo) {
+        // Reset do state
+        appState.work.codigo = "";
+        appState.work.nome = "";
+        appState.work.avaliador = "";
+        // ... outros campos
+        UI.renderAll();
+      }
+
+      // Deletar do IndexedDB
+      await WorkManager.deleteWork(codigo);
+
+      // Registrar no audit trail
+      if (work) {
+        AuditSystem.logChange("delete", {
+          obra: codigo,
+          nome: work.work?.nome,
+          metadata: work.work?.metadata,
+        });
+      }
+
+      this.showToast(`🗑️ Obra "${codigo}" excluída PERMANENTEMENTE.`);
+      document.getElementById("worksManagementModal")?.remove();
+      this.showWorksModal(); // Refresh list
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Erro ao excluir obra: " + err.message);
+    }
+  },
+
+  // Funções de filtros e gerenciamento
+  applyWorkFilters() {
+    const filters = {
+      search: document.getElementById("filterSearch")?.value || "",
+      author: document.getElementById("filterAuthor")?.value || "",
+      status: document.getElementById("filterStatus")?.value || "",
+      dateFrom: document.getElementById("filterDateFrom")?.value || null,
+      dateTo: document.getElementById("filterDateTo")?.value || null,
+      tags: document.getElementById("filterTags")?.value
+        ? [document.getElementById("filterTags").value]
+        : [],
+      sharedWith:
+        document.getElementById("filterVisibility")?.value === "shared",
+      publicOnly:
+        document.getElementById("filterVisibility")?.value === "public",
+      mineOnly: document.getElementById("filterVisibility")?.value === "mine",
+    };
+
+    WorkManager.updateFilters(filters);
+
+    // Recarrega a lista
+    this.showWorksModal();
+  },
+
+  clearWorkFilters() {
+    WorkManager.clearFilters();
+
+    // Limpa campos do formulário
+    document.getElementById("filterSearch").value = "";
+    document.getElementById("filterAuthor").value = "";
+    document.getElementById("filterStatus").value = "";
+    document.getElementById("filterTags").value = "";
+    document.getElementById("filterDateFrom").value = "";
+    document.getElementById("filterDateTo").value = "";
+    document.getElementById("filterVisibility").value = "";
+
+    // Recarrega a lista
+    this.showWorksModal();
+  },
+
+  exportFilteredWorks() {
+    try {
+      const data = WorkManager.exportFilteredWorks();
+      const fileName = `OAE_Filtradas_${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      Export.downloadFile(
+        fileName,
+        JSON.stringify(data, null, 2),
+        "application/json"
+      );
+      this.showToast(`📥 ${data.total} obras exportadas com sucesso!`);
+    } catch (err) {
+      console.error("Export filtered failed:", err);
+      alert("Erro ao exportar obras filtradas.");
+    }
+  },
+
+  async viewWorkAudit(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) {
+        alert("Obra não encontrada.");
+        return;
+      }
+
+      // Carrega obra temporariamente para gerar relatório
+      const tempState = JSON.parse(JSON.stringify(appState));
+      Sync.syncFromDB(work);
+
+      const auditReport = AuditSystem.exportAuditReport();
+
+      // Restaura state original
+      appState = tempState;
+
+      // Cria modal com relatório de auditoria
+      const modal = document.createElement("div");
+      modal.className = "modal-backdrop show";
+      modal.id = "auditReportModal";
+
+      const html = `
+              <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                  <div class="modal-header">
+                      <h3 class="modal-title">📋 Relatório de Auditoria - ${codigo}</h3>
+                      <button class="modal-close" onclick="document.getElementById('auditReportModal').remove()">×</button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="section">
+                          <div class="section-title">📊 Estatísticas</div>
+                          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                              <div style="text-align: center; padding: 10px; background: var(--bg-secondary); border-radius: 4px;">
+                                  <div style="font-size: 1.2rem; font-weight: 700;">${
+                                    auditReport.statistics.totalChanges
+                                  }</div>
+                                  <div style="font-size: 0.8rem; color: var(--text-muted);">Total de Alterações</div>
+                              </div>
+                              <div style="text-align: center; padding: 10px; background: var(--bg-secondary); border-radius: 4px;">
+                                  <div style="font-size: 1.2rem; font-weight: 700;">${
+                                    auditReport.statistics.uniqueUsers
+                                  }</div>
+                                  <div style="font-size: 0.8rem; color: var(--text-muted);">Usuários Únicos</div>
+                              </div>
+                              <div style="text-align: center; padding: 10px; background: var(--bg-secondary); border-radius: 4px;">
+                                  <div style="font-size: 1.2rem; font-weight: 700;">${
+                                    auditReport.statistics.version
+                                  }</div>
+                                  <div style="font-size: 0.8rem; color: var(--text-muted);">Versão</div>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="section">
+                          <div class="section-title">📅 Informações Gerais</div>
+                          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                              <div><strong>Criado por:</strong> ${
+                                auditReport.obra.avaliador
+                              }</div>
+                              <div><strong>Criado em:</strong> ${
+                                auditReport.metadata?.createdAt
+                                  ? new Date(
+                                      auditReport.metadata.createdAt
+                                    ).toLocaleString("pt-BR")
+                                  : "N/A"
+                              }</div>
+                              <div><strong>Última modificação:</strong> ${
+                                auditReport.metadata?.lastModifiedAt
+                                  ? new Date(
+                                      auditReport.metadata.lastModifiedAt
+                                    ).toLocaleString("pt-BR")
+                                  : "N/A"
+                              }</div>
+                              <div><strong>Status:</strong> ${
+                                auditReport.metadata?.status || "N/A"
+                              }</div>
+                          </div>
+                      </div>
+
+                      <div class="section">
+                          <div class="section-title">📝 Histórico de Alterações (Últimas 50)</div>
+                          <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;">
+                              <table style="width: 100%; font-size: 0.85rem;">
+                                  <thead style="position: sticky; top: 0; background: var(--bg-secondary);">
+                                      <tr>
+                                          <th style="padding: 8px; text-align: left;">Data/Hora</th>
+                                          <th style="padding: 8px; text-align: left;">Usuário</th>
+                                          <th style="padding: 8px; text-align: left;">Ação</th>
+                                          <th style="padding: 8px; text-align: left;">Detalhes</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      ${auditReport.auditTrail
+                                        .slice(-50)
+                                        .reverse()
+                                        .map(
+                                          (entry) => `
+                                          <tr style="border-bottom: 1px solid var(--border);">
+                                              <td style="padding: 8px;">${new Date(
+                                                entry.timestamp
+                                              ).toLocaleString("pt-BR")}</td>
+                                              <td style="padding: 8px;">${
+                                                entry.user.name
+                                              }</td>
+                                              <td style="padding: 8px;">${
+                                                entry.action
+                                              }</td>
+                                              <td style="padding: 8px; font-family: monospace; font-size: 0.8rem;">${JSON.stringify(
+                                                entry.details
+                                              )}</td>
+                                          </tr>
+                                      `
+                                        )
+                                        .join("")}
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button class="btn btn-primary" onclick="UI.exportAuditReport('${codigo}')">📥 Exportar Relatório</button>
+                      <button class="btn btn-secondary" onclick="document.getElementById('auditReportModal').remove()">Fechar</button>
+                  </div>
+              </div>`;
+
+      modal.innerHTML = html;
+      document.body.appendChild(modal);
+    } catch (err) {
+      console.error("Error viewing audit:", err);
+      alert("Erro ao carregar relatório de auditoria.");
+    }
+  },
+
+  exportAuditReport(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) return;
+
+      const tempState = JSON.parse(JSON.stringify(appState));
+      Sync.syncFromDB(work);
+
+      const auditReport = AuditSystem.exportAuditReport();
+      appState = tempState;
+
+      const fileName = `Audit_${codigo}_${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      Export.downloadFile(
+        fileName,
+        JSON.stringify(auditReport, null, 2),
+        "application/json"
+      );
+
+      this.showToast(`📥 Relatório de auditoria exportado!`);
+    } catch (err) {
+      console.error("Export audit failed:", err);
+      alert("Erro ao exportar relatório de auditoria.");
+    }
+  },
+
+  async editWorkMetadata(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) {
+        alert("Obra não encontrada.");
+        return;
+      }
+
+      const metadata = work.work?.metadata || {};
+
+      const modal = document.createElement("div");
+      modal.className = "modal-backdrop show";
+      modal.id = "editMetadataModal";
+
+      const html = `
+              <div class="modal" style="max-width: 600px;">
+                  <div class="modal-header">
+                      <h3 class="modal-title">✏️ Editar Metadados - ${codigo}</h3>
+                      <button class="modal-close" onclick="document.getElementById('editMetadataModal').remove()">×</button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-field">
+                          <label class="form-label">Status</label>
+                          <select class="form-input" id="editStatus">
+                              <option value="draft" ${
+                                metadata.status === "draft" ? "selected" : ""
+                              }>Rascunho</option>
+                              <option value="in_progress" ${
+                                metadata.status === "in_progress"
+                                  ? "selected"
+                                  : ""
+                              }>Em Andamento</option>
+                              <option value="completed" ${
+                                metadata.status === "completed"
+                                  ? "selected"
+                                  : ""
+                              }>Concluída</option>
+                              <option value="archived" ${
+                                metadata.status === "archived" ? "selected" : ""
+                              }>Arquivada</option>
+                          </select>
+                      </div>
+                      <div class="form-field">
+                          <label class="form-label">Tags (separadas por vírgula)</label>
+                          <input type="text" class="form-input" id="editTags" value="${(
+                            metadata.tags || []
+                          ).join(
+                            ", "
+                          )}" placeholder="ex: importante, urgente, revisao">
+                      </div>
+                      <div class="form-field">
+                          <label class="form-label">Compartilhar com (emails, separados por vírgula)</label>
+                          <input type="text" class="form-input" id="editSharedWith" value="${(
+                            metadata.sharedWith || []
+                          ).join(
+                            ", "
+                          )}" placeholder="ex: user1@email.com, user2@email.com">
+                      </div>
+                      <div class="form-field">
+                          <label style="display: flex; align-items: center; gap: 10px;">
+                              <input type="checkbox" id="editIsPublic" ${
+                                metadata.isPublic ? "checked" : ""
+                              }>
+                              <span>Tornar obra pública (visível para todos)</span>
+                          </label>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button class="btn btn-secondary" onclick="document.getElementById('editMetadataModal').remove()">Cancelar</button>
+                      <button class="btn btn-primary" onclick="UI.saveWorkMetadata('${codigo}')">💾 Salvar</button>
+                  </div>
+              </div>`;
+
+      modal.innerHTML = html;
+      document.body.appendChild(modal);
+    } catch (err) {
+      console.error("Error editing metadata:", err);
+      alert("Erro ao abrir edição de metadados.");
+    }
+  },
+
+  async saveWorkMetadata(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) return;
+
+      // Inicializa metadata se não existir
+      if (!work.work.metadata) {
+        work.work.metadata = {
+          createdBy: AuditSystem.getCurrentUser().email,
+          createdAt: new Date().toISOString(),
+          lastModifiedBy: AuditSystem.getCurrentUser().email,
+          lastModifiedAt: new Date().toISOString(),
+          sharedWith: [],
+          isPublic: false,
+          version: 1,
+          tags: [],
+          status: "draft",
+        };
+      }
+
+      const status = document.getElementById("editStatus").value;
+      const tagsInput = document.getElementById("editTags").value;
+      const sharedWithInput = document.getElementById("editSharedWith").value;
+      const isPublic = document.getElementById("editIsPublic").checked;
+
+      const tags = tagsInput
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+      const sharedWith = sharedWithInput
+        .split(",")
+        .map((email) => email.trim())
+        .filter((email) => email.includes("@"));
+
+      // Atualiza metadados
+      work.work.metadata.status = status;
+      work.work.metadata.tags = tags;
+      work.work.metadata.sharedWith = sharedWith;
+      work.work.metadata.isPublic = isPublic;
+      work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
+      work.work.metadata.lastModifiedAt = new Date().toISOString();
+      work.work.metadata.version += 1;
+
+      // Salva no IndexedDB
+      await WorkManager.saveWork(work);
+
+      // Registra no audit trail
+      AuditSystem.logChange("update_metadata", {
+        obra: codigo,
+        status,
+        tags,
+        sharedWith,
+        isPublic,
+      });
+
+      this.showToast(`✅ Metadados da obra "${codigo}" atualizados!`);
+      document.getElementById("editMetadataModal").remove();
+      this.showWorksModal(); // Refresh list
+    } catch (err) {
+      console.error("Error saving metadata:", err);
+      alert("Erro ao salvar metadados.");
+    }
+  },
+
+  async shareWork(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) {
+        alert("Obra não encontrada.");
+        return;
+      }
+
+      // Inicializa metadata se não existir
+      if (!work.work.metadata) {
+        work.work.metadata = {
+          createdBy: AuditSystem.getCurrentUser().email,
+          createdAt: new Date().toISOString(),
+          lastModifiedBy: AuditSystem.getCurrentUser().email,
+          lastModifiedAt: new Date().toISOString(),
+          sharedWith: [],
+          isPublic: false,
+          version: 1,
+          tags: [],
+          status: "draft",
+        };
+      }
+
+      const emails = prompt(
+        "Digite os emails para compartilhar (separados por vírgula):",
+        (work.work?.metadata?.sharedWith || []).join(", ")
+      );
+      if (!emails) return;
+
+      const emailList = emails
+        .split(",")
+        .map((email) => email.trim())
+        .filter((email) => email.includes("@"));
+
+      if (emailList.length === 0) {
+        alert("Nenhum email válido fornecido.");
+        return;
+      }
+
+      // Atualiza metadados
+      work.work.metadata.sharedWith = [
+        ...new Set([...(work.work?.metadata?.sharedWith || []), ...emailList]),
+      ];
+      work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
+      work.work.metadata.lastModifiedAt = new Date().toISOString();
+      work.work.metadata.version += 1;
+
+      // Salva no IndexedDB
+      await WorkManager.saveWork(work);
+
+      // Registra no audit trail
+      AuditSystem.logChange("share", {
+        obra: codigo,
+        sharedWith: emailList,
+      });
+
+      this.showToast(
+        `🔗 Obra "${codigo}" compartilhada com ${emailList.length} usuários!`
+      );
+    } catch (err) {
+      console.error("Error sharing work:", err);
+      alert("Erro ao compartilhar obra.");
+    }
+  },
+
+  async exportSpecific(codigo) {
+    try {
+      const data = await DB.loadObra(codigo);
+      if (!data) return;
+
+      const fileName = `OAE_${codigo}_${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      Export.downloadFile(
+        fileName,
+        JSON.stringify(data, null, 2),
+        "application/json"
+      );
+    } catch (err) {
+      console.error("Export specific failed:", err);
+      alert("Erro ao exportar obra.");
+    }
+  },
+
+  showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    toast.textContent = message; // Changed from msg to message
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  },
+
+  // --- PEERJS CONNECTION UI ---
+
+  showPeerConnectionModal() {
+    const modal = document.getElementById("peerConnectionModal");
+    modal.classList.add("show");
+
+    // Inicializa PeerJS se ainda não foi feito
+    if (!window.PeerSync || !PeerSync.peer) {
+      this.initializePeerJS();
+    }
+
+    // Atualiza código local
+    if (PeerSync.connectionCode) {
+      document.getElementById("myConnectionCode").value =
+        PeerSync.connectionCode;
+    }
+  },
+
+  closePeerConnectionModal() {
+    document.getElementById("peerConnectionModal").classList.remove("show");
+  },
+
+  async initializePeerJS() {
+    try {
+      const peerId = await PeerSync.init();
+      console.log("PeerJS inicializado:", peerId);
+
+      // Atualiza UI com código de conexão
+      if (PeerSync.connectionCode) {
+        document.getElementById("myConnectionCode").value =
+          PeerSync.connectionCode;
+        document.getElementById("connectionCode").textContent =
+          PeerSync.connectionCode;
+      }
+
+      // Mostra informações de conexão
+      document.getElementById("peerConnectionInfo").style.display = "block";
+    } catch (error) {
+      console.error("Erro ao inicializar PeerJS:", error);
+      this.showNotification("Erro ao inicializar conexão remota", "error");
+    }
+  },
+
+  async connectToPeer() {
+    const remoteCode = document
+      .getElementById("remoteConnectionCode")
+      .value.trim();
+
+    if (!remoteCode) {
+      alert("Digite o código do participante remoto");
+      return;
+    }
+
+    try {
+      this.showConnectionStatus("Conectando...", "connecting");
+
+      await PeerSync.connectToPeer(remoteCode);
+
+      this.showConnectionStatus("Conectado com sucesso!", "success");
+      document.getElementById("remotePeerInfo").textContent = remoteCode;
+
+      // Envia estado inicial após conexão
+      setTimeout(() => PeerSync.sendState(), 1000);
+
+      setTimeout(() => {
+        this.closePeerConnectionModal();
+        this.showNotification("Conexão estabelecida com sucesso!", "success");
+      }, 2000);
+    } catch (error) {
+      console.error("Erro ao conectar:", error);
+      this.showConnectionStatus("Falha na conexão: " + error.message, "error");
+      this.showNotification("Falha ao conectar. Verifique o código.", "error");
+    }
+  },
+
+  disconnectPeer() {
+    if (PeerSync.isPeerConnected()) {
+      PeerSync.disconnect();
+      document.getElementById("remotePeerInfo").textContent = "Nenhum";
+      document.getElementById("connectionCode").textContent = "-";
+      this.showNotification("Conexão encerrada", "info");
+    }
+  },
+
+  copyConnectionCode() {
+    const codeInput = document.getElementById("myConnectionCode");
+    codeInput.select();
+    document.execCommand("copy");
+    this.showNotification(
+      "Código copiado para área de transferência!",
+      "success"
+    );
+  },
+
+  showConnectionStatus(message, type) {
+    const statusDiv = document.getElementById("connectionStatus");
+    const statusText = document.getElementById("connectionStatusText");
+
+    statusDiv.style.display = "block";
+    statusText.textContent = message;
+
+    // Define cor baseada no tipo
+    const colors = {
+      connecting: "var(--warning)",
+      success: "var(--success)",
+      error: "var(--danger)",
+      info: "var(--primary)",
+    };
+
+    statusDiv.style.background = colors[type] || "var(--bg-secondary)";
+    statusDiv.style.color = "white";
+  },
+
+  handleTyping() {
+    if (!this.typingTimeout) {
+      // Envia indicador de digitação
+      if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+        MultiPeerSync.broadcastTyping(true);
+      }
+    }
+
+    // Limpa timeout anterior
+    clearTimeout(this.typingTimeout);
+
+    // Define novo timeout para parar de digitar
+    this.typingTimeout = setTimeout(() => {
+      if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+        MultiPeerSync.broadcastTyping(false);
+      }
+      this.typingTimeout = null;
+    }, 1000);
+  },
+
+  showNotification(message, type = "info") {
+    const toast = document.getElementById("toast");
+    if (toast) {
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.style.display = "block";
+
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3000);
+    }
+  },
+
+  // --- MULTI-PEER UI FUNCTIONS ---
+
+  showUserSetupModal() {
+    const modal = document.getElementById("userSetupModal");
+    modal.classList.add("show");
+
+    // Preenche com dados salvos se existirem
+    const savedEmail = localStorage.getItem("oae-user-email");
+    const savedName = localStorage.getItem("oae-user-name");
+
+    if (savedEmail) document.getElementById("userEmail").value = savedEmail;
+    if (savedName) document.getElementById("userName").value = savedName;
+  },
+
+  closeUserSetupModal() {
+    document.getElementById("userSetupModal").classList.remove("show");
+  },
+
+  async saveUserSetup() {
+    const email = document.getElementById("userEmail").value.trim();
+    const name = document.getElementById("userName").value.trim();
+
+    if (!email || !name) {
+      alert("Preencha todos os campos");
+      return;
+    }
+
+    try {
+      await MultiPeerSync.init(email, name);
+      this.closeUserSetupModal();
+      this.updateNetworkUI();
+      this.showNotification("Identidade configurada com sucesso!", "success");
+    } catch (error) {
+      console.error("Erro ao configurar identidade:", error);
+      this.showNotification("Erro ao configurar identidade", "error");
+    }
+  },
+
+  showNetworkModal() {
+    const modal = document.getElementById("networkModal");
+    modal.classList.add("show");
+    this.updateNetworkModal();
+  },
+
+  closeNetworkModal() {
+    document.getElementById("networkModal").classList.remove("show");
+  },
+
+  updateNetworkModal() {
+    if (!window.MultiPeerSync) return;
+
+    const stats = MultiPeerSync.getNetworkStats();
+
+    // Atualiza estatísticas
+    document.getElementById("modalTotalPeers").textContent = stats.totalPeers;
+    document.getElementById("modalConnectedPeers").textContent =
+      stats.connectedPeers;
+
+    // Atualiza lista de pares conhecidos
+    const peersList = document.getElementById("knownPeersList");
+    if (stats.knownPeers.length === 0) {
+      peersList.innerHTML =
+        '<p style="color: var(--text-muted); text-align: center;">Nenhum usuário adicionado</p>';
+    } else {
+      peersList.innerHTML = stats.knownPeers
+        .map((peerId) => {
+          const displayName = MultiPeerSync.getPeerDisplayName(peerId);
+          const isConnected = MultiPeerSync.isConnectedTo(peerId);
+          const statusColor = isConnected
+            ? "var(--success)"
+            : "var(--text-muted)";
+          const statusText = isConnected ? "Conectado" : "Desconectado";
+
+          return `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-tertiary); border-radius: 4px; margin-bottom: 5px;">
+            <div>
+              <div style="font-weight: 600;">${displayName}</div>
+              <div style="font-size: 0.8rem; color: ${statusColor};">${statusText}</div>
+            </div>
+            <button class="btn btn-danger" onclick="UI.removePeer('${peerId}')" style="height: 24px; font-size: 0.7rem;">Remover</button>
+          </div>
+        `;
+        })
+        .join("");
+    }
+  },
+
+  updateNetworkUI() {
+    if (!window.MultiPeerSync) {
+      // Usuário não configurado
+      document.getElementById("userIdentity").textContent = "Não configurado";
+      document.getElementById("networkStatusText").textContent = "Rede offline";
+      document.getElementById("totalPeersCount").textContent = "0";
+      document.getElementById("connectedPeersCount").textContent = "0";
+      document.getElementById("syncStatus").textContent = "⏸";
+      document.getElementById("connectedPeersList").style.display = "none";
+      return;
+    }
+
+    const stats = MultiPeerSync.getNetworkStats();
+
+    // Atualiza identidade
+    document.getElementById(
+      "userIdentity"
+    ).textContent = `${MultiPeerSync.userName} (${MultiPeerSync.userEmail})`;
+
+    // Atualiza status da rede
+    const hasConnections = stats.connectedPeers > 0;
+    document.getElementById("networkStatus").className = `connection-status ${
+      hasConnections ? "connected" : "disconnected"
+    }`;
+    document.getElementById("networkStatusText").textContent = hasConnections
+      ? `${stats.connectedPeers} conectados`
+      : "Rede offline";
+
+    // Atualiza estatísticas
+    document.getElementById("totalPeersCount").textContent = stats.totalPeers;
+    document.getElementById("connectedPeersCount").textContent =
+      stats.connectedPeers;
+    document.getElementById("syncStatus").textContent = hasConnections
+      ? "🔄"
+      : "⏸";
+
+    // Atualiza lista de conectados
+    if (hasConnections) {
+      document.getElementById("connectedPeersList").style.display = "block";
+      const peersList = document.getElementById("peersList");
+      peersList.innerHTML = stats.connections
+        .map((peerId) => {
+          const displayName = MultiPeerSync.getPeerDisplayName(peerId);
+          return `
+          <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--bg-tertiary); border-radius: 4px;">
+            <div class="connection-status connected" style="width: 8px; height: 8px;"></div>
+            <span style="font-size: 0.85rem;">${displayName}</span>
+          </div>
+        `;
+        })
+        .join("");
+    } else {
+      document.getElementById("connectedPeersList").style.display = "none";
+    }
+  },
+
+  async addPeerByEmail() {
+    const email = document.getElementById("newPeerEmail").value.trim();
+
+    if (!email) {
+      alert("Digite o email do usuário");
+      return;
+    }
+
+    try {
+      const peerId = MultiPeerSync.generateUserId(email);
+      const peerFullName = email.split("@")[0];
+
+      MultiPeerSync.addKnownPeer(`oae-${peerId}`, peerFullName);
+
+      document.getElementById("newPeerEmail").value = "";
+      this.updateNetworkModal();
+      this.updateNetworkUI();
+      this.showNotification("Usuário adicionado à rede", "success");
+    } catch (error) {
+      console.error("Erro ao adicionar usuário:", error);
+      this.showNotification("Erro ao adicionar usuário", "error");
+    }
+  },
+
+  removePeer(peerId) {
+    if (confirm("Tem certeza que deseja remover este usuário da rede?")) {
+      MultiPeerSync.removeKnownPeer(peerId);
+      this.updateNetworkModal();
+      this.updateNetworkUI();
+      this.showNotification("Usuário removido da rede", "info");
+    }
+  },
+
+  disconnectAll() {
+    if (confirm("Tem certeza que deseja desconectar de todos os usuários?")) {
+      MultiPeerSync.disconnect();
+      this.updateNetworkUI();
+      this.showNotification("Desconectado de todos os usuários", "info");
+    }
+  },
+
+  updatePeerConnectionStatus(peerId, status) {
+    // Atualiza UI quando status de conexão muda
+    this.updateNetworkUI();
+    if (document.getElementById("networkModal").classList.contains("show")) {
+      this.updateNetworkModal();
+    }
+  },
 };
