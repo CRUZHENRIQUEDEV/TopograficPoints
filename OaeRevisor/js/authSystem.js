@@ -90,12 +90,20 @@ const AuthSystem = {
   async login(email, password) {
     try {
       const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+      // Verifica se usuário existe
+      const userExists = users.find((u) => u.email === email);
+
+      if (!userExists) {
+        throw new Error(`❌ Usuário não encontrado!\n\n💡 DICA: Se este usuário foi criado em outro dispositivo, você precisa:\n1. Conectar via PeerJS usando o email do admin\n2. Aguardar sincronização\n3. Depois fazer login`);
+      }
+
       const user = users.find(
         (u) => u.email === email && u.password === password && u.active
       );
 
       if (!user) {
-        throw new Error("Email ou senha inválidos");
+        throw new Error("❌ Senha incorreta!");
       }
 
       // Remove senha do objeto de usuário
