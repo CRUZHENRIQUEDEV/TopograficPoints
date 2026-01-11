@@ -16,13 +16,23 @@ const AuditSystem = {
   },
 
   /**
-   * Obtém o usuário atual do MultiPeerSync ou localStorage
+   * Obtém o usuário atual do AuthSystem ou MultiPeerSync
    */
   getCurrentUser() {
+    // Tenta primeiro do AuthSystem (mais confiável para roles)
+    if (window.AuthSystem && AuthSystem.currentUser) {
+      return {
+        email: AuthSystem.currentUser.email,
+        name: AuthSystem.currentUser.name,
+        role: AuthSystem.currentUser.role,
+      };
+    }
+
     if (window.MultiPeerSync && MultiPeerSync.userEmail) {
       return {
         email: MultiPeerSync.userEmail,
         name: MultiPeerSync.userName,
+        role: "avaliador", // Default se não logado via AuthSystem
       };
     }
 
@@ -31,16 +41,19 @@ const AuditSystem = {
     const name = localStorage.getItem("oae-user-name");
 
     if (email && name) {
-      return { email, name };
+      return { email, name, role: "avaliador" };
     }
 
-    return { email: "unknown@local", name: "Usuário Local" };
+    return { email: "unknown@local", name: "Usuário Local", role: "visitante" };
   },
 
   /**
    * Registra uma alteração no audit trail
    */
   logChange(action, details, targetField = null) {
+    if (!this.currentUser) {
+        this.currentUser = this.getCurrentUser();
+    }
     if (!this.currentUser) return;
 
     // Inicializa auditTrail se não existir
@@ -54,8 +67,9 @@ const AuditSystem = {
       user: {
         email: this.currentUser.email,
         name: this.currentUser.name,
+        role: this.currentUser.role,
       },
-      action, // 'create', 'update', 'delete', 'add_error', 'resolve_error', 'add_message'
+      action, // 'create', 'update', 'delete', 'add_error', 'resolve_error', 'add_message', 'status_change', 'visibility_toggle'
       details,
       targetField,
       sessionId: this.getSessionId(),

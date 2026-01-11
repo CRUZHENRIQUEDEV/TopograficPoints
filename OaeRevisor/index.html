@@ -811,13 +811,7 @@
                   class="form-field"
                   style="justify-content: flex-end; padding-bottom: 2px"
                 >
-                  <button
-                    class="btn btn-primary"
-                    id="btn_enriquecer_vmd"
-                    style="height: 32px; font-size: 11px; white-space: nowrap"
-                  >
-                    Enriquecer Vmds
-                  </button>
+                
                 </div>
               </div>
             </div>
@@ -1915,12 +1909,22 @@
           </div>
           <div class="form-field">
             <label class="form-label" for="loginPassword">Senha</label>
-            <input
-              type="password"
-              class="form-input"
-              id="loginPassword"
-              placeholder="Digite sua senha"
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="loginPassword"
+                placeholder="Digite sua senha"
+              />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                onclick="togglePasswordVisibility('loginPassword')"
+                title="Mostrar/Ocultar senha"
+              >
+                👁️
+              </button>
+            </div>
           </div>
           <div id="loginError"></div>
           <button class="btn btn-primary" onclick="AuthSystem.loginFromForm()">
@@ -1940,6 +1944,9 @@
             >
               🔑 Esqueci minha senha
             </button>
+          </div>
+          <div style="margin-top: 10px; text-align: center; font-size: 0.75rem; color: var(--text-muted)">
+            Problemas? <a href="#" onclick="debugUsers(); return false;" style="color: var(--primary)">Verificar usuários</a>
           </div>
         </div>
       </div>
@@ -1963,32 +1970,62 @@
           </div>
           <div class="form-field">
             <label class="form-label" for="currentPassword">Senha Atual</label>
-            <input
-              type="password"
-              class="form-input"
-              id="currentPassword"
-              placeholder="Senha atual"
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="currentPassword"
+                placeholder="Senha atual"
+              />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                onclick="togglePasswordVisibility('currentPassword')"
+                title="Mostrar/Ocultar senha"
+              >
+                👁️
+              </button>
+            </div>
           </div>
           <div class="form-field">
             <label class="form-label" for="newPassword">Nova Senha</label>
-            <input
-              type="password"
-              class="form-input"
-              id="newPassword"
-              placeholder="Nova senha"
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="newPassword"
+                placeholder="Nova senha"
+              />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                onclick="togglePasswordVisibility('newPassword')"
+                title="Mostrar/Ocultar senha"
+              >
+                👁️
+              </button>
+            </div>
           </div>
           <div class="form-field">
             <label class="form-label" for="confirmPassword"
               >Confirmar Nova Senha</label
             >
-            <input
-              type="password"
-              class="form-input"
-              id="confirmPassword"
-              placeholder="Confirme a nova senha"
-            />
+            <div class="password-field-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="confirmPassword"
+                placeholder="Confirme a nova senha"
+              />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                onclick="togglePasswordVisibility('confirmPassword')"
+                title="Mostrar/Ocultar senha"
+              >
+                👁️
+              </button>
+            </div>
           </div>
           <div id="changePasswordError"></div>
           <button
@@ -2024,17 +2061,8 @@
     <script src="js/multiPeerSync.js"></script>
 
     <script>
-      // Init logic
-      document.addEventListener("DOMContentLoaded", async () => {
-        // Inicializa sistema de autenticação primeiro
-        await AuthSystem.init();
-
-        // Verifica se usuário está logado
-        if (!AuthSystem.isLoggedIn) {
-          AuthSystem.showLoginModal();
-          return;
-        }
-
+      // Função para inicializar o sistema completo
+      async function initializeApp() {
         await DB.init();
         await WorkManager.init();
         await AuditSystem.init();
@@ -2046,6 +2074,21 @@
         UI.updateTabBadges();
         AutoSave.start();
         console.log("🚀 OAE Revisor initialized successfully!");
+      }
+
+      // Init logic
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Inicializa sistema de autenticação primeiro
+        await AuthSystem.init();
+
+        // Verifica se usuário está logado
+        if (!AuthSystem.isLoggedIn) {
+          AuthSystem.showLoginModal();
+          return;
+        }
+
+        // Se já está logado, inicializa o app
+        await initializeApp();
       });
 
       // Função de login do formulário
@@ -2063,14 +2106,18 @@
           const result = await AuthSystem.login(email, password);
           if (result.success) {
             AuthSystem.hideLoginModal();
-            document.getElementById("currentUserInfo").style.display = "block";
-            location.reload(); // Recarrega para inicializar o sistema
+
+            // Inicializa o app após login bem-sucedido
+            await initializeApp();
+
+            console.log("✅ Login bem-sucedido e sistema inicializado!");
           } else {
             document.getElementById("loginError").textContent = result.error;
           }
         } catch (error) {
           document.getElementById("loginError").textContent =
             "Erro ao fazer login";
+          console.error("Login error:", error);
         }
       }
 
@@ -2086,6 +2133,35 @@
         document.getElementById("themeIcon").textContent =
           target === "dark" ? "🌙" : "☀️";
         localStorage.setItem("oae-revisor-theme", target);
+      }
+
+      // Password Visibility Toggle
+      function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const button = event.currentTarget;
+
+        if (field.type === "password") {
+          field.type = "text";
+          button.textContent = "🙈";
+        } else {
+          field.type = "password";
+          button.textContent = "👁️";
+        }
+      }
+
+      // Debug: Verificar usuários no localStorage
+      function debugUsers() {
+        const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+        console.log("=== DEBUG: Usuários no Sistema ===");
+        console.log("Total de usuários:", users.length);
+        users.forEach((user, index) => {
+          console.log(`\n${index + 1}. ${user.name} (${user.email})`);
+          console.log("   Senha:", user.password);
+          console.log("   Role:", user.role);
+          console.log("   Ativo:", user.active);
+        });
+        console.log("\n=================================");
+        alert(`Total de usuários: ${users.length}\n\nVerifique o console (F12) para detalhes.`);
       }
 
       // Restore theme

@@ -1586,14 +1586,35 @@ const UI = {
   },
 
   async saveToDatabase() {
-    if (!appState.work.codigo) {
+    if (!appState.work.codigo || appState.work.codigo.trim() === "") {
       alert(
         "⚠️ Por favor, informe o código da obra antes de salvar no banco de dados."
       );
+      // Foca no campo de código
+      document.getElementById("obraCodigo")?.focus();
       return;
     }
 
     try {
+      // Garante que metadata existe antes de salvar
+      if (!appState.work.metadata) {
+        appState.work.metadata = {
+          createdBy: AuthSystem.currentUser?.email || "unknown",
+          createdAt: new Date().toISOString(),
+          lastModifiedBy: AuthSystem.currentUser?.email || "unknown",
+          lastModifiedAt: new Date().toISOString(),
+          sharedWith: [],
+          isPublic: false,
+          version: 1,
+          tags: [],
+          status: "draft",
+        };
+      } else {
+        // Atualiza última modificação
+        appState.work.metadata.lastModifiedBy = AuthSystem.currentUser?.email || "unknown";
+        appState.work.metadata.lastModifiedAt = new Date().toISOString();
+      }
+
       await DB.saveObra(appState.work.codigo, {
         work: appState.work,
         errors: appState.errors,
@@ -1982,7 +2003,17 @@ const UI = {
 
   // --- WORK MANAGEMENT ---
   async showWorksModal() {
-    await WorkManager.loadAllWorks(); // Atualiza cache
+    try {
+      await WorkManager.loadAllWorks(); // Atualiza cache
+    } catch (error) {
+      console.error("Error loading works:", error);
+      alert("⚠️ Erro ao carregar obras. Tente novamente.");
+      return;
+    }
+
+    // Remove modal anterior se existir para evitar empilhamento
+    const existingModal = document.getElementById("worksManagementModal");
+    if (existingModal) existingModal.remove();
 
     const modal = document.createElement("div");
     modal.className = "modal-backdrop show";
@@ -2094,7 +2125,9 @@ const UI = {
                                 </select>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="UI.createNewWork()">➕ Nova Obra</button>
+                            <div style="width: 2px; background: var(--border-color); margin: 0 5px;"></div>
                             <button class="btn btn-secondary" onclick="UI.clearWorkFilters()">🗑️ Limpar Filtros</button>
                             <button class="btn btn-primary" onclick="UI.exportFilteredWorks()">📥 Exportar Filtradas</button>
                             <button class="btn btn-secondary" onclick="Export.all()">📥 Exportar Todas (Backup)</button>
@@ -2157,16 +2190,55 @@ const UI = {
                                         <td>${w.work?.nome || "-"}</td>
                                         <td>${w.work?.avaliador || "-"}</td>
                                         <td>
-                                            <span style="background: ${
-                                              statusColors[metadata.status] ||
-                                              "var(--bg-secondary)"
-                                            }; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
-                                                ${
-                                                  statusLabels[
-                                                    metadata.status
-                                                  ] || "N/A"
-                                                }
-                                            </span>
+                                            ${
+                                              permissions.canEdit
+                                                ? `<select 
+                                                    class="form-input" 
+                                                    style="padding: 2px 4px; font-size: 0.75rem; border-radius: 4px; width: auto; background: ${
+                                                      statusColors[
+                                                        metadata.status
+                                                      ] || "var(--bg-secondary)"
+                                                    }; color: white; border: none; font-weight: 600;"
+                                                    onchange="UI.updateWorkStatus('${
+                                                      w.work?.codigo || w.codigo
+                                                    }', this.value)"
+                                                  >
+                                                    <option value="draft" ${
+                                                      metadata.status === "draft"
+                                                        ? "selected"
+                                                        : ""
+                                                    }>Rascunho</option>
+                                                    <option value="in_progress" ${
+                                                      metadata.status ===
+                                                      "in_progress"
+                                                        ? "selected"
+                                                        : ""
+                                                    }>Em Andamento</option>
+                                                    <option value="completed" ${
+                                                      metadata.status ===
+                                                      "completed"
+                                                        ? "selected"
+                                                        : ""
+                                                    }>Concluída</option>
+                                                    <option value="archived" ${
+                                                      metadata.status ===
+                                                      "archived"
+                                                        ? "selected"
+                                                        : ""
+                                                    }>Arquivada</option>
+                                                  </select>`
+                                                : `<span style="background: ${
+                                                    statusColors[
+                                                      metadata.status
+                                                    ] || "var(--bg-secondary)"
+                                                  }; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                                    ${
+                                                      statusLabels[
+                                                        metadata.status
+                                                      ] || "N/A"
+                                                    }
+                                                  </span>`
+                                            }
                                         </td>
                                         <td style="font-size: 0.85rem;">${
                                           metadata.createdAt
@@ -2186,11 +2258,25 @@ const UI = {
                                           metadata.createdBy || "-"
                                         }</td>
                                         <td>
-                                            ${
-                                              metadata.isPublic
-                                                ? '<span style="color: var(--success);">🌐 Pública</span>'
-                                                : '<span style="color: var(--text-muted);">🔒 Privada</span>'
-                                            }
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                ${
+                                                  metadata.isPublic
+                                                    ? '<span style="color: var(--success); font-size: 0.85rem;">🌐 Pública</span>'
+                                                    : '<span style="color: var(--text-muted); font-size: 0.85rem;">🔒 Privada</span>'
+                                                }
+                                                ${
+                                                  permissions.canEdit
+                                                    ? `<button
+                                                        class="btn-${metadata.isPublic ? 'warning' : 'success'}"
+                                                        style="padding: 2px 8px; font-size: 10px; white-space: nowrap;"
+                                                        onclick="UI.toggleWorkVisibility('${w.work?.codigo || w.codigo}')"
+                                                        title="${metadata.isPublic ? 'Tornar privada' : 'Tornar pública'}"
+                                                      >
+                                                        ${metadata.isPublic ? '🔒 Privar' : '🌐 Publicar'}
+                                                      </button>`
+                                                    : ""
+                                                }
+                                            </div>
                                         </td>
                                         <td style="display: flex; gap: 4px; flex-wrap: wrap;">
                                             ${
@@ -2255,6 +2341,105 @@ const UI = {
     } catch (err) {
       console.error("Failed to load work:", err);
       alert("Erro ao carregar a obra.");
+    }
+  },
+
+  async createNewWork() {
+    if (
+      confirm(
+        "Deseja criar uma nova obra? Todas as alterações não salvas na obra atual serão perdidas."
+      )
+    ) {
+      try {
+        // Reset app state
+        appState = getDefaultAppState();
+
+        // Inicializar metadados para nova obra
+        if (window.AuditSystem) {
+          AuditSystem.initializeWorkMetadata();
+        }
+
+        // Limpar todos os campos do formulário no DOM
+        document
+          .querySelectorAll(
+            "input.form-input, select.form-input, textarea.form-input"
+          )
+          .forEach((el) => {
+            if (el.type === "checkbox" || el.type === "radio") {
+              el.checked = false;
+            } else {
+              el.value = "";
+            }
+          });
+
+        // Resetar tramos e outros componentes
+        this.renderAll();
+
+        // Notificar sucesso
+        this.showToast("✨ Nova obra iniciada! O formulário foi limpo.");
+
+        // Fechar modal se estiver aberto
+        const modal = document.getElementById("worksManagementModal");
+        if (modal) modal.remove();
+      } catch (error) {
+        console.error("Erro ao criar nova obra:", error);
+        alert("Erro ao criar nova obra: " + error.message);
+      }
+    }
+  },
+
+  async updateWorkStatus(codigo, newStatus) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) {
+        throw new Error("Obra não encontrada.");
+      }
+
+      // Inicializa metadata se não existir
+      if (!work.work.metadata) {
+        work.work.metadata = {
+          createdBy: AuditSystem.getCurrentUser().email,
+          createdAt: new Date().toISOString(),
+          version: 1,
+          isPublic: false,
+          status: "draft",
+          tags: [],
+        };
+      }
+
+      // Atualiza status
+      const oldStatus = work.work.metadata.status;
+      work.work.metadata.status = newStatus;
+      work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
+      work.work.metadata.lastModifiedAt = new Date().toISOString();
+      work.work.metadata.version += 1;
+
+      // Registrar na auditoria
+      if (window.AuditSystem) {
+        AuditSystem.logChange("status_change", {
+          from: oldStatus,
+          to: newStatus,
+          obra: codigo
+        });
+      }
+
+      // Salva no IndexedDB
+      await WorkManager.saveWork(work);
+
+      // Atualiza cache
+      WorkManager.updateWorkCache(codigo, work);
+
+      // Mostra mensagem
+      this.showToast(
+        `✅ Status da obra "${codigo}" atualizado para "${newStatus}"!`
+      );
+
+      // Re-renderiza o modal para refletir as mudanças sem fechar se possível, 
+      // mas showWorksModal remove e cria de novo, o que é seguro.
+      this.showWorksModal();
+    } catch (error) {
+      console.error("Erro ao atualizar status da obra:", error);
+      alert("Erro ao atualizar status: " + error.message);
     }
   },
 
@@ -2467,6 +2652,7 @@ const UI = {
                                       <tr>
                                           <th style="padding: 8px; text-align: left;">Data/Hora</th>
                                           <th style="padding: 8px; text-align: left;">Usuário</th>
+                                          <th style="padding: 8px; text-align: left;">Papel (Role)</th>
                                           <th style="padding: 8px; text-align: left;">Ação</th>
                                           <th style="padding: 8px; text-align: left;">Detalhes</th>
                                       </tr>
@@ -2481,15 +2667,44 @@ const UI = {
                                               <td style="padding: 8px;">${new Date(
                                                 entry.timestamp
                                               ).toLocaleString("pt-BR")}</td>
-                                              <td style="padding: 8px;">${
-                                                entry.user.name
-                                              }</td>
-                                              <td style="padding: 8px;">${
-                                                entry.action
-                                              }</td>
-                                              <td style="padding: 8px; font-family: monospace; font-size: 0.8rem;">${JSON.stringify(
-                                                entry.details
-                                              )}</td>
+                                              <td style="padding: 8px;">
+                                                  <div>${
+                                                    entry.user.name
+                                                  }</div>
+                                                  <div style="font-size: 0.7rem; color: var(--text-muted);">${
+                                                    entry.user.email
+                                                  }</div>
+                                              </td>
+                                              <td style="padding: 8px;">
+                                                  <span class="badge ${
+                                                    entry.user.role === "admin"
+                                                      ? "badge-error"
+                                                      : entry.user.role ===
+                                                        "revisor"
+                                                      ? "badge-primary"
+                                                      : "badge-secondary"
+                                                  }" style="font-size: 0.7rem;">
+                                                      ${
+                                                        entry.user.role ||
+                                                        "Geral"
+                                                      }
+                                                  </span>
+                                              </td>
+                                              <td style="padding: 8px;">
+                                                  <span style="font-weight: 500;">${
+                                                    entry.action
+                                                  }</span>
+                                              </td>
+                                              <td style="padding: 8px; font-family: monospace; font-size: 0.8rem;">
+                                                  ${
+                                                    typeof entry.details ===
+                                                    "string"
+                                                      ? entry.details
+                                                      : JSON.stringify(
+                                                          entry.details
+                                                        )
+                                                  }
+                                              </td>
                                           </tr>
                                       `
                                         )
@@ -2540,7 +2755,140 @@ const UI = {
     }
   },
 
-  async shareWork(codigo) {
+  /**
+   * Abre modal para editar metadados da obra (status, tags, etc.)
+   */
+  async editWorkMetadata(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) {
+        alert("Obra não encontrada.");
+        return;
+      }
+
+      // Inicializa metadata se não existir
+      if (!work.work.metadata) {
+        work.work.metadata = {
+          createdBy: AuthSystem.currentUser.email,
+          createdAt: new Date().toISOString(),
+          lastModifiedBy: AuthSystem.currentUser.email,
+          lastModifiedAt: new Date().toISOString(),
+          sharedWith: [],
+          isPublic: false,
+          version: 1,
+          tags: [],
+          status: "draft",
+        };
+      }
+
+      const metadata = work.work.metadata;
+
+      // Modal HTML
+      const modal = document.createElement("div");
+      modal.className = "modal-backdrop show";
+      modal.id = "editMetadataModal";
+
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 600px;">
+          <div class="modal-header">
+            <h3 class="modal-title">✏️ Editar Metadados - ${codigo}</h3>
+            <button class="modal-close" onclick="document.getElementById('editMetadataModal').remove()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-field">
+              <label class="form-label">📊 Status da Obra</label>
+              <select class="form-input" id="editStatus">
+                <option value="draft" ${metadata.status === "draft" ? "selected" : ""}>📝 Rascunho</option>
+                <option value="in_progress" ${metadata.status === "in_progress" ? "selected" : ""}>⏳ Em Andamento</option>
+                <option value="completed" ${metadata.status === "completed" ? "selected" : ""}>✅ Concluída</option>
+                <option value="archived" ${metadata.status === "archived" ? "selected" : ""}>📦 Arquivada</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">🌐 Visibilidade</label>
+              <select class="form-input" id="editVisibility">
+                <option value="false" ${!metadata.isPublic ? "selected" : ""}>🔒 Privada (apenas você)</option>
+                <option value="true" ${metadata.isPublic ? "selected" : ""}>🌐 Pública (todos os usuários)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">🏷️ Tags (separadas por vírgula)</label>
+              <input type="text" class="form-input" id="editTags" value="${(metadata.tags || []).join(", ")}" placeholder="urgente, revisão, complexa">
+            </div>
+
+            <div class="section" style="margin-top: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 6px;">
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                <div><strong>Criado por:</strong> ${metadata.createdBy || "-"}</div>
+                <div><strong>Criado em:</strong> ${metadata.createdAt ? new Date(metadata.createdAt).toLocaleString("pt-BR") : "-"}</div>
+                <div><strong>Última modificação:</strong> ${metadata.lastModifiedAt ? new Date(metadata.lastModifiedAt).toLocaleString("pt-BR") : "-"}</div>
+                <div><strong>Versão:</strong> ${metadata.version || 1}</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('editMetadataModal').remove()">Cancelar</button>
+            <button class="btn btn-primary" onclick="UI.saveWorkMetadata('${codigo}')">💾 Salvar</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+    } catch (error) {
+      console.error("Error editing metadata:", error);
+      alert("Erro ao editar metadados: " + error.message);
+    }
+  },
+
+  /**
+   * Salva as alterações nos metadados da obra
+   */
+  async saveWorkMetadata(codigo) {
+    try {
+      const work = WorkManager.worksCache.get(codigo);
+      if (!work) {
+        alert("Obra não encontrada.");
+        return;
+      }
+
+      const status = document.getElementById("editStatus").value;
+      const isPublic = document.getElementById("editVisibility").value === "true";
+      const tagsInput = document.getElementById("editTags").value;
+      const tags = tagsInput ? tagsInput.split(",").map(t => t.trim()).filter(t => t) : [];
+
+      // Atualiza metadata
+      work.work.metadata.status = status;
+      work.work.metadata.isPublic = isPublic;
+      work.work.metadata.tags = tags;
+      work.work.metadata.lastModifiedBy = AuthSystem.currentUser.email;
+      work.work.metadata.lastModifiedAt = new Date().toISOString();
+      work.work.metadata.version += 1;
+
+      // Salva no IndexedDB
+      await WorkManager.saveWork(work);
+
+      // Atualiza cache
+      WorkManager.updateWorkCache(codigo, work);
+
+      // Fecha modal
+      document.getElementById("editMetadataModal").remove();
+
+      // Mostra mensagem
+      this.showToast(`✅ Metadados da obra "${codigo}" atualizados!`);
+
+      // Atualiza a lista
+      this.showWorksModal();
+    } catch (error) {
+      console.error("Error saving metadata:", error);
+      alert("Erro ao salvar metadados: " + error.message);
+    }
+  },
+
+  /**
+   * Alterna a visibilidade da obra entre pública e privada
+   */
+  async toggleWorkVisibility(codigo) {
     try {
       const work = WorkManager.worksCache.get(codigo);
       if (!work) {
@@ -2563,18 +2911,24 @@ const UI = {
         };
       }
 
-      // Pergunta simples: Público ou Privado?
-      const currentStatus = work.work.metadata.isPublic ? "Pública" : "Privada";
-      const action = work.work.metadata.isPublic
-        ? "tornar privada"
-        : "tornar pública";
+      // Alterna o status
+      const newStatus = !work.work.metadata.isPublic;
+      const statusText = newStatus ? "pública" : "privada";
 
-      if (confirm(`Esta obra está ${currentStatus}. Deseja ${action}?`)) {
+      if (confirm(`Deseja tornar esta obra ${statusText}?\n\n${newStatus ? '🌐 Pública: Qualquer usuário cadastrado poderá visualizar esta obra.' : '🔒 Privada: Apenas você terá acesso a esta obra.'}`)) {
         // Inverte o status
-        work.work.metadata.isPublic = !work.work.metadata.isPublic;
+        work.work.metadata.isPublic = newStatus;
         work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
         work.work.metadata.lastModifiedAt = new Date().toISOString();
         work.work.metadata.version += 1;
+
+        // Registrar na auditoria
+        if (window.AuditSystem) {
+          AuditSystem.logChange("visibility_toggle", {
+            isPublic: newStatus,
+            obra: codigo
+          });
+        }
 
         // Salva no IndexedDB
         await WorkManager.saveWork(work);
@@ -2583,8 +2937,9 @@ const UI = {
         WorkManager.updateWorkCache(codigo, work);
 
         // Mostra mensagem
-        const newStatus = work.work.metadata.isPublic ? "Pública" : "Privada";
-        this.showToast(`✅ Obra "${codigo}" agora está ${newStatus}!`);
+        const statusLabel = newStatus ? "Pública" : "Privada";
+        const icon = newStatus ? "🌐" : "🔒";
+        this.showToast(`${icon} Obra "${codigo}" agora está ${statusLabel}!`);
 
         // Atualiza a lista
         this.showWorksModal();
@@ -2879,5 +3234,26 @@ const UI = {
     if (document.getElementById("networkModal").classList.contains("show")) {
       this.updateNetworkModal();
     }
+  },
+
+  /**
+   * Exibe uma mensagem toast temporária
+   * @param {string} message - Mensagem a ser exibida
+   * @param {number} duration - Duração em ms (padrão: 3000)
+   */
+  showToast(message, duration = 3000) {
+    const toast = document.getElementById("toast");
+    if (!toast) {
+      console.warn("Toast element not found");
+      return;
+    }
+
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    // Remove após o tempo especificado
+    setTimeout(() => {
+      toast.classList.remove("show");
+    }, duration);
   },
 };

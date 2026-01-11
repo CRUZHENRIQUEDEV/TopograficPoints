@@ -32,6 +32,11 @@ const WorkManager = {
    */
   async loadAllWorks() {
     try {
+      if (!DB.db) {
+        console.warn("Database not initialized. Initializing now...");
+        await DB.init();
+      }
+
       const transaction = DB.db.transaction(["obras"], "readonly");
       const store = transaction.objectStore("obras");
       const request = store.getAll();
@@ -40,6 +45,22 @@ const WorkManager = {
         request.onsuccess = () => {
           this.worksCache.clear();
           request.result.forEach((work) => {
+            // Migração automática: inicializa metadata se não existir
+            if (!work.work.metadata) {
+              work.work.metadata = {
+                createdBy: work.work.avaliador || "unknown@local",
+                createdAt: new Date().toISOString(),
+                lastModifiedBy: work.work.avaliador || "unknown@local",
+                lastModifiedAt: new Date().toISOString(),
+                sharedWith: [],
+                isPublic: false,
+                version: 1,
+                tags: [],
+                status: "draft",
+              };
+              // Salva a obra com metadata inicializado (async, não bloqueante)
+              this.saveWork(work).catch(err => console.error("Error migrating work:", err));
+            }
             this.worksCache.set(work.work.codigo, work);
           });
           resolve();
@@ -393,14 +414,19 @@ const WorkManager = {
     if (!work) return null;
 
     const currentUser = AuditSystem.getCurrentUser().email;
+    const currentUserRole = AuditSystem.getCurrentUser().role;
     const metadata = work.work.metadata || {};
 
+    // Admin tem permissão total
+    const isAdmin = currentUserRole === "admin";
+    const isOwner = metadata.createdBy === currentUser;
+
     return {
-      canView: metadata.isPublic || metadata.createdBy === currentUser,
-      canEdit: metadata.createdBy === currentUser,
-      canDelete: metadata.createdBy === currentUser,
-      canShare: metadata.createdBy === currentUser,
-      isOwner: metadata.createdBy === currentUser,
+      canView: metadata.isPublic || isOwner || isAdmin,
+      canEdit: isOwner || isAdmin,
+      canDelete: isOwner || isAdmin,
+      canShare: isOwner || isAdmin,
+      isOwner: isOwner,
       isPublic: metadata.isPublic === true,
     };
   },

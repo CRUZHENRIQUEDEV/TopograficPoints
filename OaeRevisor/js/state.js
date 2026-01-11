@@ -271,7 +271,7 @@ const FUNCTIONAL_DEFICIENCIES = [
   { desc: "Seção hidráulica (ponte curta)", unit: "und" },
   { desc: "Trem tipo de cálculo TB 24tf", unit: "-" },
   { desc: "Trem tipo de cálculo TB 36tf", unit: "-" },
-  { desc: "Viga caixão com interior inacessível", unit: "und" },
+  { desc: "Viga caixão with interior inacessível", unit: "und" },
 ];
 
 // Special Aspects - standardized list
@@ -334,67 +334,75 @@ const TAB_FIELD_MAP = {
   obs: ["observacoes"],
 };
 
-let appState = {
-  role: "avaliador", // 'avaliador' or 'inspetor'
+/**
+ * Returns the default initial state for the application
+ */
+function getDefaultAppState() {
+    return {
+        role: "avaliador", // 'avaliador' or 'inspetor'
 
-  // Core data of the current work
-  work: {
-    // Tipo da obra
-    tipo: "cadastral", // 'cadastral' or 'rotineira'
+        // Core data of the current work
+        work: {
+            // Tipo da obra
+            tipo: "cadastral", // 'cadastral' or 'rotineira'
 
-    // Dados básicos
-    avaliador: "",
-    nome: "",
-    codigo: "",
-    numTramos: 1,
+            // Dados básicos
+            avaliador: "",
+            nome: "",
+            codigo: "",
+            numTramos: 1,
 
-    // Metadata for sharing and auditing
-    metadata: {
-      createdBy: null, // Email do criador
-      createdAt: null, // Timestamp de criação
-      lastModifiedBy: null, // Email do último modificador
-      lastModifiedAt: null, // Timestamp da última modificação
-      sharedWith: [], // Lista de emails com quem foi compartilhado
-      isPublic: false, // Se é visível para todos
-      version: 1, // Versão do documento
-      tags: [], // Tags para busca/filtro
-      status: "draft", // draft, in_progress, completed, archived
-    },
+            // Metadata for sharing and auditing
+            metadata: {
+                createdBy: null, // Email do criador
+                createdAt: null, // Timestamp de criação
+                lastModifiedAt: null, // Timestamp da última modificação
+                lastModifiedBy: null, // Email do último modificador
+                sharedWith: [], // Lista de emails com quem foi compartilhado
+                isPublic: false, // Se é visível para todos
+                version: 1, // Versão do documento
+                tags: [], // Tags para busca/filtro
+                status: "draft", // draft, in_progress, completed, archived
+            },
 
-    // Audit trail - registro de todas as alterações
-    auditTrail: [],
+            // Audit trail - registro de todas as alterações
+            auditTrail: [],
 
-    // Identificação (fields with data-field)
-    fields: {},
+            // Identificação (fields with data-field)
+            fields: {},
 
-    // Tramos structure: { 1: { tipo, sistema, ext, min, max, cont }, C: { tipo, sistema, ext, min, max, cont } }
-    tramos: {
-      1: { tipo: "", sistema: "", ext: "", min: "", max: "", cont: "" },
-      C: { tipo: "", sistema: "", ext: "", min: "", max: "", cont: "" },
-    },
+            // Tramos structure: { 1: { tipo, sistema, ext, min, max, cont }, C: { tipo, sistema, ext, min, max, cont } }
+            tramos: {
+                1: { tipo: "", sistema: "", ext: "", min: "", max: "", cont: "" },
+                C: { tipo: "", sistema: "", ext: "", min: "", max: "", cont: "" },
+            },
 
-    // Aspects: [ { id, desc, sigla, comment } ]
-    aspects: [],
+            // Aspects: [ { id, desc, sigla, comment } ]
+            aspects: [],
 
-    // Functional Deficiencies: [ { id, desc, unit, value } ]
-    functionalDeficiencies: [],
-  },
+            // Functional Deficiencies: [ { id, desc, unit, value } ]
+            functionalDeficiencies: [],
+        },
 
-  // Auditor Markings
-  errors: {}, // Field errors: { fieldId: { id, label, value, types[], obs, auditInfo } }
-  elementErrors: [], // Element errors: [ { id, tramo, regiao, familia, erro, obs, responses[], auditInfo } ]
-  anexoErrors: [], // Attachment errors: [ { id, nome, tipo, inconsist, obs, auditInfo } ]
-  mensagens: [], // Messages: [ { id, author, text, date, auditInfo } ]
+        // Auditor Markings
+        errors: {}, // Field errors: { fieldId: { id, label, value, types[], obs, auditInfo } }
+        elementErrors: [], // Element errors: [ { id, tramo, regiao, familia, erro, obs, responses[], auditInfo } ]
+        anexoErrors: [], // Attachment errors: [ { id, nome, tipo, inconsist, obs, auditInfo } ]
+        mensagens: [], // Messages: [ { id, author, text, date, auditInfo } ]
 
-  // Field Chat System: { fieldId: [commentData] }
-  fieldChats: {},
+        // Field Chat System: { fieldId: [commentData] }
+        fieldChats: {},
 
-  // Message System State (Maps for completion tracking and responses)
-  completionStates: new Map(), // Map<errorId, boolean>
-  messageResponses: new Map(), // Map<errorId, {text, date}
+        // Message System State (Maps for completion tracking and responses)
+        completionStates: new Map(), // Map<errorId, boolean>
+        messageResponses: new Map(), // Map<errorId, {text, date}
 
-  // UI state
-  currentField: null,
-};
+        // UI state
+        currentField: null,
+    };
+}
+
+let appState = getDefaultAppState();
+
 
 // Listeners/Subscribers could be added here if needed

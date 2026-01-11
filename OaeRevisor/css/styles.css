@@ -1139,3 +1139,44 @@ body {
     font-size: 11px;
   }
 }
+
+/* UTILITY BUTTON CLASSES */
+.btn-success {
+  background: linear-gradient(135deg, var(--ui-success) 0%, #20a03a 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, var(--ui-warning) 0%, #f0b000 100%);
+  color: #333;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-warning:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+.btn-info {
+  background: linear-gradient(135deg, var(--ui-info) 0%, #138496 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-info:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+}

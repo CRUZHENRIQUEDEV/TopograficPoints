@@ -127,8 +127,31 @@ const Sync = {
     appState.elementErrors = data.elementErrors || [];
     appState.anexoErrors = data.anexoErrors || [];
     appState.mensagens = data.mensagens || [];
-    appState.completionStates = data.completionStates || new Map();
-    appState.messageResponses = data.messageResponses || new Map();
+
+    // Convert arrays/objects back to Maps (IndexedDB serializes Maps as arrays)
+    if (data.completionStates) {
+      if (data.completionStates instanceof Map) {
+        appState.completionStates = data.completionStates;
+      } else if (Array.isArray(data.completionStates)) {
+        appState.completionStates = new Map(data.completionStates);
+      } else {
+        appState.completionStates = new Map(Object.entries(data.completionStates));
+      }
+    } else {
+      appState.completionStates = new Map();
+    }
+
+    if (data.messageResponses) {
+      if (data.messageResponses instanceof Map) {
+        appState.messageResponses = data.messageResponses;
+      } else if (Array.isArray(data.messageResponses)) {
+        appState.messageResponses = new Map(data.messageResponses);
+      } else {
+        appState.messageResponses = new Map(Object.entries(data.messageResponses));
+      }
+    } else {
+      appState.messageResponses = new Map();
+    }
 
     this.loadState();
     UI.renderAll();

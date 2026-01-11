@@ -40,12 +40,25 @@ const AuthSystem = {
    */
   async loadUsers() {
     const stored = localStorage.getItem("oae-users");
-    if (stored) {
+    if (!stored) {
+      // Se não há usuários, cria o admin padrão
+      localStorage.setItem("oae-users", JSON.stringify(this.DEFAULT_USERS));
+      console.log("✅ Usuário admin criado:", this.DEFAULT_USERS[0].email);
       return;
     }
 
-    // Se não há usuários, cria o admin padrão
-    localStorage.setItem("oae-users", JSON.stringify(this.DEFAULT_USERS));
+    // Verifica se o admin padrão existe
+    const users = JSON.parse(stored);
+    const adminExists = users.some(
+      (u) => u.email === "admin@oae.com" && u.role === "admin"
+    );
+
+    if (!adminExists) {
+      // Adiciona o admin se não existir
+      users.push(this.DEFAULT_USERS[0]);
+      localStorage.setItem("oae-users", JSON.stringify(users));
+      console.log("✅ Usuário admin restaurado");
+    }
   },
 
   /**
@@ -218,9 +231,6 @@ const AuthSystem = {
    */
   updateUIForUser() {
     if (!this.isLoggedIn) return;
-
-    // Mostra informações do usuário no modal de obras
-    this.showUserInfoInWorksModal();
 
     this.toggleElementsByRole();
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 Forçar Atualização - OAE Revisor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            margin-top: 0;
+            font-size: 2rem;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        .output.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Forçar Atualização do Sistema</h1>
+
+        <p><strong>Este script vai:</strong></p>
+        <div class="step">
+            ✅ Limpar cache do ServiceWorker<br>
+            ✅ Forçar recarregamento de todos os arquivos<br>
+            ✅ Verificar se as funções foram carregadas<br>
+            ✅ Recarregar a aplicação
+        </div>
+
+        <button class="btn" onclick="forceReload()">🔄 Atualizar Agora</button>
+        <button class="btn btn-danger" onclick="fullReset()">⚠️ Reset Completo (Apaga Tudo)</button>
+
+        <div id="output" class="output"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.classList.add('show');
+            output.innerHTML += message + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+
+        async function forceReload() {
+            log('=== INICIANDO ATUALIZAÇÃO FORÇADA ===\n');
+
+            // 1. Unregister service workers
+            if ('serviceWorker' in navigator) {
+                log('1. Removendo Service Workers...');
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                    log('   ✓ Service Worker removido');
+                }
+            }
+
+            // 2. Clear all caches
+            if ('caches' in window) {
+                log('2. Limpando Cache...');
+                const cacheNames = await caches.keys();
+                for (let name of cacheNames) {
+                    await caches.delete(name);
+                    log('   ✓ Cache removido: ' + name);
+                }
+            }
+
+            // 3. Reload com timestamp
+            log('3. Recarregando aplicação...\n');
+            log('✅ ATUALIZAÇÃO CONCLUÍDA!\n');
+            log('Redirecionando em 2 segundos...');
+
+            setTimeout(() => {
+                window.location.href = 'index.html?v=' + Date.now();
+            }, 2000);
+        }
+
+        async function fullReset() {
+            if (!confirm('⚠️ ATENÇÃO!\n\nIsso vai APAGAR PERMANENTEMENTE:\n- Todas as obras salvas\n- Configurações\n- Cache\n- Sessão de login\n\nTem certeza?')) {
+                return;
+            }
+
+            log('=== INICIANDO RESET COMPLETO ===\n');
+
+            // 1. Clear localStorage
+            log('1. Limpando LocalStorage...');
+            localStorage.clear();
+            log('   ✓ LocalStorage limpo');
+
+            // 2. Clear sessionStorage
+            log('2. Limpando SessionStorage...');
+            sessionStorage.clear();
+            log('   ✓ SessionStorage limpo');
+
+            // 3. Delete IndexedDB
+            log('3. Deletando IndexedDB...');
+            const dbs = await indexedDB.databases();
+            for (let db of dbs) {
+                indexedDB.deleteDatabase(db.name);
+                log('   ✓ Database deletado: ' + db.name);
+            }
+
+            // 4. Unregister service workers
+            if ('serviceWorker' in navigator) {
+                log('4. Removendo Service Workers...');
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                    log('   ✓ Service Worker removido');
+                }
+            }
+
+            // 5. Clear all caches
+            if ('caches' in window) {
+                log('5. Limpando Cache...');
+                const cacheNames = await caches.keys();
+                for (let name of cacheNames) {
+                    await caches.delete(name);
+                    log('   ✓ Cache removido: ' + name);
+                }
+            }
+
+            log('\n✅ RESET COMPLETO CONCLUÍDO!\n');
+            log('Redirecionando em 2 segundos...');
+
+            setTimeout(() => {
+                window.location.href = 'index.html?v=' + Date.now();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
