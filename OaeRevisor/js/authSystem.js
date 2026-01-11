@@ -518,6 +518,26 @@ const AuthSystem = {
       syncStatus.style.color = "var(--danger)";
     }
   },
+
+  /**
+   * Mostra modal com opções de sincronização
+   */
+  showSyncOptionsModal() {
+    const modal = document.getElementById("syncOptionsModal");
+    if (modal) {
+      modal.classList.add("show");
+    }
+  },
+
+  /**
+   * Esconde modal de opções de sincronização
+   */
+  hideSyncOptionsModal() {
+    const modal = document.getElementById("syncOptionsModal");
+    if (modal) {
+      modal.classList.remove("show");
+    }
+  },
 };
 
 // Export para uso global

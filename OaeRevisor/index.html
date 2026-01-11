@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V1.2
+                🔍 OAE Revisor V1.3
                 <span
                   id="workTitle"
                   style="
@@ -1895,7 +1895,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V1.2</h2>
+          <h2>🔐 Login - OAE Revisor V1.3</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -1931,33 +1931,15 @@
             🔐 Entrar
           </button>
 
-          <!-- Botão de Sincronização de Usuários -->
-          <div style="margin-top: 15px; padding: 15px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border)">
-            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary)">
-              📡 Sincronizar Usuários via PeerJS
-            </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px">
-              Conecte-se a um dispositivo que já possui os usuários cadastrados
-            </div>
-            <div style="display: flex; gap: 10px">
-              <input
-                type="text"
-                class="form-input"
-                id="peerIdToConnect"
-                placeholder="ID do peer (email do admin)"
-                style="flex: 1; font-size: 0.85rem; padding: 8px"
-              />
-              <button
-                class="btn btn-success"
-                onclick="AuthSystem.connectAndSyncUsers()"
-                style="padding: 8px 15px; font-size: 0.85rem"
-              >
-                🔗 Conectar
-              </button>
-            </div>
-            <div id="syncStatus" style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted)">
-
-            </div>
+          <!-- Opções de Sincronização -->
+          <div style="margin-top: 15px;">
+            <button
+              class="btn btn-primary"
+              onclick="AuthSystem.showSyncOptionsModal()"
+              style="width: 100%; justify-content: center; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);"
+            >
+              🔄 Opções de Sincronização
+            </button>
           </div>
 
           <div style="margin-top: 15px; text-align: center">
@@ -2075,12 +2057,115 @@
       </div>
     </div>
 
+    <!-- Modal: Opções de Sincronização -->
+    <div id="syncOptionsModal" class="modal-backdrop" style="display: none">
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2>🔄 Opções de Sincronização</h2>
+          <button class="btn-close" onclick="AuthSystem.hideSyncOptionsModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 20px; color: var(--text-secondary);">
+            Escolha um método para sincronizar usuários entre dispositivos:
+          </p>
+
+          <!-- Opção 1: PeerJS -->
+          <div class="sync-option" onclick="AuthSystem.hideSyncOptionsModal(); document.getElementById('peerSyncModal').classList.add('show');">
+            <div class="sync-option-icon">🌐</div>
+            <div class="sync-option-content">
+              <h3>PeerJS (Tempo Real)</h3>
+              <p>Conecte diretamente com outro dispositivo online via P2P</p>
+            </div>
+            <div class="sync-option-arrow">→</div>
+          </div>
+
+          <!-- Opção 2: QR Code -->
+          <div class="sync-option" onclick="AuthSystem.hideSyncOptionsModal(); SyncMethods.showImportQRModal();">
+            <div class="sync-option-icon">📱</div>
+            <div class="sync-option-content">
+              <h3>QR Code</h3>
+              <p>Escaneie ou cole um código QR para importar usuários</p>
+            </div>
+            <div class="sync-option-arrow">→</div>
+          </div>
+
+          <!-- Opção 3: Link de Convite -->
+          <div class="sync-option" onclick="AuthSystem.hideSyncOptionsModal(); alert('Abra o link de convite que você recebeu');">
+            <div class="sync-option-icon">🔗</div>
+            <div class="sync-option-content">
+              <h3>Link de Convite</h3>
+              <p>Abra o link compartilhado para sincronizar automaticamente</p>
+            </div>
+            <div class="sync-option-arrow">→</div>
+          </div>
+
+          <!-- Opção 4: Código de 6 Dígitos -->
+          <div class="sync-option" onclick="AuthSystem.hideSyncOptionsModal(); SyncMethods.showEnterCodeModal();">
+            <div class="sync-option-icon">🔢</div>
+            <div class="sync-option-content">
+              <h3>Código de 6 Dígitos</h3>
+              <p>Digite o código compartilhado pelo administrador</p>
+            </div>
+            <div class="sync-option-arrow">→</div>
+          </div>
+
+          <button
+            class="btn btn-secondary"
+            onclick="AuthSystem.hideSyncOptionsModal()"
+            style="margin-top: 20px; width: 100%;"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: PeerJS Sync -->
+    <div id="peerSyncModal" class="modal-backdrop" style="display: none">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>🌐 Sincronização PeerJS</h2>
+          <button class="btn-close" onclick="document.getElementById('peerSyncModal').classList.remove('show')">×</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 15px; color: var(--text-secondary);">
+            Digite o email do administrador para conectar e sincronizar usuários:
+          </p>
+          <div class="form-field">
+            <label class="form-label" for="peerIdToConnect">Email do Admin</label>
+            <input
+              type="email"
+              class="form-input"
+              id="peerIdToConnect"
+              placeholder="admin@oae.com"
+            />
+          </div>
+          <div id="syncStatus" style="margin: 10px 0; color: var(--text-secondary);"></div>
+          <button
+            class="btn btn-primary"
+            onclick="AuthSystem.connectAndSyncUsers()"
+            style="width: 100%;"
+          >
+            🔄 Conectar e Sincronizar
+          </button>
+          <button
+            class="btn btn-secondary"
+            onclick="document.getElementById('peerSyncModal').classList.remove('show')"
+            style="margin-top: 10px; width: 100%;"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
     <script src="js/state.js"></script>
     <script src="js/db.js"></script>
     <script src="js/authSystem.js"></script>
     <script src="js/userManager.js"></script>
+    <script src="js/syncMethods.js"></script>
     <script src="js/fieldChat.js"></script>
     <script src="js/auditSystem.js"></script>
     <script src="js/workManager.js"></script>
