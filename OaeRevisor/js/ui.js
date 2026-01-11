@@ -2000,6 +2000,11 @@ const UI = {
                     <button class="modal-close" onclick="document.getElementById('worksManagementModal').remove()">×</button>
                 </div>
                 <div class="modal-body">
+                    <!-- Informações do Usuário -->
+                    <div class="section">
+                        <div id="worksUserInfo"></div>
+                    </div>
+                    
                     <!-- Estatísticas Gerais -->
                     <div class="section">
                         <div class="section-title">📊 Estatísticas Gerais</div>
@@ -2085,7 +2090,6 @@ const UI = {
                                 <select class="form-input" id="filterVisibility" onchange="UI.applyWorkFilters()">
                                     <option value="">Todas</option>
                                     <option value="public">Apenas Públicas</option>
-                                    <option value="shared">Compartilhadas Comigo</option>
                                     <option value="mine">Minhas Obras</option>
                                 </select>
                             </div>
@@ -2185,9 +2189,6 @@ const UI = {
                                             ${
                                               metadata.isPublic
                                                 ? '<span style="color: var(--success);">🌐 Pública</span>'
-                                                : metadata.sharedWith?.length >
-                                                  0
-                                                ? `<span style="color: var(--primary);">👥 ${metadata.sharedWith.length}</span>`
                                                 : '<span style="color: var(--text-muted);">🔒 Privada</span>'
                                             }
                                         </td>
@@ -2334,8 +2335,6 @@ const UI = {
       tags: document.getElementById("filterTags")?.value
         ? [document.getElementById("filterTags").value]
         : [],
-      sharedWith:
-        document.getElementById("filterVisibility")?.value === "shared",
       publicOnly:
         document.getElementById("filterVisibility")?.value === "public",
       mineOnly: document.getElementById("filterVisibility")?.value === "mine",
@@ -2541,151 +2540,6 @@ const UI = {
     }
   },
 
-  async editWorkMetadata(codigo) {
-    try {
-      const work = WorkManager.worksCache.get(codigo);
-      if (!work) {
-        alert("Obra não encontrada.");
-        return;
-      }
-
-      const metadata = work.work?.metadata || {};
-
-      const modal = document.createElement("div");
-      modal.className = "modal-backdrop show";
-      modal.id = "editMetadataModal";
-
-      const html = `
-              <div class="modal" style="max-width: 600px;">
-                  <div class="modal-header">
-                      <h3 class="modal-title">✏️ Editar Metadados - ${codigo}</h3>
-                      <button class="modal-close" onclick="document.getElementById('editMetadataModal').remove()">×</button>
-                  </div>
-                  <div class="modal-body">
-                      <div class="form-field">
-                          <label class="form-label">Status</label>
-                          <select class="form-input" id="editStatus">
-                              <option value="draft" ${
-                                metadata.status === "draft" ? "selected" : ""
-                              }>Rascunho</option>
-                              <option value="in_progress" ${
-                                metadata.status === "in_progress"
-                                  ? "selected"
-                                  : ""
-                              }>Em Andamento</option>
-                              <option value="completed" ${
-                                metadata.status === "completed"
-                                  ? "selected"
-                                  : ""
-                              }>Concluída</option>
-                              <option value="archived" ${
-                                metadata.status === "archived" ? "selected" : ""
-                              }>Arquivada</option>
-                          </select>
-                      </div>
-                      <div class="form-field">
-                          <label class="form-label">Tags (separadas por vírgula)</label>
-                          <input type="text" class="form-input" id="editTags" value="${(
-                            metadata.tags || []
-                          ).join(
-                            ", "
-                          )}" placeholder="ex: importante, urgente, revisao">
-                      </div>
-                      <div class="form-field">
-                          <label class="form-label">Compartilhar com (emails, separados por vírgula)</label>
-                          <input type="text" class="form-input" id="editSharedWith" value="${(
-                            metadata.sharedWith || []
-                          ).join(
-                            ", "
-                          )}" placeholder="ex: user1@email.com, user2@email.com">
-                      </div>
-                      <div class="form-field">
-                          <label style="display: flex; align-items: center; gap: 10px;">
-                              <input type="checkbox" id="editIsPublic" ${
-                                metadata.isPublic ? "checked" : ""
-                              }>
-                              <span>Tornar obra pública (visível para todos)</span>
-                          </label>
-                      </div>
-                  </div>
-                  <div class="modal-footer">
-                      <button class="btn btn-secondary" onclick="document.getElementById('editMetadataModal').remove()">Cancelar</button>
-                      <button class="btn btn-primary" onclick="UI.saveWorkMetadata('${codigo}')">💾 Salvar</button>
-                  </div>
-              </div>`;
-
-      modal.innerHTML = html;
-      document.body.appendChild(modal);
-    } catch (err) {
-      console.error("Error editing metadata:", err);
-      alert("Erro ao abrir edição de metadados.");
-    }
-  },
-
-  async saveWorkMetadata(codigo) {
-    try {
-      const work = WorkManager.worksCache.get(codigo);
-      if (!work) return;
-
-      // Inicializa metadata se não existir
-      if (!work.work.metadata) {
-        work.work.metadata = {
-          createdBy: AuditSystem.getCurrentUser().email,
-          createdAt: new Date().toISOString(),
-          lastModifiedBy: AuditSystem.getCurrentUser().email,
-          lastModifiedAt: new Date().toISOString(),
-          sharedWith: [],
-          isPublic: false,
-          version: 1,
-          tags: [],
-          status: "draft",
-        };
-      }
-
-      const status = document.getElementById("editStatus").value;
-      const tagsInput = document.getElementById("editTags").value;
-      const sharedWithInput = document.getElementById("editSharedWith").value;
-      const isPublic = document.getElementById("editIsPublic").checked;
-
-      const tags = tagsInput
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
-      const sharedWith = sharedWithInput
-        .split(",")
-        .map((email) => email.trim())
-        .filter((email) => email.includes("@"));
-
-      // Atualiza metadados
-      work.work.metadata.status = status;
-      work.work.metadata.tags = tags;
-      work.work.metadata.sharedWith = sharedWith;
-      work.work.metadata.isPublic = isPublic;
-      work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
-      work.work.metadata.lastModifiedAt = new Date().toISOString();
-      work.work.metadata.version += 1;
-
-      // Salva no IndexedDB
-      await WorkManager.saveWork(work);
-
-      // Registra no audit trail
-      AuditSystem.logChange("update_metadata", {
-        obra: codigo,
-        status,
-        tags,
-        sharedWith,
-        isPublic,
-      });
-
-      this.showToast(`✅ Metadados da obra "${codigo}" atualizados!`);
-      document.getElementById("editMetadataModal").remove();
-      this.showWorksModal(); // Refresh list
-    } catch (err) {
-      console.error("Error saving metadata:", err);
-      alert("Erro ao salvar metadados.");
-    }
-  },
-
   async shareWork(codigo) {
     try {
       const work = WorkManager.worksCache.get(codigo);
@@ -2709,127 +2563,39 @@ const UI = {
         };
       }
 
-      const emails = prompt(
-        "Digite os emails para compartilhar (separados por vírgula):",
-        (work.work?.metadata?.sharedWith || []).join(", ")
-      );
-      if (!emails) return;
+      // Pergunta simples: Público ou Privado?
+      const currentStatus = work.work.metadata.isPublic ? "Pública" : "Privada";
+      const action = work.work.metadata.isPublic
+        ? "tornar privada"
+        : "tornar pública";
 
-      const emailList = emails
-        .split(",")
-        .map((email) => email.trim())
-        .filter((email) => email.includes("@"));
+      if (confirm(`Esta obra está ${currentStatus}. Deseja ${action}?`)) {
+        // Inverte o status
+        work.work.metadata.isPublic = !work.work.metadata.isPublic;
+        work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
+        work.work.metadata.lastModifiedAt = new Date().toISOString();
+        work.work.metadata.version += 1;
 
-      if (emailList.length === 0) {
-        alert("Nenhum email válido fornecido.");
-        return;
+        // Salva no IndexedDB
+        await WorkManager.saveWork(work);
+
+        // Atualiza cache
+        WorkManager.updateWorkCache(codigo, work);
+
+        // Mostra mensagem
+        const newStatus = work.work.metadata.isPublic ? "Pública" : "Privada";
+        this.showToast(`✅ Obra "${codigo}" agora está ${newStatus}!`);
+
+        // Atualiza a lista
+        this.showWorksModal();
       }
-
-      // Atualiza metadados
-      work.work.metadata.sharedWith = [
-        ...new Set([...(work.work?.metadata?.sharedWith || []), ...emailList]),
-      ];
-      work.work.metadata.lastModifiedBy = AuditSystem.getCurrentUser().email;
-      work.work.metadata.lastModifiedAt = new Date().toISOString();
-      work.work.metadata.version += 1;
-
-      // Salva no IndexedDB
-      await WorkManager.saveWork(work);
-
-      // Registra no audit trail
-      AuditSystem.logChange("share", {
-        obra: codigo,
-        sharedWith: emailList,
-      });
-
-      this.showToast(
-        `🔗 Obra "${codigo}" compartilhada com ${emailList.length} usuários!`
-      );
-    } catch (err) {
-      console.error("Error sharing work:", err);
-      alert("Erro ao compartilhar obra.");
-    }
-  },
-
-  async exportSpecific(codigo) {
-    try {
-      const data = await DB.loadObra(codigo);
-      if (!data) return;
-
-      const fileName = `OAE_${codigo}_${
-        new Date().toISOString().split("T")[0]
-      }.json`;
-      Export.downloadFile(
-        fileName,
-        JSON.stringify(data, null, 2),
-        "application/json"
-      );
-    } catch (err) {
-      console.error("Export specific failed:", err);
-      alert("Erro ao exportar obra.");
-    }
-  },
-
-  showToast(message, type = "success") {
-    const toast = document.getElementById("toast");
-    toast.textContent = message; // Changed from msg to message
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
-  },
-
-  // --- PEERJS CONNECTION UI ---
-
-  showPeerConnectionModal() {
-    const modal = document.getElementById("peerConnectionModal");
-    modal.classList.add("show");
-
-    // Inicializa PeerJS se ainda não foi feito
-    if (!window.PeerSync || !PeerSync.peer) {
-      this.initializePeerJS();
-    }
-
-    // Atualiza código local
-    if (PeerSync.connectionCode) {
-      document.getElementById("myConnectionCode").value =
-        PeerSync.connectionCode;
-    }
-  },
-
-  closePeerConnectionModal() {
-    document.getElementById("peerConnectionModal").classList.remove("show");
-  },
-
-  async initializePeerJS() {
-    try {
-      const peerId = await PeerSync.init();
-      console.log("PeerJS inicializado:", peerId);
-
-      // Atualiza UI com código de conexão
-      if (PeerSync.connectionCode) {
-        document.getElementById("myConnectionCode").value =
-          PeerSync.connectionCode;
-        document.getElementById("connectionCode").textContent =
-          PeerSync.connectionCode;
-      }
-
-      // Mostra informações de conexão
-      document.getElementById("peerConnectionInfo").style.display = "block";
     } catch (error) {
-      console.error("Erro ao inicializar PeerJS:", error);
-      this.showNotification("Erro ao inicializar conexão remota", "error");
+      console.error("Erro ao alterar visibilidade da obra:", error);
+      alert("Erro ao alterar visibilidade: " + error.message);
     }
   },
 
-  async connectToPeer() {
-    const remoteCode = document
-      .getElementById("remoteConnectionCode")
-      .value.trim();
-
-    if (!remoteCode) {
-      alert("Digite o código do participante remoto");
-      return;
-    }
-
+  async shareWork(codigo) {
     try {
       this.showConnectionStatus("Conectando...", "connecting");
 

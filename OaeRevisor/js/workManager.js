@@ -7,7 +7,7 @@ const WorkManager = {
   // Cache de obras
   worksCache: new Map(),
 
-  // Filtros ativos
+  // Estado dos filtros
   activeFilters: {
     search: "",
     author: "",
@@ -15,7 +15,6 @@ const WorkManager = {
     dateFrom: null,
     dateTo: null,
     tags: [],
-    sharedWith: false,
     publicOnly: false,
     mineOnly: false,
   },
@@ -165,16 +164,6 @@ const WorkManager = {
       });
     }
 
-    // Filtro de compartilhamento
-    if (this.activeFilters.sharedWith) {
-      const currentUser = AuditSystem.getCurrentUser().email;
-      works = works.filter((work) => {
-        const sharedWith = work.work.metadata?.sharedWith || [];
-        const createdBy = work.work.metadata?.createdBy || null;
-        return sharedWith.includes(currentUser) || createdBy === currentUser;
-      });
-    }
-
     // Apenas obras do usuário atual
     if (this.activeFilters.mineOnly) {
       const currentUser = AuditSystem.getCurrentUser().email;
@@ -292,7 +281,6 @@ const WorkManager = {
       dateFrom: null,
       dateTo: null,
       tags: [],
-      sharedWith: false,
       publicOnly: false,
       mineOnly: false,
     };
@@ -387,19 +375,6 @@ const WorkManager = {
   },
 
   /**
-   * Obtém obras compartilhadas com o usuário atual
-   */
-  getSharedWithUser() {
-    const currentUser = AuditSystem.getCurrentUser().email;
-
-    return Array.from(this.worksCache.values()).filter((work) => {
-      const sharedWith = work.work.metadata?.sharedWith || [];
-      const createdBy = work.work.metadata?.createdBy || null;
-      return sharedWith.includes(currentUser) && createdBy !== currentUser;
-    });
-  },
-
-  /**
    * Obtém obras criadas pelo usuário atual
    */
   getMyWorks() {
@@ -421,15 +396,11 @@ const WorkManager = {
     const metadata = work.work.metadata || {};
 
     return {
-      canView:
-        metadata.isPublic ||
-        metadata.createdBy === currentUser ||
-        (metadata.sharedWith || []).includes(currentUser),
+      canView: metadata.isPublic || metadata.createdBy === currentUser,
       canEdit: metadata.createdBy === currentUser,
       canDelete: metadata.createdBy === currentUser,
       canShare: metadata.createdBy === currentUser,
       isOwner: metadata.createdBy === currentUser,
-      isShared: (metadata.sharedWith || []).includes(currentUser),
       isPublic: metadata.isPublic === true,
     };
   },

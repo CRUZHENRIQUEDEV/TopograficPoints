@@ -219,26 +219,9 @@ const AuthSystem = {
   updateUIForUser() {
     if (!this.isLoggedIn) return;
 
-    // Atualiza informações do usuário na UI
-    const userInfo = document.getElementById("currentUserInfo");
-    if (userInfo) {
-      userInfo.innerHTML = `
-        <div class="user-info">
-          <span class="user-name">${this.currentUser.name}</span>
-          <span class="user-role ${
-            this.currentUser.role
-          }">${this.getRoleDisplayName(this.currentUser.role)}</span>
-          <span class="user-email">${this.currentUser.email}</span>
-          <div class="user-logout">
-            <button class="btn" onclick="AuthSystem.logout()">
-              🚪 Sair do Sistema
-            </button>
-          </div>
-        </div>
-      `;
-    }
+    // Mostra informações do usuário no modal de obras
+    this.showUserInfoInWorksModal();
 
-    // Mostra/esconde elementos baseado no role
     this.toggleElementsByRole();
 
     // Atualiza MultiPeerSync com dados do usuário
@@ -332,7 +315,6 @@ const AuthSystem = {
       const result = await this.login(email, password);
       if (result.success) {
         this.hideLoginModal();
-        document.getElementById("currentUserInfo").style.display = "block";
         location.reload(); // Recarrega para inicializar o sistema
       } else {
         document.getElementById("loginError").textContent = result.error;
