@@ -456,6 +456,60 @@ const AuthSystem = {
         "Erro ao alterar senha";
     }
   },
+
+  /**
+   * Conecta e sincroniza usuários via PeerJS
+   */
+  async connectAndSyncUsers() {
+    const peerEmail = document.getElementById("peerIdToConnect").value.trim();
+    const syncStatus = document.getElementById("syncStatus");
+
+    if (!peerEmail) {
+      syncStatus.textContent = "❌ Digite o email do peer para conectar";
+      syncStatus.style.color = "var(--danger)";
+      return;
+    }
+
+    try {
+      syncStatus.textContent = "🔄 Conectando...";
+      syncStatus.style.color = "var(--primary)";
+
+      // Inicializa MultiPeerSync se ainda não foi inicializado
+      if (!window.MultiPeerSync || !MultiPeerSync.peer) {
+        // Usa admin padrão temporário para conexão
+        await MultiPeerSync.init("temp@sync.com", "Temp Sync");
+      }
+
+      // Gera ID do peer baseado no email
+      const peerId = `oae-${MultiPeerSync.generateUserId(peerEmail)}`;
+
+      syncStatus.textContent = `🔄 Conectando com ${peerEmail}...`;
+
+      // Conecta ao peer
+      await MultiPeerSync.connectToPeer(peerId);
+
+      syncStatus.textContent = "✅ Conectado! Solicitando usuários...";
+
+      // Solicita sincronização de usuários
+      MultiPeerSync.requestUsersSync(peerId);
+
+      // Aguarda 3 segundos para receber os usuários
+      setTimeout(() => {
+        const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+        syncStatus.textContent = `✅ ${users.length} usuários sincronizados!`;
+        syncStatus.style.color = "var(--success)";
+
+        // Atualiza a interface
+        setTimeout(() => {
+          syncStatus.textContent = "👍 Agora você pode fazer login!";
+        }, 2000);
+      }, 3000);
+    } catch (error) {
+      console.error("Erro ao conectar e sincronizar:", error);
+      syncStatus.textContent = `❌ Erro: ${error.message}`;
+      syncStatus.style.color = "var(--danger)";
+    }
+  },
 };
 
 // Export para uso global

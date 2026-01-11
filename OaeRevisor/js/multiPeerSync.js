@@ -121,6 +121,12 @@ const MultiPeerSync = {
       // Envia estado inicial
       this.sendStateTo(peerId);
 
+      // Sincroniza usuários automaticamente
+      setTimeout(() => {
+        this.broadcastUsers();
+        console.log("✅ Usuários sincronizados automaticamente com novo peer");
+      }, 1000);
+
       // Notifica UI
       this.notifyConnection(peerId, "connected");
     });
@@ -169,6 +175,21 @@ const MultiPeerSync = {
         break;
       case "sync_request":
         await this.handleSyncRequest(fromPeerId, data.payload);
+        break;
+      case "users_sync":
+        await this.handleUsersSync(fromPeerId, data.payload);
+        break;
+      case "user_added":
+        await this.handleUserAdded(fromPeerId, data.payload);
+        break;
+      case "user_removed":
+        await this.handleUserRemoved(fromPeerId, data.payload);
+        break;
+      case "user_updated":
+        await this.handleUserUpdated(fromPeerId, data.payload);
+        break;
+      case "request_users_sync":
+        await this.handleRequestUsersSync(fromPeerId);
         break;
       default:
         console.warn("Tipo de mensagem desconhecido:", data.type);
@@ -822,6 +843,352 @@ const MultiPeerSync = {
   isConnectedTo(peerId) {
     const conn = this.connections.get(peerId);
     return conn && conn.open;
+  },
+
+  // ========== SINCRONIZAÇÃO DE USUÁRIOS ==========
+
+  /**
+   * Sincroniza lista de usuários com todos os peers
+   */
+  broadcastUsers() {
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+    const data = {
+      type: "users_sync",
+      payload: {
+        users: users,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log("✅ Lista de usuários sincronizada com peers");
+  },
+
+  /**
+   * Processa sincronização de usuários recebida
+   */
+  async handleUsersSync(fromPeerId, payload) {
+    console.log(`📥 Recebendo sincronização de usuários de ${fromPeerId}`);
+
+    const remoteUsers = payload.users;
+    const localUsers = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+    // Merge inteligente de usuários
+    const mergedUsers = this.mergeUsers(localUsers, remoteUsers);
+
+    // Salva usuários mesclados
+    localStorage.setItem("oae-users", JSON.stringify(mergedUsers));
+
+    console.log(
+      `✅ ${mergedUsers.length} usuários sincronizados (${localUsers.length} local + ${remoteUsers.length} remoto)`
+    );
+
+    // Notificação
+    this.showNotification(
+      `Usuários sincronizados de ${this.getPeerDisplayName(fromPeerId)}`,
+      "success"
+    );
+  },
+
+  /**
+   * Merge inteligente de listas de usuários
+   */
+  mergeUsers(localUsers, remoteUsers) {
+    const merged = new Map();
+
+    // Adiciona usuários locais
+    for (const user of localUsers) {
+      merged.set(user.email, user);
+    }
+
+    // Mescla usuários remotos
+    for (const remoteUser of remoteUsers) {
+      const existingUser = merged.get(remoteUser.email);
+
+      if (!existingUser) {
+        // Novo usuário, adiciona
+        merged.set(remoteUser.email, {
+          ...remoteUser,
+          syncedFrom: remoteUser.source || "remote",
+          syncedAt: Date.now(),
+        });
+      } else {
+        // Usuário existe, usa o mais recente (baseado em updatedAt ou createdAt)
+        const existingTime = new Date(
+          existingUser.updatedAt || existingUser.createdAt || 0
+        ).getTime();
+        const remoteTime = new Date(
+          remoteUser.updatedAt || remoteUser.createdAt || 0
+        ).getTime();
+
+        if (remoteTime > existingTime) {
+          merged.set(remoteUser.email, {
+            ...remoteUser,
+            syncedFrom: remoteUser.source || "remote",
+            syncedAt: Date.now(),
+          });
+        }
+      }
+    }
+
+    return Array.from(merged.values());
+  },
+
+  /**
+   * Notifica sobre novo usuário adicionado
+   */
+  broadcastUserAdded(user) {
+    const data = {
+      type: "user_added",
+      payload: {
+        user: user,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log(`✅ Novo usuário "${user.name}" sincronizado com peers`);
+  },
+
+  /**
+   * Processa novo usuário recebido
+   */
+  async handleUserAdded(fromPeerId, payload) {
+    const newUser = payload.user;
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+    // Verifica se usuário já existe
+    const exists = users.find((u) => u.email === newUser.email);
+
+    if (!exists) {
+      users.push({
+        ...newUser,
+        syncedFrom: fromPeerId,
+        syncedAt: Date.now(),
+      });
+
+      localStorage.setItem("oae-users", JSON.stringify(users));
+
+      console.log(
+        `✅ Novo usuário "${newUser.name}" adicionado de ${this.getPeerDisplayName(
+          fromPeerId
+        )}`
+      );
+
+      this.showNotification(
+        `Novo usuário: ${newUser.name} (${newUser.email})`,
+        "info"
+      );
+
+      // Propaga para outros peers
+      this.propagateUpdate(
+        {
+          type: "user_added",
+          payload: payload,
+        },
+        fromPeerId
+      );
+    }
+  },
+
+  /**
+   * Notifica sobre usuário removido
+   */
+  broadcastUserRemoved(email) {
+    const data = {
+      type: "user_removed",
+      payload: {
+        email: email,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log(`✅ Remoção do usuário "${email}" sincronizada com peers`);
+  },
+
+  /**
+   * Processa remoção de usuário recebida
+   */
+  async handleUserRemoved(fromPeerId, payload) {
+    const email = payload.email;
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+    // Remove usuário
+    const filteredUsers = users.filter((u) => u.email !== email);
+
+    if (filteredUsers.length < users.length) {
+      localStorage.setItem("oae-users", JSON.stringify(filteredUsers));
+
+      console.log(
+        `✅ Usuário "${email}" removido por ${this.getPeerDisplayName(
+          fromPeerId
+        )}`
+      );
+
+      this.showNotification(`Usuário removido: ${email}`, "warning");
+
+      // Propaga para outros peers
+      this.propagateUpdate(
+        {
+          type: "user_removed",
+          payload: payload,
+        },
+        fromPeerId
+      );
+    }
+  },
+
+  /**
+   * Notifica sobre usuário atualizado
+   */
+  broadcastUserUpdated(user) {
+    const data = {
+      type: "user_updated",
+      payload: {
+        user: user,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log(`✅ Atualização do usuário "${user.name}" sincronizada com peers`);
+  },
+
+  /**
+   * Processa atualização de usuário recebida
+   */
+  async handleUserUpdated(fromPeerId, payload) {
+    const updatedUser = payload.user;
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+    const userIndex = users.findIndex((u) => u.email === updatedUser.email);
+
+    if (userIndex !== -1) {
+      users[userIndex] = {
+        ...updatedUser,
+        syncedFrom: fromPeerId,
+        syncedAt: Date.now(),
+      };
+
+      localStorage.setItem("oae-users", JSON.stringify(users));
+
+      console.log(
+        `✅ Usuário "${updatedUser.name}" atualizado de ${this.getPeerDisplayName(
+          fromPeerId
+        )}`
+      );
+
+      this.showNotification(
+        `Usuário atualizado: ${updatedUser.name}`,
+        "info"
+      );
+
+      // Propaga para outros peers
+      this.propagateUpdate(
+        {
+          type: "user_updated",
+          payload: payload,
+        },
+        fromPeerId
+      );
+    }
+  },
+
+  /**
+   * Solicita sincronização de usuários de um peer
+   */
+  requestUsersSync(peerId = null) {
+    const data = {
+      type: "request_users_sync",
+      payload: {
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    if (peerId) {
+      // Solicita de um peer específico
+      const conn = this.connections.get(peerId);
+      if (conn && conn.open) {
+        conn.send(data);
+        console.log(`📤 Solicitando usuários de ${this.getPeerDisplayName(peerId)}`);
+      }
+    } else {
+      // Solicita de todos os peers
+      for (const [pId, conn] of this.connections) {
+        if (conn.open) {
+          conn.send(data);
+        }
+      }
+      console.log("📤 Solicitando usuários de todos os peers conectados");
+    }
+  },
+
+  /**
+   * Processa solicitação de sincronização de usuários
+   */
+  async handleRequestUsersSync(fromPeerId) {
+    console.log(
+      `📨 ${this.getPeerDisplayName(fromPeerId)} solicitou sincronização de usuários`
+    );
+
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+
+    const data = {
+      type: "users_sync",
+      payload: {
+        users: users,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    const conn = this.connections.get(fromPeerId);
+    if (conn && conn.open) {
+      conn.send(data);
+      console.log(
+        `✅ Enviando ${users.length} usuários para ${this.getPeerDisplayName(
+          fromPeerId
+        )}`
+      );
+    }
+  },
+
+  /**
+   * Envia broadcast de mensagem genérica
+   */
+  broadcast(data) {
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
   },
 };
 

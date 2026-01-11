@@ -66,6 +66,11 @@ const UserManager = {
     users.push(newUser);
     localStorage.setItem("oae-users", JSON.stringify(users));
 
+    // Sincroniza com peers conectados
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastUserAdded(newUser);
+    }
+
     // Registra no audit trail
     if (window.AuditSystem) {
       AuditSystem.logChange("user_created", {
@@ -115,6 +120,11 @@ const UserManager = {
     const removedUser = users[userIndex];
     users.splice(userIndex, 1);
     localStorage.setItem("oae-users", JSON.stringify(users));
+
+    // Sincroniza com peers conectados
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastUserRemoved(email);
+    }
 
     // Registra no audit trail
     if (window.AuditSystem) {
@@ -172,6 +182,11 @@ const UserManager = {
 
     users[userIndex] = user;
     localStorage.setItem("oae-users", JSON.stringify(users));
+
+    // Sincroniza com peers conectados
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastUserUpdated(user);
+    }
 
     // Registra no audit trail
     if (window.AuditSystem) {

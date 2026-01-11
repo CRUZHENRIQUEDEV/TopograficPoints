@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V1.0
+                🔍 OAE Revisor V1.1
                 <span
                   id="workTitle"
                   style="
@@ -1895,7 +1895,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V1.0</h2>
+          <h2>🔐 Login - OAE Revisor V1.1</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -1930,6 +1930,36 @@
           <button class="btn btn-primary" onclick="AuthSystem.loginFromForm()">
             🔐 Entrar
           </button>
+
+          <!-- Botão de Sincronização de Usuários -->
+          <div style="margin-top: 15px; padding: 15px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border)">
+            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary)">
+              📡 Sincronizar Usuários via PeerJS
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px">
+              Conecte-se a um dispositivo que já possui os usuários cadastrados
+            </div>
+            <div style="display: flex; gap: 10px">
+              <input
+                type="text"
+                class="form-input"
+                id="peerIdToConnect"
+                placeholder="ID do peer (email do admin)"
+                style="flex: 1; font-size: 0.85rem; padding: 8px"
+              />
+              <button
+                class="btn btn-success"
+                onclick="AuthSystem.connectAndSyncUsers()"
+                style="padding: 8px 15px; font-size: 0.85rem"
+              >
+                🔗 Conectar
+              </button>
+            </div>
+            <div id="syncStatus" style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted)">
+
+            </div>
+          </div>
+
           <div style="margin-top: 15px; text-align: center">
             <button
               class="btn btn-link"
