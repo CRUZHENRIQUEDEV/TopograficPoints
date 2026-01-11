@@ -501,6 +501,92 @@ const UserManager = {
   },
 
   /**
+   * Mostra modal com opções de compartilhamento
+   */
+  showShareOptionsModal(userEmail, userName) {
+    if (!AuthSystem.hasPermission("manage_users")) {
+      alert("Apenas administradores podem compartilhar acesso");
+      return;
+    }
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "shareOptionsModal";
+
+    const html = `
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3 class="modal-title">📤 Compartilhar Acesso</h3>
+          <button class="modal-close" onclick="document.getElementById('shareOptionsModal').remove()">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="padding: 10px;">
+            <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px;">
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">
+                Compartilhar com:
+              </div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: var(--primary);">
+                ${userName}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                ${userEmail}
+              </div>
+            </div>
+
+            <p style="margin-bottom: 20px; color: var(--text-secondary); text-align: center;">
+              Escolha como deseja compartilhar o acesso ao sistema:
+            </p>
+
+            <!-- Opção 1: QR Code -->
+            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); SyncMethods.showQRCodeModal();">
+              <div class="sync-option-icon">📱</div>
+              <div class="sync-option-content">
+                <h3>QR Code</h3>
+                <p>Gere um QR Code para escanear ou copiar os dados</p>
+              </div>
+              <div class="sync-option-arrow">→</div>
+            </div>
+
+            <!-- Opção 2: Link de Convite -->
+            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); SyncMethods.showInviteLinkModal();">
+              <div class="sync-option-icon">🔗</div>
+              <div class="sync-option-content">
+                <h3>Link de Convite</h3>
+                <p>Crie um link para compartilhar via WhatsApp, email, etc.</p>
+              </div>
+              <div class="sync-option-arrow">→</div>
+            </div>
+
+            <!-- Opção 3: Código de 6 Dígitos -->
+            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); SyncMethods.showSyncCodeModal();">
+              <div class="sync-option-icon">🔢</div>
+              <div class="sync-option-content">
+                <h3>Código de 6 Dígitos</h3>
+                <p>Gere um código temporário (válido por 10 minutos)</p>
+              </div>
+              <div class="sync-option-arrow">→</div>
+            </div>
+
+            <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid var(--info); border-radius: 8px; padding: 12px; margin-top: 15px;">
+              <div style="font-size: 0.8rem; color: var(--info);">
+                💡 <strong>Dica:</strong> Após compartilhar, o usuário deve usar a opção "🔄 Opções de Sincronização" na tela de login para importar os dados.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('shareOptionsModal').remove()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+  },
+
+  /**
    * Mostra modal de gerenciamento de usuários
    */
   showUserManagementModal() {
@@ -617,6 +703,13 @@ const UserManager = {
                       <td style="padding: 8px; text-align: center;">
                         <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
                           <button
+                            class="btn btn-sm btn-success"
+                            onclick="UserManager.showShareOptionsModal('${user.email}', '${user.name}')"
+                            title="Compartilhar acesso"
+                            style="font-size: 0.75rem; padding: 4px 8px;">
+                            📤
+                          </button>
+                          <button
                             class="btn btn-sm btn-primary"
                             onclick="UserManager.showUserPassword('${user.email}')"
                             title="Ver senha"
@@ -651,6 +744,25 @@ const UserManager = {
                     .join("")}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Compartilhamento Rápido -->
+          <div class="section">
+            <div class="section-title">📤 Compartilhamento Rápido</div>
+            <div style="background: var(--bg-secondary); border: 2px solid var(--success); border-radius: 8px; padding: 20px;">
+              <div style="text-align: center;">
+                <div style="font-size: 1.5rem; margin-bottom: 10px;">🌐</div>
+                <div style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">
+                  Compartilhar Lista de Usuários
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                  Gere QR Code, Link ou Código para compartilhar TODOS os usuários do sistema
+                </div>
+                <button class="btn btn-success" onclick="UserManager.showShareOptionsModal('todos', 'Todos os Usuários')" style="width: 100%; max-width: 400px;">
+                  📤 Compartilhar Lista Completa
+                </button>
+              </div>
             </div>
           </div>
 
