@@ -25,6 +25,7 @@ const AuditSystem = {
         email: AuthSystem.currentUser.email,
         name: AuthSystem.currentUser.name,
         role: AuthSystem.currentUser.role,
+        lote: AuthSystem.currentUser.lote || "Admin",
       };
     }
 
@@ -33,6 +34,7 @@ const AuditSystem = {
         email: MultiPeerSync.userEmail,
         name: MultiPeerSync.userName,
         role: "avaliador", // Default se não logado via AuthSystem
+        lote: "Admin",
       };
     }
 
@@ -41,10 +43,10 @@ const AuditSystem = {
     const name = localStorage.getItem("oae-user-name");
 
     if (email && name) {
-      return { email, name, role: "avaliador" };
+      return { email, name, role: "avaliador", lote: "Admin" };
     }
 
-    return { email: "unknown@local", name: "Usuário Local", role: "visitante" };
+    return { email: "unknown@local", name: "Usuário Local", role: "visitante", lote: "Admin" };
   },
 
   /**
@@ -68,8 +70,9 @@ const AuditSystem = {
         email: this.currentUser.email,
         name: this.currentUser.name,
         role: this.currentUser.role,
+        lote: this.currentUser.lote || "Admin",
       },
-      action, // 'create', 'update', 'delete', 'add_error', 'resolve_error', 'add_message', 'status_change', 'visibility_toggle'
+      action, // 'create', 'update', 'delete', 'add_error', 'resolve_error', 'add_message', 'status_change', 'visibility_toggle', 'lote_assigned'
       details,
       targetField,
       sessionId: this.getSessionId(),

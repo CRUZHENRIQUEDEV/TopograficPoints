@@ -15,6 +15,13 @@ const AuthSystem = {
     INSPETOR: "inspetor",
   },
 
+  // Lotes disponíveis
+  LOTES: {
+    LOTE_01: "Lote 01",
+    LOTE_02: "Lote 02",
+    ADMIN: "Admin",
+  },
+
   // Usuários padrão
   DEFAULT_USERS: [
     {
@@ -22,6 +29,7 @@ const AuthSystem = {
       password: "HENRIQUECRUZ",
       name: "Administrador",
       role: "admin",
+      lote: "Admin",
       active: true,
     },
   ],
@@ -111,6 +119,7 @@ const AuthSystem = {
         email: user.email,
         name: user.name,
         role: user.role,
+        lote: user.lote || "Admin",
       };
 
       // Cria sessão
@@ -221,6 +230,14 @@ const AuthSystem = {
     // Admin pode ver tudo
     if (this.hasPermission("view_all_works")) return true;
 
+    // Verifica se obra pertence ao mesmo lote
+    if (this.currentUser.lote !== "Admin") {
+      const workLote = work.work?.metadata?.lote || work.metadata?.lote;
+      if (workLote && workLote !== this.currentUser.lote) {
+        return false; // Lotes diferentes não podem ver obras uns dos outros
+      }
+    }
+
     // Obras públicas todos podem ver
     if (work.metadata?.isPublic) return true;
 
@@ -232,6 +249,13 @@ const AuthSystem = {
     if (work.work?.avaliador === this.currentUser.email) return true;
 
     return false;
+  },
+
+  /**
+   * Verifica se usuário pode ver obra de outro lote (apenas admin)
+   */
+  canViewOtherLote() {
+    return this.currentUser.lote === "Admin";
   },
 
   /**

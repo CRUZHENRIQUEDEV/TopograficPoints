@@ -9,6 +9,7 @@ const UI = {
     this.renderFamilies();
     this.renderElementErrorTypes();
     this.renderAspects();
+    this.initLoteToggle();
   },
 
   setupEventListeners() {
@@ -3255,5 +3256,163 @@ const UI = {
     setTimeout(() => {
       toast.classList.remove("show");
     }, duration);
+  },
+
+  /**
+   * Inicializa o toggle de lote (apenas admin)
+   */
+  initLoteToggle() {
+    const currentUser = AuthSystem.currentUser;
+    const loteToggle = document.getElementById("loteToggle");
+
+    if (loteToggle && currentUser?.lote === "Admin") {
+      loteToggle.style.display = "flex";
+      loteToggle.style.alignItems = "center";
+    } else if (loteToggle) {
+      loteToggle.style.display = "none";
+    }
+  },
+
+  /**
+   * Handler para mudança no filtro de lote
+   */
+  handleLoteFilterChange() {
+    const select = document.getElementById("loteFilter");
+    const selectedLote = select.value || null;
+
+    WorkManager.updateFilters({ lote: selectedLote });
+
+    // Atualiza a lista de obras se o modal estiver aberto
+    if (document.getElementById("worksModal")?.classList.contains("show")) {
+      this.showWorksModal();
+    }
+
+    const loteText = selectedLote || "Todos os Lotes";
+    this.showNotification(`Filtro alterado: ${loteText}`, "info");
+  },
+
+  /**
+   * Exibe o histórico de edições da obra atual
+   */
+  showEditHistoryModal() {
+    const obra = appState.work;
+    if (!obra || !obra.codigo) {
+      this.showNotification("Nenhuma obra carregada", "error");
+      return;
+    }
+
+    // Busca histórico do banco de dados
+    DB.getEditHistory(obra.codigo).then((history) => {
+      this.renderEditHistoryModal(history, obra);
+    }).catch((error) => {
+      console.error("Erro ao carregar histórico:", error);
+      this.showNotification("Erro ao carregar histórico", "error");
+    });
+  },
+
+  /**
+   * Renderiza o modal de histórico de edições
+   */
+  renderEditHistoryModal(history, obra) {
+    const modal = document.createElement("div");
+    modal.id = "editHistoryModal";
+    modal.className = "modal-backdrop show";
+    modal.innerHTML = `
+      <div class="modal" style="width: 80%; max-width: 1000px;">
+        <div class="modal-header">
+          <h2>📋 Histórico de Edições - ${obra.codigo}</h2>
+          <button class="modal-close" onclick="document.getElementById('editHistoryModal').remove()">✖</button>
+        </div>
+        <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+          ${this.renderEditHistoryTable(history)}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('editHistoryModal').remove()">
+            Fechar
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  },
+
+  /**
+   * Renderiza a tabela de histórico de edições
+   */
+  renderEditHistoryTable(history) {
+    if (!history || history.length === 0) {
+      return '<p style="text-align: center; color: var(--text-muted);">Nenhuma edição registrada.</p>';
+    }
+
+    // Ordena do mais recente para o mais antigo
+    const sortedHistory = [...history].sort((a, b) =>
+      new Date(b.timestamp) - new Date(a.timestamp)
+    );
+
+    let html = `
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+        <thead>
+          <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
+            <th style="padding: 10px; text-align: left;">Data/Hora</th>
+            <th style="padding: 10px; text-align: left;">Usuário</th>
+            <th style="padding: 10px; text-align: left;">Lote</th>
+            <th style="padding: 10px; text-align: left;">Ação</th>
+            <th style="padding: 10px; text-align: left;">Detalhes</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    sortedHistory.forEach((entry, index) => {
+      const date = new Date(entry.timestamp);
+      const formattedDate = date.toLocaleDateString('pt-BR');
+      const formattedTime = date.toLocaleTimeString('pt-BR');
+      const userLote = entry.userLote || 'N/A';
+
+      const changes = entry.changes || {};
+      let detailsHtml = '';
+
+      if (changes.type === 'created') {
+        detailsHtml = `<span style="color: var(--success);">Obra criada</span>`;
+      } else if (changes.type === 'updated' && changes.modifiedFields) {
+        detailsHtml = `Campos alterados: <code>${changes.modifiedFields.join(', ')}</code>`;
+      } else {
+        detailsHtml = JSON.stringify(changes);
+      }
+
+      const bgColor = index % 2 === 0 ? 'var(--bg-primary)' : 'var(--bg-secondary)';
+
+      html += `
+        <tr style="background: ${bgColor}; border-bottom: 1px solid var(--border-color);">
+          <td style="padding: 8px;">
+            <div>${formattedDate}</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">${formattedTime}</div>
+          </td>
+          <td style="padding: 8px;">
+            <div>${entry.userName || entry.userEmail || 'Desconhecido'}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">${entry.userEmail || ''}</div>
+          </td>
+          <td style="padding: 8px;">
+            <span style="background: var(--bg-accent); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">
+              ${userLote}
+            </span>
+          </td>
+          <td style="padding: 8px;">
+            <span style="color: var(--primary);">${entry.action || 'save'}</span>
+          </td>
+          <td style="padding: 8px; font-size: 0.85rem;">
+            ${detailsHtml}
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    return html;
   },
 };

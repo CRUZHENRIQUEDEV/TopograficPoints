@@ -42,6 +42,34 @@ const DB = {
             return Promise.resolve(null);
         }
 
+        // Get current user info
+        const currentUser = window.AuthSystem?.currentUser || {
+            email: 'system',
+            name: 'System',
+            lote: 'Admin'
+        };
+
+        // Create edit history entry
+        const editEntry = {
+            timestamp: new Date().toISOString(),
+            userEmail: currentUser.email,
+            userName: currentUser.name,
+            userLote: currentUser.lote,
+            action: 'save',
+            changes: this.detectChanges(codigo, obraData)
+        };
+
+        // Initialize or update edit history
+        if (!obraData.editHistory) {
+            obraData.editHistory = [];
+        }
+        obraData.editHistory.push(editEntry);
+
+        // Keep only last 1000 edits to avoid performance issues
+        if (obraData.editHistory.length > 1000) {
+            obraData.editHistory = obraData.editHistory.slice(-1000);
+        }
+
         // Convert Maps to plain objects for storage
         const dataToSave = {
             codigo: codigo,
@@ -53,8 +81,11 @@ const DB = {
             // Convert Maps to arrays for storage
             completionStates: Array.from(obraData.completionStates || new Map()),
             messageResponses: Array.from(obraData.messageResponses || new Map()),
+            editHistory: obraData.editHistory,
             dateCreated: obraData.dateCreated || new Date().toISOString(),
-            dateModified: new Date().toISOString()
+            dateModified: new Date().toISOString(),
+            lastModifiedBy: currentUser.email,
+            lastModifiedByName: currentUser.name
         };
 
         return new Promise((resolve, reject) => {
@@ -65,6 +96,31 @@ const DB = {
             request.onsuccess = () => resolve(true);
             request.onerror = (event) => reject(event.target.error);
         });
+    },
+
+    /**
+     * Detects changes between existing and new obra data
+     */
+    detectChanges(codigo, newData) {
+        // Try to get existing data from cache or DB
+        const existingWork = window.WorkManager?.worksCache?.get(codigo);
+        if (!existingWork) {
+            return { type: 'created', fields: Object.keys(newData.work || {}) };
+        }
+
+        const changes = { type: 'updated', modifiedFields: [] };
+
+        // Compare work fields
+        const oldWork = existingWork.work || {};
+        const newWork = newData.work || {};
+
+        for (const key in newWork) {
+            if (JSON.stringify(oldWork[key]) !== JSON.stringify(newWork[key])) {
+                changes.modifiedFields.push(key);
+            }
+        }
+
+        return changes;
     },
 
     /**
@@ -97,10 +153,24 @@ const DB = {
                     // Convert arrays back to Maps
                     result.completionStates = new Map(result.completionStates || []);
                     result.messageResponses = new Map(result.messageResponses || []);
+                    // Initialize edit history if not present
+                    if (!result.editHistory) {
+                        result.editHistory = [];
+                    }
                 }
                 resolve(result);
             };
             request.onerror = (event) => reject(event.target.error);
+        });
+    },
+
+    /**
+     * Gets edit history for a specific obra
+     */
+    getEditHistory(codigo) {
+        return this.loadObra(codigo).then(obra => {
+            if (!obra) return [];
+            return obra.editHistory || [];
         });
     },
 

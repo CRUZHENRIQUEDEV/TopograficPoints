@@ -58,6 +58,7 @@ const UserManager = {
       name: userData.name,
       role: userData.role,
       password: userData.password,
+      lote: userData.lote || "Admin",
       active: true,
       createdAt: new Date().toISOString(),
       createdBy: AuthSystem.currentUser.email,
@@ -175,6 +176,7 @@ const UserManager = {
     if (updates.name) user.name = updates.name;
     if (updates.role) user.role = updates.role;
     if (updates.password) user.password = updates.password;
+    if (updates.lote) user.lote = updates.lote;
     if (updates.active !== undefined) user.active = updates.active;
 
     user.updatedAt = new Date().toISOString();
@@ -649,13 +651,18 @@ const UserManager = {
           <!-- Adicionar Novo Usuário -->
           <div class="section">
             <div class="section-title">➕ Adicionar Novo Usuário</div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
               <input type="text" class="form-input" id="newUserName" placeholder="Nome completo">
               <input type="email" class="form-input" id="newUserEmail" placeholder="Email">
               <select class="form-input" id="newUserRole">
                 <option value="">Selecione o role</option>
                 <option value="avaliador">Avaliador</option>
                 <option value="inspetor">Inspetor</option>
+              </select>
+              <select class="form-input" id="newUserLote">
+                <option value="Admin">Admin</option>
+                <option value="Lote 01">Lote 01</option>
+                <option value="Lote 02">Lote 02</option>
               </select>
               <input type="password" class="form-input" id="newUserPassword" placeholder="Senha">
               <button class="btn btn-primary" onclick="UserManager.addUserFromForm()">➕ Adicionar</button>
@@ -673,6 +680,7 @@ const UserManager = {
                     <th style="padding: 8px; text-align: left;">Nome</th>
                     <th style="padding: 8px; text-align: left;">Email</th>
                     <th style="padding: 8px; text-align: left;">Role</th>
+                    <th style="padding: 8px; text-align: left;">Lote</th>
                     <th style="padding: 8px; text-align: left;">Status</th>
                     <th style="padding: 8px; text-align: left;">Criado em</th>
                     <th style="padding: 8px; text-align: center; min-width: 180px;">Ações</th>
@@ -689,6 +697,11 @@ const UserManager = {
                         <span class="role-badge ${
                           user.role
                         }">${AuthSystem.getRoleDisplayName(user.role)}</span>
+                      </td>
+                      <td style="padding: 8px;">
+                        <span style="background: var(--bg-accent); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">
+                          ${user.lote || 'Admin'}
+                        </span>
                       </td>
                       <td style="padding: 8px;">
                         <span class="status-badge ${
@@ -803,14 +816,16 @@ const UserManager = {
       const name = document.getElementById("newUserName").value.trim();
       const email = document.getElementById("newUserEmail").value.trim();
       const role = document.getElementById("newUserRole").value;
+      const lote = document.getElementById("newUserLote").value;
       const password = document.getElementById("newUserPassword").value;
 
-      const user = await this.addUser({ name, email, role, password });
+      const user = await this.addUser({ name, email, role, lote, password });
 
       // Limpa formulário
       document.getElementById("newUserName").value = "";
       document.getElementById("newUserEmail").value = "";
       document.getElementById("newUserRole").value = "";
+      document.getElementById("newUserLote").value = "Admin";
       document.getElementById("newUserPassword").value = "";
       document.getElementById("userAddError").textContent = "";
 

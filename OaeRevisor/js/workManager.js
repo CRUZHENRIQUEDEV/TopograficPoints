@@ -17,6 +17,7 @@ const WorkManager = {
     tags: [],
     publicOnly: false,
     mineOnly: false,
+    lote: null, // null = all lotes (admin only), "Lote 01" or "Lote 02" for filtering
   },
 
   /**
@@ -127,6 +128,25 @@ const WorkManager = {
    */
   getFilteredWorks() {
     let works = Array.from(this.worksCache.values());
+
+    // Get current user info
+    const currentUser = window.AuthSystem?.currentUser;
+    const isAdmin = currentUser?.lote === "Admin";
+
+    // Filtro por lote (controle de acesso)
+    if (!isAdmin && currentUser?.lote) {
+      // Usuários não-admin só veem obras do próprio lote
+      works = works.filter((work) => {
+        const workLote = work.work?.metadata?.lote || work.work?.lote;
+        return !workLote || workLote === currentUser.lote;
+      });
+    } else if (isAdmin && this.activeFilters.lote) {
+      // Admin pode filtrar por lote específico usando o toggle
+      works = works.filter((work) => {
+        const workLote = work.work?.metadata?.lote || work.work?.lote;
+        return workLote === this.activeFilters.lote;
+      });
+    }
 
     // Filtro de busca textual
     if (this.activeFilters.search) {
@@ -304,7 +324,34 @@ const WorkManager = {
       tags: [],
       publicOnly: false,
       mineOnly: false,
+      lote: null,
     };
+  },
+
+  /**
+   * Obtém estatísticas por lote
+   */
+  getStatsByLote() {
+    const stats = {
+      "Lote 01": { total: 0, byStatus: {} },
+      "Lote 02": { total: 0, byStatus: {} },
+      "Admin": { total: 0, byStatus: {} },
+      "Sem Lote": { total: 0, byStatus: {} },
+    };
+
+    this.worksCache.forEach((work) => {
+      const lote = work.work?.metadata?.lote || work.work?.lote || "Sem Lote";
+      const status = work.work?.metadata?.status || "draft";
+
+      if (!stats[lote]) {
+        stats[lote] = { total: 0, byStatus: {} };
+      }
+
+      stats[lote].total++;
+      stats[lote].byStatus[status] = (stats[lote].byStatus[status] || 0) + 1;
+    });
+
+    return stats;
   },
 
   /**
