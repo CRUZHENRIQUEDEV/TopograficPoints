@@ -7,8 +7,11 @@ const UserManager = {
   /**
    * Obtém todos os usuários cadastrados
    */
-  getAllUsers() {
+  getAllUsers(includePasswords = false) {
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+    if (includePasswords) {
+      return users; // Retorna com senhas para admin
+    }
     return users.map((user) => ({
       ...user,
       password: undefined, // Não retorna senha
@@ -80,24 +83,33 @@ const UserManager = {
    */
   removeUser(email) {
     if (!AuthSystem.hasPermission("manage_users")) {
-      throw new Error("Apenas administradores podem gerenciar usuários");
+      alert("Apenas administradores podem gerenciar usuários");
+      return;
     }
 
     // Não permite remover admin principal
     if (email === "admin@oae.com") {
-      throw new Error("Não é possível remover o administrador principal");
+      alert("Não é possível remover o administrador principal");
+      return;
     }
 
     // Não permite remover a si mesmo
     if (email === AuthSystem.currentUser.email) {
-      throw new Error("Não é possível remover seu próprio usuário");
+      alert("Não é possível remover seu próprio usuário");
+      return;
+    }
+
+    // Confirmação adicional
+    if (!confirm(`Tem certeza que deseja remover o usuário:\n${email}?`)) {
+      return;
     }
 
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
     const userIndex = users.findIndex((u) => u.email === email);
 
     if (userIndex === -1) {
-      throw new Error("Usuário não encontrado");
+      alert("Usuário não encontrado");
+      return;
     }
 
     const removedUser = users[userIndex];
@@ -112,6 +124,11 @@ const UserManager = {
         role: removedUser.role,
       });
     }
+
+    alert(`Usuário "${removedUser.name}" removido com sucesso!`);
+
+    // Atualiza modal
+    this.showUserManagementModal();
 
     return removedUser;
   },
@@ -216,11 +233,14 @@ const UserManager = {
   /**
    * Obtém usuário por email
    */
-  getUserByEmail(email) {
+  getUserByEmail(email, includePassword = false) {
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
     const user = users.find((u) => u.email === email);
 
     if (user) {
+      if (includePassword && AuthSystem.hasPermission("manage_users")) {
+        return user; // Retorna com senha para admin
+      }
       return {
         ...user,
         password: undefined, // Não retorna senha
@@ -228,6 +248,241 @@ const UserManager = {
     }
 
     return null;
+  },
+
+  /**
+   * Altera role do usuário (apenas admin)
+   */
+  changeUserRole(email, newRole) {
+    if (!AuthSystem.hasPermission("manage_users")) {
+      alert("Apenas administradores podem alterar roles");
+      return;
+    }
+
+    // Não permite alterar role do admin principal
+    if (email === "admin@oae.com") {
+      alert("Não é possível alterar o role do administrador principal");
+      return;
+    }
+
+    // Valida role
+    if (!Object.values(AuthSystem.ROLES).includes(newRole)) {
+      alert("Role inválido");
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+    const userIndex = users.findIndex((u) => u.email === email);
+
+    if (userIndex === -1) {
+      alert("Usuário não encontrado");
+      return;
+    }
+
+    const oldRole = users[userIndex].role;
+    users[userIndex].role = newRole;
+    users[userIndex].updatedAt = new Date().toISOString();
+    users[userIndex].updatedBy = AuthSystem.currentUser.email;
+
+    localStorage.setItem("oae-users", JSON.stringify(users));
+
+    // Registra no audit trail
+    if (window.AuditSystem) {
+      AuditSystem.logChange("user_role_changed", {
+        email: email,
+        oldRole: oldRole,
+        newRole: newRole,
+      });
+    }
+
+    alert(
+      `Role do usuário alterado com sucesso!\n${AuthSystem.getRoleDisplayName(
+        oldRole
+      )} → ${AuthSystem.getRoleDisplayName(newRole)}`
+    );
+
+    // Atualiza modal
+    this.showUserManagementModal();
+  },
+
+  /**
+   * Mostra senha do usuário (apenas admin)
+   */
+  showUserPassword(email) {
+    if (!AuthSystem.hasPermission("manage_users")) {
+      alert("Apenas administradores podem visualizar senhas");
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+    const user = users.find((u) => u.email === email);
+
+    if (!user) {
+      alert("Usuário não encontrado");
+      return;
+    }
+
+    // Registra no audit trail
+    if (window.AuditSystem) {
+      AuditSystem.logChange("password_viewed", {
+        email: user.email,
+        viewedBy: AuthSystem.currentUser.email,
+      });
+    }
+
+    // Mostra modal com a senha
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "passwordViewModal";
+
+    const html = `
+      <div class="modal" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3 class="modal-title">🔑 Senha do Usuário</h3>
+          <button class="modal-close" onclick="document.getElementById('passwordViewModal').remove()">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+              Usuário: <strong>${user.name}</strong>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
+              Email: <strong>${user.email}</strong>
+            </div>
+            <div style="background: var(--bg-secondary); border: 2px solid var(--primary); border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">
+                SENHA:
+              </div>
+              <div id="passwordDisplay" style="font-size: 1.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--primary); letter-spacing: 2px;">
+                ${user.password}
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="UserManager.copyPasswordToClipboard('${user.password}')">
+              📋 Copiar Senha
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('passwordViewModal').remove()">Fechar</button>
+        </div>
+      </div>
+    `;
+
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+  },
+
+  /**
+   * Copia senha para clipboard
+   */
+  copyPasswordToClipboard(password) {
+    navigator.clipboard
+      .writeText(password)
+      .then(() => {
+        alert("✅ Senha copiada para a área de transferência!");
+      })
+      .catch((err) => {
+        console.error("Erro ao copiar senha:", err);
+        alert("❌ Erro ao copiar senha");
+      });
+  },
+
+  /**
+   * Mostra modal para alterar role do usuário
+   */
+  showChangeRoleModal(email, currentRole) {
+    if (!AuthSystem.hasPermission("manage_users")) {
+      alert("Apenas administradores podem alterar roles");
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+    const user = users.find((u) => u.email === email);
+
+    if (!user) {
+      alert("Usuário não encontrado");
+      return;
+    }
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "changeRoleModal";
+
+    const html = `
+      <div class="modal" style="max-width: 450px;">
+        <div class="modal-header">
+          <h3 class="modal-title">🔄 Alterar Role do Usuário</h3>
+          <button class="modal-close" onclick="document.getElementById('changeRoleModal').remove()">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="padding: 10px;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+              Usuário: <strong>${user.name}</strong>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
+              Email: <strong>${user.email}</strong>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+                Role Atual:
+              </div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 15px;">
+                ${AuthSystem.getRoleDisplayName(currentRole)}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+                Novo Role:
+              </div>
+              <select class="form-input" id="newRoleSelect" style="font-size: 1rem; padding: 10px;">
+                <option value="">Selecione o novo role</option>
+                <option value="avaliador" ${
+                  currentRole === "avaliador" ? "selected" : ""
+                }>Avaliador</option>
+                <option value="inspetor" ${
+                  currentRole === "inspetor" ? "selected" : ""
+                }>Inspetor</option>
+                <option value="admin" ${
+                  currentRole === "admin" ? "selected" : ""
+                }>Administrador</option>
+              </select>
+            </div>
+            <div style="background: rgba(var(--warning-rgb), 0.1); border: 1px solid var(--warning); border-radius: 6px; padding: 12px; margin-bottom: 15px;">
+              <div style="font-size: 0.8rem; color: var(--warning);">
+                ⚠️ <strong>Atenção:</strong> Alterar o role do usuário afetará suas permissões no sistema.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('changeRoleModal').remove()">
+            Cancelar
+          </button>
+          <button class="btn btn-primary" onclick="UserManager.confirmChangeRole('${email}')">
+            🔄 Alterar Role
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+  },
+
+  /**
+   * Confirma alteração de role
+   */
+  confirmChangeRole(email) {
+    const newRole = document.getElementById("newRoleSelect").value;
+
+    if (!newRole) {
+      alert("Selecione um novo role");
+      return;
+    }
+
+    // Fecha modal
+    document.getElementById("changeRoleModal").remove();
+
+    // Altera role
+    this.changeUserRole(email, newRole);
   },
 
   /**
@@ -319,7 +574,7 @@ const UserManager = {
                     <th style="padding: 8px; text-align: left;">Role</th>
                     <th style="padding: 8px; text-align: left;">Status</th>
                     <th style="padding: 8px; text-align: left;">Criado em</th>
-                    <th style="padding: 8px; text-align: center;">Ações</th>
+                    <th style="padding: 8px; text-align: center; min-width: 180px;">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -345,13 +600,35 @@ const UserManager = {
                         user.createdAt || Date.now()
                       ).toLocaleDateString("pt-BR")}</td>
                       <td style="padding: 8px; text-align: center;">
-                        ${
-                          user.email !== "admin@oae.com"
-                            ? `
-                          <button class="btn btn-sm btn-danger" onclick="UserManager.removeUser('${user.email}')">🗑️</button>
-                        `
-                            : '<span style="color: var(--text-muted);">🔒</span>'
-                        }
+                        <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                          <button
+                            class="btn btn-sm btn-primary"
+                            onclick="UserManager.showUserPassword('${user.email}')"
+                            title="Ver senha"
+                            style="font-size: 0.75rem; padding: 4px 8px;">
+                            🔑
+                          </button>
+                          ${
+                            user.email !== "admin@oae.com"
+                              ? `
+                            <button
+                              class="btn btn-sm btn-warning"
+                              onclick="UserManager.showChangeRoleModal('${user.email}', '${user.role}')"
+                              title="Alterar role"
+                              style="font-size: 0.75rem; padding: 4px 8px;">
+                              🔄
+                            </button>
+                            <button
+                              class="btn btn-sm btn-danger"
+                              onclick="UserManager.removeUser('${user.email}')"
+                              title="Remover usuário"
+                              style="font-size: 0.75rem; padding: 4px 8px;">
+                              🗑️
+                            </button>
+                          `
+                              : '<span style="color: var(--text-muted); font-size: 0.75rem;">🔒 Protegido</span>'
+                          }
+                        </div>
                       </td>
                     </tr>
                   `
