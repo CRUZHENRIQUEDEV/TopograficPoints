@@ -666,6 +666,7 @@ const UserManager = {
                 <option value="Admin">Admin</option>
                 <option value="Lote 01">Lote 01</option>
                 <option value="Lote 02">Lote 02</option>
+                <option value="Lote 03">Lote 03</option>
               </select>
               <input type="password" class="form-input" id="newUserPassword" placeholder="Senha">
               <button class="btn btn-primary" onclick="UserManager.addUserFromForm()">➕ Adicionar</button>
@@ -819,8 +820,13 @@ const UserManager = {
       const name = document.getElementById("newUserName").value.trim();
       const email = document.getElementById("newUserEmail").value.trim();
       const role = document.getElementById("newUserRole").value;
-      const lote = document.getElementById("newUserLote").value;
+      let lote = document.getElementById("newUserLote").value;
       const password = document.getElementById("newUserPassword").value;
+
+      // Se o role for inspetor, força Lote 03
+      if (role === "inspetor") {
+        lote = "Lote 03";
+      }
 
       const user = await this.addUser({ name, email, role, lote, password });
 

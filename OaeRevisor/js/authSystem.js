@@ -178,6 +178,17 @@ const AuthSystem = {
         });
       }
 
+      // Notifica peers sobre o login (para que admin veja)
+      if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+        MultiPeerSync.broadcastUserLogin({
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          lote: user.lote || "Admin",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       return { success: true, user: userSession };
     } catch (error) {
       console.error("Login error:", error);

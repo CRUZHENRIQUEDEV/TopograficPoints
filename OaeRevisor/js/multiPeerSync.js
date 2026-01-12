@@ -194,6 +194,9 @@ const MultiPeerSync = {
       case "work_updated":
         await this.handleWorkUpdated(fromPeerId, data.payload);
         break;
+      case "user_login":
+        await this.handleUserLogin(fromPeerId, data.payload);
+        break;
       default:
         console.warn("Tipo de mensagem desconhecido:", data.type);
     }
@@ -1318,6 +1321,58 @@ const MultiPeerSync = {
         // UI.showWorksModal();
       }
     }
+  },
+
+  // ========== NOTIFICAÇÕES DE LOGIN ==========
+
+  /**
+   * Notifica sobre login de usuário
+   */
+  broadcastUserLogin(loginData) {
+    const data = {
+      type: "user_login",
+      payload: {
+        ...loginData,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log(`✅ Login notificado para peers: ${loginData.name}`);
+  },
+
+  /**
+   * Processa notificação de login recebida
+   */
+  async handleUserLogin(fromPeerId, payload) {
+    console.log(`👤 Login detectado: ${payload.name} (${payload.role}) - ${payload.lote}`);
+
+    // Apenas admin recebe notificações visuais de login
+    if (window.AuthSystem && window.AuthSystem.currentUser && window.AuthSystem.currentUser.role === "admin") {
+      const roleDisplay = window.AuthSystem.getRoleDisplayName(payload.role);
+
+      this.showNotification(
+        `👤 Novo login!\n${payload.name}\n${roleDisplay} - ${payload.lote}`,
+        "info"
+      );
+
+      console.log(`📢 [ADMIN] Usuário conectado: ${payload.name} (${payload.email}) - ${roleDisplay} - ${payload.lote}`);
+    }
+
+    // Propaga para outros peers
+    this.propagateUpdate(
+      {
+        type: "user_login",
+        payload: payload,
+      },
+      fromPeerId
+    );
   },
 };
 
