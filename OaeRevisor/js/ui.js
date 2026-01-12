@@ -2137,6 +2137,7 @@ const UI = {
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                             <button class="btn btn-success" onclick="UI.createNewWork()">➕ Nova Obra</button>
+                            <button class="btn btn-info" onclick="UI.importSharedWork()">📤 Importar Obra</button>
                             <div style="width: 2px; background: var(--border-color); margin: 0 5px;"></div>
                             <button class="btn btn-secondary" onclick="UI.clearWorkFilters()">🗑️ Limpar Filtros</button>
                             <button class="btn btn-primary" onclick="UI.exportFilteredWorks()">📥 Exportar Filtradas</button>
@@ -2260,6 +2261,13 @@ const UI = {
                                                 ? `<button class="btn-success" style="padding: 2px 6px; font-size: 11px;" onclick="UI.loadWork('${
                                                     w.work?.codigo || w.codigo
                                                   }')" title="Abrir obra">📂</button>`
+                                                : ""
+                                            }
+                                            ${
+                                              permissions.canEdit
+                                                ? `<button class="btn-warning" style="padding: 2px 6px; font-size: 11px;" onclick="UI.changeWorkStatus('${
+                                                    w.work?.codigo || w.codigo
+                                                  }')" title="Mudar status">🔄</button>`
                                                 : ""
                                             }
                                             ${
@@ -2936,25 +2944,260 @@ const UI = {
 
   async shareWork(codigo) {
     try {
-      this.showConnectionStatus("Conectando...", "connecting");
+      // Carrega a obra do banco
+      const obraData = await DB.loadObra(codigo);
+      if (!obraData) {
+        this.showNotification("Obra não encontrada", "error");
+        return;
+      }
 
-      await PeerSync.connectToPeer(remoteCode);
+      // Cria modal de compartilhamento
+      const modal = document.createElement("div");
+      modal.className = "modal-backdrop show";
+      modal.id = "shareWorkModal";
 
-      this.showConnectionStatus("Conectado com sucesso!", "success");
-      document.getElementById("remotePeerInfo").textContent = remoteCode;
+      const shareData = {
+        version: "1.0",
+        type: "oae-work-share",
+        timestamp: new Date().toISOString(),
+        sharedBy: AuthSystem.currentUser?.email || "unknown",
+        work: obraData,
+      };
 
-      // Envia estado inicial após conexão
-      setTimeout(() => PeerSync.sendState(), 1000);
+      const jsonString = JSON.stringify(shareData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const fileName = `OAE_${codigo}_${new Date().toISOString().split('T')[0]}.json`;
 
-      setTimeout(() => {
-        this.closePeerConnectionModal();
-        this.showNotification("Conexão estabelecida com sucesso!", "success");
-      }, 2000);
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 600px;">
+          <div class="modal-header">
+            <h2>🔗 Compartilhar Obra</h2>
+            <button class="modal-close" onclick="document.getElementById('shareWorkModal').remove()">×</button>
+          </div>
+          <div class="modal-body" style="padding: 30px;">
+            <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">Obra:</div>
+              <div style="font-weight: 600; font-size: 1.1rem;">${obraData.work.codigo} - ${obraData.work.nome}</div>
+            </div>
+
+            <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+              <div style="font-size: 0.9rem; color: #1976d2; line-height: 1.6;">
+                <strong>💡 Como compartilhar:</strong><br>
+                1. Baixe o arquivo JSON desta obra<br>
+                2. Envie o arquivo para outro usuário (email, pendrive, etc)<br>
+                3. O outro usuário deve importar usando "📥 Importar" no gerenciador de obras
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+              <button class="btn btn-success" style="padding: 15px 30px; font-size: 1.1rem;" onclick="UI.downloadShareFile('${url}', '${fileName}')">
+                📥 Baixar Arquivo de Compartilhamento
+              </button>
+            </div>
+
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-top: 20px;">
+              <div style="font-size: 0.85rem; color: #856404;">
+                <strong>⚠️ Nota:</strong> Este método funciona mesmo sem conexão P2P entre máquinas. É ideal para compartilhar obras entre escritórios ou quando não há conexão direta.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('shareWorkModal').remove()">Fechar</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
     } catch (error) {
-      console.error("Erro ao conectar:", error);
-      this.showConnectionStatus("Falha na conexão: " + error.message, "error");
-      this.showNotification("Falha ao conectar. Verifique o código.", "error");
+      console.error("Erro ao compartilhar obra:", error);
+      this.showNotification("Erro ao preparar compartilhamento: " + error.message, "error");
     }
+  },
+
+  downloadShareFile(url, fileName) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.showNotification("Arquivo baixado com sucesso!", "success");
+  },
+
+  /**
+   * Importa obra compartilhada de arquivo JSON
+   */
+  importSharedWork() {
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "importWorkModal";
+
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2>📤 Importar Obra Compartilhada</h2>
+          <button class="modal-close" onclick="document.getElementById('importWorkModal').remove()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+          <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <div style="font-size: 0.9rem; color: #1976d2; line-height: 1.6;">
+              <strong>💡 Como importar:</strong><br>
+              1. Selecione o arquivo JSON que você recebeu<br>
+              2. O sistema validará os dados<br>
+              3. Escolha se deseja sobrescrever caso a obra já exista<br>
+              4. A obra será importada para seu banco de dados local
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 10px; font-weight: 600;">
+              Selecione o arquivo JSON:
+            </label>
+            <input
+              type="file"
+              id="importFileInput"
+              accept=".json"
+              style="width: 100%; padding: 10px; border: 2px dashed var(--border-color); border-radius: 8px; cursor: pointer;"
+            />
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="overwriteExisting" style="width: 18px; height: 18px;">
+              <span style="font-size: 0.9rem;">Sobrescrever obra se já existir</span>
+            </label>
+          </div>
+
+          <div id="importPreview" style="display: none; background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;">Prévia da obra:</div>
+            <div id="importPreviewContent" style="font-size: 0.95rem;"></div>
+          </div>
+
+          <div id="importStatus" style="display: none; padding: 12px; border-radius: 4px; margin-bottom: 20px;"></div>
+
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="document.getElementById('importWorkModal').remove()">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" id="btnConfirmImport" disabled>
+              📥 Importar Obra
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Handler do input de arquivo
+    const fileInput = document.getElementById("importFileInput");
+    const btnImport = document.getElementById("btnConfirmImport");
+    let fileData = null;
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        // Valida estrutura
+        if (data.type !== "oae-work-share" || !data.work) {
+          throw new Error("Arquivo inválido. Este não é um arquivo de compartilhamento de obra válido.");
+        }
+
+        fileData = data;
+
+        // Mostra preview
+        const preview = document.getElementById("importPreview");
+        const previewContent = document.getElementById("importPreviewContent");
+        preview.style.display = "block";
+
+        previewContent.innerHTML = `
+          <strong>Código:</strong> ${data.work.work.codigo}<br>
+          <strong>Nome:</strong> ${data.work.work.nome}<br>
+          <strong>Avaliador:</strong> ${data.work.work.avaliador || "N/A"}<br>
+          <strong>Compartilhado por:</strong> ${data.sharedBy}<br>
+          <strong>Data:</strong> ${new Date(data.timestamp).toLocaleString("pt-BR")}
+        `;
+
+        btnImport.disabled = false;
+      } catch (error) {
+        this.showImportStatus("Erro ao ler arquivo: " + error.message, "error");
+        btnImport.disabled = true;
+      }
+    });
+
+    // Handler do botão de importar
+    btnImport.onclick = async () => {
+      if (!fileData) return;
+
+      try {
+        const overwrite = document.getElementById("overwriteExisting").checked;
+        const codigo = fileData.work.work.codigo;
+
+        // Verifica se já existe
+        const existing = await DB.loadObra(codigo);
+        if (existing && !overwrite) {
+          this.showImportStatus(
+            `❌ Obra ${codigo} já existe! Marque "Sobrescrever" para substituir.`,
+            "warning"
+          );
+          return;
+        }
+
+        // Atualiza metadados da importação
+        const currentUser = AuthSystem.currentUser;
+        fileData.work.work.metadata.lastModifiedBy = currentUser.email;
+        fileData.work.work.metadata.lastModifiedAt = new Date().toISOString();
+        fileData.work.work.metadata.importedFrom = fileData.sharedBy;
+        fileData.work.work.metadata.importedAt = new Date().toISOString();
+
+        // Salva no banco
+        await DB.saveObra(codigo, fileData.work);
+
+        // Atualiza cache
+        if (window.WorkManager) {
+          await WorkManager.loadAllWorks();
+        }
+
+        this.showImportStatus(
+          `✅ Obra ${codigo} importada com sucesso!`,
+          "success"
+        );
+
+        setTimeout(() => {
+          document.getElementById("importWorkModal").remove();
+          this.showWorksModal();
+          this.showNotification(`Obra ${codigo} importada com sucesso!`, "success");
+        }, 1500);
+      } catch (error) {
+        console.error("Erro ao importar:", error);
+        this.showImportStatus("Erro ao importar: " + error.message, "error");
+      }
+    };
+  },
+
+  showImportStatus(message, type) {
+    const statusDiv = document.getElementById("importStatus");
+    if (!statusDiv) return;
+
+    const colors = {
+      success: { bg: "#d4edda", border: "#28a745", text: "#155724" },
+      error: { bg: "#f8d7da", border: "#dc3545", text: "#721c24" },
+      warning: { bg: "#fff3cd", border: "#ffc107", text: "#856404" },
+    };
+
+    const color = colors[type] || colors.error;
+
+    statusDiv.style.display = "block";
+    statusDiv.style.background = color.bg;
+    statusDiv.style.borderLeft = `4px solid ${color.border}`;
+    statusDiv.style.color = color.text;
+    statusDiv.innerHTML = `<div style="font-size: 0.9rem;">${message}</div>`;
   },
 
   disconnectPeer() {
@@ -3537,6 +3780,181 @@ const UI = {
       };
 
       document.getElementById("btnCancelar").onclick = () => {
+        modal.remove();
+        resolve(null);
+      };
+    });
+  },
+
+  /**
+   * Muda o status de uma obra diretamente da lista
+   */
+  async changeWorkStatus(codigo) {
+    try {
+      // Carrega a obra do banco
+      const obraData = await DB.loadObra(codigo);
+      if (!obraData) {
+        this.showNotification("Obra não encontrada", "error");
+        return;
+      }
+
+      const obra = obraData.work;
+      const currentUser = AuthSystem.currentUser;
+      const currentStatus = obra.metadata?.status || OBRA_STATUS.CADASTRO;
+
+      // Define opções de status disponíveis baseado no role e status atual
+      let statusOptions = [];
+
+      if (currentUser.role === "admin") {
+        // Admin pode mudar para qualquer status
+        statusOptions = [
+          { value: OBRA_STATUS.CADASTRO, label: "📝 Cadastro (Inspetor)" },
+          { value: OBRA_STATUS.PUBLICADO_AVALIACAO, label: "📤 Publicado para Avaliação" },
+          { value: OBRA_STATUS.EM_AVALIACAO, label: "🔍 Em Avaliação" },
+          { value: OBRA_STATUS.PENDENTE_RETIFICACAO, label: "⚠️ Pendente de Retificação" },
+          { value: OBRA_STATUS.APROVADO, label: "✅ Aprovado" },
+        ];
+      } else if (currentUser.role === "inspetor") {
+        // Inspetor só pode publicar para avaliação
+        if (currentStatus === OBRA_STATUS.CADASTRO || currentStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
+          statusOptions = [
+            { value: currentStatus, label: OBRA_STATUS_LABELS[currentStatus] + " (Atual)" },
+            { value: OBRA_STATUS.PUBLICADO_AVALIACAO, label: "📤 Publicar para Avaliação" },
+          ];
+        } else {
+          this.showNotification("Você só pode publicar obras em Cadastro ou Pendente de Retificação", "warning");
+          return;
+        }
+      } else if (currentUser.role === "avaliador") {
+        // Avaliador pode aprovar ou reprovar
+        if (currentStatus === OBRA_STATUS.PUBLICADO_AVALIACAO || currentStatus === OBRA_STATUS.EM_AVALIACAO) {
+          statusOptions = [
+            { value: currentStatus, label: OBRA_STATUS_LABELS[currentStatus] + " (Atual)" },
+            { value: OBRA_STATUS.EM_AVALIACAO, label: "🔍 Marcar como Em Avaliação" },
+            { value: OBRA_STATUS.APROVADO, label: "✅ Aprovar Obra" },
+            { value: OBRA_STATUS.PENDENTE_RETIFICACAO, label: "⚠️ Reprovar - Pendente Retificação" },
+          ];
+        } else {
+          this.showNotification("Você só pode avaliar obras publicadas para avaliação", "warning");
+          return;
+        }
+      }
+
+      // Mostra modal de seleção de status
+      const newStatus = await this.showStatusSelectionDialog(obra, statusOptions, currentStatus);
+      if (!newStatus || newStatus === currentStatus) return;
+
+      // Atualiza status
+      obra.metadata.status = newStatus;
+      obra.metadata.lastModifiedAt = new Date().toISOString();
+      obra.metadata.lastModifiedBy = currentUser.email;
+
+      // Marca como pública quando publicada
+      if (newStatus === OBRA_STATUS.PUBLICADO_AVALIACAO ||
+          newStatus === OBRA_STATUS.APROVADO ||
+          newStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
+        obra.metadata.isPublic = true;
+      }
+
+      // Atualiza campos específicos baseado no novo status
+      if (newStatus === OBRA_STATUS.PUBLICADO_AVALIACAO) {
+        obra.metadata.publishedBy = currentUser.email;
+        obra.metadata.publishedAt = new Date().toISOString();
+      }
+
+      if (newStatus === OBRA_STATUS.APROVADO || newStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
+        obra.metadata.evaluatedBy = currentUser.email;
+        obra.metadata.evaluatedAt = new Date().toISOString();
+      }
+
+      // Salva no banco
+      await DB.saveObra(codigo, obraData);
+
+      // Registra no audit trail
+      if (window.AuditSystem) {
+        AuditSystem.logChange("status_changed", {
+          oldStatus: currentStatus,
+          newStatus: newStatus,
+          changedBy: currentUser.email,
+        });
+      }
+
+      // Atualiza cache do WorkManager
+      if (window.WorkManager) {
+        await WorkManager.loadAllWorks();
+      }
+
+      this.showNotification(`Status atualizado para: ${OBRA_STATUS_LABELS[newStatus]}`, "success");
+
+      // Recarrega a lista de obras
+      this.showWorksModal();
+    } catch (error) {
+      console.error("Erro ao mudar status:", error);
+      this.showNotification("Erro ao mudar status: " + error.message, "error");
+    }
+  },
+
+  /**
+   * Mostra diálogo de seleção de status
+   */
+  showStatusSelectionDialog(obra, statusOptions, currentStatus) {
+    return new Promise((resolve) => {
+      const modal = document.createElement("div");
+      modal.className = "modal-backdrop show";
+      modal.id = "statusSelectionDialog";
+
+      const optionsHtml = statusOptions
+        .map(
+          (opt) =>
+            `<option value="${opt.value}" ${opt.value === currentStatus ? "selected" : ""}>${opt.label}</option>`
+        )
+        .join("");
+
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 550px;">
+          <div class="modal-header">
+            <h2>🔄 Mudar Status da Obra</h2>
+          </div>
+          <div class="modal-body" style="padding: 30px;">
+            <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">Obra:</div>
+              <div style="font-weight: 600; font-size: 1.1rem;">${obra.codigo} - ${obra.nome}</div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 600;">Selecione o novo status:</label>
+              <select id="newStatusSelect" class="form-input" style="width: 100%; padding: 10px; font-size: 1rem;">
+                ${optionsHtml}
+              </select>
+            </div>
+
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+              <div style="font-size: 0.85rem; color: #856404;">
+                <strong>⚠️ Atenção:</strong> Mudanças de status são registradas no histórico de auditoria e podem afetar a visibilidade da obra.
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button class="btn btn-secondary" id="btnCancelarStatus">
+                Cancelar
+              </button>
+              <button class="btn btn-primary" id="btnConfirmarStatus">
+                Confirmar Mudança
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      document.getElementById("btnConfirmarStatus").onclick = () => {
+        const selectedStatus = document.getElementById("newStatusSelect").value;
+        modal.remove();
+        resolve(selectedStatus);
+      };
+
+      document.getElementById("btnCancelarStatus").onclick = () => {
         modal.remove();
         resolve(null);
       };
