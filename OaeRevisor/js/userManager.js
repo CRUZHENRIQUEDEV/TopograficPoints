@@ -1163,6 +1163,79 @@ const UserManager = {
 
     console.log("Related data cleared");
   },
+
+  /**
+   * Remove usuários duplicados (baseado em email case-insensitive)
+   * Mantém o usuário mais recente (baseado em updatedAt ou createdAt)
+   */
+  removeDuplicateUsers() {
+    if (!AuthSystem.hasPermission("manage_users")) {
+      throw new Error("Apenas administradores podem remover duplicados");
+    }
+
+    const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
+    const uniqueUsers = new Map();
+    let duplicatesRemoved = 0;
+
+    // Agrupa usuários por email normalizado
+    for (const user of users) {
+      const normalizedEmail = user.email.toUpperCase();
+      const existing = uniqueUsers.get(normalizedEmail);
+
+      if (!existing) {
+        // Primeiro usuário com este email
+        uniqueUsers.set(normalizedEmail, user);
+      } else {
+        // Usuário duplicado encontrado - mantém o mais recente
+        const existingTime = new Date(
+          existing.updatedAt || existing.createdAt || 0
+        ).getTime();
+        const currentTime = new Date(
+          user.updatedAt || user.createdAt || 0
+        ).getTime();
+
+        if (currentTime > existingTime) {
+          // Usuário atual é mais recente
+          uniqueUsers.set(normalizedEmail, user);
+          duplicatesRemoved++;
+          console.log(`🗑️ Removendo duplicado antigo: ${existing.email} (${new Date(existingTime).toLocaleString()})`);
+        } else {
+          // Usuário existente é mais recente, descarta o atual
+          duplicatesRemoved++;
+          console.log(`🗑️ Removendo duplicado antigo: ${user.email} (${new Date(currentTime).toLocaleString()})`);
+        }
+      }
+    }
+
+    // Salva lista limpa
+    const cleanedUsers = Array.from(uniqueUsers.values());
+    localStorage.setItem("oae-users", JSON.stringify(cleanedUsers));
+
+    // Registra no audit trail
+    if (window.AuditSystem) {
+      AuditSystem.logChange("duplicates_removed", {
+        totalBefore: users.length,
+        totalAfter: cleanedUsers.length,
+        duplicatesRemoved: duplicatesRemoved,
+      });
+    }
+
+    // Sincroniza com peers conectados
+    if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+      MultiPeerSync.broadcastUsers();
+    }
+
+    return {
+      originalCount: users.length,
+      cleanedCount: cleanedUsers.length,
+      duplicatesRemoved: duplicatesRemoved,
+      users: cleanedUsers.map(u => ({
+        email: u.email,
+        name: u.name,
+        role: u.role,
+      })),
+    };
+  },
 };
 
 // Export para uso global
