@@ -1,19 +1,5 @@
 /* ===== VALIDAÇÕES ===== */
 
-// Flag para controlar se o formulário já foi tentado salvar
-// (para evitar mostrar erros antes do usuário tentar salvar)
-window.formSubmitAttempted = false;
-
-// Função auxiliar para adicionar erro visual apenas se formulário foi tentado salvar
-function addVisualError(element, shouldAdd = true) {
-  if (!element) return;
-  if (window.formSubmitAttempted && shouldAdd) {
-    element.classList.add("error");
-  } else {
-    element.classList.remove("error");
-  }
-}
-
 // Campos obrigatórios
 window.requiredFields = {
   lote: { type: "text", min: null, required: true },
@@ -408,13 +394,12 @@ window.requiredFields = {
 // });
 
 // Validar campo específico
-function validateField(fieldId, showVisualErrors = true) {
+function validateField(fieldId) {
   const field = document.getElementById(fieldId);
   const errorElement = document.getElementById(`${fieldId}-error`);
 
   if (!field) return true;
 
-  // Sempre remove erros visuais primeiro
   field.classList.remove("error");
   if (errorElement) errorElement.classList.remove("visible");
 
@@ -442,32 +427,29 @@ function validateField(fieldId, showVisualErrors = true) {
           isNaN(value) ||
           (minValue !== null && value < minValue)
         ) {
-          // Só mostra erro visual se formSubmitAttempted OU showVisualErrors for true
-          if (window.formSubmitAttempted && showVisualErrors) {
-            field.classList.add("error");
-            if (errorElement) {
-              // Mensagem customizada para cortina-altura
-              if (fieldId === "cortina-altura" && minValue > 0) {
-                errorElement.textContent = `A altura mínima deve ser ${minValue.toFixed(
-                  2
-                )}m (ESPESSURA LAJE)`;
-              }
-              // Mensagem customizada para deslocamento esquerdo/direito
-              if (
-                (fieldId === "deslocamento-esquerdo" ||
-                  fieldId === "deslocamento-direito") &&
-                minValue > 0
-              ) {
-                const espessuraLong =
-                  parseFloat(
-                    document.getElementById("espessura-longarina")?.value
-                  ) || 0;
-                errorElement.textContent = `Mínimo ${minValue.toFixed(
-                  2
-                )}m (metade da ESPESSURA LONGARINA ${espessuraLong.toFixed(2)}m)`;
-              }
-              errorElement.classList.add("visible");
+          field.classList.add("error");
+          if (errorElement) {
+            // Mensagem customizada para cortina-altura
+            if (fieldId === "cortina-altura" && minValue > 0) {
+              errorElement.textContent = `A altura mínima deve ser ${minValue.toFixed(
+                2
+              )}m (ESPESSURA LAJE)`;
             }
+            // Mensagem customizada para deslocamento esquerdo/direito
+            if (
+              (fieldId === "deslocamento-esquerdo" ||
+                fieldId === "deslocamento-direito") &&
+              minValue > 0
+            ) {
+              const espessuraLong =
+                parseFloat(
+                  document.getElementById("espessura-longarina")?.value
+                ) || 0;
+              errorElement.textContent = `Mínimo ${minValue.toFixed(
+                2
+              )}m (metade da ESPESSURA LONGARINA ${espessuraLong.toFixed(2)}m)`;
+            }
+            errorElement.classList.add("visible");
           }
           return false;
         }
@@ -476,33 +458,27 @@ function validateField(fieldId, showVisualErrors = true) {
         const maxValue =
           typeof config.max === "function" ? config.max() : config.max;
         if (maxValue !== undefined && maxValue !== null && value > maxValue) {
-          // Só mostra erro visual se formSubmitAttempted OU showVisualErrors for true
-          if (window.formSubmitAttempted && showVisualErrors) {
-            field.classList.add("error");
-            if (errorElement) {
-              // Mensagem customizada para altura-travessa
-              if (fieldId === "altura-travessa") {
-                const menorApoio = maxValue + 0.1; // Recupera o menor apoio
-                errorElement.textContent = `A altura máxima da travessa é ${maxValue.toFixed(
-                  2
-                )}m (Menor Apoio ${menorApoio.toFixed(2)}m - 0.10m)`;
-              } else {
-                errorElement.textContent = `Valor máximo permitido: ${maxValue.toFixed(
-                  2
-                )}m`;
-              }
-              errorElement.classList.add("visible");
+          field.classList.add("error");
+          if (errorElement) {
+            // Mensagem customizada para altura-travessa
+            if (fieldId === "altura-travessa") {
+              const menorApoio = maxValue + 0.1; // Recupera o menor apoio
+              errorElement.textContent = `A altura máxima da travessa é ${maxValue.toFixed(
+                2
+              )}m (Menor Apoio ${menorApoio.toFixed(2)}m - 0.10m)`;
+            } else {
+              errorElement.textContent = `Valor máximo permitido: ${maxValue.toFixed(
+                2
+              )}m`;
             }
+            errorElement.classList.add("visible");
           }
           return false;
         }
       } else if (config.type === "text") {
         if (!field.value.trim()) {
-          // Só mostra erro visual se formSubmitAttempted OU showVisualErrors for true
-          if (window.formSubmitAttempted && showVisualErrors) {
-            field.classList.add("error");
-            if (errorElement) errorElement.classList.add("visible");
-          }
+          field.classList.add("error");
+          if (errorElement) errorElement.classList.add("visible");
           return false;
         }
       }
@@ -521,14 +497,12 @@ function validateTramos() {
     field.classList.remove("error");
     const value = parseFloat(field.value) || 0;
     if (value < 0.5) {
-      if (window.formSubmitAttempted) {
-        field.classList.add("error");
-      }
+      field.classList.add("error");
       valid = false;
     }
   });
 
-  if (!valid && errorElement && window.formSubmitAttempted) {
+  if (!valid && errorElement) {
     errorElement.classList.add("visible");
   } else if (errorElement) {
     errorElement.classList.remove("visible");
@@ -568,24 +542,22 @@ function validateApoios() {
 
     if (alturaVazia || compVazio || largVazio) {
       valid = false;
-      if (window.formSubmitAttempted) {
-        if (alturaVazia && alturaField) {
-          alturaField.classList.add("error");
-          emptyFields.push(`Apoio ${index + 1} - Altura (mín. 0.1m)`);
-        }
-        if (compVazio && compField) {
-          compField.classList.add("error");
-          emptyFields.push(`Apoio ${index + 1} - Comprimento (mín. 0.1m)`);
-        }
-        if (largVazio && largField) {
-          largField.classList.add("error");
-          emptyFields.push(`Apoio ${index + 1} - Largura (mín. 0.1m)`);
-        }
+      if (alturaVazia && alturaField) {
+        alturaField.classList.add("error");
+        emptyFields.push(`Apoio ${index + 1} - Altura (mín. 0.1m)`);
+      }
+      if (compVazio && compField) {
+        compField.classList.add("error");
+        emptyFields.push(`Apoio ${index + 1} - Comprimento (mín. 0.1m)`);
+      }
+      if (largVazio && largField) {
+        largField.classList.add("error");
+        emptyFields.push(`Apoio ${index + 1} - Largura (mín. 0.1m)`);
       }
     }
   });
 
-  if (!valid && errorElement && window.formSubmitAttempted) {
+  if (!valid && errorElement) {
     errorElement.textContent = `Campos obrigatórios vazios: ${emptyFields.join(
       ", "
     )}`;
@@ -601,34 +573,23 @@ function validateApoios() {
 
 // Validar proteção lateral
 function validateLateralProtection() {
-  const barreiraEsquerda = document.getElementById("tipo-barreira-esquerda").value;
-  const guardaRodasEsquerdo = document.getElementById("guarda-rodas-esquerdo").value;
-  const calcadaEsquerda = document.getElementById("tipo-calcada-esquerda").value;
-
-  const barreiraDireita = document.getElementById("tipo-barreira-direita").value;
-  const guardaRodasDireito = document.getElementById("guarda-rodas-direito").value;
-  const calcadaDireita = document.getElementById("tipo-calcada-direita").value;
-
   const hasLeftProtection =
-    (barreiraEsquerda !== "" && barreiraEsquerda !== "Nenhum") ||
-    (guardaRodasEsquerdo !== "" && guardaRodasEsquerdo !== "Nenhum") ||
-    (calcadaEsquerda !== "" && calcadaEsquerda !== "Nenhum");
+    (document.getElementById("tipo-barreira-esquerda").value !== "" &&
+      document.getElementById("tipo-barreira-esquerda").value !== "Nenhum") ||
+    (document.getElementById("guarda-rodas-esquerdo").value !== "" &&
+      document.getElementById("guarda-rodas-esquerdo").value !== "Nenhum") ||
+    (document.getElementById("tipo-calcada-esquerda").value !== "" &&
+      document.getElementById("tipo-calcada-esquerda").value !== "Nenhum");
 
   const hasRightProtection =
-    (barreiraDireita !== "" && barreiraDireita !== "Nenhum") ||
-    (guardaRodasDireito !== "" && guardaRodasDireito !== "Nenhum") ||
-    (calcadaDireita !== "" && calcadaDireita !== "Nenhum");
+    (document.getElementById("tipo-barreira-direita").value !== "" &&
+      document.getElementById("tipo-barreira-direita").value !== "Nenhum") ||
+    (document.getElementById("guarda-rodas-direito").value !== "" &&
+      document.getElementById("guarda-rodas-direito").value !== "Nenhum") ||
+    (document.getElementById("tipo-calcada-direita").value !== "" &&
+      document.getElementById("tipo-calcada-direita").value !== "Nenhum");
 
-  // Verificar se TODOS os campos estão vazios (formulário inicial/limpo)
-  const allFieldsEmpty =
-    barreiraEsquerda === "" && guardaRodasEsquerdo === "" && calcadaEsquerda === "" &&
-    barreiraDireita === "" && guardaRodasDireito === "" && calcadaDireita === "";
-
-  // Se todos os campos estão vazios, não mostrar erro (é um formulário novo/limpo)
-  // Só mostrar erro quando houver dados mas estiverem incompletos E o formulário já foi tentado salvar
-  const shouldShowError = window.formSubmitAttempted && !allFieldsEmpty && (!hasLeftProtection || !hasRightProtection);
-
-  if (shouldShowError && !hasLeftProtection) {
+  if (!hasLeftProtection) {
     document.getElementById("tipo-barreira-esquerda").classList.add("error");
     document.getElementById("guarda-rodas-esquerdo").classList.add("error");
     document.getElementById("tipo-calcada-esquerda").classList.add("error");
@@ -638,7 +599,7 @@ function validateLateralProtection() {
     document.getElementById("tipo-calcada-esquerda").classList.remove("error");
   }
 
-  if (shouldShowError && !hasRightProtection) {
+  if (!hasRightProtection) {
     document.getElementById("tipo-barreira-direita").classList.add("error");
     document.getElementById("guarda-rodas-direito").classList.add("error");
     document.getElementById("tipo-calcada-direita").classList.add("error");
@@ -649,16 +610,13 @@ function validateLateralProtection() {
   }
 
   const errorMessage = document.getElementById("lateral-protection-error");
-  if (shouldShowError) {
+  if (!hasLeftProtection || !hasRightProtection) {
     if (errorMessage) errorMessage.style.display = "block";
   } else {
     if (errorMessage) errorMessage.style.display = "none";
   }
 
-  // Retornar true se:
-  // 1. Todos os campos vazios (formulário novo) - permite salvar, pois é validação de formulário vazio
-  // 2. OU ambos os lados têm proteção válida
-  return allFieldsEmpty || (hasLeftProtection && hasRightProtection);
+  return hasLeftProtection && hasRightProtection;
 }
 
 // Validar ala com encontro
@@ -704,9 +662,9 @@ function validateMinimumWidth() {
   const larguraMinima = deslocEsq + deslocDir + 0.5;
 
   if (largura < larguraMinima) {
-    addVisualError(document.getElementById("largura"));
-    addVisualError(document.getElementById("deslocamento-esquerdo"));
-    addVisualError(document.getElementById("deslocamento-direito"));
+    document.getElementById("largura").classList.add("error");
+    document.getElementById("deslocamento-esquerdo").classList.add("error");
+    document.getElementById("deslocamento-direito").classList.add("error");
     return false;
   }
 
@@ -749,7 +707,7 @@ function validateMinimumHeight() {
   }
   const qtdTramosValue = qtdTramosField.value || "1";
   let qtdTramos = parseInt(qtdTramosValue, 10);
-
+  
   // Se não conseguir ler o valor ou for inválido, usar 1 como padrão
   if (isNaN(qtdTramos) || qtdTramos < 1) {
     qtdTramos = 1;
@@ -774,17 +732,114 @@ function validateMinimumHeight() {
     // Validar se altura total = altura transição
     if (Math.abs(alturaTotal - alturaMinima) > tolerancia) {
       document.getElementById("altura").classList.add("error");
-      const alturaTransicaoFieldEl =
-        document.getElementById("altura-transicao");
+      const alturaTransicaoFieldEl = document.getElementById("altura-transicao");
       if (alturaTransicaoFieldEl) {
         alturaTransicaoFieldEl.classList.add("error");
       }
 
       if (errorElement) {
         errorElement.innerHTML = `
-          A altura deve ser igual à altura da transição: ${alturaTransicao.toFixed(
-            2
-          )}m
+          A altura deve ser igual à altura da transição: ${alturaTransicao.toFixed(2)}m
+          <button
+            type="button"
+            onclick="showHeightCalculator()"
+            style="
+              background: #3498db;
+              color: white;
+              border: none;
+              padding: 3px 8px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+          >
+            Abrir Calculadora
+          </button>
+        `;
+        errorElement.style.display = "block";
+      }
+
+      return false;
+    }
+
+    // Se válido, remover erros
+    document.getElementById("altura").classList.remove("error");
+    const alturaTransicaoFieldEl = document.getElementById("altura-transicao");
+    if (alturaTransicaoFieldEl) {
+      alturaTransicaoFieldEl.classList.remove("error");
+    }
+    if (errorElement) {
+      errorElement.style.display = "none";
+    }
+
+    return true;
+  } else {
+// Validar altura mínima
+// REGRA SIMPLES:
+// - Se tiver 1 tramo: altura (configurações) = altura da transição
+// - Se tiver mais de 1 tramo: altura = maior apoio + altura longarina
+function validateMinimumHeight() {
+  const alturaTotal = parseFloat(document.getElementById("altura").value) || 0;
+  const alturaLongarina =
+    parseFloat(document.getElementById("altura-longarina").value) || 0;
+
+  const errorElement = document.getElementById("altura-sum-error");
+
+  // Se não há longarinas, não validar altura
+  const qtdLongarinasField = document.getElementById("qtd-longarinas");
+  const qtdLongarinas =
+    parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
+  if (qtdLongarinas === 0) {
+    if (errorElement) errorElement.style.display = "none";
+    return true;
+  }
+
+  if (alturaTotal === 0) {
+    if (errorElement) errorElement.style.display = "none";
+    return true;
+  }
+
+  // Verificar quantidade de tramos
+  const qtdTramosField = document.getElementById("qtd-tramos");
+  if (!qtdTramosField) {
+    if (errorElement) errorElement.style.display = "none";
+    return true;
+  }
+  const qtdTramosValue = qtdTramosField.value || "1";
+  let qtdTramos = parseInt(qtdTramosValue, 10);
+  
+  // Se não conseguir ler o valor ou for inválido, usar 1 como padrão
+  if (isNaN(qtdTramos) || qtdTramos < 1) {
+    qtdTramos = 1;
+  }
+
+  let alturaMinima = 0;
+  const tolerancia = 0.01;
+
+  if (qtdTramos === 1) {
+    // REGRA: Se tiver 1 tramo, altura = altura da transição (SIMPLES)
+    const alturaTransicaoField = document.getElementById("altura-transicao");
+    const alturaTransicao =
+      parseFloat(alturaTransicaoField ? alturaTransicaoField.value : 0) || 0;
+
+    if (alturaTransicao === 0) {
+      if (errorElement) errorElement.style.display = "none";
+      return true;
+    }
+
+    alturaMinima = alturaTransicao;
+
+    // Validar se altura total = altura transição
+    if (Math.abs(alturaTotal - alturaMinima) > tolerancia) {
+      document.getElementById("altura").classList.add("error");
+      const alturaTransicaoFieldEl = document.getElementById("altura-transicao");
+      if (alturaTransicaoFieldEl) {
+        alturaTransicaoFieldEl.classList.add("error");
+      }
+
+      if (errorElement) {
+        errorElement.innerHTML = `
+          A altura deve ser igual à altura da transição: ${alturaTransicao.toFixed(2)}m
           <button
             type="button"
             onclick="showHeightCalculator()"
@@ -866,9 +921,7 @@ function validateMinimumHeight() {
         errorElement.innerHTML = `
           A altura deve ser igual à soma da altura da longarina (${alturaLongarina.toFixed(
             2
-          )}m) + maior apoio (${maiorApoio.toFixed(
-          2
-        )}m) = ${alturaMinima.toFixed(2)}m
+          )}m) + maior apoio (${maiorApoio.toFixed(2)}m) = ${alturaMinima.toFixed(2)}m
           <button
             type="button"
             onclick="showHeightCalculator()"
@@ -1024,9 +1077,6 @@ function validateAlturaLongarinaComApoioTransicao() {
 
 // Validar formulário completo
 function validateForm() {
-  // Marcar que o formulário foi tentado salvar (ativa erros visuais)
-  window.formSubmitAttempted = true;
-
   let isValid = true;
   const missingFields = [];
 
@@ -1106,31 +1156,6 @@ function validateForm() {
     missingFields.push(
       "Altura total inválida - verifique os campos destacados"
     );
-  }
-
-  // VALIDAÇÃO CRÍTICA: Altura mínima da transição quando tipo = APOIO
-  const transitionHeightValid = validateTransitionMinimumHeight();
-  if (!transitionHeightValid) {
-    isValid = false;
-    const tipoEncontroField = document.getElementById("tipo-encontro");
-    const alturaTransicaoField = document.getElementById("altura-transicao");
-    const cortinaAlturaField = document.getElementById("cortina-altura");
-    const alturaTravessaField = document.getElementById("altura-travessa");
-
-    if (tipoEncontroField && tipoEncontroField.value === "APOIO") {
-      const alturaTransicao = parseFloat(alturaTransicaoField?.value) || 0;
-      const cortinaAltura = parseFloat(cortinaAlturaField?.value) || 0;
-      const alturaTravessa = parseFloat(alturaTravessaField?.value) || 0;
-      const alturaMinima = cortinaAltura + alturaTravessa + 0.1;
-
-      missingFields.push(
-        `Altura da Transição insuficiente! Mínimo = Cortina (${cortinaAltura.toFixed(
-          2
-        )}m) + Travessa (${alturaTravessa.toFixed(
-          2
-        )}m) + 0.10m = ${alturaMinima.toFixed(2)}m`
-      );
-    }
   }
 
   const lateralProtectionValid = validateLateralProtection();
@@ -1407,12 +1432,10 @@ function validateSuperstructureType() {
 
   // Validar que não está vazio
   if (!tipoSuperestrutura || tipoSuperestrutura === "") {
-    if (window.formSubmitAttempted) {
-      tipoSuperestruturaField.classList.add("error");
-      if (errorElement) {
-        errorElement.textContent = "Este campo é obrigatório";
-        errorElement.classList.add("visible");
-      }
+    tipoSuperestruturaField.classList.add("error");
+    if (errorElement) {
+      errorElement.textContent = "Este campo é obrigatório";
+      errorElement.classList.add("visible");
     }
     return false;
   }
@@ -1449,9 +1472,7 @@ function validateSuperstructureType() {
     // Regra 2: Validar que tem pelo menos 2 transversinas
     const qtdTransversinas = parseInt(qtdTransversinasField?.value) || 0;
     if (qtdTransversinas < 2) {
-      if (window.formSubmitAttempted && qtdTransversinasField) {
-        qtdTransversinasField.classList.add("error");
-      }
+      if (qtdTransversinasField) qtdTransversinasField.classList.add("error");
       errorMessages.push("mínimo 2 transversinas");
       isValid = false;
     } else {
@@ -1462,9 +1483,7 @@ function validateSuperstructureType() {
     // Regra 3: Validar que quantidade de longarinas > 1
     const qtdLongarinas = parseInt(qtdLongarinaField?.value) || 0;
     if (qtdLongarinas <= 1) {
-      if (window.formSubmitAttempted && qtdLongarinaField) {
-        qtdLongarinaField.classList.add("error");
-      }
+      if (qtdLongarinaField) qtdLongarinaField.classList.add("error");
       errorMessages.push("mais de 1 longarina");
       isValid = false;
     } else {
@@ -1473,13 +1492,11 @@ function validateSuperstructureType() {
 
     // Mostrar mensagens de erro
     if (!isValid) {
-      if (window.formSubmitAttempted) {
-        tipoSuperestruturaField.classList.add("error");
-        if (errorElement) {
-          errorElement.textContent =
-            "ROTULADA requer: " + errorMessages.join(" e ");
-          errorElement.classList.add("visible");
-        }
+      tipoSuperestruturaField.classList.add("error");
+      if (errorElement) {
+        errorElement.textContent =
+          "ROTULADA requer: " + errorMessages.join(" e ");
+        errorElement.classList.add("visible");
       }
     } else {
       tipoSuperestruturaField.classList.remove("error");
@@ -1849,78 +1866,6 @@ function initMonolithicTransitionListeners() {
   applyMonolithicTransitionRules();
 }
 
-/**
- * Valida altura mínima da transição quando tipo for APOIO
- * REGRA: altura mínima = altura cortina + altura travessa + 0.1
- * @returns {boolean} true se válido, false se inválido
- */
-function validateTransitionMinimumHeight() {
-  const tipoEncontroField = document.getElementById("tipo-encontro");
-  const alturaTransicaoField = document.getElementById("altura-transicao");
-  const cortinaAlturaField = document.getElementById("cortina-altura");
-  const alturaTravessaField = document.getElementById("altura-travessa");
-  const errorElement = document.getElementById("altura-transicao-error");
-
-  if (!tipoEncontroField || !alturaTransicaoField) return true;
-
-  const tipoEncontro = tipoEncontroField.value;
-
-  // Limpar erro anterior
-  alturaTransicaoField.classList.remove("error");
-  if (errorElement) {
-    errorElement.innerHTML = "";
-  }
-
-  // Validar apenas quando tipo for APOIO
-  if (tipoEncontro !== "APOIO") {
-    // Remover destaque dos campos se não for APOIO
-    if (cortinaAlturaField) cortinaAlturaField.classList.remove("error");
-    if (alturaTravessaField) alturaTravessaField.classList.remove("error");
-    return true;
-  }
-
-  const alturaTransicao = parseFloat(alturaTransicaoField.value) || 0;
-  const cortinaAltura = parseFloat(cortinaAlturaField?.value) || 0;
-  const alturaTravessa = parseFloat(alturaTravessaField?.value) || 0;
-
-  // Calcular altura mínima: cortina + travessa + 0.1
-  const alturaMinima = cortinaAltura + alturaTravessa + 0.1;
-
-  // Validar se altura da transição é suficiente
-  const tolerancia = 0.01; // Tolerância para comparação de floats
-  if (alturaTransicao < alturaMinima - tolerancia) {
-    alturaTransicaoField.classList.add("error");
-    if (cortinaAlturaField) cortinaAlturaField.classList.add("error");
-    if (alturaTravessaField) alturaTravessaField.classList.add("error");
-
-    if (errorElement) {
-      errorElement.innerHTML = `
-        ⚠️ Altura da transição insuficiente!<br>
-        Altura mínima = Cortina (${cortinaAltura.toFixed(
-          2
-        )}m) + Travessa (${alturaTravessa.toFixed(
-        2
-      )}m) + 0.10m = ${alturaMinima.toFixed(2)}m
-        <button
-          type="button"
-          class="fix-button"
-          onclick="document.getElementById('altura-transicao').value = '${alturaMinima.toFixed(
-            2
-          )}'; validateTransitionMinimumHeight(); if (typeof validateMinimumHeight === 'function') validateMinimumHeight();"
-        >
-          ✓ Corrigir para ${alturaMinima.toFixed(2)}m
-        </button>
-      `;
-    }
-    return false;
-  } else {
-    // Remover destaque dos campos se estiver OK
-    if (cortinaAlturaField) cortinaAlturaField.classList.remove("error");
-    if (alturaTravessaField) alturaTravessaField.classList.remove("error");
-    return true;
-  }
-}
-
 // Expor funções globalmente
 window.validateField = validateField;
 window.validateTramos = validateTramos;
@@ -1943,4 +1888,3 @@ window.checkCortinaHeightWarning = checkCortinaHeightWarning;
 window.getWarnings = getWarnings;
 window.applyMonolithicTransitionRules = applyMonolithicTransitionRules;
 window.initMonolithicTransitionListeners = initMonolithicTransitionListeners;
-window.validateTransitionMinimumHeight = validateTransitionMinimumHeight;

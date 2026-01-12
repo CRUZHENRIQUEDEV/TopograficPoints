@@ -86,24 +86,32 @@ function handleSingleTramoRestrictions(qtdTramos) {
   const hasApoioTransicao =
     tipoEncontroField && tipoEncontroField.value === "APOIO";
 
-  // Se há APOIO na transição, não bloqueia a aba de apoio completamente
+  // IMPORTANTE: 
+  // - Quando transição = "APOIO" e qtdTramos = 1: LIBERAR quantidade de pilares
+  // - Quando transição = "APOIO" e qtdTramos = 1: BLOQUEAR altura dos apoios (altura-travessa)
+  // - Quando transição NÃO é "APOIO" e qtdTramos = 1: BLOQUEAR tudo relacionado a apoios
   const shouldBlockApoioTab = isSingleTramo && !hasApoioTransicao;
+  const shouldBlockAlturaApoio = isSingleTramo && hasApoioTransicao;
 
-  // 1. CAMPO QTD PILARES - só bloqueia se não houver apoio na transição
+  // 1. CAMPO QTD PILARES - libera quando há 1 tramo E transição = "APOIO"
   const qtdPilaresField = document.getElementById("qtd-pilares");
   if (qtdPilaresField) {
     if (shouldBlockApoioTab) {
+      // Bloqueia se não for "APOIO" na transição
       qtdPilaresField.value = "0";
       qtdPilaresField.disabled = true;
       qtdPilaresField.classList.remove("error");
       const errorEl = document.getElementById("qtd-pilares-error");
       if (errorEl) errorEl.classList.remove("visible");
+    } else if (hasApoioTransicao && isSingleTramo) {
+      // Libera quando transição = "APOIO" e há 1 tramo
+      qtdPilaresField.disabled = false;
     } else {
       qtdPilaresField.disabled = false;
     }
   }
 
-  // 2. CAMPO PILAR DESCENTRALIZADO - só bloqueia se não houver apoio na transição
+  // 2. CAMPO PILAR DESCENTRALIZADO - bloqueia quando não é "APOIO" na transição
   const pilarDescentralizadoField = document.getElementById(
     "pilar-descentralizado"
   );
@@ -117,41 +125,30 @@ function handleSingleTramoRestrictions(qtdTramos) {
     }
   }
 
-  // 3. TIPO TRAVESSA - auto-seleciona e bloqueia quando há APOIO na transição
+  // 3. TIPO TRAVESSA - LIBERA quando transição = "APOIO" e há 1 tramo
   const tipoTravessaField = document.getElementById("tipo-travessa");
   if (tipoTravessaField) {
     if (shouldBlockApoioTab) {
-      // Só bloqueia se não houver apoio na transição
+      // Bloqueia quando transição NÃO é "APOIO" e há 1 tramo
       tipoTravessaField.value = "Nenhum";
       tipoTravessaField.disabled = true;
       tipoTravessaField.classList.remove("error");
       const errorEl = document.getElementById("tipo-travessa-error");
       if (errorEl) errorEl.classList.remove("visible");
-    } else if (hasApoioTransicao) {
-      // Se há APOIO na transição: auto-selecionar travessa e BLOQUEAR
-      if (
-        !tipoTravessaField.value ||
-        tipoTravessaField.value === "" ||
-        tipoTravessaField.value === "Nenhum"
-      ) {
-        tipoTravessaField.value = "TRAVESSA DE APOIO DE CONCRETO ARMADO";
-      }
-      tipoTravessaField.disabled = true; // Bloqueia para não permitir alterar
-      tipoTravessaField.classList.remove("error");
-      const errorEl = document.getElementById("tipo-travessa-error");
-      if (errorEl) errorEl.classList.remove("visible");
-      // Disparar evento change para atualizar dependências
-      tipoTravessaField.dispatchEvent(new Event("change", { bubbles: true }));
+    } else if (hasApoioTransicao && isSingleTramo) {
+      // LIBERA quando transição = "APOIO" e há 1 tramo
+      tipoTravessaField.disabled = false;
     } else {
       // Libera normalmente se houver mais de 1 tramo
       tipoTravessaField.disabled = false;
     }
   }
 
-  // 4. ALTURA TRAVESSA - libera se houver APOIO na transição
+  // 4. ALTURA TRAVESSA - LIBERA quando transição = "APOIO" e há 1 tramo, bloqueia caso contrário
   const alturaTravessaField = document.getElementById("altura-travessa");
   if (alturaTravessaField) {
     if (shouldBlockApoioTab) {
+      // Bloqueia quando transição NÃO é "APOIO" e há 1 tramo
       alturaTravessaField.value = "";
       alturaTravessaField.disabled = true;
       alturaTravessaField.classList.remove("error");
@@ -159,7 +156,15 @@ function handleSingleTramoRestrictions(qtdTramos) {
       if (errorEl) errorEl.classList.remove("visible");
       const infoEl = document.getElementById("altura-travessa-info");
       if (infoEl) infoEl.style.display = "none";
+    } else if (hasApoioTransicao && isSingleTramo) {
+      // LIBERA quando transição = "APOIO" e há 1 tramo
+      alturaTravessaField.disabled = false;
+      // Remover mensagem de erro se houver
+      alturaTravessaField.classList.remove("error");
+      const errorEl = document.getElementById("altura-travessa-error");
+      if (errorEl) errorEl.classList.remove("visible");
     } else {
+      // Libera normalmente para múltiplos tramos
       alturaTravessaField.disabled = false;
     }
   }
@@ -295,6 +300,13 @@ function generateApoiosFields() {
 
   // Se há apenas 1 pilar, será um pilar parede com largura calculada automaticamente
   const isPilarParede = qtdPilares === 1;
+  
+  // Verificar se há 1 tramo com transição = "APOIO" (bloqueia altura dos apoios)
+  const qtdTramosField = document.getElementById("qtd-tramos");
+  const qtdTramos = parseInt(qtdTramosField ? qtdTramosField.value : 1) || 1;
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const hasApoioTransicao = tipoEncontroField && tipoEncontroField.value === "APOIO";
+  const shouldBlockAlturaApoio = qtdTramos === 1 && hasApoioTransicao;
 
   for (let i = 1; i <= qtdApoios; i++) {
     const apoioRow = document.createElement("div");
@@ -303,8 +315,14 @@ function generateApoiosFields() {
     apoioRow.innerHTML = `
       <div class="apoio-label">Apoio ${i}</div>
       <div class="apoio-field-wrapper">
-        <input type="number" class="apoio-altura-field" name="apoio-altura-${i}" 
-               step="0.01" min="0.1" placeholder="0.00" required />
+        <input type="${shouldBlockAlturaApoio ? "text" : "number"}" 
+               class="apoio-altura-field" name="apoio-altura-${i}" 
+               step="0.01" min="0.1" 
+               placeholder="${shouldBlockAlturaApoio ? "Bloqueado (1 tramo com APOIO)" : "0.00"}" 
+               ${shouldBlockAlturaApoio ? "disabled readonly" : "required"}
+               value="${shouldBlockAlturaApoio ? "Bloqueado" : ""}"
+               style="${shouldBlockAlturaApoio ? "background-color: #f0f0f0; cursor: not-allowed;" : ""}"
+               title="${shouldBlockAlturaApoio ? "Altura bloqueada quando há 1 tramo com transição APOIO" : ""}" />
       </div>
       <div class="apoio-field-wrapper">
         <input type="number" class="apoio-comp-field" name="apoio-comp-${i}" 
@@ -348,11 +366,26 @@ function generateApoiosFields() {
           ) {
             validateField("altura-travessa");
           }
+          // Validar altura mínima quando altura dos apoios mudar
+          if (
+            field.classList.contains("apoio-altura-field") &&
+            typeof validateMinimumHeight === "function"
+          ) {
+            validateMinimumHeight();
+          }
         });
+        
         field.addEventListener("input", function () {
           // Remove erro ao começar a digitar
           if (this.value.trim() !== "" && parseFloat(this.value) > 0) {
             this.classList.remove("error");
+          }
+          // Validar altura mínima em tempo real quando altura dos apoios mudar
+          if (
+            this.classList.contains("apoio-altura-field") &&
+            typeof validateMinimumHeight === "function"
+          ) {
+            validateMinimumHeight();
           }
         });
       }

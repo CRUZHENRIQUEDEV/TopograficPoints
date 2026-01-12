@@ -3325,17 +3325,50 @@ const UI = {
    * Renderiza o modal de histórico de edições
    */
   renderEditHistoryModal(history, obra) {
+    // Calcular estatísticas
+    const totalEdits = history.length;
+    const uniqueUsers = [...new Set(history.map(h => h.userEmail))].length;
+    const editsByUser = {};
+
+    history.forEach(entry => {
+      const email = entry.userEmail || 'Desconhecido';
+      editsByUser[email] = (editsByUser[email] || 0) + 1;
+    });
+
+    const mostActiveUser = Object.entries(editsByUser).sort((a, b) => b[1] - a[1])[0];
+
     const modal = document.createElement("div");
     modal.id = "editHistoryModal";
     modal.className = "modal-backdrop show";
     modal.innerHTML = `
-      <div class="modal" style="width: 80%; max-width: 1000px;">
+      <div class="modal" style="width: 85%; max-width: 1200px;">
         <div class="modal-header">
           <h2>📋 Histórico de Edições - ${obra.codigo}</h2>
           <button class="modal-close" onclick="document.getElementById('editHistoryModal').remove()">✖</button>
         </div>
-        <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
-          ${this.renderEditHistoryTable(history)}
+        <div class="modal-body">
+          <!-- Estatísticas -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px;">
+            <div style="text-align: center;">
+              <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${totalEdits}</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Total de Edições</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 2rem; font-weight: 700; color: var(--success);">${uniqueUsers}</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Usuários Diferentes</div>
+            </div>
+            ${mostActiveUser ? `
+              <div style="text-align: center;">
+                <div style="font-size: 1.2rem; font-weight: 700; color: var(--warning);">${mostActiveUser[0]}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Mais Ativo (${mostActiveUser[1]} edições)</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Tabela de histórico -->
+          <div style="max-height: 500px; overflow-y: auto;">
+            ${this.renderEditHistoryTable(history)}
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="document.getElementById('editHistoryModal').remove()">
@@ -3532,13 +3565,34 @@ const UI = {
 
       const changes = entry.changes || {};
       let detailsHtml = '';
+      let actionLabel = entry.action || 'save';
 
+      // Formata ação
+      if (actionLabel === 'save') {
+        actionLabel = '💾 Salvou';
+      } else if (actionLabel === 'status_changed') {
+        actionLabel = '🔄 Mudou Status';
+      } else if (actionLabel === 'create') {
+        actionLabel = '➕ Criou';
+      }
+
+      // Formata detalhes
       if (changes.type === 'created') {
-        detailsHtml = `<span style="color: var(--success);">Obra criada</span>`;
-      } else if (changes.type === 'updated' && changes.modifiedFields) {
-        detailsHtml = `Campos alterados: <code>${changes.modifiedFields.join(', ')}</code>`;
+        detailsHtml = `<span style="color: var(--success); font-weight: 600;">✨ Obra criada</span>`;
+      } else if (changes.type === 'updated' && changes.modifiedFields && changes.modifiedFields.length > 0) {
+        const fieldCount = changes.modifiedFields.length;
+        detailsHtml = `
+          <div style="margin-bottom: 5px;">
+            <strong style="color: var(--primary);">Alterou ${fieldCount} campo${fieldCount > 1 ? 's' : ''}:</strong>
+          </div>
+          <div style="max-height: 100px; overflow-y: auto; background: var(--bg-primary); padding: 5px; border-radius: 4px;">
+            ${changes.modifiedFields.map(field => `<div style="font-size: 0.8rem; color: var(--text-muted);">• ${field}</div>`).join('')}
+          </div>
+        `;
+      } else if (changes.type === 'updated') {
+        detailsHtml = `<span style="color: var(--warning);">✏️ Obra atualizada</span>`;
       } else {
-        detailsHtml = JSON.stringify(changes);
+        detailsHtml = `<code style="font-size: 0.75rem;">${JSON.stringify(changes)}</code>`;
       }
 
       const bgColor = index % 2 === 0 ? 'var(--bg-primary)' : 'var(--bg-secondary)';
@@ -3559,7 +3613,7 @@ const UI = {
             </span>
           </td>
           <td style="padding: 8px;">
-            <span style="color: var(--primary);">${entry.action || 'save'}</span>
+            <span style="color: var(--primary);">${actionLabel}</span>
           </td>
           <td style="padding: 8px; font-size: 0.85rem;">
             ${detailsHtml}

@@ -276,6 +276,11 @@ const AuthSystem = {
 
     this.toggleElementsByRole();
 
+    // Inicializa toggle de lote
+    if (window.UI && UI.initLoteToggle) {
+      UI.initLoteToggle();
+    }
+
     // Atualiza MultiPeerSync com dados do usuário
     if (window.MultiPeerSync) {
       MultiPeerSync.userEmail = this.currentUser.email;

@@ -196,6 +196,17 @@ function saveCurrentWork() {
       workData["TIPO ENCONTRO"] = tipoEncontroField.value;
     }
 
+    // Capturar ALTURA TRANSIÇÃO (pode estar disabled)
+    const alturaTransicaoField = document.getElementById("altura-transicao");
+    if (alturaTransicaoField) {
+      // Se o campo estiver disabled, garantir que o valor seja 1
+      if (alturaTransicaoField.disabled) {
+        workData["ALTURA TRANSIÇÃO"] = "1";
+      } else {
+        workData["ALTURA TRANSIÇÃO"] = alturaTransicaoField.value || "1";
+      }
+    }
+
     // Capturar campos que podem estar disabled por regras de transição monolítica
     const cortinaAlturaField = document.getElementById("cortina-altura");
     if (cortinaAlturaField) {
@@ -565,6 +576,132 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         worksPanel.style.display = "none";
         toggleBtn.textContent = "Mostrar Obras";
+      }
+    });
+  }
+
+  // Inicializar campo altura transição ao carregar a página
+  if (typeof updateAlturaTransicaoField === "function") {
+    setTimeout(() => {
+      updateAlturaTransicaoField();
+    }, 100);
+  }
+
+  // Adicionar event listeners para validar altura quando campos relevantes mudarem
+  const alturaLongarinaField = document.getElementById("altura-longarina");
+  if (alturaLongarinaField) {
+    alturaLongarinaField.addEventListener("input", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+    alturaLongarinaField.addEventListener("blur", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+  }
+
+  const alturaTransicaoField = document.getElementById("altura-transicao");
+  if (alturaTransicaoField) {
+    alturaTransicaoField.addEventListener("input", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+    alturaTransicaoField.addEventListener("blur", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+  }
+
+  const tipoAparelhoApoioField = document.getElementById("tipo-aparelho-apoio");
+  if (tipoAparelhoApoioField) {
+    tipoAparelhoApoioField.addEventListener("change", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+  }
+
+  const alturaField = document.getElementById("altura");
+  if (alturaField) {
+    alturaField.addEventListener("input", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+    alturaField.addEventListener("blur", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+    });
+  }
+
+  // Listener para qtd-tramos (quando mudar, recalcular validação de altura)
+  const qtdTramosField = document.getElementById("qtd-tramos");
+  if (qtdTramosField) {
+    qtdTramosField.addEventListener("change", function() {
+      setTimeout(() => {
+        if (typeof validateMinimumHeight === "function") {
+          validateMinimumHeight();
+        }
+      }, 150); // Aguardar campos serem regenerados
+    });
+  }
+
+  // Listener para tipo-encontro (já tem onchange no HTML, mas garantir validação de altura)
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  if (tipoEncontroField) {
+    tipoEncontroField.addEventListener("change", function() {
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
+      }
+    });
+  }
+
+  // Listener para validar altura mínima da transição quando tipo for APOIO
+  if (alturaTransicaoField) {
+    alturaTransicaoField.addEventListener("input", function() {
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
+      }
+    });
+    alturaTransicaoField.addEventListener("blur", function() {
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
+      }
+    });
+  }
+
+  const cortinaAlturaField = document.getElementById("cortina-altura");
+  if (cortinaAlturaField) {
+    cortinaAlturaField.addEventListener("input", function() {
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
+      }
+    });
+    cortinaAlturaField.addEventListener("blur", function() {
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
+      }
+    });
+  }
+
+  const alturaTravessaField = document.getElementById("altura-travessa");
+  if (alturaTravessaField) {
+    alturaTravessaField.addEventListener("input", function() {
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
+      }
+    });
+    alturaTravessaField.addEventListener("blur", function() {
+      if (typeof validateTransitionMinimumHeight === "function") {
+        validateTransitionMinimumHeight();
       }
     });
   }
@@ -1228,7 +1365,9 @@ document.addEventListener("DOMContentLoaded", function () {
   initAlturaTravessaValidation(); // Inicializar validação de altura-travessa em tempo real
   initLoteFormatting(); // Inicializar formatação automática do campo LOTE
   initComprimentoListener(); // Inicializar listener de comprimento para soma dos tramos
-  validateSuperstructureType(); // Inicializar validação de tipo de superestrutura
+  if (typeof validateSuperstructureType === "function") {
+    validateSuperstructureType(); // Inicializar validação de tipo de superestrutura
+  }
 
   // Inicializar regras de transição monolítica
   if (typeof initMonolithicTransitionListeners === "function") {
@@ -1282,6 +1421,7 @@ function updateAlturaTransicaoField() {
       // Esconder mensagem de erro
       if (alturaTransicaoError) {
         alturaTransicaoError.classList.remove("visible");
+        alturaTransicaoField.classList.remove("error");
       }
     } else {
       // Se for diferente de "Nenhum", desbloquear campo
@@ -1291,12 +1431,22 @@ function updateAlturaTransicaoField() {
       if (alturaTransicaoLabel) {
         alturaTransicaoLabel.classList.add("required");
       }
+      
+      // Se o campo estiver vazio, manter vazio (será validado como obrigatório)
+      // Se já tiver valor, manter o valor
     }
 
-    // Atualizar validação
-    if (typeof validateForm === "function") {
-      validateForm();
+    // Atualizar validação de altura quando altura transição mudar
+    // (mas sem ativar a flag de formSubmitAttempted)
+    if (typeof validateMinimumHeight === "function") {
+      validateMinimumHeight();
     }
+
+    // REMOVIDO: Não validar formulário completo ao alterar campo
+    // A validação só deve ocorrer quando o usuário tentar salvar
+    // if (typeof validateForm === "function") {
+    //   validateForm();
+    // }
   } catch (error) {
     console.error("Erro ao atualizar campo altura transição:", error);
   }

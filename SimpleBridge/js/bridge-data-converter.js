@@ -190,6 +190,8 @@ function createBridgeSpanCollection(spanLengths, expectedTotalLength) {
  * @returns {object} BridgeTransitionData
  */
 function generateBridgeTransitionDataFromObra(obra) {
+  const transitionHeight =
+    parseFloat(obra["ALTURA TRANSIÇÃO"] || obra.ALTURA_TRANSICAO) || 0.5;
   const cortinaAltura =
     parseFloat(obra["CORTINA ALTURA"] || obra.CORTINA_ALTURA) || 1.5;
   const tipoEncontro = obra["TIPO ENCONTRO"] || obra.TIPO_ENCONTRO || "";
@@ -197,12 +199,14 @@ function generateBridgeTransitionDataFromObra(obra) {
     tipoEncontro.toUpperCase() === "ENCONTRO LAJE" ||
     tipoEncontro.toUpperCase() === "ENCONTRO DE LAJE";
 
+  console.log(`[Transition] Transition Height: ${transitionHeight}`);
   console.log(`[Transition] Cortina Altura: ${cortinaAltura}`);
   console.log(
     `[Transition] Tipo Encontro: "${tipoEncontro}" → IsSlabAbutment: ${isSlabAbutment}`
   );
 
   return {
+    TransitionHeight: roundTo3Decimals(transitionHeight),
     CurtainHeight: roundTo3Decimals(cortinaAltura),
     BearingThickness: 0.05,
     IsSlabAbutment: isSlabAbutment,

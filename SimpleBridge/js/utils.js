@@ -171,6 +171,9 @@ function clearFormSilent() {
 
   currentWorkCode = null;
 
+  // Resetar flag de tentativa de salvamento (para não mostrar erros em formulário limpo)
+  window.formSubmitAttempted = false;
+
   // Limpar campos dinâmicos se existirem
   const tramosContainer = document.getElementById("tramos-fields");
   if (tramosContainer) {

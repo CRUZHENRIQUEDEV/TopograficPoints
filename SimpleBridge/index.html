@@ -473,6 +473,21 @@
           <h2>ELEMENTOS DE TRANSIÇÃO</h2>
           <div class="form-row">
             <div class="form-group">
+              <label for="altura-transicao" id="altura-transicao-label"
+                >ALTURA TRANSIÇÃO</label
+              >
+              <input
+                type="number"
+                id="altura-transicao"
+                name="ALTURA TRANSIÇÃO"
+                step="0.01"
+                min="0"
+              />
+              <div class="error-message" id="altura-transicao-error">
+                Este campo é obrigatório quando há um tipo de encontro definido
+              </div>
+            </div>
+            <div class="form-group">
               <label for="cortina-altura" class="required"
                 >CORTINA ALTURA(TRANSIÇÃO)</label
               >
@@ -549,7 +564,11 @@
 
             <div class="form-group">
               <label for="tipo-encontro">TIPO ENCONTRO</label>
-              <select id="tipo-encontro" name="TIPO ENCONTRO">
+              <select
+                id="tipo-encontro"
+                name="TIPO ENCONTRO"
+                onchange="updateAlturaTransicaoField()"
+              >
                 <option value="">Selecione</option>
                 <option value="Nenhum">Nenhum</option>
                 <option value="ENCONTRO - PAREDE FRONTAL PORTANTE">

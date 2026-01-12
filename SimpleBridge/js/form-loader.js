@@ -4,6 +4,9 @@
 // Função para carregar dados de uma obra no formulário
 function loadWorkToForm(work) {
   try {
+    // Resetar flag de tentativa de salvamento (para não mostrar erros ao carregar obra)
+    window.formSubmitAttempted = false;
+
     // ========== CORREÇÃO AUTOMÁTICA DE OBRAS ANTIGAS ==========
     // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
     const qtdLongarinas = parseInt(work["QTD LONGARINAS"]) || 0;
@@ -26,6 +29,21 @@ function loadWorkToForm(work) {
     // Se TIPO SUPERESTRUTURA não existe ou está vazio, define como ENGASTADA (padrão)
     if (!work["TIPO SUPERESTRUTURA"] || work["TIPO SUPERESTRUTURA"] === "") {
       work["TIPO SUPERESTRUTURA"] = "ENGASTADA";
+    }
+
+    // CORREÇÃO: Se 1 tramo + transição APOIO, limpar alturas dos apoios salvos
+    const qtdTramos = parseInt(work["QTD TRAMOS"]) || 1;
+    const tipoEncontro = work["TIPO ENCONTRO"] || "";
+    if (qtdTramos === 1 && tipoEncontro === "APOIO") {
+      // Limpar todas as alturas de apoios que possam estar salvas
+      for (let key in work) {
+        if (key.startsWith("APOIO") && key.includes("ALTURA")) {
+          work[key] = "0.00";
+        }
+      }
+      console.log(
+        "✅ Correção automática: Alturas dos apoios zeradas (1 tramo + transição APOIO)"
+      );
     }
     // ===========================================================
 
@@ -126,7 +144,7 @@ function loadWorkToForm(work) {
       }, 100);
     }
 
-    // Processar outros campos normais
+    // Processar outros campos normais (incluindo ALTURA TRANSIÇÃO)
     for (const [key, value] of Object.entries(work)) {
       if (
         key !== "MODELADO" &&
@@ -194,6 +212,13 @@ function loadWorkToForm(work) {
       }, 100);
     }
 
+    // Atualizar campo altura transição baseado no tipo encontro
+    if (typeof updateAlturaTransicaoField === "function") {
+      setTimeout(() => {
+        updateAlturaTransicaoField();
+      }, 100);
+    }
+
     // Regenerar campos de apoio para garantir que largura fique bloqueada se for pilar parede
     if (typeof generateApoiosFields === "function") {
       setTimeout(() => {
@@ -245,19 +270,27 @@ function loadWorkToForm(work) {
       }, 150);
     }
 
-    // Executar validação após carregar (aguardar campos serem preenchidos)
-    if (typeof validateForm === "function") {
-      setTimeout(() => {
-        validateForm();
-      }, 250);
-    }
+    // REMOVIDO: Não validar ao carregar obra (para evitar mostrar erros prematuramente)
+    // A validação só deve ocorrer quando o usuário tentar salvar
+    // if (typeof validateForm === "function") {
+    //   setTimeout(() => {
+    //     validateForm();
+    //   }, 250);
+    // }
 
-    // Validar tipo de superestrutura especificamente
-    if (typeof validateSuperstructureType === "function") {
-      setTimeout(() => {
-        validateSuperstructureType();
-      }, 260);
-    }
+    // REMOVIDO: Não validar ao carregar obra (para evitar mostrar erros prematuramente)
+    // if (typeof validateTransitionMinimumHeight === "function") {
+    //   setTimeout(() => {
+    //     validateTransitionMinimumHeight();
+    //   }, 300);
+    // }
+
+    // REMOVIDO: Não validar ao carregar obra (para evitar mostrar erros prematuramente)
+    // if (typeof validateSuperstructureType === "function") {
+    //   setTimeout(() => {
+    //     validateSuperstructureType();
+    //   }, 260);
+    // }
 
     // Atualizar link do Google Maps com as coordenadas carregadas
     // Disparar eventos de input para garantir que os listeners sejam acionados
