@@ -181,30 +181,28 @@ const AuthSystem = {
       // Initialize MultiPeerSync automatically for logged users so they join the P2P network
       (async () => {
         try {
-          if (window.MultiPeerSync && (!MultiPeerSync.peer || !MultiPeerSync.hasConnections())) {
-            await MultiPeerSync.init(user.email, user.name);
+          if (!window.MultiPeerSync) {
+            console.warn('⚠️ [AUTH] MultiPeerSync não está disponível');
+            return;
+          }
 
-            // Give peer a moment to fully initialize before attempting connections
-            await new Promise(resolve => setTimeout(resolve, 500));
+          // Verifica se já está inicializado e funcionando
+          const isAlreadyInitialized = MultiPeerSync.peer && !MultiPeerSync.peer.destroyed && !MultiPeerSync.peer.disconnected;
 
-            // Connect to peers inferred from existing local users
+          if (isAlreadyInitialized) {
+            console.log('✓ [AUTH] MultiPeerSync já inicializado, pulando init...');
+
+            // Apenas tenta reconectar aos peers conhecidos
             if (typeof MultiPeerSync.connectToUsersFromLocalUsers === "function") {
-              console.log('🔍 Iniciando auto-discovery de peers...');
+              console.log('🔍 [AUTH] Tentando reconectar aos peers conhecidos...');
               MultiPeerSync.connectToUsersFromLocalUsers();
             }
 
-            // Give connections a moment to establish before requesting data
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // After init, request users and state from connected peers
+            // Solicita dados atualizados
             MultiPeerSync.requestUsersSync();
             MultiPeerSync.requestAllStates();
-            // ALSO request works list from peers so we can auto-download existing works
-            if (typeof MultiPeerSync.requestWorksSync === 'function') {
-              MultiPeerSync.requestWorksSync();
-            }
 
-            // Broadcast login to peers
+            // Broadcast login
             MultiPeerSync.broadcastUserLogin({
               email: user.email,
               name: user.name,
@@ -212,20 +210,43 @@ const AuthSystem = {
               lote: user.lote || "Admin",
               timestamp: new Date().toISOString(),
             });
-          } else if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
-            // If already initialized and has connections, still request fresh data
-            MultiPeerSync.requestUsersSync();
-            MultiPeerSync.requestAllStates();
-            MultiPeerSync.broadcastUserLogin({
-              email: user.email,
-              name: user.name,
-              role: user.role,
-              lote: user.lote || "Admin",
-              timestamp: new Date().toISOString(),
-            });
+
+            return;
           }
+
+          console.log('🚀 [AUTH] Inicializando MultiPeerSync...');
+          await MultiPeerSync.init(user.email, user.name);
+
+          // Give peer a moment to fully initialize before attempting connections
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Connect to peers inferred from existing local users
+          if (typeof MultiPeerSync.connectToUsersFromLocalUsers === "function") {
+            console.log('🔍 [AUTH] Iniciando auto-discovery de peers...');
+            MultiPeerSync.connectToUsersFromLocalUsers();
+          }
+
+          // Give connections a moment to establish before requesting data
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // After init, request users and state from connected peers
+          MultiPeerSync.requestUsersSync();
+          MultiPeerSync.requestAllStates();
+          // ALSO request works list from peers so we can auto-download existing works
+          if (typeof MultiPeerSync.requestWorksSync === 'function') {
+            MultiPeerSync.requestWorksSync();
+          }
+
+          // Broadcast login to peers
+          MultiPeerSync.broadcastUserLogin({
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            lote: user.lote || "Admin",
+            timestamp: new Date().toISOString(),
+          });
         } catch (err) {
-          console.warn("MultiPeerSync auto-init failed:", err);
+          console.warn("❌ [AUTH] MultiPeerSync auto-init failed:", err);
         }
       })();
 

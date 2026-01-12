@@ -49,8 +49,22 @@ const MultiPeerSync = {
       localStorage.setItem("oae-user-email", userEmail);
       localStorage.setItem("oae-user-name", userName);
 
+      // Se já existe um peer, destruir antes de criar um novo
+      if (this.peer && !this.peer.destroyed) {
+        console.log('⚠️ [INIT] Peer existente detectado. Destruindo...');
+        try {
+          this.peer.destroy();
+        } catch (e) {
+          console.warn('Erro ao destruir peer antigo:', e);
+        }
+        this.peer = null;
+        // Aguarda um momento para garantir que o servidor processou a desconexão
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       // Inicializa PeerJS com ID fixo
       const peerId = `oae-${this.userId}`;
+      console.log(`🚀 [INIT] Inicializando peer com ID: ${peerId}`);
       this.peer = new Peer(peerId, this.config);
 
       // Marca disponibilidade P2P
@@ -87,7 +101,7 @@ const MultiPeerSync = {
 
       return new Promise((resolve, reject) => {
         this.peer.on("open", (id) => {
-          console.log("Multi-Peer iniciado:", id);
+          console.log("✅ [INIT] Multi-Peer iniciado com sucesso:", id);
           // Atualiza UI para refletir nova disponibilidade
           if (window.UI && typeof UI.updateNetworkUI === 'function') {
             UI.updateNetworkUI();
@@ -96,8 +110,23 @@ const MultiPeerSync = {
         });
 
         this.peer.on("error", (err) => {
-          console.error("Erro no Multi-Peer:", err);
-          reject(err);
+          console.error("❌ [INIT] Erro no Multi-Peer:", err);
+
+          // Se o erro for ID duplicado, tentar reconectar
+          if (err.type === 'unavailable-id' || (err.message && err.message.includes('is taken'))) {
+            console.warn('⚠️ [INIT] ID já está em uso. Tentando reconectar ao peer existente...');
+            // Não rejeita imediatamente - o peer pode reconectar
+            setTimeout(() => {
+              if (this.peer && !this.peer.disconnected) {
+                console.log('✅ [INIT] Reconexão bem-sucedida!');
+                resolve(this.peer.id);
+              } else {
+                reject(err);
+              }
+            }, 1000);
+          } else {
+            reject(err);
+          }
         });
       });
     } catch (error) {
@@ -581,9 +610,20 @@ const MultiPeerSync = {
       return;
     }
 
+    // Verifica se o peer está válido antes de tentar conectar
+    if (!this.peer || this.peer.destroyed || this.peer.disconnected) {
+      console.warn(`⚠️ [CONNECT] Peer não está disponível. Estado: destroyed=${this.peer?.destroyed}, disconnected=${this.peer?.disconnected}`);
+      return;
+    }
+
     try {
       console.log(`🔌 [CONNECT] Tentando conectar com: ${peerId}`);
       const conn = this.peer.connect(peerId);
+
+      if (!conn) {
+        console.error(`❌ [CONNECT] Falha ao criar conexão com ${peerId}`);
+        return;
+      }
 
       return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
