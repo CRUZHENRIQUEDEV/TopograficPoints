@@ -501,11 +501,24 @@ const SyncMethods = {
   /**
    * Gera link para um usuário específico (somente seus dados)
    */
-  generateUserInviteLink(email) {
+  generateUserInviteLink(identifier) {
     try {
       const users = JSON.parse(localStorage.getItem('oae-users') || '[]');
-      const user = users.find(u => u.email.toUpperCase() === (email || '').toUpperCase());
-      if (!user) throw new Error('Usuário não encontrado');
+      const param = (identifier || '').toString().trim();
+      if (!param) throw new Error('Email/nome do usuário não fornecido');
+
+      // Try exact email match (case-insensitive)
+      let user = users.find(u => (u.email || '').toLowerCase() === param.toLowerCase());
+
+      // Try exact name match
+      if (!user) user = users.find(u => (u.name || '').toLowerCase() === param.toLowerCase());
+
+      // Try substring match on email or name
+      if (!user) user = users.find(u => ((u.email || '').toLowerCase().includes(param.toLowerCase()) || (u.name || '').toLowerCase().includes(param.toLowerCase())));
+
+      if (!user) {
+        throw new Error(`Usuário não encontrado: ${identifier}`);
+      }
 
       // Remove campos sensíveis quando necessário
       const userToShare = { ...user };
@@ -569,7 +582,37 @@ const SyncMethods = {
       document.body.appendChild(modal);
     } catch (err) {
       console.error('Erro ao abrir modal de convite de usuário:', err);
-      alert('Erro ao gerar link de usuário: ' + err.message);
+
+      // Show a friendly modal with options to help the admin recover
+      try {
+        const modal = document.createElement('div');
+        modal.className = 'modal-backdrop show';
+        modal.id = 'userInviteErrorModal';
+
+        modal.innerHTML = `
+          <div class="modal" style="max-width:500px;">
+            <div class="modal-header">
+              <h3 class="modal-title">❌ Não foi possível gerar o link</h3>
+              <button class="modal-close" onclick="document.getElementById('userInviteErrorModal').remove()">×</button>
+            </div>
+            <div class="modal-body" style="padding:20px;">
+              <p><strong>Erro:</strong> ${err.message}</p>
+              <p>Verifique se o usuário existe ou escolha compartilhar todos os usuários do sistema.</p>
+              <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('userInviteErrorModal').remove()">Fechar</button>
+                <button class="btn btn-primary" onclick="(function(){ document.getElementById('userInviteErrorModal').remove(); UserManager.showUserManagementModal(); })()">Abrir Gerenciamento de Usuários</button>
+                <button class="btn btn-success" onclick="(function(){ document.getElementById('userInviteErrorModal').remove(); SyncMethods.showUsersInviteLinkModal('Todos os Usuários'); })()">Compartilhar Lista Completa</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(modal);
+      } catch (uiErr) {
+        // Fallback to simple alert if building modal fails
+        console.error('Erro ao mostrar modal de falha de convite de usuário:', uiErr);
+        alert('Erro ao gerar link de usuário: ' + err.message);
+      }
     }
   },
 
