@@ -3343,6 +3343,199 @@ const UI = {
     document.getElementById("networkModal").classList.remove("show");
   },
 
+  /**
+   * Modal de conexão rápida com guia passo a passo
+   */
+  showQuickConnectModal() {
+    const isConfigured = window.MultiPeerSync && MultiPeerSync.userId;
+    const hasConnections = window.MultiPeerSync && MultiPeerSync.hasConnections();
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "quickConnectModal";
+
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 700px;">
+        <div class="modal-header">
+          <h2>🔗 Guia de Conexão P2P</h2>
+          <button class="modal-close" onclick="document.getElementById('quickConnectModal').remove()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+          <!-- Status Atual -->
+          <div style="background: ${hasConnections ? 'var(--success)' : 'var(--danger)'}; color: white; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 10px;">
+              ${hasConnections ? '🟢' : '🔴'}
+            </div>
+            <div style="font-size: 1.2rem; font-weight: 600;">
+              ${hasConnections ? `✅ ${MultiPeerSync.getNetworkStats().connectedPeers} Usuário(s) Conectado(s)` : '❌ Nenhum Usuário Conectado'}
+            </div>
+            ${!hasConnections ? '<div style="font-size: 0.9rem; margin-top: 5px;">Siga os passos abaixo para conectar</div>' : ''}
+          </div>
+
+          ${!isConfigured ? `
+            <!-- Passo 1: Configurar Identidade -->
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+              <div style="font-weight: 600; margin-bottom: 10px; color: #856404;">
+                ⚠️ PASSO 1: Configure sua identidade primeiro
+              </div>
+              <button class="btn btn-warning" onclick="UI.showUserSetupModal(); document.getElementById('quickConnectModal').remove();" style="width: 100%;">
+                👤 Configurar Minha Identidade
+              </button>
+            </div>
+          ` : `
+            <!-- Identidade Configurada -->
+            <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+              <div style="font-weight: 600; color: #155724; margin-bottom: 5px;">✅ Sua identidade está configurada</div>
+              <div style="font-size: 0.85rem; color: #155724;">${MultiPeerSync.userName} (${MultiPeerSync.userEmail})</div>
+            </div>
+          `}
+
+          <!-- Guia Passo a Passo -->
+          <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: #1976d2;">
+              📋 Como Conectar com Outros Usuários:
+            </div>
+
+            <div style="line-height: 1.8; color: #1976d2;">
+              <div style="margin-bottom: 15px;">
+                <strong>1️⃣ AMBOS os usuários devem configurar identidade</strong><br>
+                <span style="font-size: 0.9rem;">Cada um clica em "👤 Configurar" na aba Mensagens</span>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <strong>2️⃣ Um usuário adiciona o email do outro</strong><br>
+                <span style="font-size: 0.9rem;">Vá em "🔗 Gerenciar Rede" > Digite o email > "Adicionar Usuário"</span>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <strong>3️⃣ O outro usuário faz o mesmo</strong><br>
+                <span style="font-size: 0.9rem;">Também deve adicionar o email do primeiro usuário</span>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <strong>4️⃣ Conexão automática acontece</strong><br>
+                <span style="font-size: 0.9rem;">O indicador ficará 🟢 e mostrará "X online"</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Importante -->
+          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <div style="font-weight: 600; margin-bottom: 10px; color: #856404;">
+              ⚠️ IMPORTANTE:
+            </div>
+            <ul style="margin: 0; padding-left: 20px; color: #856404; line-height: 1.6;">
+              <li><strong>Ambos precisam adicionar um ao outro</strong> - não basta só um adicionar</li>
+              <li><strong>Use emails exatos</strong> - igual ao usado na configuração</li>
+              <li><strong>Ambos devem estar online</strong> - ao mesmo tempo no sistema</li>
+              <li>A conexão é <strong>peer-to-peer</strong> - não depende de servidor</li>
+            </ul>
+          </div>
+
+          <!-- Ações Rápidas -->
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            ${isConfigured ? `
+              <button class="btn btn-primary" onclick="UI.showNetworkModal(); document.getElementById('quickConnectModal').remove();" style="padding: 12px 24px;">
+                🔗 Gerenciar Rede
+              </button>
+              ${hasConnections ? `
+                <button class="btn btn-success" onclick="UI.forceSyncNow(); document.getElementById('quickConnectModal').remove();" style="padding: 12px 24px;">
+                  🔄 Sincronizar Agora
+                </button>
+              ` : ''}
+            ` : ''}
+            <button class="btn btn-info" onclick="UI.showQuickShareGuide(); document.getElementById('quickConnectModal').remove();" style="padding: 12px 24px;">
+              📤 Compartilhamento Manual
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('quickConnectModal').remove()">Fechar</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  },
+
+  /**
+   * Guia de compartilhamento manual alternativo
+   */
+  showQuickShareGuide() {
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "quickShareGuideModal";
+
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 650px;">
+        <div class="modal-header">
+          <h2>📤 Compartilhamento Manual de Obras</h2>
+          <button class="modal-close" onclick="document.getElementById('quickShareGuideModal').remove()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+          <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: #1976d2;">
+              💡 Quando usar compartilhamento manual:
+            </div>
+            <ul style="line-height: 1.8; color: #1976d2; margin: 0; padding-left: 20px;">
+              <li>Quando os usuários <strong>não conseguem se conectar via P2P</strong></li>
+              <li>Para enviar obras entre <strong>escritórios diferentes</strong></li>
+              <li>Quando não há <strong>conexão simultânea</strong> possível</li>
+              <li>Como <strong>backup</strong> mais confiável</li>
+            </ul>
+          </div>
+
+          <div style="background: var(--bg-secondary); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="font-weight: 600; font-size: 1rem; margin-bottom: 15px;">
+              📥 Para ENVIAR uma obra:
+            </div>
+            <ol style="line-height: 1.8; margin: 0; padding-left: 20px;">
+              <li>Abra o <strong>Gerenciador de Obras</strong></li>
+              <li>Clique no botão <strong>🔗 Compartilhar</strong> na obra</li>
+              <li>Baixe o arquivo <strong>.json</strong></li>
+              <li>Envie por <strong>email, WhatsApp ou pendrive</strong></li>
+            </ol>
+          </div>
+
+          <div style="background: var(--bg-secondary); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="font-weight: 600; font-size: 1rem; margin-bottom: 15px;">
+              📤 Para RECEBER uma obra:
+            </div>
+            <ol style="line-height: 1.8; margin: 0; padding-left: 20px;">
+              <li>Abra o <strong>Gerenciador de Obras</strong></li>
+              <li>Clique em <strong>📤 Importar Obra</strong></li>
+              <li>Selecione o arquivo <strong>.json</strong> recebido</li>
+              <li>Marque "Sobrescrever" se necessário</li>
+              <li>Clique em <strong>Importar</strong></li>
+            </ol>
+          </div>
+
+          <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px;">
+            <div style="font-weight: 600; color: #155724; margin-bottom: 8px;">
+              ✅ Vantagens:
+            </div>
+            <ul style="margin: 0; padding-left: 20px; color: #155724; line-height: 1.6;">
+              <li><strong>100% confiável</strong> - sempre funciona</li>
+              <li><strong>Não depende de conexão</strong> - funciona offline</li>
+              <li><strong>Funciona entre redes</strong> - qualquer local</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin-top: 25px;">
+            <button class="btn btn-primary" onclick="UI.showWorksModal(); document.getElementById('quickShareGuideModal').remove();" style="padding: 12px 30px;">
+              📂 Abrir Gerenciador de Obras
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('quickShareGuideModal').remove()">Fechar</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  },
+
   updateNetworkModal() {
     if (!window.MultiPeerSync) return;
 
