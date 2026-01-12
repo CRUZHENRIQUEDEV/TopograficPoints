@@ -1853,7 +1853,7 @@ const MultiPeerSync = {
   // ========== NOTIFICAÇÕES DE LOGIN ==========
 
   /**
-   * Recebe link de obra compartilhada diretamente por outro peer e pergunta para o usuário se deseja importar
+   * Recebe link de obra compartilhada diretamente por outro peer e IMPORTA AUTOMATICAMENTE (sem perguntar)
    */
   async handleWorkShareLink(fromPeerId, payload) {
     try {
@@ -1868,25 +1868,24 @@ const MultiPeerSync = {
         const title = obra ? `${obra.codigo} - ${obra.nome}` : 'Obra compartilhada';
         const by = data.sharedBy || payload.sharedBy || 'remoto';
 
-        const wants = confirm(`${title}\nCompartilhado por: ${by}\n\nDeseja importar esta obra agora?`);
-        if (wants) {
-          // Reutiliza fluxo de importação via link
-          if (window.SyncMethods && typeof SyncMethods.showAutoWorkImportNotification === 'function') {
-            SyncMethods.showAutoWorkImportNotification(encodeURIComponent(encoded));
-          } else {
-            alert('Importação via link não disponível no momento.');
-          }
+        // IMPORTA AUTOMATICAMENTE sem perguntar
+        console.log(`📥 [AUTO-IMPORT] Importando obra automaticamente: ${title} (de ${by})`);
+
+        if (window.SyncMethods && typeof SyncMethods.showAutoWorkImportNotification === 'function') {
+          SyncMethods.showAutoWorkImportNotification(encodeURIComponent(encoded));
+        } else {
+          console.warn('⚠️ [AUTO-IMPORT] Importação via link não disponível no momento');
         }
       } catch (err) {
-        console.warn('Não foi possível decodificar link de obra recebido:', err);
-        // Pergunta genérica
-        const wants = confirm('Uma obra foi compartilhada por outro usuário. Deseja importá-la?');
-        if (wants && window.SyncMethods && typeof SyncMethods.showAutoWorkImportNotification === 'function') {
+        console.warn('⚠️ [AUTO-IMPORT] Não foi possível decodificar link de obra:', err);
+
+        // Tenta importar mesmo assim
+        if (window.SyncMethods && typeof SyncMethods.showAutoWorkImportNotification === 'function') {
           SyncMethods.showAutoWorkImportNotification(encodeURIComponent(encoded));
         }
       }
     } catch (e) {
-      console.error('Erro ao processar work_share_link:', e);
+      console.error('❌ [AUTO-IMPORT] Erro ao processar work_share_link:', e);
     }
   },
 
