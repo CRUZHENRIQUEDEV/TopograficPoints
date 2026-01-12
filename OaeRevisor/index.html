@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V3.1
+                🔍 OAE Revisor V3.2
                 <span
                   id="workTitle"
                   style="
@@ -1943,7 +1943,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V3.1</h2>
+          <h2>🔐 Login - OAE Revisor V3.2</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -2210,8 +2210,8 @@
     </div>
 
     <!-- Scripts -->
-    <!-- Temporarily load PeerJS from CDN for testing -->
-    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <!-- Load local PeerJS to avoid tracking-prevention blocking -->
+    <script src="js/libs/peerjs.min.js"></script>
     <script>
       // Safety stub for SyncMethods so quick clicks don't error before the real script is parsed
       window.SyncMethods = window.SyncMethods || {

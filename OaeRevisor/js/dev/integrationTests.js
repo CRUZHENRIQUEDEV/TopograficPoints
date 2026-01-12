@@ -116,6 +116,39 @@
     }catch(e){ console.error('ERROR', e); }
   }
 
+  async function testImportViaWorkModal(){
+    console.group('IntegrationTest: importViaWorkModal');
+    try{
+      if (!window.UI || !window.SyncMethods) { console.warn('UI/SyncMethods not available'); return; }
+
+      // Open import modal
+      UI.importSharedWork();
+      await new Promise(r => setTimeout(r, 100));
+
+      const input = document.getElementById('importWorkLinkInput');
+      if(!input) { console.error('FAIL: importWorkLinkInput not found'); return; }
+
+      const encoded = (function(){
+        const data = {
+          version: '1.0', type: 'oae-work-share', timestamp: Date.now(), sharedBy: AuthSystem.currentUser?.email || 'tester', work: { work: { codigo: 'INT-MODAL-01', nome: 'Modal Import Test', metadata: { lastModifiedAt: new Date().toISOString(), createdAt: new Date().toISOString(), isPublic: true } } }
+        };
+        return btoa(JSON.stringify(data));
+      })();
+
+      input.value = window.location.origin + window.location.pathname + '?shareWork=' + encodeURIComponent(encoded);
+
+      // Click the import via link button
+      SyncMethods.processWorkLinkImport();
+
+      // Wait for the auto import modal to appear
+      await new Promise(r => setTimeout(r, 300));
+      const autoModal = document.getElementById('autoWorkShareModal');
+      if (autoModal) console.log('PASS: autoWorkShareModal appeared'); else console.error('FAIL: autoWorkShareModal did not appear');
+
+      console.groupEnd();
+    }catch(e){ console.error('ERROR', e); }
+  }
+
   // Expose tests
   window.runIntegrationTests = async function(){
     console.log('Running integration tests...');
@@ -123,6 +156,7 @@
     await testPublishBroadcast();
     await testPresenceUI();
     await testRequestWorksSync();
+    await testImportViaWorkModal();
     console.log('Integration tests completed. Inspect console for pass/fail messages.');
   };
 

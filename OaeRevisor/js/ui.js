@@ -3124,6 +3124,17 @@ const UI = {
 
           <div id="importStatus" style="display: none; padding: 12px; border-radius: 4px; margin-bottom: 20px;"></div>
 
+          <hr style="margin: 20px 0;" />
+
+          <div style="margin-bottom: 16px;">
+            <div style="font-weight: 600; margin-bottom: 8px;">🔗 Importar via Link</div>
+            <input id="importWorkLinkInput" class="form-input" placeholder="Cole o link de compartilhamento da obra aqui..." style="width: 100%;" />
+            <div id="importWorkLinkStatus" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">Cole um link com o parâmetro <code>?shareWork=...</code> ou apenas o trecho codificado.</div>
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+              <button class="btn btn-success" onclick="SyncMethods.processWorkLinkImport()">🔗 Importar Obra via Link</button>
+            </div>
+          </div>
+
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button class="btn btn-secondary" onclick="document.getElementById('importWorkModal').remove()">
               Cancelar
