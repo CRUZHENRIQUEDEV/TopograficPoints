@@ -81,7 +81,13 @@ const MultiPeerSync = {
       // Tenta reconectar periodicamente para manter as conexões vivas
       if (!this._reconnectInterval) {
         this._reconnectInterval = setInterval(() => {
-          try { this.connectToKnownPeers(); } catch (e) { console.warn('Reconnect attempt failed:', e); }
+          try {
+            this.connectToKnownPeers();
+            // Atualiza UI de rede a cada ciclo de reconexão
+            if (window.UI && typeof UI.updateNetworkUI === 'function') {
+              UI.updateNetworkUI();
+            }
+          } catch (e) { console.warn('Reconnect attempt failed:', e); }
         }, 30 * 1000);
       }
 
@@ -324,6 +330,9 @@ const MultiPeerSync = {
         break;
       case "work_updated":
         await this.handleWorkUpdated(fromPeerId, data.payload);
+        break;
+      case "work_deleted":
+        await this.handleWorkDeleted(fromPeerId, data.payload);
         break;
       case "user_login":
         await this.handleUserLogin(fromPeerId, data.payload);
@@ -1643,6 +1652,46 @@ const MultiPeerSync = {
   },
 
   /**
+   * Processa deleção de obra recebida de outro peer
+   */
+  async handleWorkDeleted(fromPeerId, payload) {
+    try {
+      const codigo = payload.codigo;
+
+      console.log(`🗑️ [DELETE] Recebendo ordem de deleção de ${this.getPeerDisplayName(fromPeerId)}: ${codigo}`);
+
+      // Verifica se a obra existe localmente
+      if (WorkManager.worksCache.has(codigo)) {
+        // Deleta do cache e IndexedDB
+        await WorkManager.deleteWork(codigo);
+
+        console.log(`✅ [DELETE] Obra "${codigo}" deletada localmente`);
+
+        // Propaga para outros peers (exceto origem)
+        this.propagateUpdate(
+          {
+            type: "work_deleted",
+            payload: payload,
+          },
+          fromPeerId
+        );
+
+        // Atualiza UI se o modal de obras estiver aberto
+        if (window.UI && typeof UI.showWorksModal === 'function') {
+          const modal = document.getElementById('worksManagementModal');
+          if (modal && modal.classList.contains('show')) {
+            UI.showWorksModal();
+          }
+        }
+      } else {
+        console.log(`ℹ️ [DELETE] Obra ${codigo} não existe localmente (já foi deletada)`);
+      }
+    } catch (err) {
+      console.error('❌ [DELETE] Erro ao processar work_deleted:', err);
+    }
+  },
+
+  /**
    * Envia broadcast de mensagem genérica
    */
   broadcast(data) {
@@ -1702,6 +1751,39 @@ const MultiPeerSync = {
     }
 
     console.log(`✅ Obra "${work.work.codigo}" sincronizada com peers (enviadas: ${sent})`);
+  },
+
+  /**
+   * Notifica sobre obra deletada
+   */
+  broadcastWorkDeleted(codigo, deletedBy) {
+    const data = {
+      type: "work_deleted",
+      payload: {
+        codigo: codigo,
+        deletedBy: deletedBy,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    let sent = 0;
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        try {
+          conn.send(data);
+          sent++;
+        } catch (e) {
+          console.warn('Failed to send work deletion to', peerId, e);
+        }
+      }
+    }
+
+    if (sent > 0) {
+      console.log(`✅ [DELETE] Deleção de "${codigo}" sincronizada com ${sent} peer(s)`);
+    } else {
+      console.log(`⚠️ [DELETE] Nenhum peer online para sincronizar deleção de "${codigo}"`);
+    }
   },
 
   /**

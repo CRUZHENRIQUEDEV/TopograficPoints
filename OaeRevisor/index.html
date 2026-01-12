@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V3.9
+                🔍 OAE Revisor V4.0
                 <span
                   id="workTitle"
                   style="
@@ -1943,7 +1943,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V3.9</h2>
+          <h2>🔐 Login - OAE Revisor V4.0</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -2334,6 +2334,11 @@
               console.log('✅ [APP] MultiPeerSync inicializado com sucesso!');
             } else {
               console.log('✓ [APP] MultiPeerSync já inicializado');
+            }
+
+            // Atualiza UI de rede para mostrar status de conexão
+            if (window.UI && typeof UI.updateNetworkUI === 'function') {
+              UI.updateNetworkUI();
             }
           } catch (err) {
             console.warn('⚠️ [APP] Falha ao inicializar MultiPeerSync:', err);

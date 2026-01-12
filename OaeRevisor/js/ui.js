@@ -2500,6 +2500,12 @@ const UI = {
       // Log no console para debug
       console.log(`[DELETION LOG] Obra ${codigo} excluída por ${currentUser.name} (${currentUser.email}) em ${new Date().toLocaleString("pt-BR")}`);
 
+      // Broadcast para todos os peers conectados
+      if (window.MultiPeerSync && typeof MultiPeerSync.broadcastWorkDeleted === 'function') {
+        MultiPeerSync.broadcastWorkDeleted(codigo, currentUser.email);
+        console.log(`📡 [DELETE] Deleção de "${codigo}" enviada para peers`);
+      }
+
       this.showToast(`🗑️ Obra "${codigo}" excluída PERMANENTEMENTE.`);
       this.showNotification(`Exclusão registrada no histórico de auditoria`, "info");
 
