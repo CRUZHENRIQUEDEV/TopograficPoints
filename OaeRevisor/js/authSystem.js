@@ -56,10 +56,11 @@ const AuthSystem = {
       return;
     }
 
-    // Verifica se o admin padrão existe
+    // Verifica se o admin padrão existe (case-insensitive)
     const users = JSON.parse(stored);
+    const defaultAdminEmail = this.DEFAULT_USERS[0].email.toUpperCase();
     const adminExists = users.some(
-      (u) => u.email === "admin@oae.com" && u.role === "admin"
+      (u) => u.email.toUpperCase() === defaultAdminEmail && u.role === "admin"
     );
 
     if (!adminExists) {
