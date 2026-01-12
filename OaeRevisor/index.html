@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V2.3
+                🔍 OAE Revisor V2.4
                 <span
                   id="workTitle"
                   style="
@@ -39,6 +39,21 @@
               >
                 <span id="themeIcon">🌙</span>
               </button>
+
+              <!-- Network Status Indicator -->
+              <div class="logged-in-only" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-secondary); border-radius: 8px; margin-right: 10px;">
+                <div id="headerNetworkIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: var(--danger);" title="Status da rede P2P"></div>
+                <span id="headerPeersCount" style="font-size: 0.85rem; font-weight: 600; color: var(--text-color);">0 online</span>
+                <button
+                  class="btn btn-secondary"
+                  onclick="UI.forceSyncNow()"
+                  title="Forçar sincronização agora"
+                  style="padding: 4px 8px; font-size: 0.75rem; height: 24px; margin-left: 4px;"
+                >
+                  🔄 Sync
+                </button>
+              </div>
+
               <!-- Lote Toggle (Admin e Avaliadores) -->
               <div id="loteToggle" style="display: none; margin-right: 10px; align-items: center;">
                 <label style="color: var(--text-color); margin-right: 5px; font-size: 0.9rem;">Filtrar por:</label>
@@ -1920,7 +1935,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V2.3</h2>
+          <h2>🔐 Login - OAE Revisor V2.4</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">

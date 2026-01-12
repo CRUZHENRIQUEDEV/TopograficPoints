@@ -2465,6 +2465,8 @@ const UI = {
     }
 
     try {
+      const currentUser = AuthSystem.currentUser;
+
       // Se for a obra atual, limpar appState
       if (appState.work.codigo === codigo) {
         // Reset do state
@@ -2475,19 +2477,29 @@ const UI = {
         UI.renderAll();
       }
 
-      // Deletar do IndexedDB
-      await WorkManager.deleteWork(codigo);
-
-      // Registrar no audit trail
+      // Registrar no audit trail ANTES de deletar
       if (work) {
-        AuditSystem.logChange("delete", {
+        AuditSystem.logChange("work_deleted", {
           obra: codigo,
           nome: work.work?.nome,
+          avaliador: work.work?.avaliador,
           metadata: work.work?.metadata,
+          deletedBy: currentUser.email,
+          deletedByName: currentUser.name,
+          deletedByRole: currentUser.role,
+          deletedAt: new Date().toISOString(),
         });
       }
 
+      // Deletar do IndexedDB
+      await WorkManager.deleteWork(codigo);
+
+      // Log no console para debug
+      console.log(`[DELETION LOG] Obra ${codigo} excluída por ${currentUser.name} (${currentUser.email}) em ${new Date().toLocaleString("pt-BR")}`);
+
       this.showToast(`🗑️ Obra "${codigo}" excluída PERMANENTEMENTE.`);
+      this.showNotification(`Exclusão registrada no histórico de auditoria`, "info");
+
       document.getElementById("worksManagementModal")?.remove();
       this.showWorksModal(); // Refresh list
     } catch (err) {
@@ -2924,8 +2936,20 @@ const UI = {
         WorkManager.updateWorkCache(codigo, work);
 
         // Sincroniza com peers conectados (para que outros vejam a obra publicada)
-        if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+        const hasPeers = window.MultiPeerSync && MultiPeerSync.hasConnections();
+
+        if (hasPeers) {
           MultiPeerSync.broadcastWorkUpdated(work);
+          this.showNotification(`✅ Obra sincronizada com ${MultiPeerSync.getNetworkStats().connectedPeers} usuário(s) online!`, "success");
+        } else if (newStatus) {
+          // Se tornou pública MAS não há peers conectados, avisa o usuário
+          this.showNotification(
+            `⚠️ ATENÇÃO: Obra marcada como pública, mas NENHUM usuário está conectado no momento.\n\n` +
+            `Para que outros vejam esta obra, você precisa:\n` +
+            `1️⃣ Conectar-se com outros usuários via aba Mensagens > Gerenciar Rede\n` +
+            `2️⃣ OU compartilhar manualmente usando o botão 🔗 Compartilhar`,
+            "warning"
+          );
         }
 
         // Mostra mensagem
@@ -3367,6 +3391,14 @@ const UI = {
       document.getElementById("connectedPeersCount").textContent = "0";
       document.getElementById("syncStatus").textContent = "⏸";
       document.getElementById("connectedPeersList").style.display = "none";
+
+      // Atualiza indicador do header
+      const headerIndicator = document.getElementById("headerNetworkIndicator");
+      const headerCount = document.getElementById("headerPeersCount");
+      if (headerIndicator && headerCount) {
+        headerIndicator.style.background = "var(--danger)";
+        headerCount.textContent = "0 online";
+      }
       return;
     }
 
@@ -3393,6 +3425,15 @@ const UI = {
     document.getElementById("syncStatus").textContent = hasConnections
       ? "🔄"
       : "⏸";
+
+    // Atualiza indicador do header
+    const headerIndicator = document.getElementById("headerNetworkIndicator");
+    const headerCount = document.getElementById("headerPeersCount");
+    if (headerIndicator && headerCount) {
+      headerIndicator.style.background = hasConnections ? "var(--success)" : "var(--danger)";
+      headerCount.textContent = `${stats.connectedPeers} online`;
+      headerCount.style.color = hasConnections ? "var(--success)" : "var(--text-muted)";
+    }
 
     // Atualiza lista de conectados
     if (hasConnections) {
@@ -3452,6 +3493,36 @@ const UI = {
       MultiPeerSync.disconnect();
       this.updateNetworkUI();
       this.showNotification("Desconectado de todos os usuários", "info");
+    }
+  },
+
+  /**
+   * Força sincronização imediata com todos os nós conectados
+   */
+  async forceSyncNow() {
+    if (!window.MultiPeerSync || !MultiPeerSync.hasConnections()) {
+      this.showNotification("⚠️ Nenhum usuário conectado. Sincronização P2P indisponível.", "warning");
+      return;
+    }
+
+    try {
+      this.showNotification("🔄 Sincronizando dados com usuários online...", "info");
+
+      // Recarrega todas as obras do banco local
+      if (window.WorkManager) {
+        await WorkManager.loadAllWorks();
+      }
+
+      // Envia estado atual para todos os pares conectados
+      if (window.MultiPeerSync) {
+        await MultiPeerSync.broadcastFullState();
+      }
+
+      this.showNotification("✅ Sincronização concluída com sucesso!", "success");
+      this.updateNetworkUI();
+    } catch (error) {
+      console.error("Erro na sincronização:", error);
+      this.showNotification("❌ Erro ao sincronizar: " + error.message, "error");
     }
   },
 
@@ -3721,6 +3792,37 @@ const UI = {
       }
 
       this.showNotification(message, "success");
+
+      // Verifica sincronização P2P
+      const hasPeers = window.MultiPeerSync && MultiPeerSync.hasConnections();
+      if (!hasPeers) {
+        setTimeout(() => {
+          this.showNotification(
+            `⚠️ IMPORTANTE: Nenhum usuário conectado no momento!\n\n` +
+            `A obra foi publicada LOCALMENTE, mas para que outros usuários vejam:\n` +
+            `1️⃣ Conecte-se via aba Mensagens > Gerenciar Rede\n` +
+            `2️⃣ OU use o botão 🔗 Compartilhar no Gerenciador de Obras`,
+            "warning"
+          );
+        }, 1500);
+      } else {
+        // Força broadcast da obra atualizada
+        if (window.MultiPeerSync) {
+          await MultiPeerSync.broadcastWorkUpdated({
+            work: obra,
+            errors: appState.errors,
+            elementErrors: appState.elementErrors,
+            anexoErrors: appState.anexoErrors,
+            mensagens: appState.mensagens,
+          });
+        }
+        setTimeout(() => {
+          this.showNotification(
+            `✅ Obra sincronizada com ${MultiPeerSync.getNetworkStats().connectedPeers} usuário(s) online!`,
+            "success"
+          );
+        }, 1000);
+      }
 
       // Atualiza título com novo status
       this.updateWorkTitle();
