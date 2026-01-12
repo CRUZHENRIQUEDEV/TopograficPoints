@@ -187,6 +187,10 @@ const AuthSystem = {
             // After init, request users and state from connected peers
             MultiPeerSync.requestUsersSync();
             MultiPeerSync.requestAllStates();
+            // ALSO request works list from peers so we can auto-download existing works
+            if (typeof MultiPeerSync.requestWorksSync === 'function') {
+              MultiPeerSync.requestWorksSync();
+            }
 
             // Connect to peers inferred from existing local users
             if (typeof MultiPeerSync.connectToUsersFromLocalUsers === "function") {

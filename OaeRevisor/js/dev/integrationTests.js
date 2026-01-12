@@ -91,6 +91,41 @@
     }catch(e){ console.error('ERROR', e); }
   }
 
+  async function testRequestWorksSync(){
+    console.group('IntegrationTest: requestWorksSync');
+    try{
+      if (!window.MultiPeerSync || !window.WorkManager) { console.warn('MultiPeerSync/WorkManager not available'); return; }
+
+      const sample = (function(){
+        const code = 'TEST-SYNC-01';
+        return {
+          work: { codigo: code, nome: 'Teste Sync', metadata: { lastModifiedAt: new Date().toISOString(), createdAt: new Date().toISOString(), isPublic: true } }
+        };
+      })();
+
+      // Simulate receiving works_list from a peer
+      await MultiPeerSync.handleWorksList('oae-sim', { works: [sample], source: 'oae-sim', timestamp: Date.now() });
+
+      // Allow processing
+      await new Promise(r=>setTimeout(r, 300));
+
+      const exists = WorkManager.worksCache.has('TEST-SYNC-01');
+      if (exists) console.log('PASS: received work was saved'); else console.error('FAIL: received work not saved');
+
+      console.groupEnd();
+    }catch(e){ console.error('ERROR', e); }
+  }
+
+  // Expose tests
+  window.runIntegrationTests = async function(){
+    console.log('Running integration tests...');
+    await testProcessWorkLinkImport();
+    await testPublishBroadcast();
+    await testPresenceUI();
+    await testRequestWorksSync();
+    console.log('Integration tests completed. Inspect console for pass/fail messages.');
+  };
+
   window.runIntegrationTests = async function(){
     console.log('Running integration tests...');
     await testProcessWorkLinkImport();

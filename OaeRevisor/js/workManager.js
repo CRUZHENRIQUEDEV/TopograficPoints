@@ -60,7 +60,7 @@ const WorkManager = {
                 status: "draft",
               };
               // Salva a obra com metadata inicializado (async, não bloqueante)
-              this.saveWork(work).catch(err => console.error("Error migrating work:", err));
+              this.saveWork(work, { broadcast: false }).catch(err => console.error("Error migrating work:", err));
             }
             this.worksCache.set(work.work.codigo, work);
           });
@@ -78,7 +78,7 @@ const WorkManager = {
   /**
    * Salva obra no IndexedDB
    */
-  async saveWork(workData) {
+  async saveWork(workData, options = { broadcast: true }) {
     try {
       const transaction = DB.db.transaction(["obras"], "readwrite");
       const store = transaction.objectStore("obras");
@@ -86,8 +86,33 @@ const WorkManager = {
       return new Promise((resolve, reject) => {
         const request = store.put(workData);
 
-        request.onsuccess = () => {
+        request.onsuccess = async () => {
           this.worksCache.set(workData.work.codigo, workData);
+
+          // Broadcast to peers unless explicitly disabled
+          try {
+            if (options && options.broadcast !== false && window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+              try {
+                MultiPeerSync.broadcastWorkUpdated(workData);
+                // Also attempt to send a lightweight share link for quick import
+                if (window.SyncMethods && typeof SyncMethods.generateWorkShareLink === 'function') {
+                  const inviteLink = await SyncMethods.generateWorkShareLink(workData.work.codigo).catch(()=>null);
+                  if (inviteLink) {
+                    const url = new URL(inviteLink);
+                    const encoded = url.searchParams.get('shareWork');
+                    if (encoded) {
+                      MultiPeerSync.broadcast({ type: 'work_share_link', payload: { encoded } });
+                    }
+                  }
+                }
+              } catch (e) {
+                console.warn('Broadcast after save failed:', e);
+              }
+            }
+          } catch (e) {
+            console.warn('Error during post-save broadcast:', e);
+          }
+
           resolve();
         };
 

@@ -64,6 +64,13 @@ const MultiPeerSync = {
       // Tenta conectar com pares conhecidos
       this.connectToKnownPeers();
 
+      // Tenta reconectar periodicamente para manter as conexões vivas
+      if (!this._reconnectInterval) {
+        this._reconnectInterval = setInterval(() => {
+          try { this.connectToKnownPeers(); } catch (e) { console.warn('Reconnect attempt failed:', e); }
+        }, 30 * 1000);
+      }
+
       return new Promise((resolve, reject) => {
         this.peer.on("open", (id) => {
           console.log("Multi-Peer iniciado:", id);
@@ -244,6 +251,12 @@ const MultiPeerSync = {
         break;
       case "request_users_sync":
         await this.handleRequestUsersSync(fromPeerId);
+        break;
+      case "request_works":
+        await this.handleRequestWorks(fromPeerId);
+        break;
+      case "works_list":
+        await this.handleWorksList(fromPeerId, data.payload);
         break;
       case "work_updated":
         await this.handleWorkUpdated(fromPeerId, data.payload);
@@ -1362,6 +1375,146 @@ const MultiPeerSync = {
           fromPeerId
         )}`
       );
+    }
+  },
+
+  /**
+   * Solicita lista completa de obras dos peers conectados
+   */
+  requestWorksSync(peerId = null) {
+    const data = {
+      type: 'request_works',
+      payload: {
+        source: this.userId,
+        timestamp: Date.now(),
+      }
+    };
+
+    if (peerId) {
+      const conn = this.connections.get(peerId);
+      if (conn && conn.open) conn.send(data);
+    } else {
+      for (const [pId, conn] of this.connections) {
+        if (conn.open) conn.send(data);
+      }
+    }
+
+    console.log('📤 Solicitando lista de obras dos peers conectados');
+  },
+
+  /**
+   * Envia lista de obras em resposta à solicitação
+   */
+  async handleRequestWorks(fromPeerId) {
+    try {
+      const conn = this.connections.get(fromPeerId);
+      if (!conn || !conn.open) return;
+
+      // Prepara lista de obras a partir do cache
+      const works = Array.from(WorkManager.worksCache.values()).map(w => ({ ...w }));
+
+      conn.send({ type: 'works_list', payload: { works, source: this.userId, timestamp: Date.now() } });
+
+      console.log(`✅ Enviando ${works.length} obras para ${this.getPeerDisplayName(fromPeerId)}`);
+    } catch (e) {
+      console.error('Erro ao enviar lista de obras:', e);
+    }
+  },
+
+  /**
+   * Processa lista de obras recebida de um peer
+   */
+  async handleWorksList(fromPeerId, payload) {
+    try {
+      const remoteWorks = payload.works || [];
+      console.log(`📥 Recebendo ${remoteWorks.length} obras de ${this.getPeerDisplayName(fromPeerId)}`);
+
+      let imported = 0, skipped = 0;
+
+      for (const w of remoteWorks) {
+        try {
+          const code = w.work.codigo;
+          const existing = WorkManager.worksCache.get(code);
+
+          const incomingTime = (w.work.metadata && w.work.metadata.lastModifiedAt) ? new Date(w.work.metadata.lastModifiedAt).getTime() : (payload.timestamp || Date.now());
+          const existingTime = existing && existing.work && existing.work.metadata && existing.work.metadata.lastModifiedAt ? new Date(existing.work.metadata.lastModifiedAt).getTime() : 0;
+
+          if (!existing || incomingTime > existingTime) {
+            // Save without re-broadcasting (to avoid echo)
+            await WorkManager.saveWork(w, { broadcast: false });
+            WorkManager.worksCache.set(code, w);
+            imported++;
+          } else {
+            skipped++;
+          }
+        } catch (e) {
+          console.warn('Erro ao importar obra:', e);
+        }
+      }
+
+      if (imported > 0) {
+        this.showNotification(`📦 ${imported} obras importadas de ${this.getPeerDisplayName(fromPeerId)}`,'success');
+        if (window.WorkManager) WorkManager.updateWorkCache();
+        if (window.UI && typeof UI.showWorksModal === 'function') UI.updateNetworkUI();
+      }
+
+      console.log(`✅ Works import summary: ${imported} imported, ${skipped} skipped.`);
+    } catch (e) {
+      console.error('Erro ao processar works_list:', e);
+    }
+  },
+
+  /**
+   * Processa atualização de obra recebida
+   */
+  async handleWorkUpdated(fromPeerId, payload) {
+    const updatedWork = payload.work;
+
+    try {
+      const code = updatedWork.work.codigo;
+      const existing = WorkManager.worksCache.get(code);
+
+      const incomingTime = (updatedWork.work.metadata && updatedWork.work.metadata.lastModifiedAt) ? new Date(updatedWork.work.metadata.lastModifiedAt).getTime() : (payload.timestamp || Date.now());
+      const existingTime = existing && existing.work && existing.work.metadata && existing.work.metadata.lastModifiedAt ? new Date(existing.work.metadata.lastModifiedAt).getTime() : 0;
+
+      console.log(`📥 Recebendo atualização de obra de ${this.getPeerDisplayName(fromPeerId)}: ${code}`);
+
+      // If it's new or newer, save; else ignore
+      if (!existing || incomingTime > existingTime) {
+        // Atualiza metadados locais
+        updatedWork.work.metadata = updatedWork.work.metadata || {};
+        updatedWork.work.metadata.lastModifiedBy = payload.source || fromPeerId;
+        updatedWork.work.metadata.lastModifiedAt = updatedWork.work.metadata.lastModifiedAt || new Date().toISOString();
+
+        // Save without broadcasting to avoid cycles
+        await WorkManager.saveWork(updatedWork, { broadcast: false });
+        WorkManager.worksCache.set(code, updatedWork);
+
+        console.log(`✅ Obra "${code}" atualizada e salva locally`);
+
+        this.showNotification(
+          `📦 Obra atualizada: ${code}`,
+          "info"
+        );
+
+        // Propaga para outros peers (exceto origem)
+        this.propagateUpdate(
+          {
+            type: "work_updated",
+            payload: payload,
+          },
+          fromPeerId
+        );
+
+        // Atualiza UI se necessário
+        if (window.UI && typeof UI.showWorksModal === 'function') {
+          UI.showWorksModal();
+        }
+      } else {
+        console.log(`ℹ️ Obra ${code} ignorada (server copy older or equal)`);
+      }
+    } catch (err) {
+      console.error('Erro ao processar work_updated:', err);
     }
   },
 

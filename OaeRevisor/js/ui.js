@@ -2037,7 +2037,10 @@ const UI = {
             <div class="modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3 class="modal-title">📂 Gerenciamento Avançado de Obras</h3>
-                    <button class="modal-close" onclick="document.getElementById('worksManagementModal').remove()">×</button>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                      <button class="btn btn-secondary" onclick="MultiPeerSync.requestWorksSync()" title="Procurar obras em nós online">🔄 Sincronizar Obras</button>
+                      <button class="modal-close" onclick="document.getElementById('worksManagementModal').remove()">×</button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <!-- Informações do Usuário -->
