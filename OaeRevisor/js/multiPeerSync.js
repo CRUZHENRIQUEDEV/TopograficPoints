@@ -355,11 +355,8 @@ const MultiPeerSync = {
     Sync.loadState();
     UI.renderAll();
 
-    // Notificação
-    this.showNotification(
-      `Dados sincronizados de ${this.getPeerDisplayName(fromPeerId)}`,
-      "success"
-    );
+    // Log silencioso - não mostra notificação para não incomodar
+    console.log(`✅ [SYNC] Dados sincronizados de ${this.getPeerDisplayName(fromPeerId)}`);
   },
 
   /**
@@ -1000,22 +997,31 @@ const MultiPeerSync = {
   },
 
   /**
-   * Notifica sobre mudança de conexão
+   * Notifica sobre mudança de conexão (apenas log, sem notificação visual)
    */
   notifyConnection(peerId, status) {
     const displayName = this.getPeerDisplayName(peerId);
+    const icon = status === "connected" ? "✅" : "ℹ️";
     const message =
       status === "connected"
         ? `Conectado com ${displayName}`
         : `Desconectado de ${displayName}`;
 
-    this.showNotification(message, status === "connected" ? "success" : "info");
+    // Apenas log no console, sem notificação visual
+    console.log(`${icon} [P2P] ${message}`);
   },
 
   /**
-   * Mostra notificação
+   * Mostra notificação (DESABILITADO - apenas log no console)
    */
   showNotification(message, type = "info") {
+    // Apenas log no console, sem notificação visual
+    const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️';
+    console.log(`${icon} [SYNC] ${message}`);
+
+    // Notificações visuais desabilitadas para não incomodar o usuário
+    // Se precisar reativar, descomente o código abaixo:
+    /*
     const toast = document.getElementById("toast");
     if (toast) {
       toast.textContent = message;
@@ -1026,12 +1032,16 @@ const MultiPeerSync = {
         toast.style.display = "none";
       }, 3000);
     }
+    */
   },
 
   /**
-   * Reproduz som de notificação
+   * Reproduz som de notificação (DESABILITADO)
    */
   playNotificationSound() {
+    // Som desabilitado para não incomodar o usuário
+    // Se precisar reativar, descomente o código abaixo:
+    /*
     try {
       const audio = new Audio(
         "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
@@ -1041,6 +1051,7 @@ const MultiPeerSync = {
     } catch (e) {
       // Silencioso se não conseguir reproduzir
     }
+    */
   },
 
   /**
@@ -1912,16 +1923,12 @@ const MultiPeerSync = {
       UI.updateNetworkUI();
     }
 
-    // Apenas admin recebe notificações visuais de login
+    // Log de login apenas no console (admin pode ver no console se quiser)
     if (window.AuthSystem && window.AuthSystem.currentUser && window.AuthSystem.currentUser.role === "admin") {
       const roleDisplay = window.AuthSystem.getRoleDisplayName(payload.role);
 
-      this.showNotification(
-        `👤 Novo login!\n${payload.name}\n${roleDisplay} - ${payload.lote}`,
-        "info"
-      );
-
-      console.log(`📢 [ADMIN] Usuário conectado: ${payload.name} (${payload.email}) - ${roleDisplay} - ${payload.lote}`);
+      // Apenas log no console, sem notificação visual para não incomodar
+      console.log(`👤 [ADMIN] Novo login: ${payload.name} (${payload.email}) - ${roleDisplay} - ${payload.lote}`);
     }
 
     // Propaga para outros peers
