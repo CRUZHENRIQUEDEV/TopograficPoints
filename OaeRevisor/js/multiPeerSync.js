@@ -903,18 +903,20 @@ const MultiPeerSync = {
   mergeUsers(localUsers, remoteUsers) {
     const merged = new Map();
 
-    // Adiciona usuários locais
+    // Adiciona usuários locais (usa email em maiúsculo como chave para evitar duplicação)
     for (const user of localUsers) {
-      merged.set(user.email, user);
+      const normalizedEmail = user.email.toUpperCase();
+      merged.set(normalizedEmail, user);
     }
 
     // Mescla usuários remotos
     for (const remoteUser of remoteUsers) {
-      const existingUser = merged.get(remoteUser.email);
+      const normalizedEmail = remoteUser.email.toUpperCase();
+      const existingUser = merged.get(normalizedEmail);
 
       if (!existingUser) {
         // Novo usuário, adiciona
-        merged.set(remoteUser.email, {
+        merged.set(normalizedEmail, {
           ...remoteUser,
           syncedFrom: remoteUser.source || "remote",
           syncedAt: Date.now(),
@@ -929,7 +931,7 @@ const MultiPeerSync = {
         ).getTime();
 
         if (remoteTime > existingTime) {
-          merged.set(remoteUser.email, {
+          merged.set(normalizedEmail, {
             ...remoteUser,
             syncedFrom: remoteUser.source || "remote",
             syncedAt: Date.now(),
@@ -970,8 +972,9 @@ const MultiPeerSync = {
     const newUser = payload.user;
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
 
-    // Verifica se usuário já existe
-    const exists = users.find((u) => u.email === newUser.email);
+    // Verifica se usuário já existe (case-insensitive)
+    const normalizedNewEmail = newUser.email.toUpperCase();
+    const exists = users.find((u) => u.email.toUpperCase() === normalizedNewEmail);
 
     if (!exists) {
       users.push({
@@ -1033,8 +1036,9 @@ const MultiPeerSync = {
     const email = payload.email;
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
 
-    // Remove usuário
-    const filteredUsers = users.filter((u) => u.email !== email);
+    // Remove usuário (case-insensitive)
+    const normalizedEmail = email.toUpperCase();
+    const filteredUsers = users.filter((u) => u.email.toUpperCase() !== normalizedEmail);
 
     if (filteredUsers.length < users.length) {
       localStorage.setItem("oae-users", JSON.stringify(filteredUsers));
@@ -1087,7 +1091,9 @@ const MultiPeerSync = {
     const updatedUser = payload.user;
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
 
-    const userIndex = users.findIndex((u) => u.email === updatedUser.email);
+    // Busca usuário case-insensitive
+    const normalizedUpdatedEmail = updatedUser.email.toUpperCase();
+    const userIndex = users.findIndex((u) => u.email.toUpperCase() === normalizedUpdatedEmail);
 
     if (userIndex !== -1) {
       users[userIndex] = {
@@ -1103,6 +1109,38 @@ const MultiPeerSync = {
           fromPeerId
         )}`
       );
+
+      // Verifica se o usuário atualizado é o usuário atual logado
+      if (window.AuthSystem && window.AuthSystem.currentUser) {
+        const normalizedCurrentEmail = window.AuthSystem.currentUser.email.toUpperCase();
+        const normalizedUpdatedEmail = updatedUser.email.toUpperCase();
+
+        if (normalizedCurrentEmail === normalizedUpdatedEmail) {
+          // Atualiza a sessão atual com os novos dados
+          const session = JSON.parse(sessionStorage.getItem("oae-session") || "{}");
+          if (session.user) {
+            session.user.role = updatedUser.role;
+            session.user.lote = updatedUser.lote;
+            session.user.name = updatedUser.name;
+            sessionStorage.setItem("oae-session", JSON.stringify(session));
+
+            // Atualiza o objeto currentUser no AuthSystem
+            window.AuthSystem.currentUser.role = updatedUser.role;
+            window.AuthSystem.currentUser.lote = updatedUser.lote;
+            window.AuthSystem.currentUser.name = updatedUser.name;
+
+            // Atualiza UI com novo role
+            window.AuthSystem.updateUIForUser();
+
+            this.showNotification(
+              `🔄 Seu perfil foi atualizado!\nNova role: ${window.AuthSystem.getRoleDisplayName(updatedUser.role)}\nLote: ${updatedUser.lote}`,
+              "warning"
+            );
+
+            console.log("🔄 Perfil do usuário atual atualizado em tempo real!");
+          }
+        }
+      }
 
       this.showNotification(
         `Usuário atualizado: ${updatedUser.name}`,

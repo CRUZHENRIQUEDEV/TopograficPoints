@@ -28,8 +28,9 @@ const UserManager = {
 
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
 
-    // Verifica se email já existe
-    if (users.find((u) => u.email === userData.email)) {
+    // Verifica se email já existe (case-insensitive)
+    const normalizedEmail = userData.email.toUpperCase();
+    if (users.find((u) => u.email.toUpperCase() === normalizedEmail)) {
       throw new Error("Email já cadastrado");
     }
 
@@ -153,7 +154,9 @@ const UserManager = {
     }
 
     const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
-    const userIndex = users.findIndex((u) => u.email === email);
+    // Busca usuário case-insensitive
+    const normalizedEmail = email.toUpperCase();
+    const userIndex = users.findIndex((u) => u.email.toUpperCase() === normalizedEmail);
 
     if (userIndex === -1) {
       throw new Error("Usuário não encontrado");

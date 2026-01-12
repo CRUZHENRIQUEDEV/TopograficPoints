@@ -19,6 +19,7 @@ const AuthSystem = {
   LOTES: {
     LOTE_01: "Lote 01",
     LOTE_02: "Lote 02",
+    LOTE_03: "Lote 03",
     ADMIN: "Admin",
   },
 
@@ -99,15 +100,18 @@ const AuthSystem = {
     try {
       const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
 
-      // Verifica se usuário existe
-      const userExists = users.find((u) => u.email === email);
+      // Normaliza email para case-insensitive
+      const normalizedEmail = email.toUpperCase();
+
+      // Verifica se usuário existe (case-insensitive)
+      const userExists = users.find((u) => u.email.toUpperCase() === normalizedEmail);
 
       if (!userExists) {
         throw new Error(`❌ Usuário não encontrado!\n\n💡 DICA: Se este usuário foi criado em outro dispositivo, você precisa:\n1. Conectar via PeerJS usando o email do admin\n2. Aguardar sincronização\n3. Depois fazer login`);
       }
 
       const user = users.find(
-        (u) => u.email === email && u.password === password && u.active
+        (u) => u.email.toUpperCase() === normalizedEmail && u.password === password && u.active
       );
 
       if (!user) {
@@ -415,7 +419,9 @@ const AuthSystem = {
   async changePassword(email, currentPassword, newPassword) {
     try {
       const users = JSON.parse(localStorage.getItem("oae-users") || "[]");
-      const user = users.find((u) => u.email === email && u.active);
+      // Normaliza email para case-insensitive
+      const normalizedEmail = email.toUpperCase();
+      const user = users.find((u) => u.email.toUpperCase() === normalizedEmail && u.active);
 
       if (!user) {
         throw new Error("Usuário não encontrado");

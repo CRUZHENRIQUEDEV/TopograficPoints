@@ -342,6 +342,7 @@ const WorkManager = {
     const stats = {
       "Lote 01": { total: 0, byStatus: {} },
       "Lote 02": { total: 0, byStatus: {} },
+      "Lote 03": { total: 0, byStatus: {} },
       "Admin": { total: 0, byStatus: {} },
       "Sem Lote": { total: 0, byStatus: {} },
     };
@@ -477,7 +478,7 @@ const WorkManager = {
 
     return {
       canView: metadata.isPublic || isOwner || isAdmin,
-      canEdit: isOwner || isAdmin,
+      canEdit: true, // Permite que TODOS possam publicar obras (tornar pública/privada)
       canDelete: isOwner || isAdmin,
       canShare: isOwner || isAdmin,
       isOwner: isOwner,
