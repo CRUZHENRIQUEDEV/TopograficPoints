@@ -246,6 +246,9 @@ const AuthSystem = {
     // Admin pode apagar qualquer obra
     if (this.hasPermission("delete_any_work")) return true;
 
+    // Avaliador pode apagar qualquer obra
+    if (this.currentUser.role === this.ROLES.AVALIADOR) return true;
+
     // Usuário pode apagar suas próprias obras
     if (
       this.hasPermission("delete_own_work") &&

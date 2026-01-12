@@ -2915,6 +2915,11 @@ const UI = {
         // Atualiza cache
         WorkManager.updateWorkCache(codigo, work);
 
+        // Sincroniza com peers conectados (para que outros vejam a obra publicada)
+        if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+          MultiPeerSync.broadcastWorkUpdated(work);
+        }
+
         // Mostra mensagem
         const statusLabel = newStatus ? "Pública" : "Privada";
         const icon = newStatus ? "🌐" : "🔒";

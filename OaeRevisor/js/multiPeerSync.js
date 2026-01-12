@@ -191,6 +191,9 @@ const MultiPeerSync = {
       case "request_users_sync":
         await this.handleRequestUsersSync(fromPeerId);
         break;
+      case "work_updated":
+        await this.handleWorkUpdated(fromPeerId, data.payload);
+        break;
       default:
         console.warn("Tipo de mensagem desconhecido:", data.type);
     }
@@ -1049,6 +1052,33 @@ const MultiPeerSync = {
         )}`
       );
 
+      // Verifica se o usuário removido é o usuário atual logado
+      if (window.AuthSystem && window.AuthSystem.currentUser) {
+        const normalizedCurrentEmail = window.AuthSystem.currentUser.email.toUpperCase();
+
+        if (normalizedCurrentEmail === normalizedEmail) {
+          // Usuário atual foi removido - faz logout forçado
+          this.showNotification(
+            `⚠️ Sua conta foi removida pelo administrador!\nVocê será desconectado em 3 segundos...`,
+            "warning"
+          );
+
+          setTimeout(() => {
+            // Limpa sessão
+            sessionStorage.removeItem("oae-session");
+            window.AuthSystem.currentUser = null;
+            window.AuthSystem.isLoggedIn = false;
+
+            // Redireciona para login
+            alert("❌ Sua conta foi removida do sistema pelo administrador.");
+            window.location.reload();
+          }, 3000);
+
+          console.log("⚠️ Conta removida - logout forçado!");
+          return; // Não propaga nem mostra notificação normal
+        }
+      }
+
       this.showNotification(`Usuário removido: ${email}`, "warning");
 
       // Propaga para outros peers
@@ -1225,6 +1255,67 @@ const MultiPeerSync = {
     for (const [peerId, conn] of this.connections) {
       if (conn.open) {
         conn.send(data);
+      }
+    }
+  },
+
+  // ========== SINCRONIZAÇÃO DE OBRAS ==========
+
+  /**
+   * Notifica sobre obra atualizada/publicada
+   */
+  broadcastWorkUpdated(work) {
+    const data = {
+      type: "work_updated",
+      payload: {
+        work: work,
+        source: this.userId,
+        timestamp: Date.now(),
+      },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log(`✅ Obra "${work.work.codigo}" sincronizada com peers`);
+  },
+
+  /**
+   * Processa atualização de obra recebida
+   */
+  async handleWorkUpdated(fromPeerId, payload) {
+    const updatedWork = payload.work;
+
+    console.log(`📥 Recebendo atualização de obra de ${this.getPeerDisplayName(fromPeerId)}: ${updatedWork.work.codigo}`);
+
+    // Salva no IndexedDB
+    if (window.WorkManager) {
+      await WorkManager.saveWork(updatedWork);
+      WorkManager.updateWorkCache(updatedWork.work.codigo, updatedWork);
+
+      console.log(`✅ Obra "${updatedWork.work.codigo}" atualizada de ${this.getPeerDisplayName(fromPeerId)}`);
+
+      this.showNotification(
+        `📦 Obra atualizada: ${updatedWork.work.codigo}`,
+        "info"
+      );
+
+      // Propaga para outros peers
+      this.propagateUpdate(
+        {
+          type: "work_updated",
+          payload: payload,
+        },
+        fromPeerId
+      );
+
+      // Atualiza UI se estiver na tela de obras
+      if (window.UI && typeof UI.showWorksModal === 'function') {
+        // Não chama automaticamente para não incomodar o usuário
+        // UI.showWorksModal();
       }
     }
   },
