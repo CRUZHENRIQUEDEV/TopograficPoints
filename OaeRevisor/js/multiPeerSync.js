@@ -25,6 +25,9 @@ const MultiPeerSync = {
     conflictResolution: new Map(), // dataId -> resolution
   },
 
+  // Registro permanente de obras deletadas (para evitar que voltem)
+  deletedWorks: new Set(), // Set de códigos de obras deletadas
+
   // Configuração
   config: {
     iceServers: [
@@ -48,6 +51,9 @@ const MultiPeerSync = {
       localStorage.setItem("oae-user-id", this.userId);
       localStorage.setItem("oae-user-email", userEmail);
       localStorage.setItem("oae-user-name", userName);
+
+      // Carrega registro de obras deletadas
+      this.loadDeletedWorksRegistry();
 
       // Se já existe um peer, destruir antes de criar um novo
       if (this.peer && !this.peer.destroyed) {
@@ -722,6 +728,52 @@ const MultiPeerSync = {
       "oae-known-peers",
       JSON.stringify([...this.knownPeers])
     );
+  },
+
+  /**
+   * Carrega registro de obras deletadas do localStorage
+   */
+  loadDeletedWorksRegistry() {
+    const stored = localStorage.getItem("oae-deleted-works");
+    if (stored) {
+      try {
+        const deletedArray = JSON.parse(stored);
+        this.deletedWorks = new Set(deletedArray);
+        console.log(`🗑️ [REGISTRY] Carregado registro de ${this.deletedWorks.size} obras deletadas`);
+      } catch (e) {
+        console.warn('Erro ao carregar registro de obras deletadas:', e);
+        this.deletedWorks = new Set();
+      }
+    } else {
+      this.deletedWorks = new Set();
+    }
+  },
+
+  /**
+   * Salva registro de obras deletadas no localStorage
+   */
+  saveDeletedWorksRegistry() {
+    localStorage.setItem(
+      "oae-deleted-works",
+      JSON.stringify([...this.deletedWorks])
+    );
+    console.log(`💾 [REGISTRY] Registro de obras deletadas salvo: ${this.deletedWorks.size} obras`);
+  },
+
+  /**
+   * Marca obra como deletada no registro permanente
+   */
+  markWorkAsDeleted(codigo) {
+    this.deletedWorks.add(codigo);
+    this.saveDeletedWorksRegistry();
+    console.log(`🗑️ [REGISTRY] Obra "${codigo}" marcada como deletada permanentemente`);
+  },
+
+  /**
+   * Verifica se uma obra está no registro de deletadas
+   */
+  isWorkDeleted(codigo) {
+    return this.deletedWorks.has(codigo);
   },
 
   /**
@@ -1567,6 +1619,33 @@ const MultiPeerSync = {
       for (const w of remoteWorks) {
         try {
           const code = w.work.codigo;
+
+          // VERIFICA SE A OBRA FOI DELETADA
+          if (this.isWorkDeleted(code)) {
+            console.log(`🚫 [REGISTRY] Obra "${code}" está no registro de deletadas. Rejeitando e reenviando ordem de deleção para ${this.getPeerDisplayName(fromPeerId)}`);
+
+            // Reenvia ordem de deleção para o peer que enviou a obra
+            const conn = this.connections.get(fromPeerId);
+            if (conn && conn.open) {
+              try {
+                conn.send({
+                  type: "work_deleted",
+                  payload: {
+                    codigo: code,
+                    deletedBy: this.userEmail,
+                    source: this.userId,
+                    timestamp: Date.now(),
+                  },
+                });
+                console.log(`📤 [REGISTRY] Ordem de deleção reenviada para ${this.getPeerDisplayName(fromPeerId)}: ${code}`);
+              } catch (e) {
+                console.warn('Erro ao reenviar ordem de deleção:', e);
+              }
+            }
+            skipped++;
+            continue; // Não processa essa obra
+          }
+
           const existing = WorkManager.worksCache.get(code);
 
           const incomingTime = (w.work.metadata && w.work.metadata.lastModifiedAt) ? new Date(w.work.metadata.lastModifiedAt).getTime() : (payload.timestamp || Date.now());
@@ -1605,12 +1684,61 @@ const MultiPeerSync = {
 
     try {
       const code = updatedWork.work.codigo;
+
+      console.log(`📥 Recebendo atualização de obra de ${this.getPeerDisplayName(fromPeerId)}: ${code}`);
+
+      // VERIFICA SE A OBRA FOI DELETADA
+      if (this.isWorkDeleted(code)) {
+        console.log(`🚫 [REGISTRY] Obra "${code}" está no registro de deletadas. Rejeitando atualização e reenviando ordem de deleção para ${this.getPeerDisplayName(fromPeerId)}`);
+
+        // Marca no registro (idempotente) e limpa quaisquer broadcasts pendentes desta obra
+        try {
+          this.markWorkAsDeleted(code);
+          // Remove pending broadcasts for this code
+          try {
+            const pending = this.getPendingWorkBroadcasts();
+            const remaining = (pending || []).filter(i => !(i && i.work && i.work.work && i.work.work.codigo === code));
+            this.savePendingWorkBroadcasts(remaining);
+          } catch (e) {
+            console.warn('Erro ao limpar broadcasts pendentes para obra deletada:', e);
+          }
+        } catch (e) {
+          console.warn('Erro ao marcar obra como deletada no registro:', e);
+        }
+
+        // Reenvia ordem de deleção para o peer que enviou a atualização
+        const conn = this.connections.get(fromPeerId);
+        if (conn && conn.open) {
+          try {
+            conn.send({
+              type: "work_deleted",
+              payload: {
+                codigo: code,
+                deletedBy: this.userEmail,
+                source: this.userId,
+                timestamp: Date.now(),
+              },
+            });
+            console.log(`📤 [REGISTRY] Ordem de deleção reenviada para ${this.getPeerDisplayName(fromPeerId)}: ${code}`);
+          } catch (e) {
+            console.warn('Erro ao reenviar ordem de deleção:', e);
+          }
+        }
+
+        // Garanta que todos os peers recebam a ordem de deleção (re-broadcast)
+        try {
+          this.broadcastWorkDeleted(code, this.userEmail);
+        } catch (e) {
+          console.warn('Falha ao re-broadcastar deleção:', e);
+        }
+
+        return; // Não processa a atualização
+      }
+
       const existing = WorkManager.worksCache.get(code);
 
       const incomingTime = (updatedWork.work.metadata && updatedWork.work.metadata.lastModifiedAt) ? new Date(updatedWork.work.metadata.lastModifiedAt).getTime() : (payload.timestamp || Date.now());
       const existingTime = existing && existing.work && existing.work.metadata && existing.work.metadata.lastModifiedAt ? new Date(existing.work.metadata.lastModifiedAt).getTime() : 0;
-
-      console.log(`📥 Recebendo atualização de obra de ${this.getPeerDisplayName(fromPeerId)}: ${code}`);
 
       // If it's new or newer, save; else ignore
       if (!existing || incomingTime > existingTime) {
@@ -1667,6 +1795,13 @@ const MultiPeerSync = {
 
         console.log(`✅ [DELETE] Obra "${codigo}" deletada localmente`);
 
+        // Marca no registro permanente e persiste para evitar recriações
+        try {
+          this.markWorkAsDeleted(codigo);
+        } catch (e) {
+          console.warn('Erro ao marcar obra como deletada no registro:', e);
+        }
+
         // Propaga para outros peers (exceto origem)
         this.propagateUpdate(
           {
@@ -1708,6 +1843,19 @@ const MultiPeerSync = {
    * Notifica sobre obra atualizada/publicada
    */
   broadcastWorkUpdated(work) {
+    const code = work && work.work && work.work.codigo;
+
+    // If the work is marked as deleted permanently, do NOT broadcast updates — broadcast deletion order instead
+    if (code && this.isWorkDeleted(code)) {
+      console.log(`⚠️ [REGISTRY] Not broadcasting update for deleted work "${code}". Broadcasting deletion instead.`);
+      try {
+        this.broadcastWorkDeleted(code, this.userEmail);
+      } catch (e) {
+        console.warn('Failed to broadcast deletion instead of update:', e);
+      }
+      return;
+    }
+
     const data = {
       type: "work_updated",
       payload: {
@@ -1757,6 +1905,22 @@ const MultiPeerSync = {
    * Notifica sobre obra deletada
    */
   broadcastWorkDeleted(codigo, deletedBy) {
+    // Persiste no registro para evitar que a obra reapareça
+    try {
+      this.markWorkAsDeleted(codigo);
+    } catch (e) {
+      console.warn('Erro ao marcar obra como deletada no registro antes do broadcast:', e);
+    }
+
+    // Clear pending updates for this code to avoid re-sending an update later
+    try {
+      const pending = this.getPendingWorkBroadcasts();
+      const remaining = (pending || []).filter(i => !(i && i.work && i.work.work && i.work.work.codigo === codigo));
+      this.savePendingWorkBroadcasts(remaining);
+    } catch (e) {
+      console.warn('Erro ao limpar broadcasts pendentes ao enviar deleção:', e);
+    }
+
     const data = {
       type: "work_deleted",
       payload: {
@@ -1786,42 +1950,7 @@ const MultiPeerSync = {
     }
   },
 
-  /**
-   * Processa atualização de obra recebida
-   */
-  async handleWorkUpdated(fromPeerId, payload) {
-    const updatedWork = payload.work;
-
-    console.log(`📥 Recebendo atualização de obra de ${this.getPeerDisplayName(fromPeerId)}: ${updatedWork.work.codigo}`);
-
-    // Salva no IndexedDB
-    if (window.WorkManager) {
-      await WorkManager.saveWork(updatedWork);
-      WorkManager.updateWorkCache(updatedWork.work.codigo, updatedWork);
-
-      console.log(`✅ Obra "${updatedWork.work.codigo}" atualizada de ${this.getPeerDisplayName(fromPeerId)}`);
-
-      this.showNotification(
-        `📦 Obra atualizada: ${updatedWork.work.codigo}`,
-        "info"
-      );
-
-      // Propaga para outros peers
-      this.propagateUpdate(
-        {
-          type: "work_updated",
-          payload: payload,
-        },
-        fromPeerId
-      );
-
-      // Atualiza UI se estiver na tela de obras
-      if (window.UI && typeof UI.showWorksModal === 'function') {
-        // Não chama automaticamente para não incomodar o usuário
-        // UI.showWorksModal();
-      }
-    }
-  },
+  // NOTE: `handleWorkUpdated` defined earlier in the file includes deletion checks and conflict handling. Duplicate removed to avoid overriding it.
 
   // ========== GERENCIAMENTO DE BROADCASTS PENDENTES ==========
 
@@ -1888,17 +2017,29 @@ const MultiPeerSync = {
       if (targetPeerId) {
         const conn = this.connections.get(targetPeerId);
         if (conn && conn.open) {
+          const codesSent = [];
           for (const item of toSend) {
             try {
-              conn.send({ type: 'work_updated', payload: { work: item.work, source: this.userId, timestamp: Date.now() } });
+              const code = item.work && item.work.work && item.work.work.codigo;
+              if (code && this.isWorkDeleted(code)) {
+                // If this work was deleted, ensure the peer receives deletion order
+                conn.send({ type: 'work_deleted', payload: { codigo: code, deletedBy: this.userEmail, source: this.userId, timestamp: Date.now() } });
+                codesSent.push(code);
+              } else {
+                conn.send({ type: 'work_updated', payload: { work: item.work, source: this.userId, timestamp: Date.now() } });
+                codesSent.push(code);
+              }
               sentCount++;
             } catch (e) {
               console.warn('Failed to send pending work to peer', targetPeerId, e);
             }
           }
-          // Remove sent items
+          // Remove sent items (by codigo) from the pending list
           if (sentCount > 0) {
-            const remaining = list.slice(sentCount);
+            const remaining = list.filter(i => {
+              const c = i.work && i.work.work && i.work.work.codigo;
+              return !codesSent.includes(c);
+            });
             this.savePendingWorkBroadcasts(remaining);
           }
           return sentCount;
@@ -1911,7 +2052,12 @@ const MultiPeerSync = {
         if (!conn || !conn.open) continue;
         for (const item of toSend) {
           try {
-            conn.send({ type: 'work_updated', payload: { work: item.work, source: this.userId, timestamp: Date.now() } });
+            const code = item.work && item.work.work && item.work.work.codigo;
+            if (code && this.isWorkDeleted(code)) {
+              conn.send({ type: 'work_deleted', payload: { codigo: code, deletedBy: this.userEmail, source: this.userId, timestamp: Date.now() } });
+            } else {
+              conn.send({ type: 'work_updated', payload: { work: item.work, source: this.userId, timestamp: Date.now() } });
+            }
             sentCount++;
           } catch (e) {
             console.warn('Failed to broadcast pending work to', peerId, e);
