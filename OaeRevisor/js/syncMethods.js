@@ -219,12 +219,23 @@ const SyncMethods = {
             ></textarea>
 
             <div id="importQRStatus" style="margin-top: 15px; font-size: 0.85rem;"></div>
+
+            <hr style="margin: 20px 0;" />
+
+            <div style="margin-top: 10px;">
+              <div style="font-weight: 600; margin-bottom: 8px;">🔗 Importar via Link</div>
+              <input id="importWorkLinkInput" class="form-input" placeholder="Cole o link de compartilhamento ou o código aqui..." style="width: 100%;" />
+              <div id="importWorkLinkStatus" style="margin-top: 8px; font-size: 0.85rem;"></div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="document.getElementById('importQRModal').remove()">Cancelar</button>
           <button class="btn btn-primary" onclick="SyncMethods.processQRImport()">
             📥 Importar Usuários
+          </button>
+          <button class="btn btn-success" onclick="SyncMethods.processWorkLinkImport()" style="margin-left: 10px;">
+            🔗 Importar Obra via Link
           </button>
         </div>
       </div>
@@ -264,6 +275,54 @@ const SyncMethods = {
     } else {
       status.textContent = `❌ Erro: ${result.error}`;
       status.style.color = "var(--danger)";
+    }
+  },
+
+  /**
+   * Tenta importar obra a partir de um link ou código inserido pelo usuário
+   */
+  async processWorkLinkImport() {
+    const input = document.getElementById('importWorkLinkInput');
+    const status = document.getElementById('importWorkLinkStatus');
+    const raw = (input.value || '').trim();
+
+    if (!raw) {
+      status.textContent = '❌ Cole o link ou código primeiro';
+      status.style.color = 'var(--danger)';
+      return;
+    }
+
+    status.textContent = '🔄 Processando...';
+    status.style.color = 'var(--primary)';
+
+    try {
+      let encoded = raw;
+
+      // Se for uma URL completa, tenta extrair o parâmetro shareWork
+      try {
+        if (raw.startsWith('http')) {
+          const url = new URL(raw);
+          const param = url.searchParams.get('shareWork');
+          if (param) encoded = param;
+        }
+      } catch (e) {
+        // não é URL, continua
+      }
+
+      // Se o usuário colou o link que contém '?shareWork=' sem o origin
+      const idx = raw.indexOf('shareWork=');
+      if (idx !== -1 && !raw.startsWith('http')) {
+        encoded = raw.substring(idx + 'shareWork='.length);
+      }
+
+      // Delega para o fluxo existente (mostra modal de importação)
+      await this.showAutoWorkImportNotification(encodeURIComponent(encoded));
+      status.textContent = '✅ Link processado! Veja a confirmação na tela.';
+      status.style.color = 'var(--success)';
+    } catch (err) {
+      console.error('Erro ao processar link:', err);
+      status.textContent = '❌ Erro ao processar link: ' + err.message;
+      status.style.color = 'var(--danger)';
     }
   },
 

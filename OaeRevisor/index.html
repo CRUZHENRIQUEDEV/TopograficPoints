@@ -2234,6 +2234,16 @@
     <script src="js/importExport.js"></script>
     <script src="js/multiPeerSync.js"></script>
 
+    <!-- Dev: Carrega helpers de teste quando ?runTests=1 estiver presente -->
+    <script>
+      if (location.search.indexOf('runTests=1') !== -1) {
+        const s = document.createElement('script');
+        s.src = 'js/dev/integrationTests.js';
+        s.onload = () => console.log('Integration tests helper loaded. Use runIntegrationTests() from console to run.');
+        document.body.appendChild(s);
+      }
+    </script>
+
     <script>
       // Função para inicializar o sistema completo
       async function initializeApp() {

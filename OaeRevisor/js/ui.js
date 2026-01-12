@@ -4124,6 +4124,18 @@ const UI = {
             anexoErrors: appState.anexoErrors,
             mensagens: appState.mensagens,
           });
+
+          // Também envia o link codificado para que os peers possam importar rapidamente
+          try {
+            const inviteLink = await SyncMethods.generateWorkShareLink(obra.codigo);
+            const url = new URL(inviteLink);
+            const encoded = url.searchParams.get('shareWork');
+            if (encoded) {
+              MultiPeerSync.broadcast({ type: 'work_share_link', payload: { encoded } });
+            }
+          } catch (e) {
+            console.warn('Não foi possível gerar/enviar link de compartilhamento:', e);
+          }
         }
         setTimeout(() => {
           this.showNotification(

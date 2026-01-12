@@ -67,6 +67,10 @@ const MultiPeerSync = {
       return new Promise((resolve, reject) => {
         this.peer.on("open", (id) => {
           console.log("Multi-Peer iniciado:", id);
+          // Atualiza UI para refletir nova disponibilidade
+          if (window.UI && typeof UI.updateNetworkUI === 'function') {
+            UI.updateNetworkUI();
+          }
           resolve(id);
         });
 
@@ -147,6 +151,33 @@ const MultiPeerSync = {
       }, 800);
 
       this.notifyConnection(peerId, "connected");
+
+      // Envia informação de login para o peer recém-conectado
+      try {
+        if (window.AuthSystem && AuthSystem.currentUser && conn.open) {
+          conn.send({
+            type: 'user_login',
+            payload: {
+              email: AuthSystem.currentUser.email,
+              name: AuthSystem.currentUser.name,
+              role: AuthSystem.currentUser.role,
+              lote: AuthSystem.currentUser.lote || '',
+              timestamp: new Date().toISOString(),
+              source: this.userId,
+            },
+          });
+        } else if (conn.open) {
+          // Envia descoberta de peers como fallback
+          conn.send({ type: 'peer_discovery', payload: { peers: [...this.knownPeers] } });
+        }
+      } catch (e) {
+        console.warn('Não foi possível enviar login ao peer:', e);
+      }
+
+      // Atualiza UI de rede
+      if (window.UI && typeof UI.updateNetworkUI === 'function') {
+        UI.updateNetworkUI();
+      }
     });
 
     conn.on("data", (data) => {
@@ -158,6 +189,11 @@ const MultiPeerSync = {
       this.connections.delete(peerId);
       this.updateConnectionStatus(peerId, "disconnected");
       this.notifyConnection(peerId, "disconnected");
+
+      // Atualiza UI de rede quando um peer desconecta
+      if (window.UI && typeof UI.updateNetworkUI === 'function') {
+        UI.updateNetworkUI();
+      }
     });
 
     conn.on("error", (err) => {
@@ -214,6 +250,9 @@ const MultiPeerSync = {
         break;
       case "user_login":
         await this.handleUserLogin(fromPeerId, data.payload);
+        break;
+      case "work_share_link":
+        await this.handleWorkShareLink(fromPeerId, data.payload);
         break;
       default:
         console.warn("Tipo de mensagem desconhecido:", data.type);
@@ -508,6 +547,11 @@ const MultiPeerSync = {
 
     localStorage.setItem(`oae-peer-${peerId}`, JSON.stringify(peerInfo));
     this.saveKnownPeers();
+
+    // Atualiza UI de rede
+    if (window.UI && typeof UI.updateNetworkUI === 'function') {
+      UI.updateNetworkUI();
+    }
 
     // Tenta conectar
     this.connectToPeer(peerId);
@@ -1396,6 +1440,44 @@ const MultiPeerSync = {
   // ========== NOTIFICAÇÕES DE LOGIN ==========
 
   /**
+   * Recebe link de obra compartilhada diretamente por outro peer e pergunta para o usuário se deseja importar
+   */
+  async handleWorkShareLink(fromPeerId, payload) {
+    try {
+      const encoded = payload && (payload.encoded || payload.link || payload.share);
+      if (!encoded) return;
+
+      // Tenta decodificar para obter informações resumidas
+      try {
+        const jsonString = atob(decodeURIComponent(encoded));
+        const data = JSON.parse(jsonString);
+        const obra = data.work && (data.work.work || data.work);
+        const title = obra ? `${obra.codigo} - ${obra.nome}` : 'Obra compartilhada';
+        const by = data.sharedBy || payload.sharedBy || 'remoto';
+
+        const wants = confirm(`${title}\nCompartilhado por: ${by}\n\nDeseja importar esta obra agora?`);
+        if (wants) {
+          // Reutiliza fluxo de importação via link
+          if (window.SyncMethods && typeof SyncMethods.showAutoWorkImportNotification === 'function') {
+            SyncMethods.showAutoWorkImportNotification(encodeURIComponent(encoded));
+          } else {
+            alert('Importação via link não disponível no momento.');
+          }
+        }
+      } catch (err) {
+        console.warn('Não foi possível decodificar link de obra recebido:', err);
+        // Pergunta genérica
+        const wants = confirm('Uma obra foi compartilhada por outro usuário. Deseja importá-la?');
+        if (wants && window.SyncMethods && typeof SyncMethods.showAutoWorkImportNotification === 'function') {
+          SyncMethods.showAutoWorkImportNotification(encodeURIComponent(encoded));
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao processar work_share_link:', e);
+    }
+  },
+
+  /**
    * Notifica sobre login de usuário
    */
   broadcastUserLogin(loginData) {
@@ -1422,6 +1504,11 @@ const MultiPeerSync = {
    */
   async handleUserLogin(fromPeerId, payload) {
     console.log(`👤 Login detectado: ${payload.name} (${payload.role}) - ${payload.lote}`);
+
+    // Atualiza UI de rede para refletir novo login
+    if (window.UI && typeof UI.updateNetworkUI === 'function') {
+      UI.updateNetworkUI();
+    }
 
     // Apenas admin recebe notificações visuais de login
     if (window.AuthSystem && window.AuthSystem.currentUser && window.AuthSystem.currentUser.role === "admin") {
