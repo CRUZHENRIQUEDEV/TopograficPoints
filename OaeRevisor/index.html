@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V3.6
+                🔍 OAE Revisor V3.7
                 <span
                   id="workTitle"
                   style="
@@ -1943,7 +1943,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V3.6</h2>
+          <h2>🔐 Login - OAE Revisor V3.7</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -2290,6 +2290,55 @@
         UI.renderAll();
         UI.updateTabBadges();
         AutoSave.start();
+
+        // Inicializa MultiPeerSync se usuário estiver logado
+        if (AuthSystem.isLoggedIn && AuthSystem.currentUser && window.MultiPeerSync) {
+          try {
+            const user = AuthSystem.currentUser;
+
+            // Verifica se já está inicializado
+            const isAlreadyInitialized = MultiPeerSync.peer && !MultiPeerSync.peer.destroyed && !MultiPeerSync.peer.disconnected;
+
+            if (!isAlreadyInitialized) {
+              console.log('🚀 [APP] Inicializando MultiPeerSync para', user.email);
+              await MultiPeerSync.init(user.email, user.name);
+
+              // Aguarda peer estabilizar
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              // Auto-discovery
+              if (typeof MultiPeerSync.connectToUsersFromLocalUsers === 'function') {
+                console.log('🔍 [APP] Iniciando auto-discovery...');
+                MultiPeerSync.connectToUsersFromLocalUsers();
+              }
+
+              // Aguarda conexões
+              await new Promise(resolve => setTimeout(resolve, 2000));
+
+              // Solicita dados
+              MultiPeerSync.requestUsersSync();
+              MultiPeerSync.requestAllStates();
+              if (typeof MultiPeerSync.requestWorksSync === 'function') {
+                MultiPeerSync.requestWorksSync();
+              }
+
+              // Broadcast login
+              MultiPeerSync.broadcastUserLogin({
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                lote: user.lote || '',
+                timestamp: new Date().toISOString(),
+              });
+
+              console.log('✅ [APP] MultiPeerSync inicializado com sucesso!');
+            } else {
+              console.log('✓ [APP] MultiPeerSync já inicializado');
+            }
+          } catch (err) {
+            console.warn('⚠️ [APP] Falha ao inicializar MultiPeerSync:', err);
+          }
+        }
       }
 
       // Init logic
