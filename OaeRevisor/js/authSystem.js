@@ -184,17 +184,24 @@ const AuthSystem = {
           if (window.MultiPeerSync && (!MultiPeerSync.peer || !MultiPeerSync.hasConnections())) {
             await MultiPeerSync.init(user.email, user.name);
 
+            // Give peer a moment to fully initialize before attempting connections
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Connect to peers inferred from existing local users
+            if (typeof MultiPeerSync.connectToUsersFromLocalUsers === "function") {
+              console.log('🔍 Iniciando auto-discovery de peers...');
+              MultiPeerSync.connectToUsersFromLocalUsers();
+            }
+
+            // Give connections a moment to establish before requesting data
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             // After init, request users and state from connected peers
             MultiPeerSync.requestUsersSync();
             MultiPeerSync.requestAllStates();
             // ALSO request works list from peers so we can auto-download existing works
             if (typeof MultiPeerSync.requestWorksSync === 'function') {
               MultiPeerSync.requestWorksSync();
-            }
-
-            // Connect to peers inferred from existing local users
-            if (typeof MultiPeerSync.connectToUsersFromLocalUsers === "function") {
-              MultiPeerSync.connectToUsersFromLocalUsers();
             }
 
             // Broadcast login to peers

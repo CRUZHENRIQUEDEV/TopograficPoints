@@ -510,19 +510,47 @@ const MultiPeerSync = {
    */
   connectToUsersFromLocalUsers() {
     try {
+      console.log('🔍 [AUTO-DISCOVERY] Iniciando descoberta automática de peers...');
+
+      if (!this.peer || !this.peer.id) {
+        console.warn('⚠️ [AUTO-DISCOVERY] Peer não inicializado ainda. Abortando auto-discovery.');
+        return;
+      }
+
       const users = JSON.parse(localStorage.getItem('oae-users') || '[]');
+      console.log(`📋 [AUTO-DISCOVERY] ${users.length} usuários encontrados no localStorage`);
+
+      let peersAdded = 0;
+      let peersSkipped = 0;
+
       for (const user of users) {
         try {
-          if (!user || !user.email) continue;
+          if (!user || !user.email) {
+            peersSkipped++;
+            continue;
+          }
+
           const peerId = `oae-${this.generateUserId(user.email)}`;
-          if (peerId === this.peer.id) continue;
+
+          if (peerId === this.peer.id) {
+            console.log(`⏭️ [AUTO-DISCOVERY] Ignorando peer próprio: ${peerId} (${user.email})`);
+            peersSkipped++;
+            continue;
+          }
+
+          console.log(`✅ [AUTO-DISCOVERY] Adicionando peer: ${user.name || user.email} → ${peerId}`);
           this.addKnownPeer(peerId, user.name || user.email);
+          peersAdded++;
         } catch (e) {
-          console.warn('Invalid user entry when connecting to users:', e);
+          console.warn('⚠️ [AUTO-DISCOVERY] Entrada de usuário inválida:', e);
+          peersSkipped++;
         }
       }
+
+      console.log(`✅ [AUTO-DISCOVERY] Concluído: ${peersAdded} peers adicionados, ${peersSkipped} ignorados`);
+      console.log(`📡 [AUTO-DISCOVERY] Total de peers conhecidos agora: ${this.knownPeers.size}`);
     } catch (error) {
-      console.error('connectToUsersFromLocalUsers failed:', error);
+      console.error('❌ [AUTO-DISCOVERY] Falha completa:', error);
     }
   },
 
@@ -549,32 +577,35 @@ const MultiPeerSync = {
    */
   async connectToPeer(peerId) {
     if (this.connections.has(peerId)) {
-      console.log("Já conectado com:", peerId);
+      console.log("✓ [CONNECT] Já conectado com:", peerId);
       return;
     }
 
     try {
-      console.log("Tentando conectar com:", peerId);
+      console.log(`🔌 [CONNECT] Tentando conectar com: ${peerId}`);
       const conn = this.peer.connect(peerId);
 
       return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
+          console.warn(`⏱️ [CONNECT] Timeout ao conectar com ${peerId} (10s)`);
           reject(new Error("Timeout de conexão"));
         }, 10000);
 
         conn.on("open", () => {
           clearTimeout(timeout);
+          console.log(`✅ [CONNECT] Conexão estabelecida com ${peerId}`);
           this.handleConnection(conn);
           resolve(conn);
         });
 
         conn.on("error", (err) => {
           clearTimeout(timeout);
+          console.error(`❌ [CONNECT] Erro ao conectar com ${peerId}:`, err);
           reject(err);
         });
       });
     } catch (error) {
-      console.error("Erro ao conectar com peer:", error);
+      console.error(`❌ [CONNECT] Falha ao conectar com peer ${peerId}:`, error);
       throw error;
     }
   },
@@ -583,6 +614,8 @@ const MultiPeerSync = {
    * Adiciona peer conhecido
    */
   addKnownPeer(peerId, displayName = null) {
+    console.log(`📌 [ADD_PEER] Adicionando peer conhecido: ${displayName || peerId} (${peerId})`);
+
     this.knownPeers.add(peerId);
 
     // Salva informações do peer
@@ -596,13 +629,18 @@ const MultiPeerSync = {
     localStorage.setItem(`oae-peer-${peerId}`, JSON.stringify(peerInfo));
     this.saveKnownPeers();
 
+    console.log(`💾 [ADD_PEER] Peer salvo no localStorage. Total de peers conhecidos: ${this.knownPeers.size}`);
+
     // Atualiza UI de rede
     if (window.UI && typeof UI.updateNetworkUI === 'function') {
       UI.updateNetworkUI();
     }
 
     // Tenta conectar
-    this.connectToPeer(peerId);
+    console.log(`🔗 [ADD_PEER] Tentando conectar com ${peerId}...`);
+    this.connectToPeer(peerId).catch(err => {
+      console.warn(`⚠️ [ADD_PEER] Falha ao conectar com ${peerId}:`, err.message);
+    });
   },
 
   /**
