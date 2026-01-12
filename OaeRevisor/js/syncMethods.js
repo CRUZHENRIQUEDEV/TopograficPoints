@@ -168,7 +168,8 @@ const SyncMethods = {
             ...remoteUser,
             syncedFrom: data.sharedBy,
             syncedAt: Date.now(),
-            syncMethod: "qrcode"
+            syncMethod: "qrcode",
+            authorizedForever: true // import via QR/link implies permanent authorization
           });
         }
       }
@@ -381,16 +382,134 @@ const SyncMethods = {
   },
 
   /**
-   * Verifica se há parâmetro de sincronização na URL
+   * Verifica se há parâmetro de sincronização na URL (usuários ou obra)
    */
   checkUrlSyncParam() {
     const urlParams = new URLSearchParams(window.location.search);
     const syncData = urlParams.get('sync');
+    const shareWorkData = urlParams.get('shareWork');
 
     if (syncData) {
       this.showAutoSyncNotification(decodeURIComponent(syncData));
     }
+
+    if (shareWorkData) {
+      this.showAutoWorkImportNotification(decodeURIComponent(shareWorkData));
+    }
   },
+
+  /**
+   * Gera link de compartilhamento de uma obra específica
+   */
+  async generateWorkShareLink(codigo) {
+    try {
+      // Usa DB para carregar a obra
+      const work = await DB.loadObra(codigo);
+      if (!work) throw new Error('Obra não encontrada');
+
+      const data = {
+        version: '1.0',
+        type: 'oae-work-share',
+        timestamp: Date.now(),
+        sharedBy: AuthSystem.currentUser?.email || 'unknown',
+        work: work,
+      };
+
+      const jsonString = JSON.stringify(data);
+      const encoded = btoa(jsonString);
+      const baseUrl = window.location.origin + window.location.pathname;
+      const inviteLink = `${baseUrl}?shareWork=${encodeURIComponent(encoded)}`;
+
+      return inviteLink;
+    } catch (error) {
+      console.error('Erro ao gerar link de obra:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Mostra modal para importar obra a partir do parâmetro de URL (preview + opções)
+   */
+  async showAutoWorkImportNotification(encodedData) {
+    try {
+      const jsonString = atob(decodeURIComponent(encodedData));
+      const data = JSON.parse(jsonString);
+
+      if (data.type !== 'oae-work-share' || !data.work) {
+        throw new Error('Link inválido: não contém obra válida');
+      }
+
+      // Cria modal de confirmação similar ao importSharedWork flow
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop show';
+      modal.id = 'autoWorkShareModal';
+
+      const obra = data.work.work;
+
+      modal.innerHTML = `
+        <div class="modal" style="max-width:600px;">
+          <div class="modal-header">
+            <h3 class="modal-title">🔗 Obra Compartilhada Detectada</h3>
+            <button class="modal-close" onclick="document.getElementById('autoWorkShareModal').remove()">×</button>
+          </div>
+          <div class="modal-body" style="padding:20px;">
+            <div style="font-weight:600; margin-bottom:8px;">${obra.codigo} - ${obra.nome}</div>
+            <div style="margin-bottom:12px; color:var(--text-muted);">Compartilhado por: ${data.sharedBy}</div>
+
+            <div style="margin-bottom:12px;">
+              <label><input type="checkbox" id="importOverwrite" /> Sobrescrever se já existir</label>
+            </div>
+
+            <div style="margin-top:12px; text-align:right;">
+              <button class="btn btn-secondary" onclick="document.getElementById('autoWorkShareModal').remove()">Cancelar</button>
+              <button class="btn btn-primary" id="btnAutoImport">📥 Importar Obra</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // Handler
+      document.getElementById('btnAutoImport').onclick = async () => {
+        try {
+          const overwrite = document.getElementById('importOverwrite').checked;
+          const codigo = data.work.work.codigo;
+
+          const existing = await DB.loadObra(codigo);
+          if (existing && !overwrite) {
+            alert(`Obra ${codigo} já existe. Marque 'Sobrescrever' para substituir.`);
+            return;
+          }
+
+          // Atualiza metadados da importação
+          data.work.work.metadata = data.work.work.metadata || {};
+          data.work.work.metadata.lastModifiedBy = AuthSystem.currentUser?.email || 'import';
+          data.work.work.metadata.lastModifiedAt = new Date().toISOString();
+          data.work.work.metadata.importedFrom = data.sharedBy;
+          data.work.work.metadata.importedAt = new Date().toISOString();
+
+          await DB.saveObra(codigo, data.work);
+
+          if (window.WorkManager) await WorkManager.loadAllWorks();
+
+          alert(`✅ Obra ${codigo} importada com sucesso!`);
+          document.getElementById('autoWorkShareModal').remove();
+
+          // Remove param from URL
+          const url = new URL(window.location);
+          url.searchParams.delete('shareWork');
+          window.history.replaceState({}, '', url);
+        } catch (err) {
+          console.error('Erro ao importar obra via link:', err);
+          alert('Erro ao importar obra: ' + err.message);
+        }
+      };
+    } catch (error) {
+      console.error('Erro ao processar link de obra:', error);
+      alert('Erro ao processar link de obra: ' + error.message);
+    }
+  }
 
   /**
    * Mostra notificação de sincronização automática

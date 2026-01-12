@@ -178,7 +178,47 @@ const AuthSystem = {
         });
       }
 
-      // Notifica peers sobre o login (para que admin veja)
+      // Initialize MultiPeerSync automatically for logged users so they join the P2P network
+      (async () => {
+        try {
+          if (window.MultiPeerSync && (!MultiPeerSync.peer || !MultiPeerSync.hasConnections())) {
+            await MultiPeerSync.init(user.email, user.name);
+
+            // After init, request users and state from connected peers
+            MultiPeerSync.requestUsersSync();
+            MultiPeerSync.requestAllStates();
+
+            // Connect to peers inferred from existing local users
+            if (typeof MultiPeerSync.connectToUsersFromLocalUsers === "function") {
+              MultiPeerSync.connectToUsersFromLocalUsers();
+            }
+
+            // Broadcast login to peers
+            MultiPeerSync.broadcastUserLogin({
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              lote: user.lote || "Admin",
+              timestamp: new Date().toISOString(),
+            });
+          } else if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+            // If already initialized and has connections, still request fresh data
+            MultiPeerSync.requestUsersSync();
+            MultiPeerSync.requestAllStates();
+            MultiPeerSync.broadcastUserLogin({
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              lote: user.lote || "Admin",
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (err) {
+          console.warn("MultiPeerSync auto-init failed:", err);
+        }
+      })();
+
+      // Notifica peers sobre o login (para que admin veja) - kept for backward compatibility
       if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
         MultiPeerSync.broadcastUserLogin({
           email: user.email,
@@ -573,8 +613,10 @@ const AuthSystem = {
 
       // Inicializa MultiPeerSync se ainda não foi inicializado
       if (!window.MultiPeerSync || !MultiPeerSync.peer) {
-        // Usa admin padrão temporário para conexão
-        await MultiPeerSync.init("temp@sync.com", "Temp Sync");
+        // Usa identidade do usuário logado se disponível, senão fallback temporário
+        const emailToUse = this.currentUser?.email || "temp@sync.com";
+        const nameToUse = this.currentUser?.name || "Temp Sync";
+        await MultiPeerSync.init(emailToUse, nameToUse);
       }
 
       // Gera ID do peer baseado no email

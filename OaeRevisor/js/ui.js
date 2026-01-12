@@ -2994,7 +2994,7 @@ const UI = {
       const fileName = `OAE_${codigo}_${new Date().toISOString().split('T')[0]}.json`;
 
       modal.innerHTML = `
-        <div class="modal" style="max-width: 600px;">
+        <div class="modal" style="max-width: 700px;">
           <div class="modal-header">
             <h2>🔗 Compartilhar Obra</h2>
             <button class="modal-close" onclick="document.getElementById('shareWorkModal').remove()">×</button>
@@ -3005,24 +3005,44 @@ const UI = {
               <div style="font-weight: 600; font-size: 1.1rem;">${obraData.work.codigo} - ${obraData.work.nome}</div>
             </div>
 
-            <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-              <div style="font-size: 0.9rem; color: #1976d2; line-height: 1.6;">
-                <strong>💡 Como compartilhar:</strong><br>
-                1. Baixe o arquivo JSON desta obra<br>
-                2. Envie o arquivo para outro usuário (email, pendrive, etc)<br>
-                3. O outro usuário deve importar usando "📥 Importar" no gerenciador de obras
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+              <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; border-radius: 4px;">
+                <div style="font-size: 0.9rem; color: #1976d2; line-height: 1.6;">
+                  <strong>💡 Como compartilhar (Arquivo):</strong><br>
+                  1. Baixe o arquivo JSON desta obra<br>
+                  2. Envie o arquivo para outro usuário (email, pendrive, etc)<br>
+                  3. O outro usuário deve importar usando "📥 Importar" no gerenciador de obras
+                </div>
+
+                <div style="text-align: center; margin-top: 12px;">
+                  <button class="btn btn-success" style="padding: 10px 18px; font-size: 0.95rem;" onclick="UI.downloadShareFile('${url}', '${fileName}')">
+                    📥 Baixar Arquivo
+                  </button>
+                </div>
+              </div>
+
+              <div style="background: #e8f5e9; border-left: 4px solid #2e7d32; padding: 15px; border-radius: 4px;">
+                <div style="font-size: 0.9rem; color: #1b5e20; line-height: 1.6;">
+                  <strong>💡 Como compartilhar (Link):</strong><br>
+                  Gere um link compartilhável que permite importar esta obra rapidamente.
+                </div>
+
+                <div style="margin-top: 12px;">
+                  <textarea id="workShareLinkText" readonly style="width:100%; height:70px; font-family:monospace; font-size:0.8rem; resize:none; background: var(--bg-primary); border:1px solid var(--border); padding:8px;">Gerando link...</textarea>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+                  <button class="btn btn-primary" onclick="(async ()=>{ const link = await SyncMethods.generateWorkShareLink('${obraData.work.codigo}'); document.getElementById('workShareLinkText').value = link; navigator.clipboard.writeText(link).then(()=>alert('✅ Link copiado!')) })()">🔗 Gerar & Copiar</button>
+                  <button class="btn btn-secondary" onclick="(async ()=>{ const link = await SyncMethods.generateWorkShareLink('${obraData.work.codigo}'); if(navigator.share){ try{ await navigator.share({ title: 'Obra OAE', text: 'Abra este link para importar a obra OAE', url:link }); }catch(e){ alert('Compartilhamento cancelado ou falhou'); } } else { alert('Navegador não suporta Web Share API. O link foi copiado para a área de transferência.'); navigator.clipboard.writeText(link);} })()">📤 Compartilhar</button>
+                </div>
+
+                <div style="margin-top:12px; font-size:0.8rem; color:var(--text-muted);">⚠️ Atenção: O link contém os dados da obra. Compartilhe apenas com pessoas autorizadas.</div>
               </div>
             </div>
 
-            <div style="text-align: center; margin-bottom: 20px;">
-              <button class="btn btn-success" style="padding: 15px 30px; font-size: 1.1rem;" onclick="UI.downloadShareFile('${url}', '${fileName}')">
-                📥 Baixar Arquivo de Compartilhamento
-              </button>
-            </div>
-
-            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-top: 20px;">
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-top: 6px;">
               <div style="font-size: 0.85rem; color: #856404;">
-                <strong>⚠️ Nota:</strong> Este método funciona mesmo sem conexão P2P entre máquinas. É ideal para compartilhar obras entre escritórios ou quando não há conexão direta.
+                <strong>⚠️ Nota:</strong> O método de arquivo funciona offline e é ideal para envio por email/pen drive; o link é prático para importação rápida via navegador.
               </div>
             </div>
           </div>

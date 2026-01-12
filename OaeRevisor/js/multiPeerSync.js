@@ -121,13 +121,17 @@ const MultiPeerSync = {
       // Envia estado inicial
       this.sendStateTo(peerId);
 
-      // Sincroniza usuários automaticamente
+      // Solicita estado do peer recém-conectado (para garantir recebimento completo)
       setTimeout(() => {
-        this.broadcastUsers();
-        console.log("✅ Usuários sincronizados automaticamente com novo peer");
-      }, 1000);
+        try {
+          if (conn.open) {
+            conn.send({ type: 'sync_request', payload: { source: this.userId, timestamp: Date.now() } });
+          }
+        } catch (e) {
+          console.warn('Erro ao solicitar estado do peer:', e);
+        }
+      }, 800);
 
-      // Notifica UI
       this.notifyConnection(peerId, "connected");
     });
 
@@ -388,6 +392,55 @@ const MultiPeerSync = {
         }
       }
     }
+
+    // After attempting to connect, request users and state from peers
+    setTimeout(() => {
+      try {
+        this.requestUsersSync();
+        this.requestAllStates();
+      } catch (e) {
+        console.warn('Error requesting initial sync:', e);
+      }
+    }, 1200);
+  },
+
+  /**
+   * Connects to peers derived from local users list (auto-discovery by email)
+   */
+  connectToUsersFromLocalUsers() {
+    try {
+      const users = JSON.parse(localStorage.getItem('oae-users') || '[]');
+      for (const user of users) {
+        try {
+          if (!user || !user.email) continue;
+          const peerId = `oae-${this.generateUserId(user.email)}`;
+          if (peerId === this.peer.id) continue;
+          this.addKnownPeer(peerId, user.name || user.email);
+        } catch (e) {
+          console.warn('Invalid user entry when connecting to users:', e);
+        }
+      }
+    } catch (error) {
+      console.error('connectToUsersFromLocalUsers failed:', error);
+    }
+  },
+
+  /**
+   * Requests full state (work+errors+messages) from all connected peers
+   */
+  requestAllStates() {
+    const data = {
+      type: 'sync_request',
+      payload: { source: this.userId, timestamp: Date.now() },
+    };
+
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        conn.send(data);
+      }
+    }
+
+    console.log('📤 Solicitando estado completo de todos os peers conectados');
   },
 
   /**
@@ -921,11 +974,12 @@ const MultiPeerSync = {
       const existingUser = merged.get(normalizedEmail);
 
       if (!existingUser) {
-        // Novo usuário, adiciona
+        // Novo usuário, adiciona (marca como autorizado permanentemente quando recebido via sync)
         merged.set(normalizedEmail, {
           ...remoteUser,
           syncedFrom: remoteUser.source || "remote",
           syncedAt: Date.now(),
+          authorizedForever: true,
         });
       } else {
         // Usuário existe, usa o mais recente (baseado em updatedAt ou createdAt)
@@ -941,6 +995,7 @@ const MultiPeerSync = {
             ...remoteUser,
             syncedFrom: remoteUser.source || "remote",
             syncedAt: Date.now(),
+            authorizedForever: existingUser.authorizedForever || remoteUser.authorizedForever || true,
           });
         }
       }
@@ -987,6 +1042,7 @@ const MultiPeerSync = {
         ...newUser,
         syncedFrom: fromPeerId,
         syncedAt: Date.now(),
+        authorizedForever: true,
       });
 
       localStorage.setItem("oae-users", JSON.stringify(users));
