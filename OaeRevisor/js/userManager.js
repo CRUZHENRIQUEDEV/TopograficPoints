@@ -201,10 +201,88 @@ const UserManager = {
       });
     }
 
-    return {
+    const result = {
       ...user,
       password: undefined, // Não retorna senha
     };
+
+    // If lote was changed, propagate the change to works asynchronously
+    if (updates.lote) {
+      setTimeout(() => {
+        try {
+          this.propagateLoteChange(email, updates.lote);
+        } catch (e) {
+          console.warn('Erro ao propagar alteração de lote:', e);
+        }
+      }, 0);
+    }
+
+    return result;
+  },
+
+  /**
+   * Propaga alteração de lote do usuário para todas as obras que criou
+   * Atualiza DB, cache e broadcast para peers
+   */
+  async propagateLoteChange(email, newLote) {
+    if (!email || !newLote) return;
+
+    try {
+      if (!window.WorkManager || !window.DB) return;
+
+      const works = Array.from(WorkManager.worksCache.values());
+      let updatedCount = 0;
+
+      for (const w of works) {
+        const creator = (w.work && (w.work.metadata?.createdBy || w.work.avaliador)) || null;
+        if (!creator) continue;
+        if (creator.toUpperCase() !== email.toUpperCase()) continue;
+
+        // Update lote in work metadata
+        w.work.metadata = w.work.metadata || {};
+        w.work.metadata.lote = newLote;
+
+        // Save to DB and update cache
+        try {
+          await DB.saveObra(w.codigo, {
+            work: w.work,
+            errors: w.errors || {},
+            elementErrors: w.elementErrors || [],
+            anexoErrors: w.anexoErrors || [],
+            mensagens: w.mensagens || [],
+            completionStates: w.completionStates || new Map(),
+            messageResponses: w.messageResponses || new Map(),
+            editHistory: w.editHistory || [],
+            dateCreated: w.dateCreated || new Date().toISOString()
+          });
+
+          // Update local cache
+          WorkManager.worksCache.set(w.codigo, {
+            ...w,
+            work: w.work
+          });
+
+          // Broadcast update so peers also update the obra
+          if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+            try {
+              MultiPeerSync.broadcastWorkUpdated({ work: w.work });
+            } catch (e) {
+              console.warn('Erro ao broadcastar obra atualizada:', e);
+            }
+          }
+
+          updatedCount++;
+        } catch (err) {
+          console.warn('Falha ao atualizar obra ao propagar lote:', w.codigo, err);
+        }
+      }
+
+      if (updatedCount > 0 && window.UI && typeof UI.showNotification === 'function') {
+        UI.showNotification(`✅ ${updatedCount} obra(s) atualizada(s) com o novo lote do usuário ${email}`, 'info');
+      }
+    } catch (e) {
+      console.error('Erro na propagação de lote:', e);
+    }
   },
 
   /**
@@ -823,8 +901,8 @@ const UserManager = {
       let lote = document.getElementById("newUserLote").value;
       const password = document.getElementById("newUserPassword").value;
 
-      // Se o role for inspetor, força Lote 03
-      if (role === "inspetor") {
+      // Se o role for inspetor, força Lote 03 apenas se nenhum lote válido foi selecionado
+      if (role === "inspetor" && (!lote || lote === "Admin")) {
         lote = "Lote 03";
       }
 
