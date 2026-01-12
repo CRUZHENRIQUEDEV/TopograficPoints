@@ -53,6 +53,9 @@ const MultiPeerSync = {
       const peerId = `oae-${this.userId}`;
       this.peer = new Peer(peerId, this.config);
 
+      // Marca disponibilidade P2P
+      this.p2pAvailable = true;
+
       this.setupEventListeners();
 
       // Carrega pares conhecidos
@@ -74,6 +77,17 @@ const MultiPeerSync = {
       });
     } catch (error) {
       console.error("Falha ao inicializar Multi-Peer:", error);
+
+      // Mostra mensagem amigável para o usuário (pode ser Tracking Prevention ou falta do PeerJS)
+      if (window.UI && typeof UI.showNotification === 'function') {
+        UI.showNotification('⚠️ Falha ao inicializar P2P: verifique se o PeerJS foi carregado ou se o modo de prevenção de rastreamento bloqueou recursos do site. O compartilhamento em arquivo/por link ainda funciona.', 'warning');
+      } else {
+        console.warn('P2P init failed - UI not available to show notification');
+      }
+
+      // Marca flag para indicar que P2P não está disponível
+      this.p2pAvailable = false;
+
       throw error;
     }
   },

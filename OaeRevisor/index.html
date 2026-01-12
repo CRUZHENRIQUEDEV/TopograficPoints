@@ -2210,7 +2210,16 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <!-- Load local PeerJS (preferred) to avoid Tracking Prevention blocking third-party CDN storage access -->
+    <script src="js/libs/peerjs.min.js"></script>
+    <script>
+      // Safety stub for SyncMethods so quick clicks don't error before the real script is parsed
+      window.SyncMethods = window.SyncMethods || {
+        showQRCodeModal: function(){ alert('Sincronização indisponível no momento. Tente recarregar.'); },
+        showInviteLinkModal: function(){ alert('Sincronização indisponível no momento. Tente recarregar.'); },
+        showSyncCodeModal: function(){ alert('Sincronização indisponível no momento. Tente recarregar.'); }
+      };
+    </script>
     <script src="js/state.js"></script>
     <script src="js/db.js"></script>
     <script src="js/authSystem.js"></script>

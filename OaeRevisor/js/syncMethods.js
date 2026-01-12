@@ -396,6 +396,12 @@ const SyncMethods = {
     if (shareWorkData) {
       this.showAutoWorkImportNotification(decodeURIComponent(shareWorkData));
     }
+
+    // shareUser param imports a single user
+    const shareUserData = urlParams.get('shareUser');
+    if (shareUserData) {
+      this.showAutoUserImportNotification(decodeURIComponent(shareUserData));
+    }
   },
 
   /**
@@ -424,6 +430,81 @@ const SyncMethods = {
     } catch (error) {
       console.error('Erro ao gerar link de obra:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Gera link para um usuário específico (somente seus dados)
+   */
+  generateUserInviteLink(email) {
+    try {
+      const users = JSON.parse(localStorage.getItem('oae-users') || '[]');
+      const user = users.find(u => u.email.toUpperCase() === (email || '').toUpperCase());
+      if (!user) throw new Error('Usuário não encontrado');
+
+      // Remove campos sensíveis quando necessário
+      const userToShare = { ...user };
+      if (userToShare.email === 'admin@oae.com') {
+        userToShare.password = undefined;
+      }
+
+      const data = {
+        version: '1.0',
+        type: 'oae-user-share',
+        timestamp: Date.now(),
+        sharedBy: AuthSystem.currentUser?.email || 'unknown',
+        user: userToShare,
+      };
+
+      const encoded = btoa(JSON.stringify(data));
+      const baseUrl = window.location.origin + window.location.pathname;
+      return `${baseUrl}?shareUser=${encodeURIComponent(encoded)}`;
+    } catch (err) {
+      console.error('Erro ao gerar link de usuário:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Mostra modal para compartilhar apenas um usuário via link
+   */
+  showUserInviteLinkModal(email, name) {
+    try {
+      const inviteLink = this.generateUserInviteLink(email);
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop show';
+      modal.id = 'userInviteModal';
+
+      modal.innerHTML = `
+        <div class="modal" style="max-width:600px;">
+          <div class="modal-header">
+            <h3 class="modal-title">🔗 Link de Convite (Usuário)</h3>
+            <button class="modal-close" onclick="document.getElementById('userInviteModal').remove()">×</button>
+          </div>
+          <div class="modal-body" style="padding:20px;">
+            <div style="font-weight:600; margin-bottom:8px;">${name} &nbsp; <span style="font-size:0.85rem; color:var(--text-muted);">${email}</span></div>
+
+            <div style="background: var(--bg-secondary); border-radius:6px; padding:12px; margin-bottom:12px;">
+              <textarea id="userInviteLinkText" readonly style="width:100%; height:80px; font-family:monospace;">${inviteLink}</textarea>
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button class="btn btn-primary" onclick="(async ()=>{ navigator.clipboard.writeText(document.getElementById('userInviteLinkText').value); alert('✅ Link copiado!') })()">📋 Copiar</button>
+              <button class="btn btn-success" onclick="(async ()=>{ const url = document.getElementById('userInviteLinkText').value; if(navigator.share){ try{ await navigator.share({ title: 'Convite OAE', text: 'Abra este link para importar este usuário', url }); }catch(e){ alert('Compartilhamento cancelado ou falhou'); } } else { navigator.clipboard.writeText(url); alert('Link copiado para área de transferência'); } })()">📤 Compartilhar</button>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('userInviteModal').remove()">Fechar</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+    } catch (err) {
+      console.error('Erro ao abrir modal de convite de usuário:', err);
+      alert('Erro ao gerar link de usuário: ' + err.message);
     }
   },
 
@@ -509,7 +590,7 @@ const SyncMethods = {
       console.error('Erro ao processar link de obra:', error);
       alert('Erro ao processar link de obra: ' + error.message);
     }
-  }
+  },
 
   /**
    * Mostra notificação de sincronização automática
@@ -528,7 +609,42 @@ const SyncMethods = {
       alert(`❌ Erro na sincronização automática:\n${result.error}`);
     }
   },
+  /**
+   * Importa (automático) um usuário a partir do link de convite
+   */
+  async showAutoUserImportNotification(encodedData) {
+    try {
+      const jsonString = atob(decodeURIComponent(encodedData));
+      const data = JSON.parse(jsonString);
 
+      if (data.type !== 'oae-user-share' || !data.user) {
+        throw new Error('Link inválido: não contém usuário válido');
+      }
+
+      const localUsers = JSON.parse(localStorage.getItem('oae-users') || '[]');
+      const normalized = data.user.email.toUpperCase();
+      const exists = localUsers.find(u => u.email.toUpperCase() === normalized);
+
+      if (exists) {
+        alert(`Usuário ${data.user.email} já existe na sua lista.`);
+      } else {
+        // Marca autorização permanente e salva
+        const toSave = { ...data.user, syncedFrom: data.sharedBy, syncedAt: Date.now(), authorizedForever: true };
+        localUsers.push(toSave);
+        localStorage.setItem('oae-users', JSON.stringify(localUsers));
+
+        alert(`✅ Usuário ${data.user.email} importado com sucesso! Você já pode fazer login.`);
+      }
+
+      // Remove param
+      const url = new URL(window.location);
+      url.searchParams.delete('shareUser');
+      window.history.replaceState({}, '', url);
+    } catch (err) {
+      console.error('Erro ao importar usuário via link:', err);
+      alert('Erro ao importar usuário: ' + err.message);
+    }
+  },
   // ==================== CÓDIGO DE 6 DÍGITOS ====================
 
   /**

@@ -552,12 +552,12 @@ const UserManager = {
               <div class="sync-option-arrow">→</div>
             </div>
 
-            <!-- Opção 2: Link de Convite -->
-            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); SyncMethods.showInviteLinkModal();">
+            <!-- Opção 2: Link de Convite (Usuário específico) -->
+            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); SyncMethods.showUserInviteLinkModal('${userEmail}', '${userName}');">
               <div class="sync-option-icon">🔗</div>
               <div class="sync-option-content">
                 <h3>Link de Convite</h3>
-                <p>Crie um link para compartilhar via WhatsApp, email, etc.</p>
+                <p>Gere um link para que este usuário importe somente seus dados</p>
               </div>
               <div class="sync-option-arrow">→</div>
             </div>
