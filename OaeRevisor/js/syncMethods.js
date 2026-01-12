@@ -461,6 +461,12 @@ const SyncMethods = {
     if (shareUserData) {
       this.showAutoUserImportNotification(decodeURIComponent(shareUserData));
     }
+
+    // Import of full users list
+    const shareUsersData = urlParams.get('shareUsers');
+    if (shareUsersData) {
+      this.showAutoUsersImportNotification(decodeURIComponent(shareUsersData));
+    }
   },
 
   /**
@@ -564,6 +570,123 @@ const SyncMethods = {
     } catch (err) {
       console.error('Erro ao abrir modal de convite de usuário:', err);
       alert('Erro ao gerar link de usuário: ' + err.message);
+    }
+  },
+
+  /**
+   * Gera link para compartilhar TODOS os usuários (lista)
+   */
+  generateUsersShareLink() {
+    try {
+      const users = JSON.parse(localStorage.getItem('oae-users') || '[]');
+      if (!users || !users.length) throw new Error('Nenhum usuário disponível para compartilhar');
+
+      // Remove dados sensíveis
+      const sanitized = users.map(u => {
+        const copy = { ...u };
+        delete copy.password;
+        return copy;
+      });
+
+      const data = {
+        version: '1.0',
+        type: 'oae-users-share',
+        timestamp: Date.now(),
+        sharedBy: AuthSystem.currentUser?.email || 'unknown',
+        users: sanitized,
+      };
+
+      const encoded = btoa(JSON.stringify(data));
+      const baseUrl = window.location.origin + window.location.pathname;
+      return `${baseUrl}?shareUsers=${encodeURIComponent(encoded)}`;
+    } catch (err) {
+      console.error('Erro ao gerar link de compartilhamento de usuários:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Mostra modal com link/QR para compartilhar TODOS os usuários
+   */
+  showUsersInviteLinkModal(name) {
+    try {
+      const inviteLink = this.generateUsersShareLink();
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop show';
+      modal.id = 'usersInviteModal';
+
+      modal.innerHTML = `
+        <div class="modal" style="max-width:700px;">
+          <div class="modal-header">
+            <h3 class="modal-title">🔗 Link de Convite (Lista de Usuários)</h3>
+            <button class="modal-close" onclick="document.getElementById('usersInviteModal').remove()">×</button>
+          </div>
+          <div class="modal-body" style="padding:20px;">
+            <div style="font-weight:600; margin-bottom:8px;">${name}</div>
+
+            <div style="background: var(--bg-secondary); border-radius:6px; padding:12px; margin-bottom:12px;">
+              <textarea id="usersInviteLinkText" readonly style="width:100%; height:120px; font-family:monospace;">${inviteLink}</textarea>
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button class="btn btn-primary" onclick="(async ()=>{ navigator.clipboard.writeText(document.getElementById('usersInviteLinkText').value); alert('✅ Link copiado!') })()">📋 Copiar</button>
+              <button class="btn btn-success" onclick="(async ()=>{ const url = document.getElementById('usersInviteLinkText').value; if(navigator.share){ try{ await navigator.share({ title: 'Convite OAE - Usuários', text: 'Abra este link para importar a lista de usuários', url }); }catch(e){ alert('Compartilhamento cancelado ou falhou'); } } else { navigator.clipboard.writeText(url); alert('Link copiado para área de transferência'); } })()">📤 Compartilhar</button>
+            </div>
+
+            <div style="margin-top:12px; font-size:0.9rem; color:var(--text-muted);">Ao importar este link, os usuários serão adicionados à lista local (sem sobrescrever usuários existentes).</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('usersInviteModal').remove()">Fechar</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+    } catch (err) {
+      console.error('Erro ao abrir modal de convite de usuários:', err);
+      alert('Erro ao gerar link de usuários: ' + err.message);
+    }
+  },
+
+  /**
+   * Importa lista de usuários a partir do link (param shareUsers)
+   */
+  async showAutoUsersImportNotification(encodedData) {
+    try {
+      const jsonString = atob(decodeURIComponent(encodedData));
+      const data = JSON.parse(jsonString);
+
+      if (data.type !== 'oae-users-share' || !Array.isArray(data.users)) {
+        throw new Error('Link inválido: não contém lista de usuários válida');
+      }
+
+      const localUsers = JSON.parse(localStorage.getItem('oae-users') || '[]');
+      let imported = 0;
+      let skipped = 0;
+
+      for (const u of data.users) {
+        const norm = (u.email || '').toUpperCase();
+        const exists = localUsers.find(x => (x.email || '').toUpperCase() === norm);
+        if (exists) {
+          skipped++;
+          continue;
+        }
+        localUsers.push({ ...u, syncedFrom: data.sharedBy, syncedAt: Date.now(), authorizedForever: true });
+        imported++;
+      }
+
+      localStorage.setItem('oae-users', JSON.stringify(localUsers));
+
+      alert(`✅ Importação concluída: ${imported} importados, ${skipped} ignorados.`);
+
+      // Remove param
+      const url = new URL(window.location);
+      url.searchParams.delete('shareUsers');
+      window.history.replaceState({}, '', url);
+    } catch (err) {
+      console.error('Erro ao importar lista de usuários via link:', err);
+      alert('Erro ao importar lista de usuários: ' + err.message);
     }
   },
 

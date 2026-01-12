@@ -71,6 +71,20 @@ const MultiPeerSync = {
         }, 30 * 1000);
       }
 
+      // Periodically attempt to flush any pending work broadcasts when connections are available
+      if (!this._flushInterval) {
+        this._flushInterval = setInterval(() => {
+          try {
+            const pending = this.getPendingWorkBroadcasts ? this.getPendingWorkBroadcasts() : [];
+            if (pending && pending.length && this.connections && this.connections.size > 0) {
+              try { this.flushPendingBroadcasts(); } catch (e) { console.warn('Periodic flush failed:', e); }
+            }
+          } catch (e) {
+            console.warn('Error during periodic pending-flush check:', e);
+          }
+        }, 15 * 1000);
+      }
+
       return new Promise((resolve, reject) => {
         this.peer.on("open", (id) => {
           console.log("Multi-Peer iniciado:", id);
@@ -185,6 +199,27 @@ const MultiPeerSync = {
       if (window.UI && typeof UI.updateNetworkUI === 'function') {
         UI.updateNetworkUI();
       }
+
+      // After a short delay, request works and flush any pending broadcasts to this peer
+      setTimeout(() => {
+        try {
+          if (conn.open) {
+            // Request works from this peer to ensure we receive any new/updated items
+            conn.send({ type: 'request_works', payload: { source: this.userId, timestamp: Date.now() } });
+
+            // Flush any pending broadcasts specifically to this peer
+            try {
+              if (typeof this.flushPendingBroadcasts === 'function') {
+                this.flushPendingBroadcasts(peerId);
+              }
+            } catch (e) {
+              console.warn('Failed to flush pending broadcasts to', peerId, e);
+            }
+          }
+        } catch (e) {
+          console.warn('Erro ao solicitar lista de obras/flush para o peer:', e);
+        }
+      }, 1200);
     });
 
     conn.on("data", (data) => {
@@ -1544,13 +1579,40 @@ const MultiPeerSync = {
       },
     };
 
-    for (const [peerId, conn] of this.connections) {
-      if (conn.open) {
-        conn.send(data);
+    // If no active connections, queue for later
+    if (!this.hasConnections()) {
+      try {
+        if (typeof this.queuePendingWorkBroadcast === 'function') {
+          this.queuePendingWorkBroadcast(work);
+          console.log('No peers available — queued work for later broadcast:', work.work.codigo);
+          return;
+        }
+      } catch (e) {
+        console.warn('Failed to queue when no peers available:', e);
       }
     }
 
-    console.log(`✅ Obra "${work.work.codigo}" sincronizada com peers`);
+    let sent = 0;
+    for (const [peerId, conn] of this.connections) {
+      if (conn.open) {
+        try {
+          conn.send(data);
+          sent++;
+        } catch (e) {
+          console.warn('Failed to send work update to', peerId, e);
+          // On failure, make sure it's queued for eventual delivery
+          try {
+            if (typeof this.queuePendingWorkBroadcast === 'function') {
+              this.queuePendingWorkBroadcast(work);
+            }
+          } catch (err) {
+            console.warn('Failed to queue pending work after send error:', err);
+          }
+        }
+      }
+    }
+
+    console.log(`✅ Obra "${work.work.codigo}" sincronizada com peers (enviadas: ${sent})`);
   },
 
   /**
@@ -1587,6 +1649,115 @@ const MultiPeerSync = {
         // Não chama automaticamente para não incomodar o usuário
         // UI.showWorksModal();
       }
+    }
+  },
+
+  // ========== GERENCIAMENTO DE BROADCASTS PENDENTES ==========
+
+  /**
+   * Recupera broadcasts pendentes do armazenamento local
+   */
+  getPendingWorkBroadcasts() {
+    try {
+      const raw = localStorage.getItem('oae-pending-works');
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Failed to read pending work broadcasts:', e);
+      return [];
+    }
+  },
+
+  /**
+   * Salva lista de broadcasts pendentes no armazenamento local
+   */
+  savePendingWorkBroadcasts(list) {
+    try {
+      localStorage.setItem('oae-pending-works', JSON.stringify(list || []));
+    } catch (e) {
+      console.warn('Failed to save pending work broadcasts:', e);
+    }
+  },
+
+  /**
+   * Adiciona uma obra à fila de broadcasts pendentes
+   */
+  queuePendingWorkBroadcast(work) {
+    try {
+      const list = this.getPendingWorkBroadcasts();
+      // Store minimal necessary payload to re-broadcast later
+      const item = {
+        id: `${work.work.codigo}-${Date.now()}`,
+        work: work,
+        queuedAt: Date.now(),
+      };
+      list.push(item);
+      // Keep list bounded
+      if (list.length > 200) list.splice(0, list.length - 200);
+      this.savePendingWorkBroadcasts(list);
+      console.log('Queued pending work broadcast:', work.work.codigo);
+      return item.id;
+    } catch (e) {
+      console.warn('Failed to queue pending work broadcast:', e);
+      return null;
+    }
+  },
+
+  /**
+   * Envia todos os broadcasts pendentes para um peer específico ou para todos os conectados
+   */
+  async flushPendingBroadcasts(targetPeerId = null) {
+    try {
+      const list = this.getPendingWorkBroadcasts();
+      if (!list || !list.length) return 0;
+
+      const toSend = [...list];
+      let sentCount = 0;
+
+      if (targetPeerId) {
+        const conn = this.connections.get(targetPeerId);
+        if (conn && conn.open) {
+          for (const item of toSend) {
+            try {
+              conn.send({ type: 'work_updated', payload: { work: item.work, source: this.userId, timestamp: Date.now() } });
+              sentCount++;
+            } catch (e) {
+              console.warn('Failed to send pending work to peer', targetPeerId, e);
+            }
+          }
+          // Remove sent items
+          if (sentCount > 0) {
+            const remaining = list.slice(sentCount);
+            this.savePendingWorkBroadcasts(remaining);
+          }
+          return sentCount;
+        }
+        return 0;
+      }
+
+      // Broadcast to all connected peers
+      for (const [peerId, conn] of this.connections) {
+        if (!conn || !conn.open) continue;
+        for (const item of toSend) {
+          try {
+            conn.send({ type: 'work_updated', payload: { work: item.work, source: this.userId, timestamp: Date.now() } });
+            sentCount++;
+          } catch (e) {
+            console.warn('Failed to broadcast pending work to', peerId, e);
+          }
+        }
+      }
+
+      // If we managed to send to at least one peer, clear queue
+      if (sentCount > 0) {
+        this.savePendingWorkBroadcasts([]);
+      }
+
+      console.log(`Flushed ${sentCount} pending work broadcasts`);
+      return sentCount;
+    } catch (e) {
+      console.error('Error flushing pending work broadcasts:', e);
+      return 0;
     }
   },
 

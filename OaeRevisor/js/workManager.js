@@ -91,22 +91,34 @@ const WorkManager = {
 
           // Broadcast to peers unless explicitly disabled
           try {
-            if (options && options.broadcast !== false && window.MultiPeerSync && MultiPeerSync.hasConnections()) {
-              try {
-                MultiPeerSync.broadcastWorkUpdated(workData);
-                // Also attempt to send a lightweight share link for quick import
-                if (window.SyncMethods && typeof SyncMethods.generateWorkShareLink === 'function') {
-                  const inviteLink = await SyncMethods.generateWorkShareLink(workData.work.codigo).catch(()=>null);
-                  if (inviteLink) {
-                    const url = new URL(inviteLink);
-                    const encoded = url.searchParams.get('shareWork');
-                    if (encoded) {
-                      MultiPeerSync.broadcast({ type: 'work_share_link', payload: { encoded } });
+            if (options && options.broadcast !== false) {
+              if (window.MultiPeerSync && MultiPeerSync.hasConnections()) {
+                try {
+                  MultiPeerSync.broadcastWorkUpdated(workData);
+                  // Also attempt to send a lightweight share link for quick import
+                  if (window.SyncMethods && typeof SyncMethods.generateWorkShareLink === 'function') {
+                    const inviteLink = await SyncMethods.generateWorkShareLink(workData.work.codigo).catch(()=>null);
+                    if (inviteLink) {
+                      const url = new URL(inviteLink);
+                      const encoded = url.searchParams.get('shareWork');
+                      if (encoded) {
+                        MultiPeerSync.broadcast({ type: 'work_share_link', payload: { encoded } });
+                      }
                     }
                   }
+                } catch (e) {
+                  console.warn('Broadcast after save failed:', e);
                 }
-              } catch (e) {
-                console.warn('Broadcast after save failed:', e);
+              } else {
+                // No peers currently connected — enqueue for later delivery
+                try {
+                  if (window.MultiPeerSync && typeof MultiPeerSync.queuePendingWorkBroadcast === 'function') {
+                    MultiPeerSync.queuePendingWorkBroadcast(workData);
+                    console.log('✅ Work queued for pending broadcast (no peers online)');
+                  }
+                } catch (e) {
+                  console.warn('Failed to queue pending work broadcast:', e);
+                }
               }
             }
           } catch (e) {
