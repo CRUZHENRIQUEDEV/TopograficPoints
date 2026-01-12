@@ -2210,8 +2210,8 @@
     </div>
 
     <!-- Scripts -->
-    <!-- Load local PeerJS (preferred) to avoid Tracking Prevention blocking third-party CDN storage access -->
-    <script src="js/libs/peerjs.min.js"></script>
+    <!-- Temporarily load PeerJS from CDN for testing -->
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
     <script>
       // Safety stub for SyncMethods so quick clicks don't error before the real script is parsed
       window.SyncMethods = window.SyncMethods || {
