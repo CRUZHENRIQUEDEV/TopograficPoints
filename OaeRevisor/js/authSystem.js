@@ -56,8 +56,37 @@ const AuthSystem = {
       return;
     }
 
+    // Remove duplicados automaticamente na inicialização
+    let users = JSON.parse(stored);
+    const uniqueUsers = new Map();
+
+    for (const user of users) {
+      const normalizedEmail = user.email.toUpperCase();
+      const existing = uniqueUsers.get(normalizedEmail);
+
+      if (!existing) {
+        uniqueUsers.set(normalizedEmail, user);
+      } else {
+        // Mantém o mais recente
+        const existingTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+        const currentTime = new Date(user.updatedAt || user.createdAt || 0).getTime();
+
+        if (currentTime > existingTime) {
+          uniqueUsers.set(normalizedEmail, user);
+        }
+      }
+    }
+
+    // Atualiza lista com usuários únicos
+    users = Array.from(uniqueUsers.values());
+    const hadDuplicates = users.length !== JSON.parse(stored).length;
+
+    if (hadDuplicates) {
+      console.log(`🧹 Removidos ${JSON.parse(stored).length - users.length} usuários duplicados`);
+      localStorage.setItem("oae-users", JSON.stringify(users));
+    }
+
     // Verifica se o admin padrão existe (case-insensitive)
-    const users = JSON.parse(stored);
     const defaultAdminEmail = this.DEFAULT_USERS[0].email.toUpperCase();
     const adminExists = users.some(
       (u) => u.email.toUpperCase() === defaultAdminEmail && u.role === "admin"
