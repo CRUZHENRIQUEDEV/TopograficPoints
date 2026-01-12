@@ -3782,10 +3782,10 @@ const UI = {
             <div style="color: #721c24; line-height: 1.6;">
               O navegador está bloqueando a biblioteca PeerJS devido ao <strong>Tracking Prevention (Prevenção de Rastreamento)</strong>.
               <br><br>
-              <strong>Mensagem do console:</strong><br>
-              <code style="background: #fff; padding: 8px; display: block; border-radius: 4px; margin-top: 10px; font-size: 0.85rem;">
-                Tracking Prevention blocked access to storage for https://unpkg.com/peerjs
-              </code>
+              <strong>Diagnóstico:</strong><br>
+              <div style="background: #fff; padding: 8px; display: block; border-radius: 4px; margin-top: 10px; font-size: 0.85rem; color: #721c24;">
+                O navegador não conseguiu carregar o PeerJS — isso costuma ocorrer quando scripts de terceiros (ex.: CDN) são bloqueados por recursos de privacidade (Tracking Prevention). Para resolver, limpe o cache e recarregue; caso persista, use o método manual de compartilhamento.
+              </div>
             </div>
           </div>
 
@@ -3839,8 +3839,8 @@ const UI = {
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="document.getElementById('trackingWarningModal').remove()">Fechar</button>
-          <button class="btn btn-success" onclick="location.reload()" style="background: var(--success);">
-            🔄 Recarregar Página
+          <button class="btn btn-success" onclick="UI.clearCacheAndReload()" style="background: var(--success);">
+            🔄 Limpar cache e Recarregar
           </button>
         </div>
       </div>
@@ -3854,6 +3854,20 @@ const UI = {
     this.updateNetworkUI();
     if (document.getElementById("networkModal").classList.contains("show")) {
       this.updateNetworkModal();
+    }
+  },
+
+  /**
+   * Limpa cache via cache-bust e recarrega a página (usar quando Tracking Prevention bloqueou scripts externos)
+   */
+  clearCacheAndReload() {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('cb', Date.now());
+      window.location.replace(url.toString());
+    } catch (e) {
+      // fallback
+      window.location.href = window.location.pathname + '?cb=' + Date.now();
     }
   },
 

@@ -20,7 +20,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V3.2
+                🔍 OAE Revisor V3.3
                 <span
                   id="workTitle"
                   style="
@@ -1943,7 +1943,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V3.2</h2>
+          <h2>🔐 Login - OAE Revisor V3.3</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -2219,6 +2219,39 @@
         showInviteLinkModal: function(){ alert('Sincronização indisponível no momento. Tente recarregar.'); },
         showSyncCodeModal: function(){ alert('Sincronização indisponível no momento. Tente recarregar.'); }
       };
+
+      // Detect PeerJS availability and show guidance if blocked by Tracking Prevention
+      (function(){
+        function warnFallback(){
+          try {
+            if (window.UI && typeof UI.showTrackingPreventionWarning === 'function') {
+              UI.showTrackingPreventionWarning();
+              return;
+            }
+          } catch (e) {}
+          // Fallback alert if UI is not ready
+          alert('⚠️ P2P não disponível: o PeerJS não foi carregado. Tente recarregar a página (Ctrl+F5) ou limpar o cache do navegador.');
+        }
+
+        setTimeout(() => {
+          if (!window.Peer) {
+            console.warn('PeerJS not available; possible Tracking Prevention or failed script load.');
+
+            // Wait briefly for UI to initialize, then show modal
+            let waited = 0;
+            const int = setInterval(() => {
+              if (window.UI && typeof UI.showTrackingPreventionWarning === 'function') {
+                clearInterval(int);
+                UI.showTrackingPreventionWarning();
+              } else if (waited > 3000) {
+                clearInterval(int);
+                warnFallback();
+              }
+              waited += 200;
+            }, 200);
+          }
+        }, 1000);
+      })();
     </script>
     <script src="js/state.js"></script>
     <script src="js/db.js"></script>
