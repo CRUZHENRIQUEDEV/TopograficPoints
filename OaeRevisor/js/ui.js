@@ -3444,6 +3444,14 @@ const UI = {
       obra.metadata.publishedBy = currentUser.email;
       obra.metadata.publishedAt = new Date().toISOString();
 
+      // IMPORTANTE: Marca a obra como pública quando publicada
+      // Isso garante que a obra seja visível para outros usuários
+      if (newStatus === OBRA_STATUS.PUBLICADO_AVALIACAO ||
+          newStatus === OBRA_STATUS.APROVADO ||
+          newStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
+        obra.metadata.isPublic = true;
+      }
+
       if (newStatus === OBRA_STATUS.APROVADO || newStatus === OBRA_STATUS.PENDENTE_RETIFICACAO) {
         obra.metadata.evaluatedBy = currentUser.email;
         obra.metadata.evaluatedAt = new Date().toISOString();
