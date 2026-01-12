@@ -25,8 +25,8 @@ const AuthSystem = {
   // Usuários padrão
   DEFAULT_USERS: [
     {
-      email: "admin@oae.com",
-      password: "HENRIQUECRUZ",
+      email: "HENRIQUE.SILVA@GRUPOENGEMAP.COM",
+      password: "12345",
       name: "Administrador",
       role: "admin",
       lote: "Admin",
