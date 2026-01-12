@@ -3693,8 +3693,15 @@ const UI = {
    * Força sincronização imediata com todos os nós conectados
    */
   async forceSyncNow() {
+    // Verifica se PeerJS está bloqueado
+    if (!window.Peer) {
+      this.showTrackingPreventionWarning();
+      return;
+    }
+
     if (!window.MultiPeerSync || !MultiPeerSync.hasConnections()) {
       this.showNotification("⚠️ Nenhum usuário conectado. Sincronização P2P indisponível.", "warning");
+      this.showQuickConnectModal();
       return;
     }
 
@@ -3717,6 +3724,95 @@ const UI = {
       console.error("Erro na sincronização:", error);
       this.showNotification("❌ Erro ao sincronizar: " + error.message, "error");
     }
+  },
+
+  /**
+   * Mostra aviso sobre Tracking Prevention bloqueando PeerJS
+   */
+  showTrackingPreventionWarning() {
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop show";
+    modal.id = "trackingWarningModal";
+
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 750px;">
+        <div class="modal-header" style="background: var(--danger); color: white;">
+          <h2>🚨 Sincronização P2P Bloqueada</h2>
+          <button class="modal-close" onclick="document.getElementById('trackingWarningModal').remove()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+          <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; border-radius: 4px; margin-bottom: 25px;">
+            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: #721c24;">
+              ⚠️ Erro Detectado:
+            </div>
+            <div style="color: #721c24; line-height: 1.6;">
+              O navegador está bloqueando a biblioteca PeerJS devido ao <strong>Tracking Prevention (Prevenção de Rastreamento)</strong>.
+              <br><br>
+              <strong>Mensagem do console:</strong><br>
+              <code style="background: #fff; padding: 8px; display: block; border-radius: 4px; margin-top: 10px; font-size: 0.85rem;">
+                Tracking Prevention blocked access to storage for https://unpkg.com/peerjs
+              </code>
+            </div>
+          </div>
+
+          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px; margin-bottom: 25px;">
+            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: #856404;">
+              🔧 Solução Rápida - Desabilitar Tracking Prevention:
+            </div>
+
+            <div style="color: #856404; line-height: 1.8;">
+              <strong>Microsoft Edge:</strong><br>
+              1️⃣ Clique no ícone de <strong>🛡️ cadeado</strong> na barra de endereço<br>
+              2️⃣ Clique em <strong>"Cookies e dados do site"</strong><br>
+              3️⃣ Desative <strong>"Bloquear cookies de terceiros"</strong> para este site<br>
+              4️⃣ Recarregue a página (F5)<br><br>
+
+              <strong>OU no Menu:</strong><br>
+              1️⃣ Menu ⋮ > <strong>Configurações</strong><br>
+              2️⃣ <strong>Privacidade, pesquisa e serviços</strong><br>
+              3️⃣ Em "Prevenção de rastreamento", escolha <strong>"Básico"</strong><br>
+              4️⃣ Ou adicione este site em <strong>"Exceções"</strong><br>
+              5️⃣ Recarregue a página
+            </div>
+          </div>
+
+          <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: #1976d2;">
+              📤 Alternativa: Compartilhamento Manual
+            </div>
+            <div style="color: #1976d2; line-height: 1.6;">
+              Se não puder desabilitar o Tracking Prevention, use o <strong>Compartilhamento Manual</strong>:
+              <br><br>
+              ✅ 100% confiável - sempre funciona<br>
+              ✅ Não depende de P2P ou navegador<br>
+              ✅ Funciona mesmo com bloqueios ativos<br>
+              <br>
+              <button class="btn btn-primary" onclick="UI.showQuickShareGuide(); document.getElementById('trackingWarningModal').remove();" style="width: 100%; padding: 12px;">
+                📤 Ver Guia de Compartilhamento Manual
+              </button>
+            </div>
+          </div>
+
+          <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px;">
+            <div style="font-weight: 600; color: #155724; margin-bottom: 8px;">
+              ℹ️ Por que isso acontece?
+            </div>
+            <div style="color: #155724; font-size: 0.9rem; line-height: 1.6;">
+              Navegadores modernos bloqueiam scripts de terceiros (como PeerJS hospedado no unpkg.com) para proteger sua privacidade.
+              Como o OAE Revisor precisa de conexões P2P para sincronização em tempo real, é necessário permitir esse acesso.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="document.getElementById('trackingWarningModal').remove()">Fechar</button>
+          <button class="btn btn-success" onclick="location.reload()" style="background: var(--success);">
+            🔄 Recarregar Página
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
   },
 
   updatePeerConnectionStatus(peerId, status) {
