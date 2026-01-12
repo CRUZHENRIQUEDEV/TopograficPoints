@@ -619,15 +619,15 @@ const SyncMethods = {
   /**
    * Gera link para compartilhar TODOS os usuários (lista)
    */
-  generateUsersShareLink() {
+  generateUsersShareLink(includePasswords = false) {
     try {
       const users = JSON.parse(localStorage.getItem('oae-users') || '[]');
       if (!users || !users.length) throw new Error('Nenhum usuário disponível para compartilhar');
 
-      // Remove dados sensíveis
+      // Optionally include passwords (only when admin explicitly requests)
       const sanitized = users.map(u => {
         const copy = { ...u };
-        delete copy.password;
+        if (!includePasswords) delete copy.password;
         return copy;
       });
 
@@ -649,6 +649,16 @@ const SyncMethods = {
   },
 
   /**
+   * Gera uma senha temporária (usada ao importar usuários sem senha)
+   */
+  generateTempPassword(length = 10) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    let out = '';
+    for (let i = 0; i < length; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+    return out;
+  },
+
+  /**
    * Mostra modal com link/QR para compartilhar TODOS os usuários
    */
   showUsersInviteLinkModal(name) {
@@ -660,7 +670,7 @@ const SyncMethods = {
       modal.id = 'usersInviteModal';
 
       modal.innerHTML = `
-        <div class="modal" style="max-width:700px;">
+        <div class="modal" style="max-width:760px;">
           <div class="modal-header">
             <h3 class="modal-title">🔗 Link de Convite (Lista de Usuários)</h3>
             <button class="modal-close" onclick="document.getElementById('usersInviteModal').remove()">×</button>
@@ -668,16 +678,24 @@ const SyncMethods = {
           <div class="modal-body" style="padding:20px;">
             <div style="font-weight:600; margin-bottom:8px;">${name}</div>
 
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+              <label style="display:flex; gap:8px; align-items:center; font-size:0.95rem;">
+                <input type="checkbox" id="includePasswordsCheckbox" />
+                <span>Incluir senhas nos dados (apenas se você confiar no destinatário)</span>
+              </label>
+              <button class="btn btn-secondary" id="btnGenerateUsersLink">Gerar link</button>
+            </div>
+
             <div style="background: var(--bg-secondary); border-radius:6px; padding:12px; margin-bottom:12px;">
               <textarea id="usersInviteLinkText" readonly style="width:100%; height:120px; font-family:monospace;">${inviteLink}</textarea>
             </div>
 
             <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button class="btn btn-primary" onclick="(async ()=>{ navigator.clipboard.writeText(document.getElementById('usersInviteLinkText').value); alert('✅ Link copiado!') })()">📋 Copiar</button>
-              <button class="btn btn-success" onclick="(async ()=>{ const url = document.getElementById('usersInviteLinkText').value; if(navigator.share){ try{ await navigator.share({ title: 'Convite OAE - Usuários', text: 'Abra este link para importar a lista de usuários', url }); }catch(e){ alert('Compartilhamento cancelado ou falhou'); } } else { navigator.clipboard.writeText(url); alert('Link copiado para área de transferência'); } })()">📤 Compartilhar</button>
+              <button class="btn btn-primary" id="btnCopyUsersInvite">📋 Copiar</button>
+              <button class="btn btn-success" id="btnShareUsersInvite">📤 Compartilhar</button>
             </div>
 
-            <div style="margin-top:12px; font-size:0.9rem; color:var(--text-muted);">Ao importar este link, os usuários serão adicionados à lista local (sem sobrescrever usuários existentes).</div>
+            <div style="margin-top:12px; font-size:0.9rem; color:var(--text-muted);">Ao importar este link, os usuários serão adicionados à lista local (sem sobrescrever usuários existentes). Se optar por incluir senhas, verifique que o destino é confiável.</div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" onclick="document.getElementById('usersInviteModal').remove()">Fechar</button>
@@ -686,6 +704,38 @@ const SyncMethods = {
       `;
 
       document.body.appendChild(modal);
+
+      // Wire up buttons
+      document.getElementById('btnGenerateUsersLink').onclick = () => {
+        const include = document.getElementById('includePasswordsCheckbox').checked;
+        try {
+          const link = this.generateUsersShareLink(include);
+          document.getElementById('usersInviteLinkText').value = link;
+        } catch (e) {
+          alert('Erro ao gerar link: ' + e.message);
+        }
+      };
+
+      document.getElementById('btnCopyUsersInvite').onclick = async () => {
+        const v = document.getElementById('usersInviteLinkText').value;
+        await navigator.clipboard.writeText(v);
+        alert('✅ Link copiado!');
+      };
+
+      document.getElementById('btnShareUsersInvite').onclick = async () => {
+        const url = document.getElementById('usersInviteLinkText').value;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: 'Convite OAE - Usuários', text: 'Abra este link para importar a lista de usuários', url });
+          } catch (e) {
+            alert('Compartilhamento cancelado ou falhou');
+          }
+        } else {
+          await navigator.clipboard.writeText(url);
+          alert('Link copiado para área de transferência');
+        }
+      };
+
     } catch (err) {
       console.error('Erro ao abrir modal de convite de usuários:', err);
       alert('Erro ao gerar link de usuários: ' + err.message);
@@ -708,6 +758,7 @@ const SyncMethods = {
       let imported = 0;
       let skipped = 0;
 
+      const tempPasswords = [];
       for (const u of data.users) {
         const norm = (u.email || '').toUpperCase();
         const exists = localUsers.find(x => (x.email || '').toUpperCase() === norm);
@@ -715,13 +766,76 @@ const SyncMethods = {
           skipped++;
           continue;
         }
-        localUsers.push({ ...u, syncedFrom: data.sharedBy, syncedAt: Date.now(), authorizedForever: true });
+
+        // If incoming user has no password, generate a temporary one and mark for change
+        const userCopy = { ...u };
+        if (!userCopy.password) {
+          const temp = Sync.generateTempPassword(10);
+          userCopy.password = temp;
+          userCopy.mustChangePassword = true;
+          tempPasswords.push({ email: userCopy.email, name: userCopy.name, password: temp });
+        }
+
+        // Ensure some useful flags
+        userCopy.syncedFrom = data.sharedBy;
+        userCopy.syncedAt = Date.now();
+        userCopy.authorizedForever = true;
+        userCopy.active = typeof userCopy.active === 'boolean' ? userCopy.active : true;
+
+        localUsers.push(userCopy);
         imported++;
       }
 
       localStorage.setItem('oae-users', JSON.stringify(localUsers));
 
-      alert(`✅ Importação concluída: ${imported} importados, ${skipped} ignorados.`);
+      // Summary message
+      let summary = `✅ Importação concluída: ${imported} importados, ${skipped} ignorados.`;
+      if (tempPasswords.length) {
+        summary += `\n\n⚠️ ${tempPasswords.length} usuário(s) importado(s) sem senha receberam uma senha temporária.`;
+        summary += `\nAs senhas temporárias aparecem no console (F12) e você pode visualizá-las em Gerenciar Usuários → 🔑 Ver senha.`;
+      }
+
+      alert(summary);
+
+      // Log the temporary passwords to console (and build a modal)
+      if (tempPasswords.length) {
+        console.table(tempPasswords);
+
+        // Show modal with list and copy-all option
+        try {
+          const modal = document.createElement('div');
+          modal.className = 'modal-backdrop show';
+          modal.id = 'importedUsersModal';
+
+          let rows = tempPasswords
+            .map(t => `<tr><td>${t.name || ''}</td><td>${t.email}</td><td style="font-family: 'JetBrains Mono', monospace;">${t.password}</td><td><button class="btn btn-sm btn-primary" onclick="navigator.clipboard.writeText('${t.password}').then(()=>alert('✅ Senha copiada'))">Copiar</button></td></tr>`)
+            .join('');
+
+          modal.innerHTML = `
+            <div class="modal" style="max-width:700px;">
+              <div class="modal-header">
+                <h3 class="modal-title">🔐 Senhas Temporárias Geradas</h3>
+                <button class="modal-close" onclick="document.getElementById('importedUsersModal').remove()">×</button>
+              </div>
+              <div class="modal-body" style="padding:20px; max-height: 60vh; overflow:auto;">
+                <p>Foram geradas senhas temporárias para usuários importados que não tinham senha.</p>
+                <table style="width:100%; border-collapse: collapse;">
+                  <thead><tr><th>Nome</th><th>Email</th><th>Senha</th><th>Ação</th></tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(tempPasswords.map(t=>t.email+':'+t.password).join('\n')); alert('✅ Todas as senhas copiadas!')">📋 Copiar Tudo</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importedUsersModal').remove()">Fechar</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+        } catch (e) {
+          console.warn('Falha ao exibir modal de senhas temporárias:', e);
+        }
+      }
 
       // Remove param
       const url = new URL(window.location);
