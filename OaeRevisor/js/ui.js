@@ -1352,43 +1352,36 @@ const UI = {
       .match(/'([^']+)',\s*'([^']+)'/);
     const label = labelMatch ? labelMatch[2] : "Campo";
 
-    // Cria descrição formatada para aparecer nas mensagens
-    // Determina o nome da aba/seção
+    // Cria descrição formatada simples para aparecer nas mensagens
     const tabMapping = {
-      ident: 'IDENTIFICAÇÃO',
-      carac: 'CARACTERÍSTICAS FUNCIONAIS',
-      asp: 'ASPECTOS ESPECIAIS',
-      def: 'DEFICIÊNCIAS FUNCIONAIS',
-      rot: 'ROTAS ALTERNATIVAS',
-      obs: 'OBSERVAÇÕES',
-      elem: 'ELEMENTOS'
+      ident: 'Identificação',
+      carac: 'Características Funcionais',
+      asp: 'Aspectos Especiais',
+      def: 'Deficiências Funcionais',
+      rot: 'Rotas Alternativas',
+      obs: 'Observações',
+      elem: 'Elementos Componentes'
     };
 
-    // Determina a tab do campo usando a mesma lógica do messageSystem
     const fieldToTabMap = {
-      // Identificação
       codigo: 'ident', nome: 'ident', avaliador: 'ident', municipio: 'ident',
       rodovia: 'ident', segmento: 'ident', km: 'ident', latitude: 'ident',
       longitude: 'ident', tipo: 'ident', material: 'ident',
-      // Características
       comprimento: 'carac', numFaixas: 'carac', numTramos: 'carac', classe: 'carac',
       cargaMaxima: 'carac', larguraPista: 'carac', larguraPasseio: 'carac',
       galiboVertical: 'carac', galiboHorizontal: 'carac', vmp: 'carac',
       acessoInspecao: 'carac',
-      // Observações
       observacoesGerais: 'obs'
     };
 
     const tabCode = fieldToTabMap[fieldId] || 'ident';
-    const tabName = tabMapping[tabCode] || 'OUTROS';
+    const tabName = tabMapping[tabCode] || 'Outros';
 
-    // Obtém o valor atual do campo
     const currentValue = (
       document.getElementById(fieldId) ||
       document.getElementById("f_" + fieldId)
     )?.value || "(vazio)";
 
-    // Formata o motivo (tipos de erro + observações)
     let motivo = '';
     if (types.length > 0) {
       motivo = types.join('; ');
@@ -1397,14 +1390,8 @@ const UI = {
       motivo += (motivo ? ' - ' : '') + obs;
     }
 
-    // Conta mensagens existentes para numeração sequencial
-    const existingMessagesCount = Object.keys(appState.errors || {}).length +
-                                   (appState.elementErrors || []).length +
-                                   (appState.anexoErrors || []).length;
-    const messageNumber = existingMessagesCount + 1;
-
-    // Cria descrição formatada completa
-    const description = `${tabName}\n${messageNumber}. Campo: ${label}\n   Valor Atual: ${currentValue}\n   Motivo: ${motivo}`;
+    // Formato simples: Aba: [Nome]\nCampo: [label]: [motivo]
+    const description = `Aba: ${tabName}\nCampo: ${label}: ${motivo}`;
 
     const fieldError = {
       id: fieldId,
