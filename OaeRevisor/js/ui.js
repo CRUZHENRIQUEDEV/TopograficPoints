@@ -1366,14 +1366,24 @@ const UI = {
     };
 
     const fieldToTabMap = {
-      codigo: 'ident', nome: 'ident', avaliador: 'ident', municipio: 'ident',
-      rodovia: 'ident', segmento: 'ident', km: 'ident', latitude: 'ident',
-      longitude: 'ident', tipo: 'ident', material: 'ident',
-      comprimento: 'carac', numFaixas: 'carac', numTramos: 'carac', classe: 'carac',
-      cargaMaxima: 'carac', larguraPista: 'carac', larguraPasseio: 'carac',
-      galiboVertical: 'carac', galiboHorizontal: 'carac', vmp: 'carac',
-      acessoInspecao: 'carac',
-      observacoesGerais: 'obs'
+      // Identificação
+      ident_orig: 'ident', comprimento: 'ident', largura: 'ident', trem_tipo: 'ident',
+      ano: 'ident', natureza: 'ident', uf: 'ident', via: 'ident', local_via: 'ident',
+      cidade: 'ident', latitude: 'ident', longitude: 'ident', altitude: 'ident',
+      snv_codigo: 'ident', snv_versao: 'ident', superintendencia: 'ident',
+      unidade_local: 'ident', adm_dnit: 'ident', administrador: 'ident',
+      projetista: 'ident', construtor: 'ident', loc_projeto: 'ident',
+      loc_docs_constr: 'ident', loc_docs_diversos: 'ident',
+      // Características Funcionais
+      atend_snv: 'carac', tipo_regiao: 'carac', tipo_tracado: 'carac', rampa: 'carac',
+      raio: 'carac', vmda: 'carac', vmdc: 'carac', faixas: 'carac', larg_faixa: 'carac',
+      acost_dir: 'carac', acost_esq: 'carac', calc_dir: 'carac', calc_esq: 'carac',
+      gab_hor: 'carac', gab_ver: 'carac', larg_pista_antes: 'carac', larg_pista_depois: 'carac',
+      numTramos: 'carac',
+      // Rotas Alternativas
+      rota: 'rot', rota_km: 'rot',
+      // Observações
+      observacoes: 'obs', observacoesGerais: 'obs'
     };
 
     const tabCode = fieldToTabMap[fieldId] || 'ident';
