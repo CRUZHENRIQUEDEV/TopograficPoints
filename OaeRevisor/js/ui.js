@@ -306,10 +306,11 @@ const UI = {
     }
 
     // Cria descrição formatada para aparecer nas mensagens
-    let description = `Tramo ${tramo} - ${regiao} | ${familia}: ${erro}`;
+    let motivo = erro;
     if (obs) {
-      description += ` - ${obs}`;
+      motivo += ` - ${obs}`;
     }
+    const description = `Aba: Elementos Componentes\nTramo ${tramo} - ${regiao}\nElemento: ${familia}: ${motivo}`;
 
     const elementError = {
       id: "elem_" + Date.now() + Math.random(),
@@ -836,10 +837,11 @@ const UI = {
     if (!nome) return;
 
     // Cria descrição formatada para aparecer nas mensagens
-    let description = `Anexo [${nome}]: ${inconsist}`;
+    let motivo = inconsist;
     if (obs) {
-      description += ` - ${obs}`;
+      motivo += ` - ${obs}`;
     }
+    const description = `Aba: Anexos\nAnexo: ${nome}: ${motivo}`;
 
     const anexoError = {
       id: "anexo_" + Date.now(),
