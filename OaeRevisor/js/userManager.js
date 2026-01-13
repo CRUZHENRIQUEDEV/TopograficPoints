@@ -631,7 +631,7 @@ const UserManager = {
             </div>
 
             <!-- Opção 2: Link de Convite (Usuário específico ou Todos) -->
-            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); ${userEmail === 'todos' ? "SyncMethods.showUsersInviteLinkModal('${userName}')" : "SyncMethods.showUserInviteLinkModal('${userEmail}', '${userName}')"}">
+            <div class="sync-option" onclick="document.getElementById('shareOptionsModal').remove(); ${userEmail === 'todos' ? `SyncMethods.showUsersInviteLinkModal('${userName}')` : `SyncMethods.showUserInviteLinkModal('${userEmail}', '${userName}')`}">
               <div class="sync-option-icon">🔗</div>
               <div class="sync-option-content">
                 <h3>Link de Convite</h3>
