@@ -1353,25 +1353,66 @@ const UI = {
     const label = labelMatch ? labelMatch[2] : "Campo";
 
     // Cria descrição formatada para aparecer nas mensagens
-    let description = '';
+    // Determina o nome da aba/seção
+    const tabMapping = {
+      ident: 'IDENTIFICAÇÃO',
+      carac: 'CARACTERÍSTICAS FUNCIONAIS',
+      asp: 'ASPECTOS ESPECIAIS',
+      def: 'DEFICIÊNCIAS FUNCIONAIS',
+      rot: 'ROTAS ALTERNATIVAS',
+      obs: 'OBSERVAÇÕES',
+      elem: 'ELEMENTOS'
+    };
+
+    // Determina a tab do campo usando a mesma lógica do messageSystem
+    const fieldToTabMap = {
+      // Identificação
+      codigo: 'ident', nome: 'ident', avaliador: 'ident', municipio: 'ident',
+      rodovia: 'ident', segmento: 'ident', km: 'ident', latitude: 'ident',
+      longitude: 'ident', tipo: 'ident', material: 'ident',
+      // Características
+      comprimento: 'carac', numFaixas: 'carac', numTramos: 'carac', classe: 'carac',
+      cargaMaxima: 'carac', larguraPista: 'carac', larguraPasseio: 'carac',
+      galiboVertical: 'carac', galiboHorizontal: 'carac', vmp: 'carac',
+      acessoInspecao: 'carac',
+      // Observações
+      observacoesGerais: 'obs'
+    };
+
+    const tabCode = fieldToTabMap[fieldId] || 'ident';
+    const tabName = tabMapping[tabCode] || 'OUTROS';
+
+    // Obtém o valor atual do campo
+    const currentValue = (
+      document.getElementById(fieldId) ||
+      document.getElementById("f_" + fieldId)
+    )?.value || "(vazio)";
+
+    // Formata o motivo (tipos de erro + observações)
+    let motivo = '';
     if (types.length > 0) {
-      description = types.join('; ');
+      motivo = types.join('; ');
     }
     if (obs) {
-      description += (description ? ' - ' : '') + obs;
+      motivo += (motivo ? ' - ' : '') + obs;
     }
+
+    // Conta mensagens existentes para numeração sequencial
+    const existingMessagesCount = Object.keys(appState.errors || {}).length +
+                                   (appState.elementErrors || []).length +
+                                   (appState.anexoErrors || []).length;
+    const messageNumber = existingMessagesCount + 1;
+
+    // Cria descrição formatada completa
+    const description = `${tabName}\n${messageNumber}. Campo: ${label}\n   Valor Atual: ${currentValue}\n   Motivo: ${motivo}`;
 
     const fieldError = {
       id: fieldId,
       label,
-      value:
-        (
-          document.getElementById(fieldId) ||
-          document.getElementById("f_" + fieldId)
-        )?.value || "(vazio)",
+      value: currentValue,
       types,
       obs,
-      description: description, // Adiciona descrição para sistema de mensagens
+      description: description, // Descrição formatada completa para sistema de mensagens
       nomeUsuario: window.AuthSystem?.currentUser?.name || 'Avaliador',
       perfil: window.AuthSystem?.currentUser?.role || 'avaliador',
       dataHistorico: new Date().toISOString(),
