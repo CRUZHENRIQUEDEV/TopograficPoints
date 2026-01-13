@@ -267,7 +267,16 @@ function loadWorkToForm(work) {
     if (typeof manageComplementaryElements === "function") {
       setTimeout(() => {
         manageComplementaryElements();
+        // Garantir que guarda-rodas não fique bloqueado incorretamente
+        // Esta função deve ser executada após manageComplementaryElements para corrigir
+        // qualquer bloqueio incorreto que possa ter sido aplicado
+        ensureGuardaRodasEnabled();
       }, 150);
+      
+      // Chamada adicional com delay maior para garantir que não há bloqueios incorretos
+      setTimeout(() => {
+        ensureGuardaRodasEnabled();
+      }, 300);
     }
 
     // REMOVIDO: Não validar ao carregar obra (para evitar mostrar erros prematuramente)
@@ -347,6 +356,98 @@ function loadWorkToForm(work) {
   } catch (error) {
     console.error("Erro ao carregar dados no formulário:", error);
     alert("Erro ao carregar dados no formulário: " + error.message);
+  }
+}
+
+// Função para garantir que guarda-rodas não fique bloqueado incorretamente
+function ensureGuardaRodasEnabled() {
+  const guardaRodasEsquerdo = document.getElementById("guarda-rodas-esquerdo");
+  const guardaRodasDireito = document.getElementById("guarda-rodas-direito");
+  const barreiraEsquerda = document.getElementById("tipo-barreira-esquerda");
+  const barreiraDireita = document.getElementById("tipo-barreira-direita");
+  const calcadaEsquerda = document.getElementById("tipo-calcada-esquerda");
+  const calcadaDireita = document.getElementById("tipo-calcada-direita");
+
+  // Função para verificar se uma barreira é excludente
+  function isBarreiraExcludente(value) {
+    return (
+      value === "BARREIRA NEW JERSEY" ||
+      value === "BARREIRA COM GUARDA-CORPO" ||
+      (window.CONSTANTS &&
+        (value === window.CONSTANTS.TIPO_BARREIRA?.BARREIRA_NEW_JERSEY ||
+          value === window.CONSTANTS.TIPO_BARREIRA?.BARREIRA_COM_GUARDA_CORPO))
+    );
+  }
+
+  // Função para verificar se calçada está selecionada
+  function hasCalcada(value) {
+    return (
+      value === "CALÇADA PARA PEDESTRES DE CONCRETO ARMADO" ||
+      (window.CONSTANTS &&
+        value === window.CONSTANTS.TIPO_CALCADA?.CALCADA_PEDESTRES_CONCRETO_ARMADO)
+    );
+  }
+
+  // LADO ESQUERDO
+  if (guardaRodasEsquerdo) {
+    const hasGuardaRodasEsq =
+      guardaRodasEsquerdo.value !== "" &&
+      guardaRodasEsquerdo.value !== "Nenhum";
+    const hasBarreiraEsq =
+      barreiraEsquerda &&
+      barreiraEsquerda.value !== "" &&
+      barreiraEsquerda.value !== "Nenhum" &&
+      isBarreiraExcludente(barreiraEsquerda.value);
+    const hasCalcadaEsq =
+      calcadaEsquerda && hasCalcada(calcadaEsquerda.value);
+
+    // Se guarda-rodas está selecionado, deve estar habilitado
+    if (hasGuardaRodasEsq && !hasBarreiraEsq && !hasCalcadaEsq) {
+      guardaRodasEsquerdo.disabled = false;
+      guardaRodasEsquerdo.style.opacity = "1";
+      guardaRodasEsquerdo.style.cursor = "pointer";
+      guardaRodasEsquerdo.removeAttribute("data-locked");
+      guardaRodasEsquerdo.style.pointerEvents = "";
+    }
+    // Se guarda-rodas não está selecionado e não há barreira/calçada bloqueando, deve estar habilitado
+    else if (!hasGuardaRodasEsq && !hasBarreiraEsq && !hasCalcadaEsq) {
+      guardaRodasEsquerdo.disabled = false;
+      guardaRodasEsquerdo.style.opacity = "1";
+      guardaRodasEsquerdo.style.cursor = "pointer";
+      guardaRodasEsquerdo.removeAttribute("data-locked");
+      guardaRodasEsquerdo.style.pointerEvents = "";
+    }
+  }
+
+  // LADO DIREITO
+  if (guardaRodasDireito) {
+    const hasGuardaRodasDir =
+      guardaRodasDireito.value !== "" &&
+      guardaRodasDireito.value !== "Nenhum";
+    const hasBarreiraDir =
+      barreiraDireita &&
+      barreiraDireita.value !== "" &&
+      barreiraDireita.value !== "Nenhum" &&
+      isBarreiraExcludente(barreiraDireita.value);
+    const hasCalcadaDir =
+      calcadaDireita && hasCalcada(calcadaDireita.value);
+
+    // Se guarda-rodas está selecionado, deve estar habilitado
+    if (hasGuardaRodasDir && !hasBarreiraDir && !hasCalcadaDir) {
+      guardaRodasDireito.disabled = false;
+      guardaRodasDireito.style.opacity = "1";
+      guardaRodasDireito.style.cursor = "pointer";
+      guardaRodasDireito.removeAttribute("data-locked");
+      guardaRodasDireito.style.pointerEvents = "";
+    }
+    // Se guarda-rodas não está selecionado e não há barreira/calçada bloqueando, deve estar habilitado
+    else if (!hasGuardaRodasDir && !hasBarreiraDir && !hasCalcadaDir) {
+      guardaRodasDireito.disabled = false;
+      guardaRodasDireito.style.opacity = "1";
+      guardaRodasDireito.style.cursor = "pointer";
+      guardaRodasDireito.removeAttribute("data-locked");
+      guardaRodasDireito.style.pointerEvents = "";
+    }
   }
 }
 
