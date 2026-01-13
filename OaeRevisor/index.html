@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/peerjs-styles.css" />
     <link rel="stylesheet" href="css/auth-styles.css" />
+    <link rel="stylesheet" href="css/message-system.css" />
     <style>
       /* Extra fonts */
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
@@ -20,7 +21,7 @@
           <div class="header-top">
             <div class="header-title-section">
               <h1>
-                🔍 OAE Revisor V4.3
+                🔍 OAE Revisor V4.4
                 <span
                   id="workTitle"
                   style="
@@ -182,20 +183,7 @@
                   </div>
                 </div>
                 <div class="form-field">
-                  <label class="form-label" for="obraNome">Obra (Nome)</label>
                   <div class="field-wrapper">
-                    <input
-                      type="text"
-                      class="form-input"
-                      id="obraNome"
-                      data-sync="nome"
-                      placeholder="Nome da OAE"
-                    />
-                    <button
-                      class="error-btn"
-                      onclick="UI.openErrorModal('nome', 'Obra (Nome)')"
-                    >
-                      ⚠
                     </button>
                   </div>
                 </div>
@@ -1572,25 +1560,91 @@
               </div>
             </div>
 
-            <div class="section">
-              <div class="section-title">💬 Canal de Comunicação</div>
-              <div class="evaluator-only">
-                <div class="form-field" style="margin-bottom: 20px">
-                  <label class="form-label">Escrever Mensagem</label>
-                  <textarea
-                    class="form-input no-btn"
-                    id="novaMensagem"
-                    style="height: 100px"
-                    placeholder="Dúvida ou esclarecimento sobre a auditoria..."
-                    oninput="UI.handleTyping()"
-                  ></textarea>
+            <!-- Ajuda do Sistema de Mensagens -->
+            <div class="section" style="margin-bottom: 15px;">
+              <details style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; border: 2px solid var(--ui-accent);">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--ui-accent); font-size: 14px; user-select: none;">
+                  📖 Como usar o Sistema de Mensagens
+                </summary>
+                <div style="margin-top: 15px; font-size: 13px; line-height: 1.6;">
+                  <h4 style="color: var(--ui-accent); margin: 15px 0 8px 0;">📊 Tipos de Mensagens</h4>
+                  <ul style="margin-left: 20px;">
+                    <li><strong>Mensagens de Outros</strong> (borda azul): Mensagens que você precisa responder/corrigir. Aparecem destacadas.</li>
+                    <li><strong>Suas Mensagens</strong> (opacas): Mensagens que você mesmo enviou. Aparecem com opacidade reduzida e marca "📤 Sua Mensagem".</li>
+                  </ul>
+
+                  <h4 style="color: var(--ui-accent); margin: 15px 0 8px 0;">✅ Marcar como Corrigida</h4>
+                  <p>Clique no <strong>checkbox</strong> ao lado esquerdo da mensagem para marcá-la como corrigida. A mensagem ganhará visual verde e a tag "✅ Corrigido".</p>
+
+                  <h4 style="color: var(--ui-accent); margin: 15px 0 8px 0;">💬 Responder Mensagens</h4>
+                  <ul style="margin-left: 20px;">
+                    <li>Cada mensagem de outros possui uma <strong>área de texto</strong> para você responder</li>
+                    <li>Digite sua correção/resposta e clique em <strong>"💾 Salvar Resposta"</strong></li>
+                    <li>Ao salvar, a mensagem é automaticamente marcada como corrigida</li>
+                  </ul>
+
+                  <h4 style="color: var(--ui-accent); margin: 15px 0 8px 0;">🎨 Resposta Salva - Ferramentas</h4>
+                  <p>Quando você salva uma resposta, ela aparece em um box especial com:</p>
+                  <ul style="margin-left: 20px;">
+                    <li><strong>📋 Copiar</strong>: Copia sua resposta para a área de transferência</li>
+                    <li><strong>✏️ Editar</strong>: Permite editar a resposta. Marca como "(editado)" após atualização</li>
+                  </ul>
+
+                  <h4 style="color: var(--ui-accent); margin: 15px 0 8px 0;">🔍 Filtros e Busca</h4>
+                  <ul style="margin-left: 20px;">
+                    <li><strong>📋 Todas</strong>: Mostra todas as mensagens</li>
+                    <li><strong>⏳ Pendentes</strong>: Apenas mensagens não corrigidas</li>
+                    <li><strong>✅ Corrigidas</strong>: Apenas mensagens já respondidas</li>
+                    <li><strong>📤 Minhas</strong>: Apenas suas mensagens originais</li>
+                    <li><strong>🔎 Busca</strong>: Campo de busca filtra em tempo real pelo texto</li>
+                  </ul>
+
+                  <h4 style="color: var(--ui-accent); margin: 15px 0 8px 0;">📊 Contadores de Status</h4>
+                  <p>A barra superior mostra em tempo real: <strong>Total</strong>, <strong>✅ Corrigidas</strong> e <strong>⏳ Pendentes</strong>.</p>
                 </div>
-                <button class="btn btn-primary" onclick="UI.addMensagem()">
-                  Enviar Mensagem
-                </button>
+              </details>
+            </div>
+
+            <!-- Sistema de Chat de Inconsistências -->
+            <div class="section">
+              <div class="section-title">💬 Chat de Inconsistências</div>
+
+              <!-- Filtros e Busca -->
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
+                  <input
+                    type="text"
+                    id="messageSearchInput"
+                    class="form-input no-btn"
+                    placeholder="🔍 Buscar mensagem..."
+                    style="flex: 1; min-width: 200px;"
+                    oninput="MessageSystem.applyFilters()"
+                  >
+                  <button class="btn btn-info" onclick="MessageSystem.exportReport()" style="padding: 8px 16px; font-size: 13px;" title="Exporta relatório completo estruturado por seções">
+                    📊 Relatório Completo
+                  </button>
+                  <button class="btn btn-primary" onclick="MessageSystem.copyAllMessages()" style="padding: 8px 16px; font-size: 13px;" title="Copia todas as mensagens em formato simples">
+                    📋 Copiar Todas
+                  </button>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button class="filter-btn active" data-filter="all" onclick="MessageSystem.setFilter('all')">
+                    📋 Todas
+                  </button>
+                  <button class="filter-btn" data-filter="pending" onclick="MessageSystem.setFilter('pending')">
+                    ⏳ Pendentes
+                  </button>
+                  <button class="filter-btn" data-filter="completed" onclick="MessageSystem.setFilter('completed')">
+                    ✅ Corrigidas
+                  </button>
+                  <button class="filter-btn" data-filter="own" onclick="MessageSystem.setFilter('own')">
+                    📤 Minhas
+                  </button>
+                </div>
               </div>
 
-              <div id="mensagensContainer" style="margin-top: 30px"></div>
+              <!-- Container de Mensagens (Chat Style) -->
+              <div id="messagesListContainer" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
           </div>
         </div>
@@ -1943,7 +1997,7 @@
     <div id="loginModal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <h2>🔐 Login - OAE Revisor V4.3</h2>
+          <h2>🔐 Login - OAE Revisor V4.4</h2>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -2261,6 +2315,7 @@
     <script src="js/fieldChat.js"></script>
     <script src="js/auditSystem.js"></script>
     <script src="js/workManager.js"></script>
+    <script src="js/messageSystem.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/sync.js"></script>
     <script src="js/autosave.js"></script>
@@ -2290,6 +2345,11 @@
         UI.renderAll();
         UI.updateTabBadges();
         AutoSave.start();
+
+        // Inicializa o MessageSystem DEPOIS que appState está carregado
+        if (window.MessageSystem && window.appState) {
+          MessageSystem.init();
+        }
 
         // Inicializa MultiPeerSync se usuário estiver logado
         if (AuthSystem.isLoggedIn && AuthSystem.currentUser && window.MultiPeerSync) {

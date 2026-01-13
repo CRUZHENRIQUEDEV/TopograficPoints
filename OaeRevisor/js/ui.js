@@ -76,10 +76,14 @@ const UI = {
     this.renderAspects();
     this.renderFunctionalDeficiencies();
     this.renderAttachments();
-    this.renderMessages();
     this.updateReport();
     this.updateFieldVisuals();
     this.updateTabBadges();
+
+    // Renderiza o sistema de mensagens se disponível (substitui UI.renderMessages antigo)
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   // --- TRAMOS TABLE ---
@@ -301,6 +305,12 @@ const UI = {
       return;
     }
 
+    // Cria descrição formatada para aparecer nas mensagens
+    let description = `Tramo ${tramo} - ${regiao} | ${familia}: ${erro}`;
+    if (obs) {
+      description += ` - ${obs}`;
+    }
+
     const elementError = {
       id: "elem_" + Date.now() + Math.random(),
       tramo,
@@ -309,6 +319,13 @@ const UI = {
       erro,
       obs,
       responses: [],
+      description: description, // Adiciona descrição para sistema de mensagens
+      nomeUsuario: window.AuthSystem?.currentUser?.name || 'Avaliador',
+      perfil: window.AuthSystem?.currentUser?.role || 'avaliador',
+      dataHistorico: new Date().toISOString(),
+      timestamp: Date.now(),
+      tramNumber: tramo,
+      field: familia
     };
 
     appState.elementErrors.push(elementError);
@@ -328,6 +345,11 @@ const UI = {
     this.updateReport();
     this.updateTabBadges();
     AutoSave.trigger();
+
+    // Atualiza o sistema de mensagens
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   renderElementsList() {
@@ -425,6 +447,11 @@ const UI = {
     this.updateReport();
     this.updateTabBadges();
     AutoSave.trigger();
+
+    // Atualiza o sistema de mensagens
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   editElementError(id) {
@@ -808,13 +835,26 @@ const UI = {
 
     if (!nome) return;
 
-    appState.anexoErrors.push({
+    // Cria descrição formatada para aparecer nas mensagens
+    let description = `Anexo [${nome}]: ${inconsist}`;
+    if (obs) {
+      description += ` - ${obs}`;
+    }
+
+    const anexoError = {
       id: "anexo_" + Date.now(),
       nome,
       tipo,
       inconsist,
       obs,
-    });
+      description: description, // Adiciona descrição para sistema de mensagens
+      nomeUsuario: window.AuthSystem?.currentUser?.name || 'Avaliador',
+      perfil: window.AuthSystem?.currentUser?.role || 'avaliador',
+      dataHistorico: new Date().toISOString(),
+      timestamp: Date.now()
+    };
+
+    appState.anexoErrors.push(anexoError);
 
     document.getElementById("anexoNome").value = "";
     document.getElementById("anexoObs").value = "";
@@ -822,6 +862,11 @@ const UI = {
     this.updateReport();
     this.updateTabBadges();
     AutoSave.trigger();
+
+    // Atualiza o sistema de mensagens
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   renderAttachments() {
@@ -871,6 +916,11 @@ const UI = {
     this.updateReport();
     this.updateTabBadges();
     AutoSave.trigger();
+
+    // Atualiza o sistema de mensagens
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   // --- MESSAGES ---
@@ -902,7 +952,18 @@ const UI = {
   },
 
   renderMessages() {
+    // Delegate to MessageSystem if available (new system)
+    if (window.MessageSystem && typeof MessageSystem.renderMessages === 'function') {
+      MessageSystem.renderMessages();
+      return;
+    }
+
+    // Fallback: old container (kept for backward compatibility)
     const container = document.getElementById("mensagensContainer");
+    if (!container) {
+      // Container doesn't exist, skip rendering
+      return;
+    }
 
     // Convert all errors to message format
     const allMessages = [];
@@ -1291,6 +1352,15 @@ const UI = {
       .match(/'([^']+)',\s*'([^']+)'/);
     const label = labelMatch ? labelMatch[2] : "Campo";
 
+    // Cria descrição formatada para aparecer nas mensagens
+    let description = '';
+    if (types.length > 0) {
+      description = types.join('; ');
+    }
+    if (obs) {
+      description += (description ? ' - ' : '') + obs;
+    }
+
     const fieldError = {
       id: fieldId,
       label,
@@ -1301,6 +1371,11 @@ const UI = {
         )?.value || "(vazio)",
       types,
       obs,
+      description: description, // Adiciona descrição para sistema de mensagens
+      nomeUsuario: window.AuthSystem?.currentUser?.name || 'Avaliador',
+      perfil: window.AuthSystem?.currentUser?.role || 'avaliador',
+      dataHistorico: new Date().toISOString(),
+      timestamp: Date.now()
     };
 
     appState.errors[fieldId] = fieldError;
@@ -1320,6 +1395,11 @@ const UI = {
     this.updateReport();
     this.updateTabBadges();
     AutoSave.trigger();
+
+    // Atualiza o sistema de mensagens
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   clearFieldError() {
@@ -1329,6 +1409,11 @@ const UI = {
     this.updateReport();
     this.updateTabBadges();
     AutoSave.trigger();
+
+    // Atualiza o sistema de mensagens
+    if (window.MessageSystem) {
+      MessageSystem.renderMessages();
+    }
   },
 
   updateFieldVisuals() {
@@ -2510,7 +2595,11 @@ const UI = {
       this.showNotification(`Exclusão registrada no histórico de auditoria`, "info");
 
       document.getElementById("worksManagementModal")?.remove();
-      this.showWorksModal(); // Refresh list
+
+      // Aguarda um momento para o DOM limpar antes de reabrir o modal
+      setTimeout(() => {
+        this.showWorksModal(); // Refresh list
+      }, 100);
     } catch (err) {
       console.error("Delete failed:", err);
       alert("Erro ao excluir obra: " + err.message);

@@ -427,5 +427,7 @@ function getDefaultAppState() {
 
 let appState = getDefaultAppState();
 
+// Expor appState globalmente para permitir acesso por outros módulos
+window.appState = appState;
 
 // Listeners/Subscribers could be added here if needed

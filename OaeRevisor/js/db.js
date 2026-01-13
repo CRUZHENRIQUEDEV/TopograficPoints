@@ -141,7 +141,13 @@ const DB = {
     /**
      * Loads a complete obra by codigo, converting arrays back to Maps
      */
-    loadObra(codigo) {
+    async loadObra(codigo) {
+        // Initialize DB if not ready
+        if (!this.db) {
+            console.warn('DB not initialized. Initializing now...');
+            await this.init();
+        }
+
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readonly');
             const store = transaction.objectStore(this.storeName);

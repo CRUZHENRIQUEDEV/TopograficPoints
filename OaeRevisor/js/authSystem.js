@@ -406,6 +406,11 @@ const AuthSystem = {
       MultiPeerSync.userEmail = this.currentUser.email;
       MultiPeerSync.userName = this.currentUser.name;
     }
+
+    // Atualiza campo de avaliador (auto-preenche e bloqueia para inspetores)
+    if (window.Sync && typeof Sync.setupAvaliadorField === 'function') {
+      Sync.setupAvaliadorField();
+    }
   },
 
   /**

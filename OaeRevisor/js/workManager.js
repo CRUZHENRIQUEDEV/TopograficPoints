@@ -80,6 +80,12 @@ const WorkManager = {
    */
   async saveWork(workData, options = { broadcast: true }) {
     try {
+      // Initialize DB if not ready
+      if (!DB.db) {
+        console.warn("Database not initialized. Initializing now...");
+        await DB.init();
+      }
+
       const transaction = DB.db.transaction(["obras"], "readwrite");
       const store = transaction.objectStore("obras");
 
@@ -141,6 +147,12 @@ const WorkManager = {
    */
   async deleteWork(codigo) {
     try {
+      // Initialize DB if not ready
+      if (!DB.db) {
+        console.warn("Database not initialized. Initializing now...");
+        await DB.init();
+      }
+
       const transaction = DB.db.transaction(["obras"], "readwrite");
       const store = transaction.objectStore("obras");
 

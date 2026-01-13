@@ -6,6 +6,7 @@ const Sync = {
   init() {
     this.setupBiBinding();
     this.syncFromDOM();
+    this.setupAvaliadorField();
   },
 
   setupBiBinding() {
@@ -116,6 +117,39 @@ const Sync = {
 
     // 6. Badges (Red ⚠ markers)
     UI.updateFieldVisuals();
+
+    // 7. Auto-fill avaliador name and lock for inspetores
+    this.setupAvaliadorField();
+  },
+
+  /**
+   * Configura o campo de Nome do Avaliador baseado no usuário logado
+   */
+  setupAvaliadorField() {
+    const avaliadorField = document.getElementById("avaliadorNome");
+    if (!avaliadorField || !window.AuthSystem || !AuthSystem.isLoggedIn) return;
+
+    const currentUser = AuthSystem.currentUser;
+    const isInspetor = currentUser.role === AuthSystem.ROLES.INSPETOR;
+
+    // Se o campo está vazio, preenche automaticamente com o nome do usuário logado
+    if (!avaliadorField.value && currentUser.name) {
+      avaliadorField.value = currentUser.name;
+      appState.work.avaliador = currentUser.name;
+    }
+
+    // Se for inspetor, bloqueia o campo
+    if (isInspetor) {
+      avaliadorField.disabled = true;
+      avaliadorField.style.backgroundColor = "var(--bg-secondary)";
+      avaliadorField.style.cursor = "not-allowed";
+      avaliadorField.title = "Campo bloqueado para inspetores";
+    } else {
+      avaliadorField.disabled = false;
+      avaliadorField.style.backgroundColor = "";
+      avaliadorField.style.cursor = "";
+      avaliadorField.title = "";
+    }
   },
 
   syncFromDB(data) {
