@@ -718,6 +718,7 @@ function validateMinimumWidth() {
 
 // Validar altura mínima
 // REGRA SIMPLES:
+// - Se tipo encontro for MONOLÍTICO e tiver tramo: altura (configurações) = altura da transição
 // - Se tiver 1 tramo: altura (configurações) = altura da transição
 // - Se tiver mais de 1 tramo: altura = maior apoio + altura longarina
 function validateMinimumHeight() {
@@ -727,19 +728,9 @@ function validateMinimumHeight() {
 
   const errorElement = document.getElementById("altura-sum-error");
 
-  // Se não há longarinas, não validar altura
-  const qtdLongarinasField = document.getElementById("qtd-longarinas");
-  const qtdLongarinas =
-    parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
-  if (qtdLongarinas === 0) {
-    if (errorElement) errorElement.style.display = "none";
-    return true;
-  }
-
-  if (alturaTotal === 0) {
-    if (errorElement) errorElement.style.display = "none";
-    return true;
-  }
+  // Verificar tipo de encontro
+  const tipoEncontroField = document.getElementById("tipo-encontro");
+  const tipoEncontro = tipoEncontroField ? tipoEncontroField.value : "";
 
   // Verificar quantidade de tramos
   const qtdTramosField = document.getElementById("qtd-tramos");
@@ -753,6 +744,83 @@ function validateMinimumHeight() {
   // Se não conseguir ler o valor ou for inválido, usar 1 como padrão
   if (isNaN(qtdTramos) || qtdTramos < 1) {
     qtdTramos = 1;
+  }
+
+  // REGRA ESPECIAL: Se tipo encontro for MONOLÍTICO e tiver tramo, altura = altura transição
+  const isMonolitico = tipoEncontro === "MONOLITICO";
+  const temTramo = qtdTramos > 0;
+
+  if (isMonolitico && temTramo) {
+    const alturaTransicaoField = document.getElementById("altura-transicao");
+    const alturaTransicao =
+      parseFloat(alturaTransicaoField ? alturaTransicaoField.value : 0) || 0;
+
+    if (alturaTransicao === 0) {
+      if (errorElement) errorElement.style.display = "none";
+      return true;
+    }
+
+    const tolerancia = 0.01;
+
+    // Validar se altura total = altura transição
+    if (Math.abs(alturaTotal - alturaTransicao) > tolerancia) {
+      document.getElementById("altura").classList.add("error");
+      if (alturaTransicaoField) {
+        alturaTransicaoField.classList.add("error");
+      }
+
+      if (errorElement) {
+        errorElement.innerHTML = `
+          Quando o tipo de encontro é MONOLÍTICO e há tramo na obra, a altura deve ser igual à altura da transição: ${alturaTransicao.toFixed(
+            2
+          )}m
+          <button
+            type="button"
+            onclick="showHeightCalculator()"
+            style="
+              background: #3498db;
+              color: white;
+              border: none;
+              padding: 3px 8px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+          >
+            Abrir Calculadora
+          </button>
+        `;
+        errorElement.style.display = "block";
+      }
+
+      return false;
+    }
+
+    // Se válido, remover erros
+    document.getElementById("altura").classList.remove("error");
+    const alturaTransicaoFieldEl = document.getElementById("altura-transicao");
+    if (alturaTransicaoFieldEl) {
+      alturaTransicaoFieldEl.classList.remove("error");
+    }
+    if (errorElement) {
+      errorElement.style.display = "none";
+    }
+
+    return true;
+  }
+
+  // Se não há longarinas, não validar altura (exceto para MONOLÍTICO que já foi tratado acima)
+  const qtdLongarinasField = document.getElementById("qtd-longarinas");
+  const qtdLongarinas =
+    parseInt(qtdLongarinasField ? qtdLongarinasField.value : 0) || 0;
+  if (qtdLongarinas === 0) {
+    if (errorElement) errorElement.style.display = "none";
+    return true;
+  }
+
+  if (alturaTotal === 0) {
+    if (errorElement) errorElement.style.display = "none";
+    return true;
   }
 
   let alturaMinima = 0;

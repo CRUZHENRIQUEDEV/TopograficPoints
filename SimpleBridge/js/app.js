@@ -628,11 +628,45 @@ document.addEventListener("DOMContentLoaded", function () {
   const alturaField = document.getElementById("altura");
   if (alturaField) {
     alturaField.addEventListener("input", function() {
+      // Sincronizar altura transição quando tipo for MONOLÍTICO e houver tramo
+      const tipoEncontroField = document.getElementById("tipo-encontro");
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const alturaTransicaoField = document.getElementById("altura-transicao");
+      
+      if (tipoEncontroField && qtdTramosField && alturaTransicaoField) {
+        const tipoEncontro = tipoEncontroField.value;
+        const qtdTramos = parseInt(qtdTramosField.value) || 0;
+        
+        if (tipoEncontro === "MONOLITICO" && qtdTramos > 0) {
+          const altura = parseFloat(alturaField.value) || 0;
+          if (altura > 0) {
+            alturaTransicaoField.value = altura.toFixed(2);
+          }
+        }
+      }
+      
       if (typeof validateMinimumHeight === "function") {
         validateMinimumHeight();
       }
     });
     alturaField.addEventListener("blur", function() {
+      // Sincronizar altura transição quando tipo for MONOLÍTICO e houver tramo
+      const tipoEncontroField = document.getElementById("tipo-encontro");
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const alturaTransicaoField = document.getElementById("altura-transicao");
+      
+      if (tipoEncontroField && qtdTramosField && alturaTransicaoField) {
+        const tipoEncontro = tipoEncontroField.value;
+        const qtdTramos = parseInt(qtdTramosField.value) || 0;
+        
+        if (tipoEncontro === "MONOLITICO" && qtdTramos > 0) {
+          const altura = parseFloat(alturaField.value) || 0;
+          if (altura > 0) {
+            alturaTransicaoField.value = altura.toFixed(2);
+          }
+        }
+      }
+      
       if (typeof validateMinimumHeight === "function") {
         validateMinimumHeight();
       }
@@ -644,6 +678,30 @@ document.addEventListener("DOMContentLoaded", function () {
   if (qtdTramosField) {
     qtdTramosField.addEventListener("change", function() {
       setTimeout(() => {
+        // Sincronizar alturas quando tipo for MONOLÍTICO e houver tramo
+        const tipoEncontroField = document.getElementById("tipo-encontro");
+        const alturaField = document.getElementById("altura");
+        const alturaTransicaoField = document.getElementById("altura-transicao");
+        
+        if (tipoEncontroField && alturaField && alturaTransicaoField) {
+          const tipoEncontro = tipoEncontroField.value;
+          const qtdTramos = parseInt(qtdTramosField.value) || 0;
+          
+          if (tipoEncontro === "MONOLITICO" && qtdTramos > 0) {
+            // Se altura transição já tiver valor, sincronizar para altura
+            const alturaTransicao = parseFloat(alturaTransicaoField.value) || 0;
+            if (alturaTransicao > 0) {
+              alturaField.value = alturaTransicao.toFixed(2);
+            } else {
+              // Se altura já tiver valor, sincronizar para altura transição
+              const altura = parseFloat(alturaField.value) || 0;
+              if (altura > 0) {
+                alturaTransicaoField.value = altura.toFixed(2);
+              }
+            }
+          }
+        }
+        
         if (typeof validateMinimumHeight === "function") {
           validateMinimumHeight();
         }
@@ -655,6 +713,30 @@ document.addEventListener("DOMContentLoaded", function () {
   const tipoEncontroField = document.getElementById("tipo-encontro");
   if (tipoEncontroField) {
     tipoEncontroField.addEventListener("change", function() {
+      // Sincronizar alturas quando tipo for MONOLÍTICO e houver tramo
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const alturaField = document.getElementById("altura");
+      const alturaTransicaoField = document.getElementById("altura-transicao");
+      
+      if (qtdTramosField && alturaField && alturaTransicaoField) {
+        const tipoEncontro = tipoEncontroField.value;
+        const qtdTramos = parseInt(qtdTramosField.value) || 0;
+        
+        if (tipoEncontro === "MONOLITICO" && qtdTramos > 0) {
+          // Se altura transição já tiver valor, sincronizar para altura
+          const alturaTransicao = parseFloat(alturaTransicaoField.value) || 0;
+          if (alturaTransicao > 0) {
+            alturaField.value = alturaTransicao.toFixed(2);
+          } else {
+            // Se altura já tiver valor, sincronizar para altura transição
+            const altura = parseFloat(alturaField.value) || 0;
+            if (altura > 0) {
+              alturaTransicaoField.value = altura.toFixed(2);
+            }
+          }
+        }
+      }
+      
       if (typeof validateMinimumHeight === "function") {
         validateMinimumHeight();
       }
@@ -665,15 +747,56 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Listener para validar altura mínima da transição quando tipo for APOIO
+  // E sincronizar altura quando tipo for MONOLÍTICO e houver tramo
   if (alturaTransicaoField) {
     alturaTransicaoField.addEventListener("input", function() {
+      // Sincronizar altura quando tipo for MONOLÍTICO e houver tramo
+      const tipoEncontroField = document.getElementById("tipo-encontro");
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const alturaField = document.getElementById("altura");
+      
+      if (tipoEncontroField && qtdTramosField && alturaField) {
+        const tipoEncontro = tipoEncontroField.value;
+        const qtdTramos = parseInt(qtdTramosField.value) || 0;
+        
+        if (tipoEncontro === "MONOLITICO" && qtdTramos > 0) {
+          const alturaTransicao = parseFloat(alturaTransicaoField.value) || 0;
+          if (alturaTransicao > 0) {
+            alturaField.value = alturaTransicao.toFixed(2);
+          }
+        }
+      }
+      
       if (typeof validateTransitionMinimumHeight === "function") {
         validateTransitionMinimumHeight();
       }
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
+      }
     });
     alturaTransicaoField.addEventListener("blur", function() {
+      // Sincronizar altura quando tipo for MONOLÍTICO e houver tramo
+      const tipoEncontroField = document.getElementById("tipo-encontro");
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const alturaField = document.getElementById("altura");
+      
+      if (tipoEncontroField && qtdTramosField && alturaField) {
+        const tipoEncontro = tipoEncontroField.value;
+        const qtdTramos = parseInt(qtdTramosField.value) || 0;
+        
+        if (tipoEncontro === "MONOLITICO" && qtdTramos > 0) {
+          const alturaTransicao = parseFloat(alturaTransicaoField.value) || 0;
+          if (alturaTransicao > 0) {
+            alturaField.value = alturaTransicao.toFixed(2);
+          }
+        }
+      }
+      
       if (typeof validateTransitionMinimumHeight === "function") {
         validateTransitionMinimumHeight();
+      }
+      if (typeof validateMinimumHeight === "function") {
+        validateMinimumHeight();
       }
     });
   }
@@ -1430,6 +1553,28 @@ function updateAlturaTransicaoField() {
       // Adicionar classe required ao label
       if (alturaTransicaoLabel) {
         alturaTransicaoLabel.classList.add("required");
+      }
+      
+      // Sincronizar alturas quando tipo for MONOLÍTICO e houver tramo
+      const qtdTramosField = document.getElementById("qtd-tramos");
+      const alturaField = document.getElementById("altura");
+      
+      if (tipoEncontro === "MONOLITICO" && qtdTramosField && alturaField) {
+        const qtdTramos = parseInt(qtdTramosField.value) || 0;
+        
+        if (qtdTramos > 0) {
+          // Se altura transição já tiver valor, sincronizar para altura
+          const alturaTransicao = parseFloat(alturaTransicaoField.value) || 0;
+          if (alturaTransicao > 0) {
+            alturaField.value = alturaTransicao.toFixed(2);
+          } else {
+            // Se altura já tiver valor, sincronizar para altura transição
+            const altura = parseFloat(alturaField.value) || 0;
+            if (altura > 0) {
+              alturaTransicaoField.value = altura.toFixed(2);
+            }
+          }
+        }
       }
       
       // Se o campo estiver vazio, manter vazio (será validado como obrigatório)
