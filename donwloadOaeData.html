@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNIT OAE Manager - Console</title>
+    <title> OAE Manager - Console</title>
     <style>
         * {
             margin: 0;
@@ -133,7 +133,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏗️ DNIT OAE Manager</h1>
+            <h1>🏗️ OAE Manager</h1>
             <p>Extrator Completo via Console</p>
         </div>
 
@@ -143,7 +143,7 @@
 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Acesse o DNIT e faça login:</strong><br>
+                    <strong>Acesse o site e faça login:</strong><br>
                     <code>https://servicos.dnit.gov.br/sgplan/prd/sge/</code>
                 </div>
 
@@ -219,9 +219,9 @@
     </div>
 
     <script>
-// Versão: 6.0 - DNIT OAE Extractor - Cadastro e Inspeções Rotineiras
+// Versão: 6.0 - OAE Extractor - Cadastro e Inspeções Rotineiras
 (async function() {
-    console.log('🚀 DNIT OAE Extractor v6.0 - Cadastro e Inspeções Rotineiras');
+    console.log('🚀 OAE Extractor v6.0 - Cadastro e Inspeções Rotineiras');
     console.log('═══════════════════════════════════════\n');
 
     // URLs da API
@@ -240,7 +240,9 @@
         '570a3aef-92fc-4ef2-b660-eccd8fcc2ec7',
         'b6988556-b011-4f6e-a119-70d29727bb08',
         '2c42ab19-c634-412e-92a6-382979ad3ca2',
-        'b6988556-b011-4f6e-a119-70d29727bb08'
+        'b6988556-b011-4f6e-a119-70d29727bb08',
+        '1de8536b-75d9-4bc6-b0f7-fcb7e47d2736'
+
     ];
 
     // Tipo de inspeção (para endpoint de inspeções)
@@ -936,9 +938,9 @@ function copiarCodigo() {
 
 // O script que deve aparecer na div #codigoScript:
 document.getElementById('codigoScript').textContent =
- `// Versão: 7.0 - DNIT OAE Extractor - Download Simultâneo Cadastral e Rotineira
+ `// Versão: 7.0  OAE Extractor - Download Simultâneo Cadastral e Rotineira
 (async function() {
-    console.log('🚀 DNIT OAE Extractor v7.0 - Cadastro e Inspeções Rotineiras');
+    console.log('🚀  OAE Extractor v7.0 - Cadastro e Inspeções Rotineiras');
     console.log('═══════════════════════════════════════\\n');
     // URLs da API
     const API_BASE_URL_OAE = 'https://servicos.dnit.gov.br/sgplan/prd/sge/api/v1/CadastroOae/obterListaManterOaes';
