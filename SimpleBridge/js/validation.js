@@ -708,6 +708,47 @@ function validateMinimumWidth() {
   return true;
 }
 
+// Validar deslocamento encontro laje (não pode ser maior que largura/2)
+function validateDeslocamentoEncontroLaje() {
+  const larguraField = document.getElementById("largura");
+  const deslocEsqField = document.getElementById("deslocamento-esquerdo-encontro-laje");
+  const deslocDirField = document.getElementById("deslocamento-direito-encontro-laje");
+
+  if (!larguraField || !deslocEsqField || !deslocDirField) {
+    return true;
+  }
+
+  const largura = parseFloat(larguraField.value) || 0;
+  const deslocEsq = parseFloat(deslocEsqField.value) || 0;
+  const deslocDir = parseFloat(deslocDirField.value) || 0;
+
+  // Se largura é 0 ou os deslocamentos são 0, não validar
+  if (largura === 0 || (deslocEsq === 0 && deslocDir === 0)) {
+    deslocEsqField.classList.remove("error");
+    deslocDirField.classList.remove("error");
+    return true;
+  }
+
+  const maxDeslocamento = largura / 2;
+  let valid = true;
+
+  if (deslocEsq > maxDeslocamento) {
+    deslocEsqField.classList.add("error");
+    valid = false;
+  } else {
+    deslocEsqField.classList.remove("error");
+  }
+
+  if (deslocDir > maxDeslocamento) {
+    deslocDirField.classList.add("error");
+    valid = false;
+  } else {
+    deslocDirField.classList.remove("error");
+  }
+
+  return valid;
+}
+
 // Validar altura mínima
 // REGRA SIMPLES:
 // - Se tipo encontro for MONOLÍTICO e tiver tramo: altura (configurações) = altura da transição
@@ -1234,6 +1275,15 @@ function validateForm() {
     isValid = false;
     missingFields.push(
       "Tipo de Superestrutura inválido ou ROTULADA sem mínimo de 2 transversinas"
+    );
+  }
+
+  const deslocamentoEncontroLajeValid = validateDeslocamentoEncontroLaje();
+  if (!deslocamentoEncontroLajeValid) {
+    isValid = false;
+    const largura = parseFloat(document.getElementById("largura").value) || 0;
+    missingFields.push(
+      `Deslocamento encontro laje não pode ser maior que LARGURA/2 (${(largura / 2).toFixed(2)}m)`
     );
   }
 
@@ -1990,6 +2040,7 @@ window.validateAlaWithEncountro = validateAlaWithEncountro;
 window.validateAlaExclusivity = validateAlaExclusivity;
 window.validatePilarMaxLength = validatePilarMaxLength;
 window.validateMinimumWidth = validateMinimumWidth;
+window.validateDeslocamentoEncontroLaje = validateDeslocamentoEncontroLaje;
 window.validateMinimumHeight = validateMinimumHeight;
 window.validateTramosSum = validateTramosSum;
 window.validateSuperstructureType = validateSuperstructureType;
