@@ -619,14 +619,8 @@ function validateLateralProtection() {
     (guardaRodasDireito !== "" && guardaRodasDireito !== "Nenhum") ||
     (calcadaDireita !== "" && calcadaDireita !== "Nenhum");
 
-  // Verificar se TODOS os campos estão vazios (formulário inicial/limpo)
-  const allFieldsEmpty =
-    barreiraEsquerda === "" && guardaRodasEsquerdo === "" && calcadaEsquerda === "" &&
-    barreiraDireita === "" && guardaRodasDireito === "" && calcadaDireita === "";
-
-  // Se todos os campos estão vazios, não mostrar erro (é um formulário novo/limpo)
-  // Só mostrar erro quando houver dados mas estiverem incompletos E o formulário já foi tentado salvar
-  const shouldShowError = window.formSubmitAttempted && !allFieldsEmpty && (!hasLeftProtection || !hasRightProtection);
+  // Mostrar erro quando não houver proteção em ambos os lados E o formulário já foi tentado salvar
+  const shouldShowError = window.formSubmitAttempted && (!hasLeftProtection || !hasRightProtection);
 
   if (shouldShowError && !hasLeftProtection) {
     document.getElementById("tipo-barreira-esquerda").classList.add("error");
@@ -655,10 +649,8 @@ function validateLateralProtection() {
     if (errorMessage) errorMessage.style.display = "none";
   }
 
-  // Retornar true se:
-  // 1. Todos os campos vazios (formulário novo) - permite salvar, pois é validação de formulário vazio
-  // 2. OU ambos os lados têm proteção válida
-  return allFieldsEmpty || (hasLeftProtection && hasRightProtection);
+  // Retornar true APENAS se ambos os lados têm proteção válida
+  return hasLeftProtection && hasRightProtection;
 }
 
 // Validar ala com encontro
