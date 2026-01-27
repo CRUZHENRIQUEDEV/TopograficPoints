@@ -19,7 +19,7 @@ function showHeightCalculator() {
       
       <div class="calc-row" style="margin-bottom: 15px;">
         <label style="width: 150px; display: inline-block;">Altura Total:</label>
-        <input type="number" id="calc-altura-total" value="${alturaTotal}" step="0.01" min="0" style="width: 100px;">
+        <input type="number" id="calc-altura-total" value="${alturaTotal || 0.30}" step="0.01" min="0.30" style="width: 100px;">
       </div>
       
       <div class="calc-row" style="margin-bottom: 15px;">
@@ -120,6 +120,12 @@ function updateHeightCalculations() {
 function applyHeightCalculation() {
   const alturaTotal = parseFloat(document.getElementById("calc-altura-total").value) || 0;
   const alturaLongarina = parseFloat(document.getElementById("calc-altura-longarina").value) || 0;
+  
+  // VALIDAÇÃO: Altura nunca pode ser zero
+  if (alturaTotal === 0 || alturaTotal < 0.01) {
+    alert("A altura não pode ser zero. Por favor, informe um valor válido (mínimo 0.01m).");
+    return;
+  }
   
   // Atualizar campos no formulário principal
   document.getElementById("altura").value = alturaTotal;
