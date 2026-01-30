@@ -851,21 +851,46 @@ function validateMinimumHeight() {
     return true;
   }
 
-  if (alturaTotal === 0) {
-    if (errorElement) errorElement.style.display = "none";
-    return true;
+  // VALIDAÇÃO CRÍTICA: Altura nunca pode ser zero
+  if (alturaTotal === 0 || alturaTotal < 0.30) {
+    document.getElementById("altura").classList.add("error");
+    if (errorElement) {
+      errorElement.innerHTML = `
+        A altura não pode ser zero. Por favor, informe um valor válido.
+        <button
+          type="button"
+          onclick="showHeightCalculator()"
+          style="
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+          "
+        >
+          Abrir Calculadora
+        </button>
+      `;
+      errorElement.style.display = "block";
+    }
+    return false;
   }
 
   let alturaMinima = 0;
   const tolerancia = 0.01;
 
   if (qtdTramos === 1) {
-    // REGRA: Se tiver 1 tramo, altura = altura da transição (simples assim)
+    // REGRA: Se tiver 1 tramo, altura = altura da transição (mas nunca zero)
     const alturaTransicaoField = document.getElementById("altura-transicao");
     const alturaTransicao =
       parseFloat(alturaTransicaoField ? alturaTransicaoField.value : 0) || 0;
 
-    if (alturaTransicao === 0) {
+    // Se altura da transição for zero, ainda assim a altura não pode ser zero
+    // Mas não vamos forçar a igualdade se a transição não estiver preenchida
+    if (alturaTransicao === 0 || alturaTransicao < 0.30) {
+      // Altura já foi validada como não-zero acima, então está OK
       if (errorElement) errorElement.style.display = "none";
       return true;
     }
@@ -920,14 +945,16 @@ function validateMinimumHeight() {
 
     return true;
   } else {
-    // REGRA: Se tiver mais de 1 tramo, altura = maior apoio + altura longarina (SIMPLES)
+    // REGRA: Se tiver mais de 1 tramo, altura = maior apoio + altura longarina (mas nunca zero)
     const apoioAlturaFields = document.querySelectorAll(".apoio-altura-field");
     if (apoioAlturaFields.length === 0) {
+      // Sem apoios, mas altura já foi validada como não-zero acima
       if (errorElement) errorElement.style.display = "none";
       return true;
     }
 
-    if (alturaLongarina === 0) {
+    if (alturaLongarina === 0 || alturaLongarina < 0.30) {
+      // Sem altura de longarina válida, mas altura já foi validada como não-zero acima
       if (errorElement) errorElement.style.display = "none";
       return true;
     }
@@ -943,13 +970,41 @@ function validateMinimumHeight() {
       }
     });
 
-    if (maiorApoio === 0) {
+    if (maiorApoio === 0 || maiorApoio < 0.30) {
+      // Sem apoio válido, mas altura já foi validada como não-zero acima
       if (errorElement) errorElement.style.display = "none";
       return true;
     }
 
-    // Altura = maior apoio + altura longarina
+    // Altura mínima = maior apoio + altura longarina (nunca pode ser zero)
     const alturaMinima = maiorApoio + alturaLongarina;
+    
+    // Garantir que altura mínima não seja zero
+    if (alturaMinima < 0.30) {
+      document.getElementById("altura").classList.add("error");
+      if (errorElement) {
+        errorElement.innerHTML = `
+          A altura mínima calculada (maior apoio + altura longarina) não pode ser zero.
+          <button
+            type="button"
+            onclick="showHeightCalculator()"
+            style="
+              background: #3498db;
+              color: white;
+              border: none;
+              padding: 3px 8px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+          >
+            Abrir Calculadora
+          </button>
+        `;
+        errorElement.style.display = "block";
+      }
+      return false;
+    }
 
     // Validar
     if (Math.abs(alturaTotal - alturaMinima) > tolerancia) {
