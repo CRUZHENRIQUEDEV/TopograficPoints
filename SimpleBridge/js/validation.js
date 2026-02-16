@@ -220,6 +220,14 @@ window.requiredFields = {
       return qtdPilares > 0;
     },
   },
+  "tipo-travessa": {
+    type: "text",
+    required: function () {
+      // Obrigatório quando há APOIO na transição
+      const tipoEncontroField = document.getElementById("tipo-encontro");
+      return tipoEncontroField && tipoEncontroField.value === "APOIO";
+    },
+  },
   "altura-travessa": {
     type: "number",
     min: 0,

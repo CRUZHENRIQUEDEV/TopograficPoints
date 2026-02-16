@@ -365,15 +365,6 @@ function generateBridgePierDataFromObra(obra) {
     });
   }
 
-  // Se não há apoios, retorna estrutura vazia
-  if (pierHeights.length === 0) {
-    return {
-      PierConfigurations: {
-        _piers: [],
-      },
-    };
-  }
-
   // Processa larguras dos pilares (formato: "0.6;0.6;0.6;0.6;0.6;0.6")
   const pillarWidths = [];
   const larguraPilarValue = obra["LARGURA PILAR"] || obra.LARGURA_PILAR;
@@ -401,6 +392,19 @@ function generateBridgePierDataFromObra(obra) {
         pillarLengths.push(roundTo3Decimals(valor));
       }
     });
+  }
+
+  // Determinar quantidade de apoios pelo maior array (altura, largura ou comprimento)
+  // Quando há APOIO na transição com 1 tramo, a altura pode ser 0 mas COMP e LARG estão preenchidos
+  const numPiers = Math.max(pierHeights.length, pillarWidths.length, pillarLengths.length);
+
+  // Se não há apoios, retorna estrutura vazia
+  if (numPiers === 0) {
+    return {
+      PierConfigurations: {
+        _piers: [],
+      },
+    };
   }
 
   // Dados comuns a todos os apoios (aplicados a cada PierConfiguration)
@@ -485,10 +489,10 @@ function generateBridgePierDataFromObra(obra) {
 
   // Criar array de PierConfiguration (um objeto para cada apoio)
   const piers = [];
-  for (let i = 0; i < pierHeights.length; i++) {
+  for (let i = 0; i < numPiers; i++) {
     const pierConfig = {
       Index: i,
-      Height: pierHeights[i],
+      Height: pierHeights[i] || 0.0,
       IsManuallyDefined: true,
 
       // Configuração dos Pilares (pode variar por apoio)

@@ -136,8 +136,10 @@ function handleSingleTramoRestrictions(qtdTramos) {
       const errorEl = document.getElementById("tipo-travessa-error");
       if (errorEl) errorEl.classList.remove("visible");
     } else if (hasApoioTransicao && isSingleTramo) {
-      // LIBERA quando transição = "APOIO" e há 1 tramo
+      // LIBERA e OBRIGA quando transição = "APOIO" e há 1 tramo
       tipoTravessaField.disabled = false;
+      const label = document.querySelector('label[for="tipo-travessa"]');
+      if (label) label.classList.add("required");
     } else {
       // Libera normalmente se houver mais de 1 tramo
       tipoTravessaField.disabled = false;
@@ -297,11 +299,7 @@ function generateApoiosFields() {
     parseInt(document.getElementById("qtd-pilares")?.value) || 0;
   const container = document.getElementById("apoios-fields");
 
-
-  if (!container) {
-    console.log("[DEBUG] container apoios-fields NÃO encontrado!");
-    return;
-  }
+  if (!container) return;
 
   container.innerHTML = "";
 

@@ -293,11 +293,14 @@ function saveCurrentWork() {
     const apoiosComprimentos = [];
 
     document.querySelectorAll(".apoio-altura-field").forEach((field) => {
-      apoiosAlturas.push(field.value || "0.00");
+      // Ignorar campos bloqueados (ex: "Bloqueado" quando 1 tramo + APOIO na transição)
+      const val = field.disabled ? "0.00" : (field.value || "0.00");
+      apoiosAlturas.push(val);
     });
 
     document.querySelectorAll(".apoio-larg-field").forEach((field) => {
-      apoiosLarguras.push(field.value || "0.00");
+      const val = field.disabled ? "0.00" : (field.value || "0.00");
+      apoiosLarguras.push(val);
     });
 
     document.querySelectorAll(".apoio-comp-field").forEach((field) => {

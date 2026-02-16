@@ -65,12 +65,29 @@ function exportToCSV() {
     });
     data["COMPRIMENTO TRAMOS"] = tramosValues.join(";");
 
-    // Coletar valores dos apoios
-    const apoiosValues = [];
+    // Coletar valores dos apoios (altura, largura e comprimento)
+    const apoiosAlturas = [];
+    const apoiosLarguras = [];
+    const apoiosComprimentos = [];
+
     document.querySelectorAll(".apoio-altura-field").forEach((field) => {
-      apoiosValues.push(field.value || "0.00");
+      // Ignorar campos bloqueados (ex: "Bloqueado" quando 1 tramo + APOIO na transição)
+      const val = field.disabled ? "0.00" : (field.value || "0.00");
+      apoiosAlturas.push(val);
     });
-    data["ALTURA APOIO"] = apoiosValues.join(";");
+
+    document.querySelectorAll(".apoio-larg-field").forEach((field) => {
+      const val = field.disabled ? "0.00" : (field.value || "0.00");
+      apoiosLarguras.push(val);
+    });
+
+    document.querySelectorAll(".apoio-comp-field").forEach((field) => {
+      apoiosComprimentos.push(field.value || "0.00");
+    });
+
+    data["ALTURA APOIO"] = apoiosAlturas.join(";");
+    data["LARGURA PILAR"] = apoiosLarguras.join(";");
+    data["COMPRIMENTO PILARES"] = apoiosComprimentos.join(";");
 
     // ========== CORREÇÃO AUTOMÁTICA ==========
     // Se QTD LONGARINAS = 1 (seção caixão), força ESPESSURA LONGARINA = 1
