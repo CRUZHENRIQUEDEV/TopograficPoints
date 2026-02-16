@@ -221,6 +221,13 @@ function handleSingleTramoRestrictions(qtdTramos) {
 
   // Forçar regeneração dos apoios se necessário
   if (isSingleTramo) {
+    // Quando 1 tramo + APOIO na transição, atualizar qtd-apoios para qtdPilares
+    const qtdApoiosField = document.getElementById("qtd-apoios");
+    if (qtdApoiosField && hasApoioTransicao) {
+      qtdApoiosField.value = 1;
+    } else if (qtdApoiosField && !hasApoioTransicao) {
+      qtdApoiosField.value = 0;
+    }
     generateApoiosFields();
   }
 
@@ -285,14 +292,27 @@ function toggleTipoApoioTransicao() {
 
 // Gerar campos de apoios
 function generateApoiosFields() {
-  const qtdApoios = parseInt(document.getElementById("qtd-apoios").value) || 0;
+  let qtdApoios = parseInt(document.getElementById("qtd-apoios").value) || 0;
   const qtdPilares =
     parseInt(document.getElementById("qtd-pilares")?.value) || 0;
   const container = document.getElementById("apoios-fields");
 
-  if (!container) return;
+
+  if (!container) {
+    console.log("[DEBUG] container apoios-fields NÃO encontrado!");
+    return;
+  }
 
   container.innerHTML = "";
+
+  // Quando há 1 tramo + APOIO na transição, precisa de 1 apoio (unidade estrutural)
+  const qtdTramosCheck = parseInt(document.getElementById("qtd-tramos")?.value) || 1;
+  const tipoEncontroCheck = document.getElementById("tipo-encontro");
+  const hasApoioTransicaoCheck = tipoEncontroCheck && tipoEncontroCheck.value === "APOIO";
+
+  if (qtdTramosCheck === 1 && hasApoioTransicaoCheck) {
+    qtdApoios = 1;
+  }
 
   if (qtdApoios === 0) {
     return;
@@ -325,24 +345,25 @@ function generateApoiosFields() {
                title="${shouldBlockAlturaApoio ? "Altura bloqueada quando há 1 tramo com transição APOIO" : ""}" />
       </div>
       <div class="apoio-field-wrapper">
-        <input type="number" class="apoio-comp-field" name="apoio-comp-${i}" 
-               step="0.01" min="0.1" placeholder="0.00" required />
+        <input type="number" class="apoio-comp-field" name="apoio-comp-${i}"
+               step="0.01" min="${shouldBlockAlturaApoio ? "0.3" : "0.1"}" placeholder="${shouldBlockAlturaApoio ? "0.30" : "0.00"}" required
+               title="${shouldBlockAlturaApoio ? "Comprimento mínimo: 0.30m (APOIO na transição)" : ""}" />
       </div>
       <div class="apoio-field-wrapper">
         <input type="${
           isPilarParede ? "text" : "number"
-        }" class="apoio-larg-field" name="apoio-larg-${i}" 
-               step="0.01" min="0.1" ${
+        }" class="apoio-larg-field" name="apoio-larg-${i}"
+               step="0.01" min="${shouldBlockAlturaApoio && !isPilarParede ? "0.3" : "0.1"}" ${
                  !isPilarParede ? 'max="2"' : ""
-               } placeholder="${isPilarParede ? "Cálculo automático" : "0.00"}" 
-               ${isPilarParede ? "disabled readonly" : "required"} 
-               value="${isPilarParede ? "Cálculo automático" : ""}" 
+               } placeholder="${isPilarParede ? "Cálculo automático" : (shouldBlockAlturaApoio ? "0.30" : "0.00")}"
+               ${isPilarParede ? "disabled readonly" : "required"}
+               value="${isPilarParede ? "Cálculo automático" : ""}"
                style="${
                  isPilarParede
                    ? "background-color: #f0f0f0; cursor: not-allowed;"
                    : ""
                }"
-               title="${!isPilarParede ? "Largura máxima: 2 metros" : ""}" />
+               title="${isPilarParede ? "" : (shouldBlockAlturaApoio ? "Largura mínima: 0.30m (APOIO na transição). Máximo: 2m" : "Largura máxima: 2 metros")}" />
       </div>
     `;
 
