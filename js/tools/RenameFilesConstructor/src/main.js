@@ -517,9 +517,7 @@ function applyToCurrent() {
   let manualDescription = "";
 
   if (currentRow) {
-    const nameInput = currentRow.querySelector(
-      'input[data-field="newName"]',
-    );
+    const nameInput = currentRow.querySelector('input[data-field="newName"]');
     const descInput = currentRow.querySelector(
       'input[data-field="description"]',
     );
@@ -580,9 +578,7 @@ function applyToAll() {
 
     if (row) {
       const nameInput = row.querySelector('input[data-field="newName"]');
-      const descInput = row.querySelector(
-        'input[data-field="description"]',
-      );
+      const descInput = row.querySelector('input[data-field="description"]');
       manualName = nameInput ? nameInput.value.trim() : "";
       manualDescription = descInput ? descInput.value.trim() : "";
     }
@@ -591,9 +587,7 @@ function applyToAll() {
     if (manualName) {
       item.newName = manualName;
     } else {
-      item.newName = keepOriginal
-        ? item.originalName
-        : generateName(index);
+      item.newName = keepOriginal ? item.originalName : generateName(index);
     }
 
     item.keepOriginal = keepOriginal;
@@ -745,9 +739,7 @@ function updateTable() {
       // Atualizar estado do botão de copiar quando descrição muda
       if (field === "description") {
         const row = e.target.closest("tr");
-        const copyBtn = row.querySelector(
-          'button[onclick*="copyDescription"]',
-        );
+        const copyBtn = row.querySelector('button[onclick*="copyDescription"]');
         if (copyBtn) {
           copyBtn.disabled = !e.target.value.trim();
         }
@@ -850,9 +842,7 @@ function updateButtonStates() {
   const hasFiles = files.length > 0;
   const hasAllNames =
     fileData.length > 0 &&
-    fileData.every(
-      (item) => item.newName.trim() !== "" || item.keepOriginal,
-    );
+    fileData.every((item) => item.newName.trim() !== "" || item.keepOriginal);
 
   applyCurrentBtn.disabled = currentFileIndex === -1;
   applyAllBtn.disabled = !hasFiles;
@@ -871,10 +861,7 @@ function copyDescription(index) {
   navigator.clipboard
     .writeText(description)
     .then(() => {
-      showMessage(
-        "Descrição copiada para a área de transferência!",
-        "success",
-      );
+      showMessage("Descrição copiada para a área de transferência!", "success");
     })
     .catch(() => {
       // Fallback para navegadores mais antigos
@@ -904,9 +891,7 @@ function exportToCsv() {
 
   let csvContent = "Nome Original\tNovo Nome\tDescrição\tTipo\n";
   fileData.forEach((item) => {
-    const type = item.keepOriginal
-      ? "Nome Original Mantido"
-      : "Renomeado";
+    const type = item.keepOriginal ? "Nome Original Mantido" : "Renomeado";
     const newName = item.keepOriginal ? item.originalName : item.newName;
     csvContent += `${item.originalName}\t${newName}\t${item.description}\t${type}\n`;
   });
@@ -931,10 +916,7 @@ function downloadFiles() {
   );
 
   if (!hasAllNames) {
-    showMessage(
-      "Todos os arquivos precisam ter um nome definido.",
-      "error",
-    );
+    showMessage("Todos os arquivos precisam ter um nome definido.", "error");
     return;
   }
 

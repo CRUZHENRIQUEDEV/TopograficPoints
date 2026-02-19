@@ -265,26 +265,64 @@ Plano de ação: Ofuscação e proteção de código cliente
   - Sempre que alterar código em js/tools/<pagina>/src.
   - Antes de publicar no GitHub Pages, para garantir dist/ atualizado.
 
-27. Gate duplo (inline no HTML + dentro do JS ofuscado)
+27. Gate duplo obrigatório (inline no HTML + dentro do JS ofuscado)
 
-- Motivo:
-  - Bloquear o mais cedo possível (inline) e também no código da ferramenta (defesa em profundidade).
-  - Se alguém remover o gate inline do HTML, o JS ainda não executa fora do origin/protocolo permitido.
+- **Obrigatório em ambos**: Gate deve existir tanto no HTML quanto no JS ofuscado.
+  - Gate no HTML: bloqueia renderização e carregamento de scripts.
+  - Gate no JS: bloqueia execução mesmo se o arquivo for salvo/copiado.
 
-- Implementação aplicada (exemplo csvToXlsxJoin):
-  - Gate inline no HTML, antes do script principal:
-    - Verifica: file://, protocolo diferente de https:, origin diferente de https://cruzhenriquedev.github.io.
-    - Em bloqueio: **retorna silenciosamente sem carregar o script principal** - a UI aparece mas não funciona (parece bug natural).
-  - Gate dentro do JS (no topo do src antes da lógica):
-    - Mesmas verificações; em bloqueio, **retorna silenciosamente sem executar a lógica**.
-    - Após ofuscação, permanece como primeira instrução do arquivo dist/main.obf.js.
+- Implementação aplicada (exemplo elementsOAEVisualizer):
+  - Gate inline no HTML `<head>`, antes de qualquer outro script:
+    ```javascript
+    (function () {
+      const allowedOrigins = [
+        "https://cruzhenriquedev.github.io",
+        "https://cruzhenriquedev.github.io/TopograficPoints",
+      ];
+      const isFileProtocol = location.protocol === "file:";
+      const isNotHttps = location.protocol !== "https:";
+      const originNotAllowed = !allowedOrigins.some(
+        (o) => location.origin === o || location.href.startsWith(o),
+      );
+      if (isFileProtocol || isNotHttps || originNotAllowed) {
+        document.write("");
+        document.close();
+        window.stop && window.stop();
+        return; // Silencioso - sem erros no console
+      }
+    })();
+    ```
+  - Gate dentro do JS (primeira linha do src/main.js antes da lógica):
+    ```javascript
+    (function () {
+      const allowedOrigins = [
+        "https://cruzhenriquedev.github.io",
+        "https://cruzhenriquedev.github.io/TopograficPoints",
+      ];
+      const isFileProtocol = window.location.protocol === "file:";
+      const isNotHttps = window.location.protocol !== "https:";
+      const originNotAllowed = !allowedOrigins.some(
+        (o) =>
+          window.location.origin === o || window.location.href.startsWith(o),
+      );
+      if (isFileProtocol || isNotHttps || originNotAllowed) {
+        document.open();
+        document.write("");
+        document.close();
+        return; // Silencioso - sem erros no console
+      }
+    })();
+    ```
 
 - Efeito ao baixar a página:
-  - Ao abrir como file://, a UI carrega mas não funciona (parece bug natural).
-  - O usuário acha que "simplesmente não funciona", não percebe bloqueio proposital.
-  - Mesmo que o gate inline seja removido no HTML salvo, o main.obf.js também bloqueia.
+  - Ao abrir como file://, a tela fica em branco (document.write limpa o DOM).
+  - JS não executa (return silencioso antes da lógica principal).
+  - **Sem erros no console** - parece um bug natural, não bloqueio intencional.
+  - Dupla proteção: mesmo removendo gate do HTML salvo, o JS ofuscado também bloqueia.
 
 - Como replicar em outras páginas:
-  - Inserir o snippet inline antes do <script src="...dist/*.obf.js">.
-  - Adicionar a mesma checagem como primeira linha do arquivo js/tools/<pagina>/src/\*.js.
-  - Rodar o ofuscador para gerar o dist atualizado.
+  1. Inserir o snippet inline no `<head>` antes de carregar qualquer script.
+  2. Adicionar a mesma checagem como **primeira linha** do arquivo js/tools/<pagina>/src/\*.js.
+  3. Rodar o ofuscador para gerar o dist atualizado.
+  4. **Obrigatório**: ambos os gates devem estar presentes para proteção completa.
+  5. **Importante**: usar `return` silencioso, **nunca** `throw new Error()` para não alertar no console.

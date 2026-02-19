@@ -21,6 +21,7 @@
         if (isFileProtocol || isNotHttps || originNotAllowed) {
           document.write("");
           document.close();
+          window.stop && window.stop();
           return;
         }
       })();
@@ -608,12 +609,12 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // Carrega script principal apenas se passar no gate (gate está no head)
-        window.addEventListener("DOMContentLoaded", function () {
-            const script = document.createElement("script");
-            script.src = "./js/tools/elementsOAEVisualizer/dist/main.obf.js";
-            document.body.appendChild(script);
-        });
+      // Carrega script principal apenas se passar no gate (gate está no head)
+      window.addEventListener("DOMContentLoaded", function () {
+        const script = document.createElement("script");
+        script.src = "./js/tools/elementsOAEVisualizer/dist/main.obf.js";
+        document.body.appendChild(script);
+      });
     </script>
-</body>
+  </body>
 </html>
