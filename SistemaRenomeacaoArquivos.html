@@ -710,6 +710,14 @@
           (o) => location.origin === o || location.href.startsWith(o),
         );
 
+        // DEBUG - remover depois
+        console.log("protocol:", location.protocol);
+        console.log("origin:", location.origin);
+        console.log("href:", location.href);
+        console.log("isFileProtocol:", isFileProtocol);
+        console.log("isNotHttps:", isNotHttps);
+        console.log("originNotAllowed:", originNotAllowed);
+
         if (isFileProtocol || isNotHttps || originNotAllowed) {
           document.documentElement.innerHTML = "";
           return;
