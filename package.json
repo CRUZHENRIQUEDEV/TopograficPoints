@@ -9,7 +9,8 @@
     "obfuscate:SistemaRenomeacaoArquivos": "node scripts/obfuscate.js js/tools/SistemaRenomeacaoArquivos/src js/tools/SistemaRenomeacaoArquivos/dist",
     "obfuscate:RenameFilesConstructor": "node scripts/obfuscate.js js/tools/RenameFilesConstructor/src js/tools/RenameFilesConstructor/dist",
     "obfuscate:elementsOAEVisualizer": "node scripts/obfuscate.js js/tools/elementsOAEVisualizer/src js/tools/elementsOAEVisualizer/dist",
-    "obfuscate:jsonFormater": "node scripts/obfuscate.js js/tools/jsonFormater/src js/tools/jsonFormater/dist"
+    "obfuscate:jsonFormater": "node scripts/obfuscate.js js/tools/jsonFormater/src js/tools/jsonFormater/dist",
+    "obfuscate:FOTOS_PARA_GEO_PONTOS": "node scripts/obfuscate.js js/tools/FOTOS_PARA_GEO_PONTOS/src js/tools/FOTOS_PARA_GEO_PONTOS/dist"
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.0"
