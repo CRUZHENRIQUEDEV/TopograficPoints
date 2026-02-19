@@ -287,7 +287,6 @@
         var allowedOrigin = "https://cruzhenriquedev.github.io";
         if (isFile || !isHttps || location.origin !== allowedOrigin) {
           document.documentElement.innerHTML = "";
-          throw new Error("blocked");
         }
       })();
     </script>

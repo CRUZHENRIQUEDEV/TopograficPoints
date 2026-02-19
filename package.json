@@ -5,7 +5,8 @@
   "description": "Static tools and pages for TopograficPoints with JS obfuscation pipeline",
   "scripts": {
     "obfuscate": "node scripts/obfuscate.js",
-    "obfuscate:csvToXlsxJoin": "node scripts/obfuscate.js js/tools/csvToXlsxJoin/src js/tools/csvToXlsxJoin/dist"
+    "obfuscate:csvToXlsxJoin": "node scripts/obfuscate.js js/tools/csvToXlsxJoin/src js/tools/csvToXlsxJoin/dist",
+    "obfuscate:SistemaRenomeacaoArquivos": "node scripts/obfuscate.js js/tools/SistemaRenomeacaoArquivos/src js/tools/SistemaRenomeacaoArquivos/dist"
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.0"

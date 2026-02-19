@@ -31,7 +31,9 @@ Plano de ação: Ofuscação e proteção de código cliente
   - location.protocol !== "https:".
   - location.origin não estiver em lista de permitidos.
   - for file:// (indica página salva/local).
-- Em bloqueio: limpar DOM e não montar a aplicação (tela branca).
+- Em bloqueio: **não executar o script principal** mas manter UI visível.
+- O objetivo é que a página pareça "quebrada" ou com bug natural, não que pareça intencionalmente bloqueada.
+- O usuário que baixou deve achar que simplesmente "não funciona", sem saber que é proposital.
 - Repetir checagem em pontos críticos (bootstrap, antes do router, após hydration).
 
 6. Ofuscação de JavaScript (build)
@@ -69,7 +71,9 @@ Plano de ação: Ofuscação e proteção de código cliente
 9. SPA: fallback de tela branca
 
 - Implementar função initialize() que só monta a aplicação se as checagens passarem.
-- Em falha: document.documentElement.innerHTML = ""; (ou overlay opaco) e encerrar.
+- Em falha: **retornar silenciosamente sem executar a lógica**, mantendo a UI visível.
+- **Importante:** A página deve parecer com um bug natural ("não funciona") em vez de aparecer intencionalmente bloqueada.
+- Não lançar erros no console (`throw new Error()`) para não alertar o usuário que baixou a página.
 - Evitar mensagens de erro no console em produção.
 
 10. Pipeline sugerido (exemplo genérico)
@@ -111,12 +115,10 @@ Plano de ação: Ofuscação e proteção de código cliente
 15. Prompt operacional (copiar e colar para processar página a página)
 
 - Contexto/Objetivo:
-
   - Aplique esta política de proteção sem alterar a experiência do usuário em GitHub Pages.
   - Se a página for aberta via file:// ou em domínio não autorizado, a aplicação não deve inicializar e a tela deve permanecer em branco.
 
 - Entradas que vou fornecer:
-
   - Conteúdo da página alvo (HTML completo e, se houver, JS associado).
   - Lista de origins permitidos (ex.: https://cruzhenriquedev.github.io/ e https://cruzhenriquedev.github.io/<nome-do-repo>/).
   - Preferência sobre JS externo: separar JS do HTML? (sim/não)
@@ -124,7 +126,6 @@ Plano de ação: Ofuscação e proteção de código cliente
   - Ferramenta de build (webpack/vite/esbuild/sem bundler).
 
 - Tarefas que você deve executar:
-
   - Implementar gate de execução que bloqueia file://, protocolo diferente de https:, e origins fora da lista.
   - Em bloqueio, impedir bootstrap e esvaziar o DOM (tela branca).
   - Se o JS estiver inline e a preferência for separar: extrair para arquivo .js, referenciar via <script src>, preparar para ofuscação.
@@ -133,13 +134,11 @@ Plano de ação: Ofuscação e proteção de código cliente
   - (Opcional) Adicionar verificação via /ping.json de mesma origem como camada extra.
 
 - Restrições:
-
   - Não alterar a interface/fluxo quando a página roda em origins permitidos.
   - Não inserir comentários no JS final; não publicar sourcemaps.
   - Evitar dependências novas; preferir JavaScript puro.
 
 - Formato de saída:
-
   - HTML final completo pronto para publicar em docs/.
   - Arquivo(s) .js finais ofuscados, com caminhos relativos corretos.
   - Passos claros de onde colocar cada arquivo sob docs/.
@@ -196,7 +195,6 @@ Plano de ação: Ofuscação e proteção de código cliente
 21. Automação com Node (recomendada)
 
 - Configuração:
-
   - Iniciar Node na raiz do repositório e instalar javascript-obfuscator.
   - Adicionar um script Node (scripts/obfuscate.js) que:
     - Varre js/tools/_/src/_.js.
@@ -244,13 +242,11 @@ Plano de ação: Ofuscação e proteção de código cliente
 26. Comandos práticos para rodar o ofuscador (Node)
 
 - Pré-requisitos:
-
   - Estar na raiz do projeto: c:\Users\Henrique da Cruz\source\repos\TopograficPoints
   - Ter executado ao menos uma vez:
     - npm install
 
 - Rodar ofuscador só para a ferramenta csvToXlsxJoin:
-
   - Comando:
     - npm run obfuscate:csvToXlsxJoin
   - Entrada:
@@ -259,7 +255,6 @@ Plano de ação: Ofuscação e proteção de código cliente
     - js/tools/csvToXlsxJoin/dist/main.obf.js
 
 - Rodar ofuscador para todas as ferramentas em js/tools/:
-
   - Comando:
     - npm run obfuscate
   - Comportamento:
@@ -273,22 +268,20 @@ Plano de ação: Ofuscação e proteção de código cliente
 27. Gate duplo (inline no HTML + dentro do JS ofuscado)
 
 - Motivo:
-
   - Bloquear o mais cedo possível (inline) e também no código da ferramenta (defesa em profundidade).
   - Se alguém remover o gate inline do HTML, o JS ainda não executa fora do origin/protocolo permitido.
 
 - Implementação aplicada (exemplo csvToXlsxJoin):
-
   - Gate inline no HTML, antes do script principal:
     - Verifica: file://, protocolo diferente de https:, origin diferente de https://cruzhenriquedev.github.io.
-    - Em bloqueio: document.documentElement.innerHTML = "" e exceção.
+    - Em bloqueio: **retorna silenciosamente sem carregar o script principal** - a UI aparece mas não funciona (parece bug natural).
   - Gate dentro do JS (no topo do src antes da lógica):
-    - Mesmas verificações; em bloqueio, document.open(); document.write(""); document.close(); e exceção.
+    - Mesmas verificações; em bloqueio, **retorna silenciosamente sem executar a lógica**.
     - Após ofuscação, permanece como primeira instrução do arquivo dist/main.obf.js.
 
 - Efeito ao baixar a página:
-
-  - Ao abrir como file://, a página fica branca (o gate inline bloqueia).
+  - Ao abrir como file://, a UI carrega mas não funciona (parece bug natural).
+  - O usuário acha que "simplesmente não funciona", não percebe bloqueio proposital.
   - Mesmo que o gate inline seja removido no HTML salvo, o main.obf.js também bloqueia.
 
 - Como replicar em outras páginas:
