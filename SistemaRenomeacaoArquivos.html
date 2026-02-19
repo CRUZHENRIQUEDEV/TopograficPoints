@@ -714,8 +714,12 @@
           document.documentElement.innerHTML = "";
           return;
         }
+
+        // Carrega script principal apenas se passar no gate
+        const script = document.createElement("script");
+        script.src = "./js/tools/SistemaRenomeacaoArquivos/dist/main.obf.js";
+        document.body.appendChild(script);
       })();
     </script>
-    <script src="./js/tools/SistemaRenomeacaoArquivos/dist/main.obf.js"></script>
   </body>
 </html>
