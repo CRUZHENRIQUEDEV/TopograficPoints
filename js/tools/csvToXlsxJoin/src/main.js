@@ -1,3 +1,12 @@
+if (
+  location.protocol !== "https:" ||
+  location.origin !== "https://cruzhenriquedev.github.io"
+) {
+  document.open();
+  document.write("");
+  document.close();
+  throw new Error("blocked");
+}
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileInput");
 const fileList = document.getElementById("fileList");

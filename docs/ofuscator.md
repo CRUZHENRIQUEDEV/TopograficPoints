@@ -269,3 +269,29 @@ Plano de ação: Ofuscação e proteção de código cliente
 - Quando lembrar de rodar:
   - Sempre que alterar código em js/tools/<pagina>/src.
   - Antes de publicar no GitHub Pages, para garantir dist/ atualizado.
+
+27. Gate duplo (inline no HTML + dentro do JS ofuscado)
+
+- Motivo:
+
+  - Bloquear o mais cedo possível (inline) e também no código da ferramenta (defesa em profundidade).
+  - Se alguém remover o gate inline do HTML, o JS ainda não executa fora do origin/protocolo permitido.
+
+- Implementação aplicada (exemplo csvToXlsxJoin):
+
+  - Gate inline no HTML, antes do script principal:
+    - Verifica: file://, protocolo diferente de https:, origin diferente de https://cruzhenriquedev.github.io.
+    - Em bloqueio: document.documentElement.innerHTML = "" e exceção.
+  - Gate dentro do JS (no topo do src antes da lógica):
+    - Mesmas verificações; em bloqueio, document.open(); document.write(""); document.close(); e exceção.
+    - Após ofuscação, permanece como primeira instrução do arquivo dist/main.obf.js.
+
+- Efeito ao baixar a página:
+
+  - Ao abrir como file://, a página fica branca (o gate inline bloqueia).
+  - Mesmo que o gate inline seja removido no HTML salvo, o main.obf.js também bloqueia.
+
+- Como replicar em outras páginas:
+  - Inserir o snippet inline antes do <script src="...dist/*.obf.js">.
+  - Adicionar a mesma checagem como primeira linha do arquivo js/tools/<pagina>/src/\*.js.
+  - Rodar o ofuscador para gerar o dist atualizado.
