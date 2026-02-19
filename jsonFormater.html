@@ -1,2387 +1,1372 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Formatador de Mensagens - Sistema de Controle v6.1</title>
-    
+
     <!-- Versão: 6.1 - Cards compactos otimizados para centenas de obras, sem templates -->
-    
+
+    <!-- Gate de Proteção - Bloqueia execução em domínios não autorizados -->
+    <script>
+      (function () {
+        const allowedOrigins = [
+          "https://cruzhenriquedev.github.io",
+          "https://cruzhenriquedev.github.io/TopograficPoints",
+        ];
+
+        const isFileProtocol = location.protocol === "file:";
+        const isNotHttps = location.protocol !== "https:";
+        const originNotAllowed = !allowedOrigins.some(
+          (o) => location.origin === o || location.href.startsWith(o),
+        );
+
+        if (isFileProtocol || isNotHttps || originNotAllowed) {
+          document.write("");
+          document.close();
+          return;
+        }
+      })();
+    </script>
+
     <!-- JSZip para exportação em ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
+
     <style>
-        /* ========== VARIÁVEIS DE TEMA ========== */
-        :root {
-            --primary: #2563eb;
-            --success: #16a34a;
-            --warning: #eab308;
-            --danger: #dc2626;
-            --info: #0891b2;
-            --purple: #9333ea;
-            
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f5f9;
-            --bg-quaternary: #e2e8f0;
-            
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            
-            --border: #cbd5e1;
-            --border-light: #e2e8f0;
-            --shadow: rgba(15, 23, 42, 0.1);
-        }
+      /* ========== VARIÁVEIS DE TEMA ========== */
+      :root {
+        --primary: #2563eb;
+        --success: #16a34a;
+        --warning: #eab308;
+        --danger: #dc2626;
+        --info: #0891b2;
+        --purple: #9333ea;
 
-        [data-theme="dark"] {
-            --primary: #3b82f6;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #06b6d4;
-            --purple: #a855f7;
-            
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --bg-quaternary: #475569;
-            
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            
-            --border: #475569;
-            --border-light: #64748b;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-tertiary: #f1f5f9;
+        --bg-quaternary: #e2e8f0;
 
-        /* ========== RESET E BASE ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        --text-primary: #1e293b;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
 
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            transition: all 0.3s ease;
-        }
+        --border: #cbd5e1;
+        --border-light: #e2e8f0;
+        --shadow: rgba(15, 23, 42, 0.1);
+      }
 
+      [data-theme="dark"] {
+        --primary: #3b82f6;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --purple: #a855f7;
+
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --bg-quaternary: #475569;
+
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+
+        --border: #475569;
+        --border-light: #64748b;
+        --shadow: rgba(0, 0, 0, 0.3);
+      }
+
+      /* ========== RESET E BASE ========== */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
+        transition: all 0.3s ease;
+      }
+
+      .app-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      /* ========== HEADER ========== */
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 30px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px var(--shadow);
+        position: relative;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+      }
+
+      .version-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, var(--purple), var(--primary));
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .theme-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px var(--shadow);
+      }
+
+      /* ========== PERFIL ========== */
+      .profile-selector {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 20px var(--shadow);
+        margin-bottom: 30px;
+      }
+
+      .profile-selector h2 {
+        color: var(--primary);
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        text-align: center;
+      }
+
+      .profile-options {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .profile-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px 25px;
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 180px;
+      }
+
+      .profile-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--shadow);
+      }
+
+      .profile-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--primary);
+      }
+
+      .profile-option label {
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-primary);
+      }
+
+      .profile-option.selected {
+        background: linear-gradient(
+          135deg,
+          rgba(37, 99, 235, 0.15),
+          rgba(8, 145, 178, 0.1)
+        );
+        border-color: var(--primary);
+      }
+
+      /* ========== GERENCIAMENTO DE OBRAS ========== */
+      .obras-manager {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 20px var(--shadow);
+        margin-bottom: 30px;
+      }
+
+      .obras-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .obras-header h2 {
+        color: var(--primary);
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .sync-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--success);
+        transition: all 0.3s ease;
+      }
+
+      .sync-indicator.syncing {
+        background: rgba(234, 179, 8, 0.15);
+        color: var(--warning);
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      .obras-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .obra-current {
+        background: var(--bg-tertiary);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid var(--primary);
+      }
+
+      .obra-current-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .obra-current-info h3 {
+        font-size: 1.4rem;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+      }
+
+      .obra-current-code {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-family: "Courier New", monospace;
+      }
+
+      .obra-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .stat-card {
+        background: var(--bg-secondary);
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+      }
+
+      /* ========== LISTA DE OBRAS COMPACTA ========== */
+      .obras-list-container {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 5px;
+      }
+
+      .obras-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .obra-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .obra-card:hover {
+        background: var(--bg-quaternary);
+        border-left-color: var(--primary);
+        transform: translateX(3px);
+      }
+
+      .obra-card.active {
+        border-left-color: var(--success);
+        background: linear-gradient(90deg, rgba(34, 197, 94, 0.1), transparent);
+        font-weight: 600;
+      }
+
+      .obra-card-main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .obra-card-title {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .obra-card-code {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-family: "Courier New", monospace;
+      }
+
+      .obra-card-stats {
+        display: flex;
+        gap: 10px;
+        font-size: 11px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+
+      .obra-card-stat {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .obra-card-actions {
+        display: flex;
+        gap: 4px;
+      }
+
+      .icon-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .icon-btn:hover {
+        background: var(--bg-secondary);
+        color: var(--primary);
+      }
+
+      .empty-obras {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+      }
+
+      .empty-obras-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+      }
+
+      /* ========== BOTÕES ========== */
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px var(--shadow);
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-success {
+        background: var(--success);
+        color: white;
+      }
+      .btn-info {
+        background: var(--info);
+        color: white;
+      }
+      .btn-warning {
+        background: var(--warning);
+        color: white;
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+      }
+      .btn-purple {
+        background: var(--purple);
+        color: white;
+      }
+      .btn-secondary {
+        background: var(--bg-quaternary);
+        color: var(--text-primary);
+      }
+
+      .btn-sm {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      /* ========== MODAIS ========== */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        animation: modalFadeIn 0.3s ease;
+        overflow-y: auto;
+        padding: 20px;
+      }
+
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 20px 40px var(--shadow);
+        border: 1px solid var(--border);
+        transform: scale(0.9);
+        animation: modalSlideUp 0.3s ease forwards;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .modal-close:hover {
+        color: var(--danger);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .form-input.required {
+        border-left: 4px solid var(--danger);
+      }
+
+      .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+      }
+
+      .form-hint {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 5px;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+        justify-content: flex-end;
+      }
+
+      /* ========== FILTROS E BUSCA ========== */
+      .filters-bar {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 20px var(--shadow);
+        margin-bottom: 20px;
+      }
+
+      .filters-grid {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 15px;
+        align-items: end;
+      }
+
+      .search-box {
+        position: relative;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 12px 40px 12px 15px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 18px;
+        pointer-events: none;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      .filter-btn {
+        padding: 10px 16px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .filter-btn:hover {
+        background: var(--bg-quaternary);
+      }
+
+      .filter-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+      }
+
+      /* ========== MENSAGENS ========== */
+      .input-section {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 20px var(--shadow);
+        margin-bottom: 20px;
+      }
+
+      .input-section h2 {
+        color: var(--primary);
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+      }
+
+      .input-textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 15px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        resize: vertical;
+        transition: all 0.3s ease;
+      }
+
+      .input-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .messages-section {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 20px var(--shadow);
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: var(--bg-tertiary);
+        border-radius: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+      }
+
+      .status-total {
+        color: var(--primary);
+      }
+      .status-done {
+        color: var(--success);
+      }
+      .status-pending {
+        color: var(--warning);
+      }
+
+      .messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .message-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .message-card.own-message {
+        opacity: 0.6;
+        background: var(--bg-tertiary);
+        border-style: dashed;
+      }
+
+      .message-card.other-message {
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .message-card.other-message.completed {
+        background: linear-gradient(
+          135deg,
+          rgba(34, 197, 94, 0.1),
+          rgba(22, 163, 74, 0.05)
+        );
+        border-color: var(--success);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+      }
+
+      .message-card.other-message:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px var(--shadow);
+      }
+
+      .message-card.hidden {
+        display: none;
+      }
+
+      .message-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .checkbox-container {
+        margin-top: 2px;
+      }
+
+      .message-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--success);
+      }
+
+      .message-content {
+        flex: 1;
+      }
+
+      .message-text {
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+        padding: 15px;
+        background: var(--bg-tertiary);
+        border-radius: 8px;
+        border-left: 4px solid var(--primary);
+      }
+
+      .message-card.own-message .message-text {
+        border-left-color: var(--text-muted);
+        opacity: 0.8;
+      }
+
+      .message-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+      }
+
+      .response-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-light);
+      }
+
+      .response-textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 12px;
+        border: 2px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        transition: all 0.3s ease;
+      }
+
+      .response-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .saved-response {
+        margin-top: 10px;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: 6px;
+        border-left: 4px solid var(--success);
+      }
+
+      .saved-response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .saved-response-text {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-primary);
+      }
+
+      /* ========== ALERTAS ========== */
+      .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideInDown 0.3s ease;
+      }
+
+      .alert-success {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+
+      .alert-error {
+        background: rgba(220, 38, 38, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(220, 38, 38, 0.3);
+      }
+
+      .alert-info {
+        background: rgba(8, 145, 178, 0.1);
+        color: var(--info);
+        border: 1px solid rgba(8, 145, 178, 0.3);
+      }
+
+      /* ========== ANIMAÇÕES ========== */
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes modalSlideUp {
+        from {
+          transform: scale(0.9) translateY(20px);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideInDown {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* ========== SCROLLBAR CUSTOMIZADA ========== */
+      .obras-list-container::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .obras-list-container::-webkit-scrollbar-track {
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+      }
+
+      .obras-list-container::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+      }
+
+      .obras-list-container::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
+      }
+
+      /* ========== RESPONSIVIDADE ========== */
+      @media (max-width: 768px) {
         .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
+          padding: 15px;
         }
-
-        /* ========== HEADER ========== */
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 30px 20px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px var(--shadow);
-            position: relative;
-        }
-
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--info));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+          font-size: 2rem;
         }
-
-        .header p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-
-        .version-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: linear-gradient(135deg, var(--purple), var(--primary));
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px var(--shadow);
-        }
-
-        /* ========== PERFIL ========== */
-        .profile-selector {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 20px var(--shadow);
-            margin-bottom: 30px;
-        }
-
-        .profile-selector h2 {
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            text-align: center;
-        }
-
-        .profile-options {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .profile-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px 25px;
-            background: var(--bg-tertiary);
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 180px;
-        }
-
-        .profile-option:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-
-        .profile-option input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--primary);
-        }
-
-        .profile-option label {
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-primary);
-        }
-
-        .profile-option.selected {
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(8, 145, 178, 0.1));
-            border-color: var(--primary);
-        }
-
-        /* ========== GERENCIAMENTO DE OBRAS ========== */
-        .obras-manager {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 20px var(--shadow);
-            margin-bottom: 30px;
-        }
-
-        .obras-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .obras-header h2 {
-            color: var(--primary);
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sync-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--success);
-            transition: all 0.3s ease;
-        }
-
-        .sync-indicator.syncing {
-            background: rgba(234, 179, 8, 0.15);
-            color: var(--warning);
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .obras-controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .obra-current {
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .obra-current-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .obra-current-info h3 {
-            font-size: 1.4rem;
-            color: var(--text-primary);
-            margin-bottom: 5px;
-        }
-
-        .obra-current-code {
-            font-size: 14px;
-            color: var(--text-muted);
-            font-family: 'Courier New', monospace;
-        }
-
-        .obra-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
-        }
-
-        /* ========== LISTA DE OBRAS COMPACTA ========== */
-        .obras-list-container {
-            max-height: 500px;
-            overflow-y: auto;
-            padding: 5px;
-        }
-
-        .obras-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .obra-card {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .obra-card:hover {
-            background: var(--bg-quaternary);
-            border-left-color: var(--primary);
-            transform: translateX(3px);
-        }
-
-        .obra-card.active {
-            border-left-color: var(--success);
-            background: linear-gradient(90deg, rgba(34, 197, 94, 0.1), transparent);
-            font-weight: 600;
-        }
-
-        .obra-card-main {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .obra-card-title {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text-primary);
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .obra-card-code {
-            font-size: 11px;
-            color: var(--text-muted);
-            font-family: 'Courier New', monospace;
-        }
-
-        .obra-card-stats {
-            display: flex;
-            gap: 10px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
-
-        .obra-card-stat {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .obra-card-actions {
-            display: flex;
-            gap: 4px;
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 14px;
-            cursor: pointer;
-            padding: 4px 6px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .icon-btn:hover {
-            background: var(--bg-secondary);
-            color: var(--primary);
-        }
-
-        .empty-obras {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-obras-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-
-        /* ========== BOTÕES ========== */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-info { background: var(--info); color: white; }
-        .btn-warning { background: var(--warning); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-purple { background: var(--purple); color: white; }
-        .btn-secondary { background: var(--bg-quaternary); color: var(--text-primary); }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-
-        /* ========== MODAIS ========== */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            animation: modalFadeIn 0.3s ease;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 600px;
-            width: 100%;
-            box-shadow: 0 20px 40px var(--shadow);
-            border: 1px solid var(--border);
-            transform: scale(0.9);
-            animation: modalSlideUp 0.3s ease forwards;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .modal-close:hover {
-            color: var(--danger);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-input.required {
-            border-left: 4px solid var(--danger);
-        }
-
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-        }
-
-        .form-hint {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 25px;
-            justify-content: flex-end;
-        }
-
-        /* ========== FILTROS E BUSCA ========== */
-        .filters-bar {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 20px var(--shadow);
-            margin-bottom: 20px;
-        }
-
         .filters-grid {
-            display: grid;
-            grid-template-columns: 1fr auto auto;
-            gap: 15px;
-            align-items: end;
+          grid-template-columns: 1fr;
         }
-
-        .search-box {
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 40px 12px 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 18px;
-            pointer-events: none;
-        }
-
         .filter-buttons {
-            display: flex;
-            gap: 8px;
+          flex-wrap: wrap;
         }
-
-        .filter-btn {
-            padding: 10px 16px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .obra-stats {
+          grid-template-columns: repeat(2, 1fr);
         }
-
-        .filter-btn:hover {
-            background: var(--bg-quaternary);
+        .obra-card {
+          flex-direction: column;
+          align-items: flex-start;
         }
-
-        .filter-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
+        .obra-card-stats {
+          width: 100%;
+          justify-content: space-between;
         }
-
-        /* ========== MENSAGENS ========== */
-        .input-section {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 20px var(--shadow);
-            margin-bottom: 20px;
-        }
-
-        .input-section h2 {
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .input-textarea {
-            width: 100%;
-            min-height: 200px;
-            padding: 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-            transition: all 0.3s ease;
-        }
-
-        .input-textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .messages-section {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 20px var(--shadow);
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-
-        .status-total { color: var(--primary); }
-        .status-done { color: var(--success); }
-        .status-pending { color: var(--warning); }
-
-        .messages-list {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .message-card {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .message-card.own-message {
-            opacity: 0.6;
-            background: var(--bg-tertiary);
-            border-style: dashed;
-        }
-
-        .message-card.other-message {
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .message-card.other-message.completed {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05));
-            border-color: var(--success);
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-        }
-
-        .message-card.other-message:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--shadow);
-        }
-
-        .message-card.hidden {
-            display: none;
-        }
-
-        .message-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .checkbox-container {
-            margin-top: 2px;
-        }
-
-        .message-checkbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--success);
-        }
-
-        .message-content {
-            flex: 1;
-        }
-
-        .message-text {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 12px;
-            color: var(--text-primary);
-            padding: 15px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .message-card.own-message .message-text {
-            border-left-color: var(--text-muted);
-            opacity: 0.8;
-        }
-
-        .message-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-light);
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 15px;
-        }
-
-        .response-section {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-light);
-        }
-
-        .response-textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 14px;
-            resize: vertical;
-            transition: all 0.3s ease;
-        }
-
-        .response-textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .saved-response {
-            margin-top: 10px;
-            padding: 12px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            border-left: 4px solid var(--success);
-        }
-
-        .saved-response-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .saved-response-text {
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--text-primary);
-        }
-
-        /* ========== ALERTAS ========== */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideInDown 0.3s ease;
-        }
-
-        .alert-success {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .alert-error {
-            background: rgba(220, 38, 38, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(220, 38, 38, 0.3);
-        }
-
-        .alert-info {
-            background: rgba(8, 145, 178, 0.1);
-            color: var(--info);
-            border: 1px solid rgba(8, 145, 178, 0.3);
-        }
-
-        /* ========== ANIMAÇÕES ========== */
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes modalSlideUp {
-            from { transform: scale(0.9) translateY(20px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        @keyframes slideInDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* ========== SCROLLBAR CUSTOMIZADA ========== */
-        .obras-list-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .obras-list-container::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-            border-radius: 4px;
-        }
-
-        .obras-list-container::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        .obras-list-container::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
-        /* ========== RESPONSIVIDADE ========== */
-        @media (max-width: 768px) {
-            .app-container { padding: 15px; }
-            .header h1 { font-size: 2rem; }
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-            .filter-buttons {
-                flex-wrap: wrap;
-            }
-            .obra-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .obra-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .obra-card-stats {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="app-container">
-        <button class="theme-toggle" onclick="toggleTheme()">
-            <span id="theme-icon">🌙</span> Tema
-        </button>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌙</span> Tema
+      </button>
 
-        <header class="header">
-            <span class="version-badge">v6.1</span>
-            <h1>📋 Formatador de Mensagens</h1>
-            <p>Sistema avançado com IndexedDB e gestão otimizada de obras</p>
-        </header>
+      <header class="header">
+        <span class="version-badge">v6.1</span>
+        <h1>📋 Formatador de Mensagens</h1>
+        <p>Sistema avançado com IndexedDB e gestão otimizada de obras</p>
+      </header>
 
-        <!-- PERFIL -->
-        <section class="profile-selector">
-            <h2>👤 Seu Perfil</h2>
-            <div class="profile-options">
-                <div class="profile-option selected" onclick="selectProfile('Inspetor')">
-                    <input type="radio" id="profileInspetor" name="userProfile" value="Inspetor" checked>
-                    <label for="profileInspetor">🔍 Inspetor</label>
-                </div>
-                <div class="profile-option" onclick="selectProfile('Avaliador')">
-                    <input type="radio" id="profileAvaliador" name="userProfile" value="Avaliador">
-                    <label for="profileAvaliador">📝 Avaliador</label>
-                </div>
+      <!-- PERFIL -->
+      <section class="profile-selector">
+        <h2>👤 Seu Perfil</h2>
+        <div class="profile-options">
+          <div
+            class="profile-option selected"
+            onclick="selectProfile('Inspetor')"
+          >
+            <input
+              type="radio"
+              id="profileInspetor"
+              name="userProfile"
+              value="Inspetor"
+              checked
+            />
+            <label for="profileInspetor">🔍 Inspetor</label>
+          </div>
+          <div class="profile-option" onclick="selectProfile('Avaliador')">
+            <input
+              type="radio"
+              id="profileAvaliador"
+              name="userProfile"
+              value="Avaliador"
+            />
+            <label for="profileAvaliador">📝 Avaliador</label>
+          </div>
+        </div>
+      </section>
+
+      <!-- GERENCIAMENTO DE OBRAS -->
+      <section class="obras-manager">
+        <div class="obras-header">
+          <h2>
+            📚 Gerenciamento de Obras
+            <span class="sync-indicator" id="syncIndicator">
+              <span>●</span> Sincronizado
+            </span>
+          </h2>
+          <div class="obras-controls">
+            <button
+              class="btn btn-primary btn-sm"
+              onclick="showCreateObraModal()"
+            >
+              <span>➕</span> Nova Obra
+            </button>
+            <button class="btn btn-info btn-sm" onclick="showImportModal()">
+              <span>📥</span> Importar
+            </button>
+            <button class="btn btn-purple btn-sm" onclick="exportAllObrasZip()">
+              <span>📦</span> Exportar Tudo (ZIP)
+            </button>
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick="toggleObrasList()"
+            >
+              <span id="toggleObrasIcon">👁️</span>
+              <span id="toggleObrasText">Ver Obras</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- OBRA ATUAL -->
+        <div class="obra-current" id="obraCurrentSection" style="display: none">
+          <div class="obra-current-header">
+            <div class="obra-current-info">
+              <h3 id="currentObraNome">Sem obra carregada</h3>
+              <span class="obra-current-code" id="currentObraCodigo">---</span>
             </div>
-        </section>
-
-        <!-- GERENCIAMENTO DE OBRAS -->
-        <section class="obras-manager">
-            <div class="obras-header">
-                <h2>
-                    📚 Gerenciamento de Obras
-                    <span class="sync-indicator" id="syncIndicator">
-                        <span>●</span> Sincronizado
-                    </span>
-                </h2>
-                <div class="obras-controls">
-                    <button class="btn btn-primary btn-sm" onclick="showCreateObraModal()">
-                        <span>➕</span> Nova Obra
-                    </button>
-                    <button class="btn btn-info btn-sm" onclick="showImportModal()">
-                        <span>📥</span> Importar
-                    </button>
-                    <button class="btn btn-purple btn-sm" onclick="exportAllObrasZip()">
-                        <span>📦</span> Exportar Tudo (ZIP)
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="toggleObrasList()">
-                        <span id="toggleObrasIcon">👁️</span> <span id="toggleObrasText">Ver Obras</span>
-                    </button>
-                </div>
+            <div class="obras-controls">
+              <button
+                class="btn btn-success btn-sm"
+                onclick="exportCurrentObraTxt()"
+              >
+                <span>💾</span> Exportar TXT
+              </button>
+              <button
+                class="btn btn-warning btn-sm"
+                onclick="showUpdateObraModal()"
+              >
+                <span>🔄</span> Atualizar JSON
+              </button>
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="closeCurrentObra()"
+              >
+                <span>✖️</span> Fechar
+              </button>
             </div>
+          </div>
+          <div class="obra-stats" id="obraStats"></div>
+        </div>
 
-            <!-- OBRA ATUAL -->
-            <div class="obra-current" id="obraCurrentSection" style="display: none;">
-                <div class="obra-current-header">
-                    <div class="obra-current-info">
-                        <h3 id="currentObraNome">Sem obra carregada</h3>
-                        <span class="obra-current-code" id="currentObraCodigo">---</span>
-                    </div>
-                    <div class="obras-controls">
-                        <button class="btn btn-success btn-sm" onclick="exportCurrentObraTxt()">
-                            <span>💾</span> Exportar TXT
-                        </button>
-                        <button class="btn btn-warning btn-sm" onclick="showUpdateObraModal()">
-                            <span>🔄</span> Atualizar JSON
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="closeCurrentObra()">
-                            <span>✖️</span> Fechar
-                        </button>
-                    </div>
-                </div>
-                <div class="obra-stats" id="obraStats"></div>
+        <!-- LISTA DE OBRAS -->
+        <div
+          class="obras-list-container"
+          id="obrasListContainer"
+          style="display: none"
+        >
+          <div class="obras-list" id="obrasList">
+            <div class="empty-obras">
+              <div class="empty-obras-icon">📚</div>
+              <p>Nenhuma obra cadastrada ainda</p>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <!-- LISTA DE OBRAS -->
-            <div class="obras-list-container" id="obrasListContainer" style="display: none;">
-                <div class="obras-list" id="obrasList">
-                    <div class="empty-obras">
-                        <div class="empty-obras-icon">📚</div>
-                        <p>Nenhuma obra cadastrada ainda</p>
-                    </div>
-                </div>
+      <!-- FILTROS E BUSCA -->
+      <section class="filters-bar" id="filtersBar" style="display: none">
+        <div class="filters-grid">
+          <div class="form-group">
+            <label class="form-label">🔍 Buscar mensagens</label>
+            <div class="search-box">
+              <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="Digite para buscar..."
+                oninput="applyFilters()"
+              />
+              <span class="search-icon">🔎</span>
             </div>
-        </section>
-
-        <!-- FILTROS E BUSCA -->
-        <section class="filters-bar" id="filtersBar" style="display: none;">
-            <div class="filters-grid">
-                <div class="form-group">
-                    <label class="form-label">🔍 Buscar mensagens</label>
-                    <div class="search-box">
-                        <input 
-                            type="text" 
-                            class="search-input" 
-                            id="searchInput"
-                            placeholder="Digite para buscar..."
-                            oninput="applyFilters()"
-                        >
-                        <span class="search-icon">🔎</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">📊 Filtrar por</label>
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">
-                            <span>📋</span> Todas
-                        </button>
-                        <button class="filter-btn" data-filter="pending" onclick="setFilter('pending')">
-                            <span>⏳</span> Pendentes
-                        </button>
-                        <button class="filter-btn" data-filter="completed" onclick="setFilter('completed')">
-                            <span>✅</span> Corrigidas
-                        </button>
-                        <button class="filter-btn" data-filter="own" onclick="setFilter('own')">
-                            <span>📤</span> Minhas
-                        </button>
-                    </div>
-                </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">📊 Filtrar por</label>
+            <div class="filter-buttons">
+              <button
+                class="filter-btn active"
+                data-filter="all"
+                onclick="setFilter('all')"
+              >
+                <span>📋</span> Todas
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="pending"
+                onclick="setFilter('pending')"
+              >
+                <span>⏳</span> Pendentes
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="completed"
+                onclick="setFilter('completed')"
+              >
+                <span>✅</span> Corrigidas
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="own"
+                onclick="setFilter('own')"
+              >
+                <span>📤</span> Minhas
+              </button>
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
 
-        <!-- MENSAGENS -->
-        <section class="messages-section" id="messagesSection" style="display: none;">
-            <div class="status-bar">
-                <div class="status-item status-total">
-                    <span>📊</span> Total: <strong id="totalCount">0</strong>
-                </div>
-                <div class="status-item status-done">
-                    <span>✅</span> Corrigidas: <strong id="doneCount">0</strong>
-                </div>
-                <div class="status-item status-pending">
-                    <span>⏳</span> Pendentes: <strong id="pendingCount">0</strong>
-                </div>
-            </div>
+      <!-- MENSAGENS -->
+      <section
+        class="messages-section"
+        id="messagesSection"
+        style="display: none"
+      >
+        <div class="status-bar">
+          <div class="status-item status-total">
+            <span>📊</span> Total: <strong id="totalCount">0</strong>
+          </div>
+          <div class="status-item status-done">
+            <span>✅</span> Corrigidas: <strong id="doneCount">0</strong>
+          </div>
+          <div class="status-item status-pending">
+            <span>⏳</span> Pendentes: <strong id="pendingCount">0</strong>
+          </div>
+        </div>
 
-            <div class="messages-list" id="messagesList"></div>
-        </section>
+        <div class="messages-list" id="messagesList"></div>
+      </section>
 
-        <div id="alerts"></div>
+      <div id="alerts"></div>
     </div>
 
     <!-- MODAL: CRIAR/EDITAR OBRA -->
     <div class="modal" id="obraModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="obraModalTitle">
-                    <span>📚</span> Nova Obra
-                </h3>
-                <button class="modal-close" onclick="closeObraModal()">✖</button>
-            </div>
-            
-            <form id="obraForm" onsubmit="saveObra(event)">
-                <div class="form-group">
-                    <label class="form-label">🔑 Código da Obra (obrigatório)</label>
-                    <input 
-                        type="text" 
-                        class="form-input required" 
-                        id="obraCodigo" 
-                        placeholder="Ex: OBRA001"
-                        required
-                    >
-                    <div class="form-hint">Este será o identificador único da obra</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">📝 Nome da Obra (opcional)</label>
-                    <input 
-                        type="text" 
-                        class="form-input" 
-                        id="obraNome" 
-                        placeholder="Ex: Edifício Central"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">📄 JSON das Mensagens</label>
-                    <textarea 
-                        class="form-input form-textarea" 
-                        id="obraJson" 
-                        placeholder='Cole o JSON das mensagens aqui...'
-                        required
-                    ></textarea>
-                    <div class="form-hint">Formato: Array de objetos com mensagem, nomeUsuario, perfil, dataHistorico</div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeObraModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <span>💾</span> Salvar Obra
-                    </button>
-                </div>
-            </form>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="obraModalTitle">
+            <span>📚</span> Nova Obra
+          </h3>
+          <button class="modal-close" onclick="closeObraModal()">✖</button>
         </div>
+
+        <form id="obraForm" onsubmit="saveObra(event)">
+          <div class="form-group">
+            <label class="form-label">🔑 Código da Obra (obrigatório)</label>
+            <input
+              type="text"
+              class="form-input required"
+              id="obraCodigo"
+              placeholder="Ex: OBRA001"
+              required
+            />
+            <div class="form-hint">Este será o identificador único da obra</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📝 Nome da Obra (opcional)</label>
+            <input
+              type="text"
+              class="form-input"
+              id="obraNome"
+              placeholder="Ex: Edifício Central"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📄 JSON das Mensagens</label>
+            <textarea
+              class="form-input form-textarea"
+              id="obraJson"
+              placeholder="Cole o JSON das mensagens aqui..."
+              required
+            ></textarea>
+            <div class="form-hint">
+              Formato: Array de objetos com mensagem, nomeUsuario, perfil,
+              dataHistorico
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeObraModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <span>💾</span> Salvar Obra
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- MODAL: ATUALIZAR OBRA -->
     <div class="modal" id="updateObraModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">
-                    <span>🔄</span> Atualizar JSON da Obra
-                </h3>
-                <button class="modal-close" onclick="closeUpdateObraModal()">✖</button>
-            </div>
-            
-            <div class="alert alert-info">
-                <span>ℹ️</span> As respostas já dadas serão mantidas. Novas mensagens serão adicionadas.
-            </div>
-
-            <form id="updateObraForm" onsubmit="updateObraJson(event)">
-                <div class="form-group">
-                    <label class="form-label">📄 Novo JSON com Mensagens Atualizadas</label>
-                    <textarea 
-                        class="form-input form-textarea" 
-                        id="updateObraJson" 
-                        placeholder='Cole o JSON completo atualizado aqui...'
-                        style="min-height: 200px;"
-                        required
-                    ></textarea>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeUpdateObraModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-warning">
-                        <span>🔄</span> Atualizar e Mesclar
-                    </button>
-                </div>
-            </form>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title"><span>🔄</span> Atualizar JSON da Obra</h3>
+          <button class="modal-close" onclick="closeUpdateObraModal()">
+            ✖
+          </button>
         </div>
+
+        <div class="alert alert-info">
+          <span>ℹ️</span> As respostas já dadas serão mantidas. Novas mensagens
+          serão adicionadas.
+        </div>
+
+        <form id="updateObraForm" onsubmit="updateObraJson(event)">
+          <div class="form-group">
+            <label class="form-label"
+              >📄 Novo JSON com Mensagens Atualizadas</label
+            >
+            <textarea
+              class="form-input form-textarea"
+              id="updateObraJson"
+              placeholder="Cole o JSON completo atualizado aqui..."
+              style="min-height: 200px"
+              required
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeUpdateObraModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-warning">
+              <span>🔄</span> Atualizar e Mesclar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- MODAL: IMPORTAR OBRA -->
     <div class="modal" id="importModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">
-                    <span>📥</span> Importar Obra
-                </h3>
-                <button class="modal-close" onclick="closeImportModal()">✖</button>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">📁 Selecione um arquivo TXT ou JSON</label>
-                <input 
-                    type="file" 
-                    class="form-input" 
-                    id="importFile" 
-                    accept=".txt,.json"
-                >
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-info" onclick="importObra()">
-                    <span>📥</span> Importar
-                </button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title"><span>📥</span> Importar Obra</h3>
+          <button class="modal-close" onclick="closeImportModal()">✖</button>
         </div>
+
+        <div class="form-group">
+          <label class="form-label">📁 Selecione um arquivo TXT ou JSON</label>
+          <input
+            type="file"
+            class="form-input"
+            id="importFile"
+            accept=".txt,.json"
+          />
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeImportModal()"
+          >
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-info" onclick="importObra()">
+            <span>📥</span> Importar
+          </button>
+        </div>
+      </div>
     </div>
 
+    <!-- Carrega script principal apenas se passar no gate (gate está no head) -->
     <script>
-        // ========== VERSÃO 6.1 - CARDS COMPACTOS, SEM TEMPLATES ==========
-        
-        // ========== VARIÁVEIS GLOBAIS ==========
-        let db = null;
-        let currentObra = null;
-        let userProfile = 'Inspetor';
-        let messages = [];
-        let completionStates = new Map();
-        let messageResponses = new Map();
-        let currentFilter = 'all';
-        let searchQuery = '';
-
-        // ========== INICIALIZAÇÃO ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeTheme();
-            initializeUserProfile();
-            initializeDB();
-        });
-
-        // ========== INDEXEDDB ==========
-        function initializeDB() {
-            const request = indexedDB.open('FormatadorDB', 1);
-
-            request.onerror = function() {
-                showAlert('Erro ao abrir banco de dados', 'error');
-            };
-
-            request.onsuccess = function(event) {
-                db = event.target.result;
-                loadObrasList();
-            };
-
-            request.onupgradeneeded = function(event) {
-                db = event.target.result;
-                
-                if (!db.objectStoreNames.contains('obras')) {
-                    const obraStore = db.createObjectStore('obras', { keyPath: 'codigo' });
-                    obraStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
-                    obraStore.createIndex('dataModificacao', 'dataModificacao', { unique: false });
-                }
-            };
-        }
-
-        function saveObraToDb(obraData) {
-            return new Promise(function(resolve, reject) {
-                const transaction = db.transaction(['obras'], 'readwrite');
-                const store = transaction.objectStore('obras');
-                const request = store.put(obraData);
-
-                request.onsuccess = function() {
-                    setSyncStatus('syncing');
-                    setTimeout(function() {
-                        setSyncStatus('synced');
-                    }, 500);
-                    resolve();
-                };
-
-                request.onerror = function() {
-                    reject(new Error('Erro ao salvar obra'));
-                };
-            });
-        }
-
-        function loadObraFromDb(codigo) {
-            return new Promise(function(resolve, reject) {
-                const transaction = db.transaction(['obras'], 'readonly');
-                const store = transaction.objectStore('obras');
-                const request = store.get(codigo);
-
-                request.onsuccess = function(event) {
-                    resolve(event.target.result);
-                };
-
-                request.onerror = function() {
-                    reject(new Error('Erro ao carregar obra'));
-                };
-            });
-        }
-
-        function deleteObraFromDb(codigo) {
-            return new Promise(function(resolve, reject) {
-                const transaction = db.transaction(['obras'], 'readwrite');
-                const store = transaction.objectStore('obras');
-                const request = store.delete(codigo);
-
-                request.onsuccess = function() {
-                    resolve();
-                };
-
-                request.onerror = function() {
-                    reject(new Error('Erro ao deletar obra'));
-                };
-            });
-        }
-
-        function getAllObras() {
-            return new Promise(function(resolve, reject) {
-                const transaction = db.transaction(['obras'], 'readonly');
-                const store = transaction.objectStore('obras');
-                const request = store.getAll();
-
-                request.onsuccess = function(event) {
-                    resolve(event.target.result);
-                };
-
-                request.onerror = function() {
-                    reject(new Error('Erro ao listar obras'));
-                };
-            });
-        }
-
-        // ========== GERENCIAMENTO DE OBRAS ==========
-        function showCreateObraModal() {
-            document.getElementById('obraModalTitle').innerHTML = '<span>📚</span> Nova Obra';
-            document.getElementById('obraForm').reset();
-            document.getElementById('obraCodigo').disabled = false;
-            document.getElementById('obraModal').classList.add('show');
-        }
-
-        function closeObraModal() {
-            document.getElementById('obraModal').classList.remove('show');
-        }
-
-        function saveObra(event) {
-            event.preventDefault();
-
-            const codigo = document.getElementById('obraCodigo').value.trim().toUpperCase();
-            const nome = document.getElementById('obraNome').value.trim() || codigo;
-            const jsonText = document.getElementById('obraJson').value.trim();
-
-            try {
-                const parsedMessages = parseInput(jsonText);
-                
-                if (parsedMessages.length === 0) {
-                    showAlert('JSON inválido ou sem mensagens', 'error');
-                    return;
-                }
-
-                const obraData = {
-                    codigo: codigo,
-                    nome: nome,
-                    dataCriacao: new Date().toISOString(),
-                    dataModificacao: new Date().toISOString(),
-                    messages: parsedMessages,
-                    completionStates: {},
-                    messageResponses: {},
-                    userProfile: userProfile,
-                    totalMensagens: parsedMessages.length,
-                    totalRespostas: 0
-                };
-
-                saveObraToDb(obraData).then(function() {
-                    showAlert('Obra "' + nome + '" criada com sucesso!', 'success');
-                    closeObraModal();
-                    loadObrasList();
-                    loadObra(codigo);
-                }).catch(function(error) {
-                    showAlert(error.message, 'error');
-                });
-
-            } catch (error) {
-                showAlert('Erro ao processar JSON: ' + error.message, 'error');
-            }
-        }
-
-        function loadObra(codigo) {
-            loadObraFromDb(codigo).then(function(obra) {
-                if (!obra) {
-                    showAlert('Obra não encontrada', 'error');
-                    return;
-                }
-
-                currentObra = obra;
-                messages = obra.messages;
-                
-                completionStates = new Map();
-                Object.keys(obra.completionStates).forEach(function(key) {
-                    completionStates.set(parseInt(key), obra.completionStates[key]);
-                });
-
-                messageResponses = new Map();
-                Object.keys(obra.messageResponses).forEach(function(key) {
-                    messageResponses.set(parseInt(key), obra.messageResponses[key]);
-                });
-
-                userProfile = obra.userProfile;
-                selectProfile(userProfile);
-
-                updateCurrentObraUI();
-                renderMessages();
-                
-                document.getElementById('messagesSection').style.display = 'block';
-                document.getElementById('filtersBar').style.display = 'block';
-
-                showAlert('Obra "' + obra.nome + '" carregada!', 'success');
-                loadObrasList();
-            }).catch(function(error) {
-                showAlert(error.message, 'error');
-            });
-        }
-
-        function closeCurrentObra() {
-            if (confirm('Deseja realmente fechar a obra atual? Certifique-se de ter salvo tudo.')) {
-                currentObra = null;
-                messages = [];
-                completionStates.clear();
-                messageResponses.clear();
-                
-                document.getElementById('obraCurrentSection').style.display = 'none';
-                document.getElementById('messagesSection').style.display = 'none';
-                document.getElementById('filtersBar').style.display = 'none';
-                
-                loadObrasList();
-                showAlert('Obra fechada', 'success');
-            }
-        }
-
-        function updateCurrentObraUI() {
-            if (!currentObra) {
-                document.getElementById('obraCurrentSection').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('obraCurrentSection').style.display = 'block';
-            document.getElementById('currentObraNome').textContent = currentObra.nome;
-            document.getElementById('currentObraCodigo').textContent = '🔑 ' + currentObra.codigo;
-
-            const total = messages.length;
-            let done = 0;
-            let totalRespondable = 0;
-
-            messages.forEach(function(message, index) {
-                if (message.role !== userProfile) {
-                    totalRespondable++;
-                    if (completionStates.get(index)) {
-                        done++;
-                    }
-                }
-            });
-
-            const pending = totalRespondable - done;
-            const progress = totalRespondable > 0 ? Math.round((done / totalRespondable) * 100) : 0;
-
-            const statsHtml = `
-                <div class="stat-card">
-                    <div class="stat-value">${total}</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalRespondable}</div>
-                    <div class="stat-label">Para Responder</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--success)">${done}</div>
-                    <div class="stat-label">Corrigidas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--warning)">${pending}</div>
-                    <div class="stat-label">Pendentes</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--purple)">${progress}%</div>
-                    <div class="stat-label">Progresso</div>
-                </div>
-            `;
-
-            document.getElementById('obraStats').innerHTML = statsHtml;
-        }
-
-        function autoSaveCurrentObra() {
-            if (!currentObra) return;
-
-            currentObra.messages = messages;
-            currentObra.dataModificacao = new Date().toISOString();
-            
-            const statesObj = {};
-            completionStates.forEach(function(value, key) {
-                statesObj[key] = value;
-            });
-            currentObra.completionStates = statesObj;
-
-            const responsesObj = {};
-            messageResponses.forEach(function(value, key) {
-                responsesObj[key] = value;
-            });
-            currentObra.messageResponses = responsesObj;
-
-            let totalRespostas = 0;
-            messageResponses.forEach(function() {
-                totalRespostas++;
-            });
-            currentObra.totalRespostas = totalRespostas;
-
-            saveObraToDb(currentObra).then(function() {
-                updateCurrentObraUI();
-                loadObrasList();
-            }).catch(function(error) {
-                console.error('Auto-save falhou:', error);
-            });
-        }
-
-        function loadObrasList() {
-            getAllObras().then(function(obras) {
-                const container = document.getElementById('obrasList');
-                
-                if (obras.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-obras">
-                            <div class="empty-obras-icon">📚</div>
-                            <p>Nenhuma obra cadastrada ainda</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                obras.sort(function(a, b) {
-                    return new Date(b.dataModificacao) - new Date(a.dataModificacao);
-                });
-
-                let html = '';
-                obras.forEach(function(obra) {
-                    const isActive = currentObra && currentObra.codigo === obra.codigo;
-                    const totalRespondable = obra.totalMensagens > 0 ? obra.totalMensagens : 1;
-                    const progress = Math.round((obra.totalRespostas / totalRespondable) * 100);
-
-                    html += `
-                        <div class="obra-card ${isActive ? 'active' : ''}" onclick="loadObra('${obra.codigo}')">
-                            <div class="obra-card-main">
-                                <div class="obra-card-title">${obra.nome}</div>
-                                <div class="obra-card-code">${obra.codigo}</div>
-                            </div>
-                            <div class="obra-card-stats">
-                                <div class="obra-card-stat">
-                                    <span>📊</span> ${obra.totalMensagens}
-                                </div>
-                                <div class="obra-card-stat" style="color: var(--success)">
-                                    <span>✅</span> ${obra.totalRespostas}
-                                </div>
-                                <div class="obra-card-stat" style="color: var(--purple)">
-                                    <span>📈</span> ${progress}%
-                                </div>
-                            </div>
-                            <div class="obra-card-actions">
-                                <button class="icon-btn" onclick="event.stopPropagation(); exportObraTxt('${obra.codigo}')" title="Exportar">
-                                    💾
-                                </button>
-                                <button class="icon-btn" onclick="event.stopPropagation(); deleteObra('${obra.codigo}')" title="Excluir">
-                                    🗑️
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
-            }).catch(function(error) {
-                showAlert('Erro ao carregar obras: ' + error.message, 'error');
-            });
-        }
-
-        function toggleObrasList() {
-            const list = document.getElementById('obrasListContainer');
-            const icon = document.getElementById('toggleObrasIcon');
-            const text = document.getElementById('toggleObrasText');
-            
-            if (list.style.display === 'none' || list.style.display === '') {
-                list.style.display = 'block';
-                icon.textContent = '🙈';
-                text.textContent = 'Ocultar Obras';
-            } else {
-                list.style.display = 'none';
-                icon.textContent = '👁️';
-                text.textContent = 'Ver Obras';
-            }
-        }
-
-        function deleteObra(codigo) {
-            if (!confirm('Tem certeza que deseja excluir a obra "' + codigo + '"? Esta ação não pode ser desfeita!')) {
-                return;
-            }
-
-            deleteObraFromDb(codigo).then(function() {
-                showAlert('Obra excluída com sucesso', 'success');
-                
-                if (currentObra && currentObra.codigo === codigo) {
-                    closeCurrentObra();
-                }
-                
-                loadObrasList();
-            }).catch(function(error) {
-                showAlert('Erro ao excluir obra: ' + error.message, 'error');
-            });
-        }
-
-        // ========== ATUALIZAÇÃO DE OBRA (MERGE) ==========
-        function showUpdateObraModal() {
-            if (!currentObra) {
-                showAlert('Carregue uma obra primeiro', 'error');
-                return;
-            }
-
-            document.getElementById('updateObraModal').classList.add('show');
-        }
-
-        function closeUpdateObraModal() {
-            document.getElementById('updateObraModal').classList.remove('show');
-        }
-
-        function updateObraJson(event) {
-            event.preventDefault();
-
-            const jsonText = document.getElementById('updateObraJson').value.trim();
-
-            try {
-                const newMessages = parseInput(jsonText);
-                
-                if (newMessages.length === 0) {
-                    showAlert('JSON inválido ou sem mensagens', 'error');
-                    return;
-                }
-
-                const mergeResult = mergeMessages(messages, newMessages);
-                
-                messages = mergeResult.mergedMessages;
-                currentObra.messages = messages;
-                currentObra.totalMensagens = messages.length;
-
-                autoSaveCurrentObra();
-                renderMessages();
-                closeUpdateObraModal();
-
-                showAlert(
-                    'Obra atualizada! ' + mergeResult.kept + ' mantidas, ' + 
-                    mergeResult.added + ' novas adicionadas', 
-                    'success'
-                );
-
-            } catch (error) {
-                showAlert('Erro ao processar JSON: ' + error.message, 'error');
-            }
-        }
-
-        function mergeMessages(oldMessages, newMessages) {
-            const merged = [];
-            const oldNormalized = new Map();
-            
-            oldMessages.forEach(function(msg, index) {
-                const key = normalizeMessageForMatching(msg.text);
-                oldNormalized.set(key, { msg: msg, index: index });
-            });
-
-            let kept = 0;
-            let added = 0;
-
-            newMessages.forEach(function(newMsg) {
-                const key = normalizeMessageForMatching(newMsg.text);
-                const existing = oldNormalized.get(key);
-                
-                if (existing) {
-                    merged.push(existing.msg);
-                    oldNormalized.delete(key);
-                    kept++;
-                } else {
-                    merged.push(newMsg);
-                    added++;
-                }
-            });
-
-            return {
-                mergedMessages: merged,
-                kept: kept,
-                added: added
-            };
-        }
-
-        // ========== EXPORTAÇÕES ==========
-        function exportCurrentObraTxt() {
-            if (!currentObra) {
-                showAlert('Nenhuma obra carregada', 'error');
-                return;
-            }
-
-            exportObraTxt(currentObra.codigo);
-        }
-
-        function exportObraTxt(codigo) {
-            loadObraFromDb(codigo).then(function(obra) {
-                if (!obra) return;
-
-                const content = generateObraTxtContent(obra);
-                const filename = codigo + '_' + obra.nome.replace(/[^a-z0-9]/gi, '_') + '.txt';
-
-                downloadFile(content, filename, 'text/plain');
-                showAlert('Arquivo TXT exportado!', 'success');
-            }).catch(function(error) {
-                showAlert('Erro ao exportar: ' + error.message, 'error');
-            });
-        }
-
-        function generateObraTxtContent(obra) {
-            let content = '';
-            
-            content += '╔════════════════════════════════════════════════════════════╗\n';
-            content += '║         CONTROLE DE CORREÇÕES - FORMATADOR v6.1          ║\n';
-            content += '╚════════════════════════════════════════════════════════════╝\n\n';
-            
-            content += 'OBRA: ' + obra.nome + '\n';
-            content += 'CÓDIGO: ' + obra.codigo + '\n';
-            content += 'PERFIL: ' + obra.userProfile + '\n';
-            content += 'CRIAÇÃO: ' + new Date(obra.dataCriacao).toLocaleString('pt-BR') + '\n';
-            content += 'MODIFICAÇÃO: ' + new Date(obra.dataModificacao).toLocaleString('pt-BR') + '\n';
-            content += 'TOTAL MENSAGENS: ' + obra.totalMensagens + '\n';
-            content += 'TOTAL RESPOSTAS: ' + obra.totalRespostas + '\n\n';
-            content += '══════════════════════════════════════════════════════════════\n\n';
-
-            obra.messages.forEach(function(message, index) {
-                const isOwnMessage = message.role === obra.userProfile;
-                const completed = obra.completionStates[index] || false;
-                const response = obra.messageResponses[index];
-
-                let status = '';
-                if (isOwnMessage) {
-                    status = ' 📤 SUA MENSAGEM';
-                } else {
-                    status = completed ? ' ✅ CORRIGIDO' : ' ⏳ PENDENTE';
-                }
-
-                content += 'MENSAGEM ORIGINAL' + status + '\n';
-                content += message.text + '\n';
-                content += message.date + '\n';
-                content += message.author + ' - ' + message.role + '\n\n';
-
-                if (response && !isOwnMessage) {
-                    content += 'SUA RESPOSTA:\n';
-                    content += response.text + '\n';
-                    content += 'Respondido em: ' + response.date + '\n';
-                }
-
-                if (index < obra.messages.length - 1) {
-                    content += '──────────────────────────────────────────────────────────\n\n';
-                }
-            });
-
-            content += '\n══════════════════════════════════════════════════════════════\n';
-            content += '║ Formatador de Mensagens v6.1 - Sistema Profissional     ║\n';
-            content += '╚════════════════════════════════════════════════════════════╝';
-
-            return content;
-        }
-
-        function exportAllObrasZip() {
-            getAllObras().then(function(obras) {
-                if (obras.length === 0) {
-                    showAlert('Nenhuma obra para exportar', 'error');
-                    return;
-                }
-
-                const zip = new JSZip();
-                
-                let indexContent = 'ÍNDICE DE OBRAS EXPORTADAS\n';
-                indexContent += 'Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n';
-                indexContent += 'Total de obras: ' + obras.length + '\n\n';
-                indexContent += '═══════════════════════════════════════════════════════\n\n';
-
-                obras.forEach(function(obra, idx) {
-                    const content = generateObraTxtContent(obra);
-                    const filename = obra.codigo + '_' + obra.nome.replace(/[^a-z0-9]/gi, '_') + '.txt';
-                    
-                    zip.file(filename, content);
-
-                    indexContent += (idx + 1) + '. ' + obra.nome + '\n';
-                    indexContent += '   Código: ' + obra.codigo + '\n';
-                    indexContent += '   Arquivo: ' + filename + '\n';
-                    indexContent += '   Mensagens: ' + obra.totalMensagens + '\n';
-                    indexContent += '   Respostas: ' + obra.totalRespostas + '\n\n';
-                });
-
-                zip.file('_INDEX.txt', indexContent);
-
-                zip.generateAsync({ type: 'blob' }).then(function(content) {
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
-                    downloadFile(content, 'formatador-backup-' + timestamp + '.zip', 'application/zip');
-                    showAlert('Backup ZIP criado com ' + obras.length + ' obra(s)!', 'success');
-                });
-
-            }).catch(function(error) {
-                showAlert('Erro ao exportar: ' + error.message, 'error');
-            });
-        }
-
-        function downloadFile(content, filename, mimeType) {
-            const blob = new Blob([content], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            URL.revokeObjectURL(url);
-        }
-
-        // ========== IMPORTAÇÃO ==========
-        function showImportModal() {
-            document.getElementById('importModal').classList.add('show');
-        }
-
-        function closeImportModal() {
-            document.getElementById('importModal').classList.remove('show');
-        }
-
-        function importObra() {
-            const fileInput = document.getElementById('importFile');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                showAlert('Selecione um arquivo', 'error');
-                return;
-            }
-
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    let parsedData;
-
-                    if (file.name.endsWith('.json')) {
-                        parsedData = JSON.parse(content);
-                    } else if (file.name.endsWith('.txt')) {
-                        parsedData = parseTxtFileForImport(content);
-                    } else {
-                        showAlert('Formato de arquivo não suportado', 'error');
-                        return;
-                    }
-
-                    if (parsedData && parsedData.codigo) {
-                        saveObraToDb(parsedData).then(function() {
-                            showAlert('Obra importada com sucesso!', 'success');
-                            closeImportModal();
-                            loadObrasList();
-                            loadObra(parsedData.codigo);
-                        });
-                    } else {
-                        showAlert('Arquivo inválido', 'error');
-                    }
-
-                } catch (error) {
-                    showAlert('Erro ao importar: ' + error.message, 'error');
-                }
-            };
-
-            reader.readAsText(file, 'utf-8');
-        }
-
-        function parseTxtFileForImport(content) {
-            const lines = content.split('\n');
-            let codigo = '';
-            let nome = '';
-            
-            lines.forEach(function(line) {
-                if (line.includes('CÓDIGO:')) {
-                    codigo = line.split('CÓDIGO:')[1].trim();
-                }
-                if (line.includes('OBRA:')) {
-                    nome = line.split('OBRA:')[1].trim();
-                }
-            });
-
-            if (!codigo) return null;
-
-            return {
-                codigo: codigo,
-                nome: nome || codigo,
-                dataCriacao: new Date().toISOString(),
-                dataModificacao: new Date().toISOString(),
-                messages: [],
-                completionStates: {},
-                messageResponses: {},
-                userProfile: 'Inspetor',
-                totalMensagens: 0,
-                totalRespostas: 0
-            };
-        }
-
-        // ========== FILTROS ==========
-        function setFilter(filter) {
-            currentFilter = filter;
-            
-            document.querySelectorAll('.filter-btn').forEach(function(btn) {
-                btn.classList.remove('active');
-            });
-            
-            document.querySelector('[data-filter="' + filter + '"]').classList.add('active');
-            
-            applyFilters();
-        }
-
-        function applyFilters() {
-            searchQuery = document.getElementById('searchInput').value.toLowerCase();
-            
-            document.querySelectorAll('.message-card').forEach(function(card) {
-                const index = parseInt(card.getAttribute('data-message-id'));
-                const message = messages[index];
-                const isOwn = message.role === userProfile;
-                const isCompleted = completionStates.get(index) || false;
-                
-                let show = true;
-                
-                if (currentFilter === 'pending' && (isOwn || isCompleted)) show = false;
-                if (currentFilter === 'completed' && !isCompleted) show = false;
-                if (currentFilter === 'own' && !isOwn) show = false;
-                
-                if (searchQuery && !message.text.toLowerCase().includes(searchQuery)) {
-                    show = false;
-                }
-                
-                if (show) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        }
-
-        // ========== MENSAGENS ==========
-        function parseInput(input) {
-            try {
-                const jsonData = JSON.parse(input);
-                const messagesArray = Array.isArray(jsonData) ? jsonData : [jsonData];
-                
-                return messagesArray.map(function(msg) {
-                    return {
-                        text: msg.mensagem || msg.message || msg.texto || '',
-                        author: msg.nomeUsuario || msg.author || msg.usuario || 'Usuário',
-                        role: msg.perfil || msg.role || msg.cargo || 'Sistema',
-                        date: formatDateTime(msg.dataHistorico || msg.date || msg.data || new Date().toISOString())
-                    };
-                });
-                
-            } catch (jsonError) {
-                return parseFormattedText(input);
-            }
-        }
-
-        function parseFormattedText(text) {
-            const messages = [];
-            const lines = text.split('\n').map(function(line) { return line.trim(); }).filter(function(line) { return line; });
-            
-            let currentMessage = null;
-            let messageText = '';
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                
-                if (isDateLine(line)) {
-                    if (currentMessage && messageText) {
-                        messages.push({
-                            text: messageText.trim(),
-                            author: currentMessage.author,
-                            role: currentMessage.role,
-                            date: currentMessage.date
-                        });
-                    }
-                    
-                    const dateMatch = line.match(/(\d{2}\/\d{2}\/\d{4}),?\s*(\d{2}:\d{2}:\d{2})/);
-                    if (dateMatch) {
-                        currentMessage = {
-                            date: formatDateTime(dateMatch[1] + ' ' + dateMatch[2]),
-                            author: 'Usuário',
-                            role: 'Sistema'
-                        };
-                        messageText = '';
-                    }
-                    continue;
-                }
-                
-                if (isAuthorLine(line)) {
-                    const parts = line.split(' - ');
-                    if (parts.length >= 2 && currentMessage) {
-                        currentMessage.author = parts[0].trim();
-                        currentMessage.role = parts[1].trim();
-                    }
-                    continue;
-                }
-                
-                if (currentMessage) {
-                    if (messageText) messageText += ' ';
-                    messageText += line;
-                }
-            }
-            
-            if (currentMessage && messageText) {
-                messages.push({
-                    text: messageText.trim(),
-                    author: currentMessage.author,
-                    role: currentMessage.role,
-                    date: currentMessage.date
-                });
-            }
-            
-            return messages;
-        }
-
-        function isDateLine(line) {
-            return /\d{2}\/\d{2}\/\d{4}/.test(line);
-        }
-
-        function isAuthorLine(line) {
-            return line.includes(' - ') && !line.match(/^\d+\./) && line.length < 100;
-        }
-
-        function formatDateTime(dateInput) {
-            try {
-                let date;
-                
-                if (typeof dateInput === 'string') {
-                    if (dateInput.includes('/')) {
-                        const parts = dateInput.split(/[,\s]+/);
-                        const datePart = parts[0];
-                        const timePart = parts[1];
-                        const dateComponents = datePart.split('/');
-                        const day = parseInt(dateComponents[0], 10);
-                        const month = parseInt(dateComponents[1], 10);
-                        const year = parseInt(dateComponents[2], 10);
-                        
-                        if (timePart) {
-                            const timeComponents = timePart.split(':');
-                            const hour = parseInt(timeComponents[0], 10);
-                            const minute = parseInt(timeComponents[1], 10);
-                            const second = parseInt(timeComponents[2], 10) || 0;
-                            date = new Date(year, month - 1, day, hour, minute, second);
-                        } else {
-                            date = new Date(year, month - 1, day);
-                        }
-                    } else {
-                        date = new Date(dateInput);
-                    }
-                } else {
-                    date = new Date(dateInput);
-                }
-                
-                return date.toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            } catch {
-                return 'Data inválida';
-            }
-        }
-
-        function normalizeMessageForMatching(text) {
-            return text
-                .toLowerCase()
-                .replace(/^\d+\.\s*/g, '')
-                .replace(/\t/g, ' ')
-                .replace(/[^\w\s]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-        }
-
-        function renderMessages() {
-            const container = document.getElementById('messagesList');
-            container.innerHTML = '';
-            
-            messages.forEach(function(message, index) {
-                const isOwnMessage = message.role === userProfile;
-                const isCompleted = completionStates.get(index) || false;
-                const savedResponse = messageResponses.get(index);
-                
-                const messageCard = document.createElement('div');
-                const cardClasses = ['message-card'];
-                
-                if (isOwnMessage) {
-                    cardClasses.push('own-message');
-                } else {
-                    cardClasses.push('other-message');
-                    if (isCompleted) {
-                        cardClasses.push('completed');
-                    }
-                }
-                
-                messageCard.className = cardClasses.join(' ');
-                messageCard.setAttribute('data-message-id', index);
-                
-                let cardContent = '<div class="message-header">';
-                
-                if (!isOwnMessage) {
-                    cardContent += '<div class="checkbox-container">' +
-                                  '<input type="checkbox" class="message-checkbox" ' +
-                                  (isCompleted ? 'checked' : '') +
-                                  ' onchange="toggleCompletion(' + index + ')">' +
-                                  '</div>';
-                }
-                
-                cardContent += '<div class="message-content">' +
-                              '<div class="message-text">' + message.text + '</div>' +
-                              '<div class="message-meta">' +
-                                  '<div>' +
-                                      '<strong>' + message.author + '</strong> - ' + message.role + '<br>' +
-                                      '<small>' + message.date + '</small>' +
-                                  '</div>';
-                
-                if (isOwnMessage) {
-                    cardContent += '<span style="background: rgba(100, 116, 139, 0.2); color: var(--text-muted); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">📤 Sua Mensagem</span>';
-                } else {
-                    cardContent += '<span style="background: ' + (isCompleted ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)') + '; color: ' + (isCompleted ? 'var(--success)' : 'var(--warning)') + '; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">' +
-                                  (isCompleted ? '✅ Corrigido' : '⏳ Pendente') +
-                                  '</span>';
-                }
-                
-                cardContent += '</div>';
-                
-                if (!isOwnMessage) {
-                    cardContent += '<div class="response-section">' +
-                                  (savedResponse ? 
-                                      generateSavedResponseHtml(savedResponse, index) : 
-                                      generateResponseInputHtml(index)
-                                  ) +
-                                  '</div>';
-                }
-                
-                cardContent += '</div></div>';
-                
-                messageCard.innerHTML = cardContent;
-                container.appendChild(messageCard);
-            });
-            
-            updateStatusCounter();
-            applyFilters();
-        }
-
-        function generateResponseInputHtml(index) {
-            return '<div style="margin-bottom: 10px;">' +
-                    '<label style="font-weight: 600; font-size: 14px; color: var(--text-primary);">💬 Sua Resposta:</label>' +
-                '</div>' +
-                '<textarea id="response-' + index + '" class="response-textarea" ' +
-                'placeholder="Digite sua resposta..."></textarea>' +
-                '<div style="display: flex; gap: 10px; margin-top: 10px;">' +
-                    '<button class="btn btn-primary btn-sm" onclick="saveResponse(' + index + ')">Salvar</button>' +
-                '</div>';
-        }
-
-        function generateSavedResponseHtml(response, index) {
-            return '<div class="saved-response">' +
-                    '<div class="saved-response-header">' +
-                        '<span style="font-size: 12px; font-weight: 600; color: var(--success);">✅ Sua Resposta</span>' +
-                        '<div style="display: flex; gap: 8px; align-items: center;">' +
-                            '<span style="font-size: 11px; color: var(--text-muted);">' + response.date + '</span>' +
-                            '<button class="icon-btn" onclick="copyResponse(' + index + ')" title="Copiar">📋</button>' +
-                            '<button class="icon-btn" onclick="editResponse(' + index + ')" title="Editar">✏️</button>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="saved-response-text">' + response.text + '</div>' +
-                '</div>';
-        }
-
-        function saveResponse(index) {
-            const textarea = document.getElementById('response-' + index);
-            const responseText = textarea.value.trim();
-            
-            if (!responseText) {
-                showAlert('Digite uma resposta antes de salvar', 'error');
-                return;
-            }
-            
-            const response = {
-                text: responseText,
-                date: new Date().toLocaleString('pt-BR')
-            };
-            
-            messageResponses.set(index, response);
-            completionStates.set(index, true);
-            
-            autoSaveCurrentObra();
-            renderMessages();
-            showAlert('Resposta salva!', 'success');
-        }
-
-        function editResponse(index) {
-            const savedResponse = messageResponses.get(index);
-            
-            const responseSection = document.querySelector('[data-message-id="' + index + '"] .response-section');
-            if (responseSection) {
-                responseSection.innerHTML = 
-                    '<div style="margin-bottom: 10px;">' +
-                        '<label style="font-weight: 600; font-size: 14px; color: var(--text-primary);">✏️ Editando:</label>' +
-                    '</div>' +
-                    '<textarea id="response-' + index + '" class="response-textarea">' + 
-                    savedResponse.text + '</textarea>' +
-                    '<div style="display: flex; gap: 10px; margin-top: 10px;">' +
-                        '<button class="btn btn-primary btn-sm" onclick="updateResponse(' + index + ')">Atualizar</button>' +
-                        '<button class="btn btn-secondary btn-sm" onclick="cancelEdit()">Cancelar</button>' +
-                    '</div>';
-            }
-        }
-
-        function updateResponse(index) {
-            const textarea = document.getElementById('response-' + index);
-            const responseText = textarea.value.trim();
-            
-            if (!responseText) {
-                showAlert('Digite uma resposta', 'error');
-                return;
-            }
-            
-            const response = {
-                text: responseText,
-                date: new Date().toLocaleString('pt-BR') + ' (editado)'
-            };
-            
-            messageResponses.set(index, response);
-            autoSaveCurrentObra();
-            renderMessages();
-            showAlert('Resposta atualizada!', 'success');
-        }
-
-        function cancelEdit() {
-            renderMessages();
-        }
-
-        function copyResponse(index) {
-            const response = messageResponses.get(index);
-            if (!response) return;
-
-            navigator.clipboard.writeText(response.text).then(function() {
-                showAlert('Resposta copiada!', 'success');
-            });
-        }
-
-        function toggleCompletion(index) {
-            const isCompleted = !completionStates.get(index);
-            completionStates.set(index, isCompleted);
-            autoSaveCurrentObra();
-            renderMessages();
-        }
-
-        function updateStatusCounter() {
-            const total = messages.length;
-            let done = 0;
-            let totalRespondable = 0;
-            
-            messages.forEach(function(message, index) {
-                if (message.role !== userProfile) {
-                    totalRespondable++;
-                    if (completionStates.get(index)) {
-                        done++;
-                    }
-                }
-            });
-            
-            const pending = totalRespondable - done;
-            
-            document.getElementById('totalCount').textContent = total;
-            document.getElementById('doneCount').textContent = done;
-            document.getElementById('pendingCount').textContent = pending;
-        }
-
-        // ========== PERFIL ==========
-        function initializeUserProfile() {
-            const savedProfile = localStorage.getItem('userProfile');
-            if (savedProfile) {
-                userProfile = savedProfile;
-                selectProfile(userProfile);
-            }
-        }
-
-        function selectProfile(profile) {
-            userProfile = profile;
-            localStorage.setItem('userProfile', profile);
-            
-            const options = document.querySelectorAll('.profile-option');
-            options.forEach(function(option) {
-                option.classList.remove('selected');
-            });
-            
-            const radio = document.getElementById('profile' + profile);
-            if (radio) {
-                radio.checked = true;
-                radio.closest('.profile-option').classList.add('selected');
-            }
-            
-            if (currentObra) {
-                currentObra.userProfile = userProfile;
-                autoSaveCurrentObra();
-                renderMessages();
-            }
-        }
-
-        // ========== SYNC STATUS ==========
-        function setSyncStatus(status) {
-            const indicator = document.getElementById('syncIndicator');
-            
-            if (status === 'syncing') {
-                indicator.innerHTML = '<span>●</span> Salvando...';
-                indicator.classList.add('syncing');
-            } else {
-                indicator.innerHTML = '<span>●</span> Sincronizado';
-                indicator.classList.remove('syncing');
-            }
-        }
-
-        // ========== TEMA ==========
-        function initializeTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            
-            const icon = document.getElementById('theme-icon');
-            icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            const icon = document.getElementById('theme-icon');
-            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-
-        // ========== ALERTAS ==========
-        function showAlert(message, type) {
-            const alertsContainer = document.getElementById('alerts');
-            const alert = document.createElement('div');
-            
-            const icons = {
-                success: '✅',
-                error: '❌',
-                info: 'ℹ️'
-            };
-            
-            alert.className = 'alert alert-' + type;
-            alert.innerHTML = '<span>' + icons[type] + '</span><span>' + message + '</span>';
-            
-            alertsContainer.innerHTML = '';
-            alertsContainer.appendChild(alert);
-            
-            setTimeout(function() {
-                alert.remove();
-            }, 5000);
-        }
-
-        // ========== ATALHOS DE TECLADO ==========
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                if (currentObra) {
-                    autoSaveCurrentObra();
-                    showAlert('Obra salva manualmente!', 'success');
-                }
-            }
-
-            if (e.ctrlKey && e.key === 'e') {
-                e.preventDefault();
-                if (currentObra) {
-                    exportCurrentObraTxt();
-                }
-            }
-        });
-
-        // ========== MODAL BACKDROP CLICK ==========
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal')) {
-                e.target.classList.remove('show');
-            }
-        });
+      window.addEventListener("DOMContentLoaded", function () {
+        const script = document.createElement("script");
+        script.src = "./js/tools/jsonFormater/dist/main.obf.js";
+        document.body.appendChild(script);
+      });
     </script>
-</body>
+  </body>
 </html>

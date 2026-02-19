@@ -6,7 +6,10 @@
   "scripts": {
     "obfuscate": "node scripts/obfuscate.js",
     "obfuscate:csvToXlsxJoin": "node scripts/obfuscate.js js/tools/csvToXlsxJoin/src js/tools/csvToXlsxJoin/dist",
-    "obfuscate:SistemaRenomeacaoArquivos": "node scripts/obfuscate.js js/tools/SistemaRenomeacaoArquivos/src js/tools/SistemaRenomeacaoArquivos/dist"
+    "obfuscate:SistemaRenomeacaoArquivos": "node scripts/obfuscate.js js/tools/SistemaRenomeacaoArquivos/src js/tools/SistemaRenomeacaoArquivos/dist",
+    "obfuscate:RenameFilesConstructor": "node scripts/obfuscate.js js/tools/RenameFilesConstructor/src js/tools/RenameFilesConstructor/dist",
+    "obfuscate:elementsOAEVisualizer": "node scripts/obfuscate.js js/tools/elementsOAEVisualizer/src js/tools/elementsOAEVisualizer/dist",
+    "obfuscate:jsonFormater": "node scripts/obfuscate.js js/tools/jsonFormater/src js/tools/jsonFormater/dist"
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.0"
