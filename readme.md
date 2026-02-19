@@ -35,43 +35,51 @@ projeto/
 ## 🔧 Módulos e Funcionalidades
 
 ### 📄 `constants.js`
+
 - **TECHNICAL_LIMITS**: Limites técnicos (5% transversal, 2.5% longitudinal)
 - **ZOOM_CONFIG**: Configurações de zoom e visualização
 - **VISUAL_CONFIG**: Cores e configurações visuais
 - **COORDINATE_CONFIG**: Configurações de coordenadas e SIRGAS
 
 ### 📊 `csvParser.js`
+
 - **CSVParser**: Parse de dados CSV com detecção automática de cabeçalhos
 - **PointFinder**: Localização de pontos de estrutura nos dados
 
 ### 🗺️ `coordinateUtils.js`
+
 - **CoordinateUtils**: Conversão entre sistemas de coordenadas
 - **determineSirgas2000Zone()**: Detecção automática da zona SIRGAS 2000
 - **approximateUTMToLongitude()**: Conversão UTM para geográficas
 
 ### 🧮 `calculations.js`
+
 - **DistanceCalculator**: Cálculo de distâncias euclidianas e transversais
 - **InclinationCalculator**: Cálculo de inclinações com precisão
 - **StatusCalculator**: Análise de conformidade técnica
 - **ElevationCalculator**: Cálculos relacionados à elevação
 
 ### 🎨 `visualization.js`
+
 - **CanvasRenderer**: Renderização gráfica das estruturas
 - **Zoom e rotação** interativa
 - **Visualização** de elevações por cores
 - **Conexões** entre estruturas
 
 ### 📑 `reporting.js`
+
 - **ReportGenerator**: Geração de relatórios técnicos detalhados
 - **Resumos executivos** com análise de conformidade
 - **Seções metodológicas** explicativas
 
 ### 🔬 `examples.js`
+
 - **ExampleDataManager**: Gerenciamento de dados de exemplo
 - **Validação** de dados CSV
 - **Múltiplos exemplos** para teste
 
 ### 🎛️ `main.js`
+
 - **AppController**: Controlador principal da aplicação
 - **Coordenação** entre todos os módulos
 - **Event listeners** e controles de interface
@@ -87,6 +95,7 @@ projeto/
 ## 📋 Formatos CSV Suportados
 
 ### Formato UTM
+
 ```csv
 Ponto,Codigo,Leste,Norte,Elev
 P-01,LE INICIO PONTE,187514.122,8954447.811,102.288
@@ -96,6 +105,7 @@ P-04,LE FINAL DE PONTE,187495.294,8954445.442,102.310
 ```
 
 ### Formato Geográfico
+
 ```csv
 Name,Code,Lat,Long,H_ORTO
 P-01,LE_INICIO_OAE,-9.8975029500,-36.4164419000,197.0962773000
@@ -107,29 +117,34 @@ P-04,LD_FINAL_OAE,-9.8974730300,-36.4166092000,197.2531865000
 ## 🎯 Pontos Obrigatórios
 
 O sistema identifica automaticamente pontos com os seguintes padrões:
+
 - `LD_INICIO_OAE` ou `LD INICIO PONTE`
-- `LE_INICIO_OAE` ou `LE INICIO PONTE`  
+- `LE_INICIO_OAE` ou `LE INICIO PONTE`
 - `LD_FINAL_OAE` ou `LD FINAL DE PONTE`
 - `LE_FINAL_OAE` ou `LE FINAL DE PONTE`
 
 ## 🔍 Funcionalidades Avançadas
 
 ### ✅ **Correção da Largura Transversal**
+
 - Calcula largura como distância **transversal pura** (só componente X)
 - **Elimina diagonal** para medição estrutural precisa
 - Mantém comprimento como **distância real** (3D)
 
 ### 🗺️ **Detecção Automática SIRGAS 2000**
+
 - Identifica automaticamente a **zona UTM SIRGAS 2000**
 - Suporte para **coordenadas geográficas e UTM**
 - Calcula **código EPSG** correspondente
 
 ### 📊 **Análise de Conformidade**
+
 - Verifica limites técnicos: **5% transversal, 2.5% longitudinal**
 - Status visual: ✅ Conforme, ⚠️ Próximo ao limite, 🚨 Acima do limite
 - **Relatórios executivos** com recomendações
 
 ### 🎨 **Visualização Interativa**
+
 - **Zoom** de 10% até 10000%
 - **Rotação** em incrementos de 22.5°
 - **Cores** baseadas na elevação relativa
@@ -138,34 +153,38 @@ O sistema identifica automaticamente pontos com os seguintes padrões:
 ## 🔧 Configurações Técnicas
 
 ### Limites de Inclinação
+
 ```javascript
 const TECHNICAL_LIMITS = {
-    TRANSVERSAL: 5.0,    // 5%
-    LONGITUDINAL: 2.5    // 2.5%
+  TRANSVERSAL: 5.0, // 5%
+  LONGITUDINAL: 2.5, // 2.5%
 };
 ```
 
 ### Zoom e Visualização
+
 ```javascript
 const ZOOM_CONFIG = {
-    DEFAULT: 2.0,        // 200%
-    MIN: 0.1,           // 10%
-    MAX: 100.0,         // 10000%
-    STEP: 1.2           // Incremento
+  DEFAULT: 2.0, // 200%
+  MIN: 0.1, // 10%
+  MAX: 100.0, // 10000%
+  STEP: 1.2, // Incremento
 };
 ```
 
 ## 🐛 Debug e Desenvolvimento
 
 ### Ativar Debug
+
 ```javascript
 const DEBUG_CONFIG = {
-    ENABLED: true,
-    MAX_LOG_LINES: 1000
+  ENABLED: true,
+  MAX_LOG_LINES: 1000,
 };
 ```
 
 ### Funções de Debug Disponíveis
+
 - `debugLog(message)`: Log personalizado
 - `AppController.toggleDebug()`: Alternar painel debug
 - `AppController.getSystemInfo()`: Informações do sistema
@@ -179,6 +198,7 @@ const DEBUG_CONFIG = {
 ## 🔄 Melhorias Implementadas
 
 ### v2.0.0 - Versão Modular
+
 - ✅ **Código totalmente reorganizado** em módulos
 - ✅ **Correção da largura transversal** (sem diagonal)
 - ✅ **Melhoria na detecção SIRGAS 2000**
@@ -190,24 +210,22 @@ const DEBUG_CONFIG = {
 ## 📝 Notas Técnicas
 
 ### Metodologia de Cálculo
+
 - **Transversal**: Usa `calculateTransversalWidth()` - apenas componente X
 - **Longitudinal**: Usa `calculateDistance()` - distância euclidiana real
 - **Elevações**: Diferença absoluta entre pontos
 - **Inclinações**: `(desnível / distância) × 100`
 
 ### Sistema de Coordenadas
+
 - **Automático**: Detecta UTM, geográfico ou plano
 - **SIRGAS 2000**: Cálculo automático da zona (17-25)
 - **Conversões**: Suporte para múltiplos formatos
 
-## 🤝 Contribuição
-
-Para contribuir com o projeto:
-1. Mantenha a **estrutura modular**
-2. Documente **novas funcionalidades**
-3. Teste com **diferentes formatos de CSV**
-4. Mantenha **compatibilidade** com versões anteriores
-
 ## 📄 Licença
 
-Este projeto é de **uso técnico/educacional** para análise de estruturas de ponte seguindo boas práticas da engenharia.
+Este projeto é de **propriedade exclusiva da ZenithSolutions**.
+
+**© 2025 ZenithSolutions - Todos os direitos reservados.**
+
+É proibida qualquer reprodução, distribuição ou modificação sem autorização expressa.
