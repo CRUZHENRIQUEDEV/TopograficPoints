@@ -1,4 +1,3 @@
-// GATE DE PROTEÇÃO - Bloqueia execução em domínios não autorizados
 (function () {
   const allowedOrigins = [
     "https://cruzhenriquedev.github.io",
