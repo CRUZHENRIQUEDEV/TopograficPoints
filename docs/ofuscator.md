@@ -240,3 +240,32 @@ Plano de ação: Ofuscação e proteção de código cliente
 - Original mantido em js/tools/<pagina>/src/ (legível).
 - Produção carrega apenas js/tools/<pagina>/dist/\*.obf.js em HTML.
 - Não publicar sourcemaps ou arquivos de src/ em docs/ nem no Pages.
+
+26. Comandos práticos para rodar o ofuscador (Node)
+
+- Pré-requisitos:
+
+  - Estar na raiz do projeto: c:\Users\Henrique da Cruz\source\repos\TopograficPoints
+  - Ter executado ao menos uma vez:
+    - npm install
+
+- Rodar ofuscador só para a ferramenta csvToXlsxJoin:
+
+  - Comando:
+    - npm run obfuscate:csvToXlsxJoin
+  - Entrada:
+    - js/tools/csvToXlsxJoin/src/main.js
+  - Saída:
+    - js/tools/csvToXlsxJoin/dist/main.obf.js
+
+- Rodar ofuscador para todas as ferramentas em js/tools/:
+
+  - Comando:
+    - npm run obfuscate
+  - Comportamento:
+    - Detecta automaticamente js/tools/<pagina>/src com arquivos .js.
+    - Gera/atualiza os arquivos \*.obf.js em js/tools/<pagina>/dist.
+
+- Quando lembrar de rodar:
+  - Sempre que alterar código em js/tools/<pagina>/src.
+  - Antes de publicar no GitHub Pages, para garantir dist/ atualizado.

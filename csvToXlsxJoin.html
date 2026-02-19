@@ -280,6 +280,17 @@
 
       <div class="alert" id="alert"></div>
     </div>
+    <script>
+      (function () {
+        var isFile = location.protocol === "file:";
+        var isHttps = location.protocol === "https:";
+        var allowedOrigin = "https://cruzhenriquedev.github.io";
+        if (isFile || !isHttps || location.origin !== allowedOrigin) {
+          document.documentElement.innerHTML = "";
+          throw new Error("blocked");
+        }
+      })();
+    </script>
     <script src="js/tools/csvToXlsxJoin/dist/main.obf.js"></script>
   </body>
 </html>
