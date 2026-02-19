@@ -3,6 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // GATE DE PROTEÇÃO - Bloqueia execução em domínios não autorizados
+      (function () {
+        const allowedOrigins = [
+          "https://cruzhenriquedev.github.io",
+          "https://cruzhenriquedev.github.io/TopograficPoints",
+        ];
+
+        const isFileProtocol = location.protocol === "file:";
+        const isNotHttps = location.protocol !== "https:";
+        const originNotAllowed = !allowedOrigins.some(
+          (o) => location.origin === o || location.href.startsWith(o),
+        );
+
+        if (isFileProtocol || isNotHttps || originNotAllowed) {
+          document.write("");
+          document.close();
+          return;
+        }
+
+        // Carrega script principal apenas se passar no gate
+        window.addEventListener("DOMContentLoaded", function () {
+          const script = document.createElement("script");
+          script.src = "./js/tools/SistemaRenomeacaoArquivos/dist/main.obf.js";
+          document.body.appendChild(script);
+        });
+      })();
+    </script>
     <title>Sistema de Renomeação de Arquivos - OAE Support</title>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
@@ -695,39 +723,5 @@
       <p>Desenvolvido por <span class="zenith-brand">ZenithSolutions</span></p>
       <p>&copy; 2025. Todos os direitos reservados.</p>
     </footer>
-
-    <script>
-      // GATE DE PROTEÇÃO - Bloqueia execução em domínios não autorizados
-      (function () {
-        const allowedOrigins = [
-          "https://cruzhenriquedev.github.io",
-          "https://cruzhenriquedev.github.io/TopograficPoints",
-        ];
-
-        const isFileProtocol = location.protocol === "file:";
-        const isNotHttps = location.protocol !== "https:";
-        const originNotAllowed = !allowedOrigins.some(
-          (o) => location.origin === o || location.href.startsWith(o),
-        );
-
-        // DEBUG - remover depois
-        console.log("protocol:", location.protocol);
-        console.log("origin:", location.origin);
-        console.log("href:", location.href);
-        console.log("isFileProtocol:", isFileProtocol);
-        console.log("isNotHttps:", isNotHttps);
-        console.log("originNotAllowed:", originNotAllowed);
-
-        if (isFileProtocol || isNotHttps || originNotAllowed) {
-          document.documentElement.innerHTML = "";
-          return;
-        }
-
-        // Carrega script principal apenas se passar no gate
-        const script = document.createElement("script");
-        script.src = "./js/tools/SistemaRenomeacaoArquivos/dist/main.obf.js";
-        document.body.appendChild(script);
-      })();
-    </script>
   </body>
 </html>
