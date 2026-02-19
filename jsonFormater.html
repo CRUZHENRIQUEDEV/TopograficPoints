@@ -1362,12 +1362,6 @@
     </div>
 
     <!-- Carrega script principal apenas se passar no gate (gate está no head) -->
-    <script>
-      window.addEventListener("DOMContentLoaded", function () {
-        const script = document.createElement("script");
-        script.src = "./js/tools/jsonFormater/dist/main.obf.js";
-        document.body.appendChild(script);
-      });
-    </script>
+    <script src="./js/tools/jsonFormater/dist/main.obf.js" defer></script>
   </body>
 </html>

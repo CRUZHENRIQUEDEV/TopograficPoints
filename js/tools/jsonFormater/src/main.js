@@ -32,11 +32,17 @@ let currentFilter = "all";
 let searchQuery = "";
 
 // ========== INICIALIZAÇÃO ==========
-document.addEventListener("DOMContentLoaded", function () {
+function initialize() {
   initializeTheme();
   initializeUserProfile();
   initializeDB();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initialize);
+} else {
+  initialize();
+}
 
 // ========== INDEXEDDB ==========
 function initializeDB() {
