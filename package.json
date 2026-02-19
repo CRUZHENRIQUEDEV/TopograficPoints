@@ -10,7 +10,9 @@
     "obfuscate:RenameFilesConstructor": "node scripts/obfuscate.js js/tools/RenameFilesConstructor/src js/tools/RenameFilesConstructor/dist",
     "obfuscate:elementsOAEVisualizer": "node scripts/obfuscate.js js/tools/elementsOAEVisualizer/src js/tools/elementsOAEVisualizer/dist",
     "obfuscate:jsonFormater": "node scripts/obfuscate.js js/tools/jsonFormater/src js/tools/jsonFormater/dist",
-    "obfuscate:FOTOS_PARA_GEO_PONTOS": "node scripts/obfuscate.js js/tools/FOTOS_PARA_GEO_PONTOS/src js/tools/FOTOS_PARA_GEO_PONTOS/dist"
+    "obfuscate:FOTOS_PARA_GEO_PONTOS": "node scripts/obfuscate.js js/tools/FOTOS_PARA_GEO_PONTOS/src js/tools/FOTOS_PARA_GEO_PONTOS/dist",
+    "obfuscate:survey_points_visualizer": "node scripts/obfuscate.js js/tools/survey_points_visualizer/src js/tools/survey_points_visualizer/dist",
+    "obfuscate:airportProximity": "node scripts/obfuscate.js js/tools/airportProximity/src js/tools/airportProximity/dist"
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.0"
