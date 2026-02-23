@@ -1795,22 +1795,28 @@ async function updateProgress() {
         });
       });
 
-      // Inicializar o mapa quando a página carregar
-      document.addEventListener("DOMContentLoaded", function () {
+      // Inicializar o mapa — o script é carregado dinamicamente após DOMContentLoaded,
+      // então o evento já disparou. Chamamos diretamente se o DOM estiver pronto.
+      function inicializarApp() {
         debugLog('DOM carregado, inicializando aplicação');
         initMap();
-        
-        // Teste básico das bibliotecas
+
         if (typeof EXIF === 'undefined') {
           debugLog('ERRO: EXIF não carregado');
         } else {
           debugLog('EXIF carregado com sucesso');
         }
-        
+
         if (typeof L === 'undefined') {
           debugLog('ERRO: Leaflet não carregado');
         } else {
           debugLog('Leaflet carregado com sucesso');
         }
-      });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarApp);
+      } else {
+        inicializarApp();
+      }
     
