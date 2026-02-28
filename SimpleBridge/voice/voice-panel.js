@@ -546,6 +546,8 @@
   }
 
   let _userStoppedMic = false;  // true só quando o usuário clicou para parar
+  let _lastInterim    = '';     // último texto interim (usado se onend chegar sem isFinal)
+  let _gotFinal       = false;  // true quando isFinal já foi processado nesta sessão
 
   function startListening() {
     if (!rec) {
@@ -572,6 +574,8 @@
     }
     setMicState('listening');
     setTranscript('Ouvindo...', 'active');
+    _lastInterim = '';
+    _gotFinal    = false;
 
     rec.onresult = (e) => {
       let interim = '', finals = [];
@@ -581,25 +585,33 @@
         else interim += r[0].transcript;
       }
       if (finals.length) {
+        _gotFinal = true;
+        _lastInterim = '';
         setTranscript(finals[0], 'active');
         handleAnswer(finals[0], finals.slice(1));
       } else if (interim) {
+        _lastInterim = interim;
         setTranscript(interim, 'active');
       }
     };
 
     rec.onerror = () => {
       listening = false;
-      // Reinicia automaticamente após erro (network blip, etc.)
       if (!_userStoppedMic) setTimeout(_doStart, 400);
       else setMicState('idle');
     };
 
-    // Ao terminar (continuous=false encerra após silêncio) → reinicia sempre que não foi o usuário
+    // Ao terminar: se não houve isFinal mas havia interim, usa o interim como resposta
     rec.onend = () => {
       listening = false;
+      if (!_gotFinal && _lastInterim) {
+        const saved = _lastInterim;
+        _lastInterim = '';
+        handleAnswer(saved, []);   // trata o interim como resposta final
+        // handleAnswer pode ter setado _userStoppedMic=true se aceitou — onend decide abaixo
+      }
       if (!_userStoppedMic) {
-        setTimeout(_doStart, 200);   // reinicia imediatamente
+        setTimeout(_doStart, 200);
       } else {
         setMicState('idle');
       }
