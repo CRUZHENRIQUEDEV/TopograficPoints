@@ -1,0 +1,728 @@
+{
+  "sections": [
+    {
+      "id": "geral",
+      "label": "Informações Gerais",
+      "questions": [
+        {
+          "id": "CODIGO",
+          "label": "CODIGO",
+          "question": "Código da obra?",
+          "hint": "",
+          "confirmTemplate": "Código {value}, correto?",
+          "type": "text",
+          "required": true,
+          "conditions": null
+        },
+        {
+          "id": "LOTE",
+          "label": "LOTE",
+          "question": "Lote?",
+          "hint": "",
+          "confirmTemplate": "Lote {value}, correto?",
+          "type": "text",
+          "required": true,
+          "conditions": null
+        },
+        {
+          "id": "NOME",
+          "label": "NOME",
+          "question": "Nome da obra?",
+          "hint": "",
+          "confirmTemplate": "{value}, correto?",
+          "type": "text",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "UF",
+          "label": "UF",
+          "question": "Estado (UF)?",
+          "hint": "Sigla do estado",
+          "confirmTemplate": "{value}, correto?",
+          "type": "text",
+          "required": false,
+          "conditions": null,
+          "autoFill": "uf"
+        },
+        {
+          "id": "RODOVIA",
+          "label": "RODOVIA",
+          "question": "Número da rodovia?",
+          "hint": "",
+          "confirmTemplate": "Rodovia {value}, correto?",
+          "type": "integer",
+          "required": false,
+          "conditions": null,
+          "autoFill": "rodovia"
+        },
+        {
+          "id": "DATA",
+          "label": "DATA",
+          "question": "Data da vistoria?",
+          "hint": "dd/mm/aaaa",
+          "confirmTemplate": "{value}, correto?",
+          "type": "date",
+          "required": false,
+          "conditions": null,
+          "autoFill": "date"
+        },
+        {
+          "id": "ENGENHEIRO",
+          "label": "ENGENHEIRO",
+          "question": "Engenheiro responsável?",
+          "hint": "",
+          "confirmTemplate": "{value}, correto?",
+          "type": "text",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "TECNICO",
+          "label": "TECNICO",
+          "question": "Técnico?",
+          "hint": "",
+          "confirmTemplate": "{value}, correto?",
+          "type": "text",
+          "required": false,
+          "conditions": null
+        }
+      ]
+    },
+    {
+      "id": "dimensoes",
+      "label": "Dimensões",
+      "questions": [
+        {
+          "id": "COMPRIMENTO",
+          "label": "COMPRIMENTO",
+          "question": "Comprimento total (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": true,
+          "conditions": null
+        },
+        {
+          "id": "LARGURA",
+          "label": "LARGURA",
+          "question": "Largura (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "ALTURA",
+          "label": "ALTURA",
+          "question": "Altura (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "QTD TRAMOS",
+          "label": "QTD TRAMOS",
+          "question": "Quantos tramos?",
+          "hint": "Número inteiro",
+          "confirmTemplate": "{value} tramos, correto?",
+          "type": "integer",
+          "required": true,
+          "conditions": null,
+          "onConfirm": "generateTramosAndApoios"
+        }
+      ]
+    },
+    {
+      "id": "transicao",
+      "label": "Transição",
+      "questions": [
+        {
+          "id": "ALTURA TRANSIÇÃO",
+          "label": "ALTURA TRANSIÇÃO",
+          "question": "Altura da transição (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "CORTINA ALTURA",
+          "label": "CORTINA ALTURA",
+          "question": "Altura da cortina (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "TIPO ALA PARALELA",
+          "label": "TIPO ALA PARALELA",
+          "question": "Tipo da ala paralela?",
+          "hint": "Ala de Concreto Armado ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "ALA DE CONCRETO ARMADO"],
+          "conditions": null
+        },
+        {
+          "id": "TIPO ALA PERPENDICULAR",
+          "label": "TIPO ALA PERPENDICULAR",
+          "question": "Tipo da ala perpendicular?",
+          "hint": "Ala de Concreto Armado ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "ALA DE CONCRETO ARMADO"],
+          "conditions": null
+        },
+        {
+          "id": "COMPRIMENTO ALA",
+          "label": "COMPRIMENTO ALA",
+          "question": "Comprimento da ala (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "operator": "anyNotEquals",
+            "fields": ["TIPO ALA PARALELA", "TIPO ALA PERPENDICULAR"],
+            "value": "Nenhum"
+          }
+        },
+        {
+          "id": "ESPESSURA ALA",
+          "label": "ESPESSURA ALA",
+          "question": "Espessura da ala (metros)?",
+          "hint": "Máximo 1.5",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "operator": "anyNotEquals",
+            "fields": ["TIPO ALA PARALELA", "TIPO ALA PERPENDICULAR"],
+            "value": "Nenhum"
+          }
+        },
+        {
+          "id": "TIPO ENCONTRO",
+          "label": "TIPO ENCONTRO",
+          "question": "Tipo de encontro?",
+          "hint": "Nenhum / Parede Frontal Portante / Encontro Laje / Monolítico / Apoio",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Nenhum",
+            "ENCONTRO - PAREDE FRONTAL PORTANTE",
+            "ENCONTRO LAJE",
+            "MONOLITICO",
+            "APOIO"
+          ],
+          "conditions": null
+        },
+        {
+          "id": "DESLOCAMENTO ESQUERDO ENCONTRO LAJE",
+          "label": "DESLOCAMENTO ESQUERDO ENCONTRO LAJE",
+          "question": "Deslocamento esquerdo do encontro laje (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO ENCONTRO", "operator": "equals", "value": "ENCONTRO LAJE" }
+        },
+        {
+          "id": "DESLOCAMENTO DIREITO ENCONTRO LAJE",
+          "label": "DESLOCAMENTO DIREITO ENCONTRO LAJE",
+          "question": "Deslocamento direito do encontro laje (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO ENCONTRO", "operator": "equals", "value": "ENCONTRO LAJE" }
+        },
+        {
+          "id": "COMPRIMENTO ENCONTRO LAJE",
+          "label": "COMPRIMENTO ENCONTRO LAJE",
+          "question": "Comprimento do encontro laje (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO ENCONTRO", "operator": "equals", "value": "ENCONTRO LAJE" }
+        },
+        {
+          "id": "LAJE TRANSICAO",
+          "label": "LAJE TRANSICAO",
+          "question": "Laje de transição?",
+          "hint": "Nenhum ou Laje Transição",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "LAJE TRANSICAO"],
+          "conditions": null
+        }
+      ]
+    },
+    {
+      "id": "superestrutura",
+      "label": "Superestrutura",
+      "questions": [
+        {
+          "id": "TIPO SUPERESTRUTURA",
+          "label": "TIPO SUPERESTRUTURA",
+          "question": "Tipo de superestrutura?",
+          "hint": "Engastada ou Rotulada",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["ENGASTADA", "ROTULADA"],
+          "conditions": null
+        },
+        {
+          "id": "QTD LONGARINAS",
+          "label": "QTD LONGARINAS",
+          "question": "Quantidade de longarinas?",
+          "hint": "1 = seção caixão",
+          "confirmTemplate": "{value} longarinas, correto?",
+          "type": "integer",
+          "required": false,
+          "conditions": null,
+          "onConfirm": "handleLongarinasRules"
+        },
+        {
+          "id": "ALTURA LONGARINA",
+          "label": "ALTURA LONGARINA",
+          "question": "Altura da longarina (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "ESPESSURA LONGARINA",
+          "label": "ESPESSURA LONGARINA",
+          "question": "Espessura da longarina (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "QTD LONGARINAS", "operator": "notEquals", "value": "1" }
+        },
+        {
+          "id": "DESLOCAMENTO ESQUERDO",
+          "label": "DESLOCAMENTO ESQUERDO",
+          "question": "Deslocamento esquerdo (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "DESLOCAMENTO DIREITO",
+          "label": "DESLOCAMENTO DIREITO",
+          "question": "Deslocamento direito (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "QTD TRANSVERSINAS",
+          "label": "QTD TRANSVERSINAS",
+          "question": "Quantidade de transversinas?",
+          "hint": "Zero se não houver",
+          "confirmTemplate": "{value} transversinas, correto?",
+          "type": "integer",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "TIPO DE TRANSVERSINA",
+          "label": "TIPO DE TRANSVERSINA",
+          "question": "Tipo de transversina?",
+          "hint": "Portante / Ligação / Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Nenhum",
+            "TRANSVERSINA PORTANTE DE CONCRETO ARMADO",
+            "TRANSVERSINA DE LIGAÇÃO DE CONCRETO ARMADO"
+          ],
+          "conditions": { "field": "QTD TRANSVERSINAS", "operator": "greaterThan", "value": "0" }
+        },
+        {
+          "id": "ESPESSURA TRANSVERSINA",
+          "label": "ESPESSURA TRANSVERSINA",
+          "question": "Espessura da transversina (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "QTD TRANSVERSINAS", "operator": "greaterThan", "value": "0" }
+        },
+        {
+          "id": "ESPESSURA LAJE",
+          "label": "ESPESSURA LAJE",
+          "question": "Espessura da laje (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": null
+        },
+        {
+          "id": "REFORCO VIGA",
+          "label": "REFORCO VIGA",
+          "question": "Possui reforço de viga?",
+          "hint": "Sim ou Não",
+          "confirmTemplate": "Reforço de viga: {value}, correto?",
+          "type": "boolean",
+          "required": false,
+          "conditions": null
+        }
+      ]
+    },
+    {
+      "id": "pilares",
+      "label": "Pilares",
+      "questions": [
+        {
+          "id": "QTD PILARES",
+          "label": "QTD PILARES",
+          "question": "Quantidade de pilares por apoio?",
+          "hint": "1 = pilar parede",
+          "confirmTemplate": "{value} pilares, correto?",
+          "type": "integer",
+          "required": false,
+          "conditions": { "field": "QTD TRAMOS", "operator": "greaterThan", "value": "1" }
+        },
+        {
+          "id": "PILAR DESCENTRALIZADO",
+          "label": "PILAR DESCENTRALIZADO",
+          "question": "Pilar descentralizado?",
+          "hint": "Sim ou Não",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Não", "Sim"],
+          "conditions": { "field": "QTD TRAMOS", "operator": "greaterThan", "value": "1" }
+        },
+        {
+          "id": "TIPO APARELHO APOIO",
+          "label": "TIPO APARELHO APOIO",
+          "question": "Tipo de aparelho de apoio?",
+          "hint": "Neoprene Fretado / Rolo Metálico / Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Nenhum",
+            "APARELHO DE APOIO DE NEOPRENE FRETADO",
+            "APARELHO DE APOIO ROLO METÁLICO"
+          ],
+          "conditions": { "field": "QTD TRAMOS", "operator": "greaterThan", "value": "1" }
+        },
+        {
+          "id": "TIPO TRAVESSA",
+          "label": "TIPO TRAVESSA",
+          "question": "Tipo de travessa?",
+          "hint": "Travessa de Apoio ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "TRAVESSA DE APOIO DE CONCRETO ARMADO"],
+          "conditions": null
+        },
+        {
+          "id": "ALTURA TRAVESSA",
+          "label": "ALTURA TRAVESSA",
+          "question": "Altura da travessa (metros)?",
+          "hint": "Menor que o menor apoio",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "field": "TIPO TRAVESSA",
+            "operator": "equals",
+            "value": "TRAVESSA DE APOIO DE CONCRETO ARMADO"
+          }
+        },
+        {
+          "id": "TIPO ENCAMISAMENTO",
+          "label": "TIPO ENCAMISAMENTO",
+          "question": "Tipo de encamisamento?",
+          "hint": "Encamisamento de Pilar ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "ENCAMISAMENTO DE PILAR"],
+          "conditions": { "field": "QTD TRAMOS", "operator": "greaterThan", "value": "1" }
+        },
+        {
+          "id": "TIPO APOIO TRANSICAO",
+          "label": "TIPO APOIO TRANSICAO",
+          "question": "Berço ou pilarete?",
+          "hint": "Berço/Pilarete ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "BERÇO/PILARETE"],
+          "conditions": null
+        },
+        {
+          "id": "TIPO BLOCO SAPATA",
+          "label": "TIPO BLOCO SAPATA",
+          "question": "Tipo de bloco sapata?",
+          "hint": "Bloco Sapata de Concreto Armado ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "BLOCO SAPATA DE CONCRETO ARMADO"],
+          "conditions": null
+        },
+        {
+          "id": "ALTURA BLOCO SAPATA",
+          "label": "ALTURA BLOCO SAPATA",
+          "question": "Altura do bloco sapata (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "field": "TIPO BLOCO SAPATA",
+            "operator": "equals",
+            "value": "BLOCO SAPATA DE CONCRETO ARMADO"
+          }
+        },
+        {
+          "id": "LARGURA BLOCO SAPATA",
+          "label": "LARGURA BLOCO SAPATA",
+          "question": "Largura do bloco sapata (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "field": "TIPO BLOCO SAPATA",
+            "operator": "equals",
+            "value": "BLOCO SAPATA DE CONCRETO ARMADO"
+          }
+        },
+        {
+          "id": "COMPRIMENTO BLOCO SAPATA",
+          "label": "COMPRIMENTO BLOCO SAPATA",
+          "question": "Comprimento do bloco sapata (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "field": "TIPO BLOCO SAPATA",
+            "operator": "equals",
+            "value": "BLOCO SAPATA DE CONCRETO ARMADO"
+          }
+        },
+        {
+          "id": "TIPO CONTRAVENTAMENTO PILAR",
+          "label": "TIPO CONTRAVENTAMENTO PILAR",
+          "question": "Tipo de contraventamento de pilar?",
+          "hint": "Viga de Ligação ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Nenhum",
+            "VIGA DE LIGAÇÃO DE FUNDAÇÕES DE CONCRETO ARMADO"
+          ],
+          "conditions": { "field": "QTD TRAMOS", "operator": "greaterThan", "value": "1" }
+        },
+        {
+          "id": "QTD VIGA CONTRAVENTAMENTO PILAR",
+          "label": "QTD VIGA CONTRAVENTAMENTO PILAR",
+          "question": "Quantidade de vigas de contraventamento?",
+          "hint": "",
+          "confirmTemplate": "{value} vigas, correto?",
+          "type": "integer",
+          "required": false,
+          "conditions": {
+            "field": "TIPO CONTRAVENTAMENTO PILAR",
+            "operator": "notEquals",
+            "value": "Nenhum"
+          }
+        }
+      ]
+    },
+    {
+      "id": "complementares",
+      "label": "Complementares",
+      "questions": [
+        {
+          "id": "TIPO BARREIRA ESQUERDA",
+          "label": "TIPO BARREIRA ESQUERDA",
+          "question": "Tipo de barreira esquerda?",
+          "hint": "New Jersey / Com Guarda-Corpo / Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "BARREIRA NEW JERSEY", "BARREIRA COM GUARDA-CORPO"],
+          "conditions": null
+        },
+        {
+          "id": "LARGURA BARREIRA ESQUERDA",
+          "label": "LARGURA BARREIRA ESQUERDA",
+          "question": "Largura da barreira esquerda (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO BARREIRA ESQUERDA", "operator": "notEquals", "value": "Nenhum" }
+        },
+        {
+          "id": "TIPO BARREIRA DIREITA",
+          "label": "TIPO BARREIRA DIREITA",
+          "question": "Tipo de barreira direita?",
+          "hint": "New Jersey / Com Guarda-Corpo / Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "BARREIRA NEW JERSEY", "BARREIRA COM GUARDA-CORPO"],
+          "conditions": null
+        },
+        {
+          "id": "LARGURA BARREIRA DIREITA",
+          "label": "LARGURA BARREIRA DIREITA",
+          "question": "Largura da barreira direita (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO BARREIRA DIREITA", "operator": "notEquals", "value": "Nenhum" }
+        },
+        {
+          "id": "TIPO CALCADA ESQUERDA",
+          "label": "TIPO CALCADA ESQUERDA",
+          "question": "Tipo de calçada esquerda?",
+          "hint": "Calçada para Pedestres ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "CALÇADA PARA PEDESTRES DE CONCRETO ARMADO"],
+          "conditions": null
+        },
+        {
+          "id": "LARGURA CALCADA ESQUERDA",
+          "label": "LARGURA CALCADA ESQUERDA",
+          "question": "Largura da calçada esquerda (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO CALCADA ESQUERDA", "operator": "notEquals", "value": "Nenhum" }
+        },
+        {
+          "id": "TIPO CALCADA DIREITA",
+          "label": "TIPO CALCADA DIREITA",
+          "question": "Tipo de calçada direita?",
+          "hint": "Calçada para Pedestres ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "CALÇADA PARA PEDESTRES DE CONCRETO ARMADO"],
+          "conditions": null
+        },
+        {
+          "id": "LARGURA CALCADA DIREITA",
+          "label": "LARGURA CALCADA DIREITA",
+          "question": "Largura da calçada direita (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": { "field": "TIPO CALCADA DIREITA", "operator": "notEquals", "value": "Nenhum" }
+        },
+        {
+          "id": "GUARDA RODAS ESQUERDO",
+          "label": "GUARDA RODAS ESQUERDO",
+          "question": "Guarda-rodas esquerdo?",
+          "hint": "DNER ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "GUARDA-RODAS ANTIGO DO DNER"],
+          "conditions": { "field": "TIPO BARREIRA ESQUERDA", "operator": "equals", "value": "Nenhum" }
+        },
+        {
+          "id": "LARGURA GUARDA RODAS ESQUERDO",
+          "label": "LARGURA GUARDA RODAS ESQUERDO",
+          "question": "Largura do guarda-rodas esquerdo (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "field": "GUARDA RODAS ESQUERDO",
+            "operator": "equals",
+            "value": "GUARDA-RODAS ANTIGO DO DNER"
+          }
+        },
+        {
+          "id": "GUARDA RODAS DIREITO",
+          "label": "GUARDA RODAS DIREITO",
+          "question": "Guarda-rodas direito?",
+          "hint": "DNER ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "GUARDA-RODAS ANTIGO DO DNER"],
+          "conditions": { "field": "TIPO BARREIRA DIREITA", "operator": "equals", "value": "Nenhum" }
+        },
+        {
+          "id": "LARGURA GUARDA RODAS DIREITO",
+          "label": "LARGURA GUARDA RODAS DIREITO",
+          "question": "Largura do guarda-rodas direito (metros)?",
+          "hint": "",
+          "confirmTemplate": "{value} metros, correto?",
+          "type": "number",
+          "required": false,
+          "conditions": {
+            "field": "GUARDA RODAS DIREITO",
+            "operator": "equals",
+            "value": "GUARDA-RODAS ANTIGO DO DNER"
+          }
+        },
+        {
+          "id": "PAVIMENTO",
+          "label": "PAVIMENTO",
+          "question": "Tipo de pavimento?",
+          "hint": "Pavimento Asfáltico ou Nenhum",
+          "confirmTemplate": "{value}, correto?",
+          "type": "select",
+          "required": false,
+          "options": ["Nenhum", "PAVIMENTO ASFÁLTICO"],
+          "conditions": null
+        },
+        {
+          "id": "QTD BUZINOTES",
+          "label": "QTD BUZINOTES",
+          "question": "Quantidade de buzinotes?",
+          "hint": "Zero se não houver",
+          "confirmTemplate": "{value} buzinotes, correto?",
+          "type": "integer",
+          "required": false,
+          "conditions": null
+        }
+      ]
+    }
+  ]
+}

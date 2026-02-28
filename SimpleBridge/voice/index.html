@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimpleBridge Voice</title>
+  <link rel="stylesheet" href="css/voice.css" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <h1>SimpleBridge Voice</h1>
+    <button class="btn-exit" id="btn-exit" style="display:none" onclick="exitSession()">✕ Sair</button>
+  </header>
+
+  <!-- ================================================================
+       TELA 1 — Home
+       ================================================================ -->
+  <section id="home-screen" class="screen active">
+    <div class="home-card">
+      <div class="home-icon">🎙️</div>
+      <h2>Cadastro por Voz</h2>
+      <p>
+        O assistente irá conduzir o preenchimento da OAE campo a campo —
+        perguntando, ouvindo e confirmando cada resposta.<br><br>
+        Ao final, exporte para JSON, CSV ou salve diretamente no banco.
+      </p>
+      <button class="btn-primary" id="btn-start" onclick="startSession()">
+        🎙️ Iniciar Cadastro
+      </button>
+      <p class="browser-note" id="compat-note"></p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       TELA 2 — Sessão
+       ================================================================ -->
+  <section id="session-screen" class="screen">
+
+    <!-- Painel principal (esquerda) -->
+    <div class="session-main">
+
+      <!-- Progresso -->
+      <div class="progress-area">
+        <div class="progress-header">
+          <span class="progress-section-name" id="progress-section">—</span>
+          <span id="progress-count">0 / 0</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Card da pergunta -->
+      <div class="question-card" id="question-card">
+        <div class="question-text" id="question-text">Aguardando...</div>
+        <div class="question-hint" id="question-hint"></div>
+      </div>
+
+      <!-- Card de reconhecimento -->
+      <div class="recognition-card" id="recognition-card">
+        <div class="recognition-text" id="recognition-text">
+          Pressione o microfone para falar
+        </div>
+      </div>
+
+      <!-- Campo de texto manual (fallback STT) -->
+      <div class="manual-input-area" id="manual-input-area" style="display:none">
+        <input
+          class="manual-input"
+          id="manual-input"
+          type="text"
+          placeholder="Digite a resposta aqui..."
+          onkeydown="if(event.key==='Enter') confirmManualInput()"
+        />
+        <button class="btn-confirm-text" onclick="confirmManualInput()">✓ OK</button>
+      </div>
+
+      <!-- Prompt de confirmação -->
+      <div class="confirm-prompt" id="confirm-prompt">
+        <div id="confirm-text"></div>
+        <div class="confirm-buttons">
+          <button class="btn-sim"  id="btn-sim" onclick="confirmYes()">✅ Sim</button>
+          <button class="btn-nao"  id="btn-nao" onclick="confirmNo()">✗ Não</button>
+        </div>
+      </div>
+
+      <!-- Aviso de erro STT -->
+      <div class="stt-error-notice" id="stt-error-notice">
+        ⚠️ Reconhecimento de voz falhou. Use o campo de texto acima.
+      </div>
+
+      <!-- Botões de ação -->
+      <div class="action-buttons">
+        <button class="btn-mic" id="btn-mic" onclick="toggleMic()">
+          <span id="btn-mic-icon">🎙️</span>
+          <span id="btn-mic-label">Falar</span>
+        </button>
+        <button class="btn-back" id="btn-back" onclick="goBack()" disabled>
+          ◀ Voltar
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Painel lateral (campos preenchidos) -->
+    <aside class="fields-panel">
+      <div class="fields-panel-header">CAMPOS</div>
+      <div class="fields-list" id="fields-list"></div>
+    </aside>
+
+  </section>
+
+  <!-- ================================================================
+       TELA 3 — Resumo / Exportação
+       ================================================================ -->
+  <section id="summary-screen" class="screen">
+    <div class="summary-header">
+      <h2>✅ Cadastro Concluído</h2>
+      <p id="summary-subtitle">Revise os dados e escolha uma ação.</p>
+    </div>
+
+    <div class="summary-grid" id="summary-grid"></div>
+
+    <div class="summary-actions">
+      <button class="btn-secondary" onclick="doExportJSON()">📄 Exportar JSON</button>
+      <button class="btn-secondary" onclick="doExportCSV()">📊 Exportar CSV</button>
+      <button class="btn-success"   onclick="doSaveDB()">💾 Salvar no Banco</button>
+      <button class="btn-correct"   onclick="goCorrect()">✏️ Corrigir</button>
+    </div>
+  </section>
+
+  <!-- ── Toast ──────────────────────────────────────────────────── -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ── Scripts externos do SimpleBridge ──────────────────────── -->
+  <script src="../js/constants.js"></script>
+  <script src="../js/bridge-data-converter.js"></script>
+  <script src="../js/export.js"></script>
+
+  <!-- ── Módulos do Voice App ──────────────────────────────────── -->
+  <script src="voice/TTSService.js"></script>
+  <script src="voice/STTService.js"></script>
+  <script src="parsers/AnswerParser.js"></script>
+  <script src="engine/FlowEngine.js"></script>
+  <script src="export/ExportService.js"></script>
+
+  <!-- ── App principal ─────────────────────────────────────────── -->
+  <script>
+  /* ==============================================================
+     Estado global
+     ============================================================== */
+  let tts     = null;
+  let stt     = null;
+  let engine  = null;
+
+  let _pendingValue        = null;   // valor aguardando confirmação
+  let _pendingAlternatives = [];
+  let _sttFailCount        = 0;
+  const STT_FAIL_THRESHOLD = 2;
+
+  let _confirmingAnswer = false;     // true: aguardando sim/não de confirmação
+  let _confirmingBack   = false;     // true: aguardando manter/corrigir (modo voltar)
+
+  /* ==============================================================
+     Inicialização
+     ============================================================== */
+  document.addEventListener('DOMContentLoaded', () => {
+    tts = new TTSService();
+    stt = new STTService();
+
+    // Aviso de compatibilidade
+    const note = document.getElementById('compat-note');
+    const sttOk = STTService.isSupported();
+    const ttsOk = TTSService.isSupported();
+
+    if (!sttOk || !ttsOk) {
+      note.textContent = sttOk
+        ? '⚠️ TTS não suportado neste navegador.'
+        : '⚠️ Reconhecimento de voz não suportado. Use Chrome ou Edge. Você ainda pode digitar as respostas.';
+    } else {
+      note.textContent = '✅ Chrome/Edge detectado — totalmente compatível.';
+    }
+
+    // Atalhos de teclado
+    document.addEventListener('keydown', onKeyDown);
+  });
+
+  function onKeyDown(e) {
+    if (!engine) return;
+    if (e.target.tagName === 'INPUT') return;
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (!_confirmingAnswer && !_confirmingBack) toggleMic();
+    }
+    if (e.code === 'Backspace' || e.code === 'ArrowLeft') {
+      e.preventDefault();
+      if (!_confirmingAnswer) goBack();
+    }
+    if (e.code === 'Enter') {
+      e.preventDefault();
+      if (_confirmingAnswer || _confirmingBack) confirmYes();
+      else confirmManualInput();
+    }
+  }
+
+  /* ==============================================================
+     Início de sessão
+     ============================================================== */
+  async function startSession() {
+    // Carrega questions.json
+    let questionsData;
+    try {
+      const res = await fetch('flow/questions.json');
+      questionsData = await res.json();
+    } catch (e) {
+      showToast('Erro ao carregar questions.json', 'error');
+      return;
+    }
+
+    engine = new FlowEngine(questionsData);
+
+    showScreen('session-screen');
+    document.getElementById('btn-exit').style.display = '';
+    document.getElementById('btn-back').disabled = true;
+
+    renderFieldsList();
+    renderCurrentQuestion();
+
+    // Fala a primeira pergunta
+    await speakCurrentQuestion();
+  }
+
+  function exitSession() {
+    if (!confirm('Sair e perder o progresso?')) return;
+    engine = null;
+    showScreen('home-screen');
+    document.getElementById('btn-exit').style.display = 'none';
+    stt && stt.stop();
+    tts && tts.cancel();
+  }
+
+  /* ==============================================================
+     Renderização
+     ============================================================== */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function renderCurrentQuestion() {
+    if (!engine) return;
+    const q = engine.currentQuestion;
+    if (!q) { showSummary(); return; }
+
+    document.getElementById('question-text').textContent = q.question;
+    document.getElementById('question-hint').textContent = q.hint || '';
+    document.getElementById('progress-section').textContent = q.sectionLabel || '';
+
+    const total     = engine.totalQuestions;
+    const answered  = engine.answeredCount;
+    const pct       = total > 0 ? Math.round((answered / total) * 100) : 0;
+    document.getElementById('progress-count').textContent = `${answered} / ${total}`;
+    document.getElementById('progress-bar').style.width   = pct + '%';
+
+    // Limpa estado de reconhecimento
+    setRecognitionText('Pressione o microfone para falar', false);
+    hideConfirmPrompt();
+    setMicState('idle');
+
+    // Mostra/esconde campo manual
+    const sttBroken = !STTService.isSupported() || _sttFailCount >= STT_FAIL_THRESHOLD;
+    document.getElementById('manual-input-area').style.display = sttBroken ? 'flex' : 'none';
+    document.getElementById('stt-error-notice').style.display  = sttBroken ? 'block' : 'none';
+    document.getElementById('manual-input').value = '';
+
+    document.getElementById('btn-back').disabled = engine.currentIndex === 0 &&
+      Object.keys(engine.answers).length === 0;
+
+    renderFieldsList();
+  }
+
+  function renderFieldsList() {
+    if (!engine) return;
+    const list = document.getElementById('fields-list');
+    list.innerHTML = '';
+
+    let lastSection = null;
+    engine.allQuestions.forEach((q, idx) => {
+      // Divisor de seção
+      if (q.sectionLabel !== lastSection) {
+        lastSection = q.sectionLabel;
+        const div = document.createElement('div');
+        div.className = 'section-divider';
+        div.textContent = q.sectionLabel;
+        list.appendChild(div);
+      }
+
+      const isAnswered = engine.answers.hasOwnProperty(q.id);
+      const isCurrent  = idx === engine.currentIndex;
+
+      const item = document.createElement('div');
+      item.className = 'field-item' +
+        (isCurrent  ? ' current' : '') +
+        (isAnswered ? ' done'    : ' pending');
+
+      const status = isAnswered ? '✅' : isCurrent ? '⏳' : '○';
+      const value  = isAnswered ? String(engine.answers[q.id]) : '...';
+
+      item.innerHTML = `
+        <span class="field-status">${status}</span>
+        <div class="field-info">
+          <div class="field-label">${q.label}</div>
+          ${isAnswered ? `<div class="field-value">${value}</div>` : ''}
+        </div>
+      `;
+
+      if (isCurrent) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      list.appendChild(item);
+    });
+  }
+
+  /* ==============================================================
+     TTS
+     ============================================================== */
+  async function speakCurrentQuestion() {
+    if (!engine) return;
+    const q = engine.currentQuestion;
+    if (!q) return;
+    tts.cancel();
+    const text = q.question + (q.hint ? '. ' + q.hint : '');
+    await tts.speak(text);
+  }
+
+  async function speakText(text) {
+    tts.cancel();
+    await tts.speak(text);
+  }
+
+  /* ==============================================================
+     Microfone (STT)
+     ============================================================== */
+  function toggleMic() {
+    if (!engine || engine.isComplete) return;
+    if (stt && stt.isListening) {
+      stt.stop();
+      setMicState('idle');
+      return;
+    }
+    startListening();
+  }
+
+  function startListening() {
+    if (!STTService.isSupported()) {
+      document.getElementById('manual-input-area').style.display = 'flex';
+      document.getElementById('manual-input').focus();
+      return;
+    }
+
+    tts.cancel();
+    setMicState('listening');
+    setRecognitionText('Ouvindo...', true);
+    hideConfirmPrompt();
+
+    stt.listen({
+      onInterim: (text) => {
+        setRecognitionText('🎙️ ' + text, true);
+      },
+      onResult: (text, alternatives) => {
+        setMicState('processing');
+        setRecognitionText('⏳ Processando: "' + text + '"', true);
+        _sttFailCount = 0;
+        processAnswer(text, alternatives);
+      },
+      onError: (code) => {
+        _sttFailCount++;
+        if (_sttFailCount >= STT_FAIL_THRESHOLD) {
+          document.getElementById('manual-input-area').style.display = 'flex';
+          document.getElementById('stt-error-notice').style.display  = 'block';
+          document.getElementById('manual-input').focus();
+        }
+        setMicState('error');
+        setRecognitionText('⚠️ Erro: ' + code + '. Tente novamente.', false);
+        speakText('Não ouvi bem. Tente novamente.');
+      },
+      onEnd: () => {
+        if (!_confirmingAnswer) setMicState('idle');
+      }
+    });
+  }
+
+  function setMicState(state) {
+    const btn   = document.getElementById('btn-mic');
+    const icon  = document.getElementById('btn-mic-icon');
+    const label = document.getElementById('btn-mic-label');
+    btn.className = 'btn-mic ' + state;
+
+    switch (state) {
+      case 'idle':       icon.textContent = '🎙️'; label.textContent = 'Falar';         break;
+      case 'listening':  icon.textContent = '🔴'; label.textContent = 'Ouvindo...';    break;
+      case 'processing': icon.textContent = '⏳'; label.textContent = 'Processando';   break;
+      case 'confirmed':  icon.textContent = '✅'; label.textContent = 'Confirmado';    break;
+      case 'error':      icon.textContent = '⚠️'; label.textContent = 'Tente novamente'; break;
+    }
+  }
+
+  function setRecognitionText(text, active) {
+    const el = document.getElementById('recognition-text');
+    el.textContent = text;
+    el.className   = 'recognition-text' + (active ? ' active' : '');
+    const card = document.getElementById('recognition-card');
+    card.className = 'recognition-card' + (active ? ' listening' : '');
+  }
+
+  /* ==============================================================
+     Input manual
+     ============================================================== */
+  function confirmManualInput() {
+    const input = document.getElementById('manual-input');
+    const text  = input.value.trim();
+    if (!text) return;
+    processAnswer(text, []);
+  }
+
+  /* ==============================================================
+     Processamento de resposta
+     ============================================================== */
+  function processAnswer(text, alternatives) {
+    if (!engine) return;
+
+    // Modo: aguardando manter/corrigir (após Voltar)
+    if (_confirmingBack) {
+      handleBackConfirmation(text);
+      return;
+    }
+
+    // Verifica pedido de repetição
+    if (AnswerParser.isRepeatRequest(text)) {
+      speakCurrentQuestion();
+      setMicState('idle');
+      return;
+    }
+
+    // Modo confirmação sim/não
+    if (_confirmingAnswer) {
+      const bool = AnswerParser.parseBoolean(text);
+      if (bool === true)  { confirmYes(); return; }
+      if (bool === false) { confirmNo();  return; }
+      speakText('Responda sim ou não.');
+      setMicState('idle');
+      return;
+    }
+
+    const q = engine.currentQuestion;
+    if (!q) return;
+
+    const result = AnswerParser.parse(text, q.type, q.options || [], alternatives);
+
+    if (!result.valid) {
+      setMicState('error');
+      setRecognitionText('⚠️ Não entendi: "' + text + '"', false);
+      speakText('Não entendi. ' + (q.hint || 'Tente novamente.'));
+      return;
+    }
+
+    _pendingValue        = result.value;
+    _pendingAlternatives = alternatives;
+
+    // Monta texto de confirmação
+    const confirmText = q.confirmTemplate
+      ? q.confirmTemplate.replace('{value}', result.display)
+      : `${result.display}, correto?`;
+
+    showConfirmPrompt(confirmText);
+    setMicState('confirmed');
+    setRecognitionText('✅ ' + result.display, true);
+    speakText(confirmText);
+  }
+
+  /* ==============================================================
+     Confirmação
+     ============================================================== */
+  function showConfirmPrompt(text) {
+    _confirmingAnswer = true;
+    document.getElementById('confirm-text').textContent = text;
+    document.getElementById('confirm-prompt').classList.add('visible');
+  }
+
+  function hideConfirmPrompt() {
+    _confirmingAnswer = false;
+    document.getElementById('confirm-prompt').classList.remove('visible');
+  }
+
+  function confirmYes() {
+    if (!_confirmingAnswer && !_confirmingBack) return;
+
+    if (_confirmingBack) {
+      // Mantém valor atual e relança para próxima questão
+      const prevQ = engine.currentQuestion;
+      if (prevQ && engine.answers.hasOwnProperty(prevQ.id)) {
+        const val = engine.answers[prevQ.id];
+        engine.next(val);  // re-confirma o valor existente
+      }
+      _confirmingBack = false;
+      hideConfirmPrompt();
+      renderCurrentQuestion();
+      speakCurrentQuestion();
+      return;
+    }
+
+    hideConfirmPrompt();
+    if (_pendingValue === null) return;
+
+    engine.next(_pendingValue);
+    _pendingValue = null;
+
+    if (engine.isComplete) {
+      showSummary();
+    } else {
+      renderCurrentQuestion();
+      speakCurrentQuestion();
+    }
+  }
+
+  function confirmNo() {
+    _confirmingAnswer = false;
+    _confirmingBack   = false;
+    _pendingValue     = null;
+    hideConfirmPrompt();
+    setMicState('idle');
+    setRecognitionText('Pressione o microfone para tentar novamente', false);
+    speakCurrentQuestion();
+  }
+
+  /* ==============================================================
+     Botão Voltar
+     ============================================================== */
+  async function goBack() {
+    if (!engine) return;
+    stt && stt.stop();
+    tts.cancel();
+
+    const result = engine.previous();
+    if (!result) return;
+
+    hideConfirmPrompt();
+    setMicState('idle');
+    renderCurrentQuestion();
+
+    const q   = result.question;
+    const val = result.previousValue;
+
+    if (val !== undefined && val !== '') {
+      // Modo: mostrar valor anterior e perguntar manter/corrigir
+      _confirmingBack = true;
+      const backText = `${q.question.replace('?', '')}. Valor atual: ${val}. Deseja manter?`;
+      showConfirmPrompt(backText);
+      await speakText(backText);
+    } else {
+      await speakCurrentQuestion();
+    }
+  }
+
+  function handleBackConfirmation(text) {
+    const bool = AnswerParser.parseBoolean(text);
+    if (bool === true) {
+      confirmYes();
+    } else if (bool === false) {
+      _confirmingBack = false;
+      hideConfirmPrompt();
+      setMicState('idle');
+      speakCurrentQuestion();
+    } else {
+      speakText('Responda sim para manter ou não para corrigir.');
+    }
+  }
+
+  /* ==============================================================
+     Tela de Resumo
+     ============================================================== */
+  function showSummary() {
+    if (!engine) return;
+    tts && tts.cancel();
+    stt  && stt.stop();
+
+    showScreen('summary-screen');
+
+    const answers = engine.getFlatAnswers();
+    const grid    = document.getElementById('summary-grid');
+    grid.innerHTML = '';
+
+    const total = Object.keys(answers).length;
+    document.getElementById('summary-subtitle').textContent =
+      `${total} campo${total !== 1 ? 's' : ''} preenchido${total !== 1 ? 's' : ''}.`;
+
+    for (const [key, val] of Object.entries(answers)) {
+      if (!val && val !== 0) continue;
+      const item = document.createElement('div');
+      item.className = 'summary-item';
+      item.innerHTML = `
+        <div class="summary-item-label">${key}</div>
+        <div class="summary-item-value">${val}</div>
+      `;
+      grid.appendChild(item);
+    }
+
+    speakText('Cadastro concluído. Revise os dados e escolha uma ação.');
+  }
+
+  function goCorrect() {
+    showScreen('session-screen');
+    // Volta ao último campo preenchido
+    renderCurrentQuestion();
+    speakCurrentQuestion();
+  }
+
+  /* ==============================================================
+     Exportação
+     ============================================================== */
+  function doExportJSON() {
+    if (!engine) return;
+    try {
+      ExportService.exportJSON(engine.getFlatAnswers());
+      showToast('JSON exportado com sucesso!', 'success');
+    } catch (e) {
+      showToast('Erro ao exportar JSON: ' + e.message, 'error');
+    }
+  }
+
+  function doExportCSV() {
+    if (!engine) return;
+    try {
+      ExportService.exportCSV(engine.getFlatAnswers());
+      showToast('CSV exportado com sucesso!', 'success');
+    } catch (e) {
+      showToast('Erro ao exportar CSV: ' + e.message, 'error');
+    }
+  }
+
+  async function doSaveDB() {
+    if (!engine) return;
+    try {
+      const codigo = await ExportService.saveToDatabase(engine.getFlatAnswers());
+      showToast(`Obra "${codigo}" salva no banco!`, 'success');
+    } catch (e) {
+      showToast('Erro ao salvar: ' + e.message, 'error');
+    }
+  }
+
+  /* ==============================================================
+     Toast
+     ============================================================== */
+  let _toastTimer = null;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = 'toast visible' + (type ? ' ' + type : '');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+  </script>
+</body>
+</html>
