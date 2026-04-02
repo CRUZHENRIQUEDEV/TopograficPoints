@@ -17,3 +17,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 node_modules/
+js/tools/**/src/
+js/tools/**/dist/*.js
+!js/tools/**/dist/*.obf.js
